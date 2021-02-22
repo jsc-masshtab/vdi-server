@@ -32,6 +32,11 @@ export class NodeDetailsComponent implements OnInit, OnDestroy {
       type: 'string'
     },
     {
+      title: 'Описание',
+      property: 'description',
+      type: 'string'
+    },
+    {
       title: 'Локация',
       property: 'datacenter_name',
       type: 'string'

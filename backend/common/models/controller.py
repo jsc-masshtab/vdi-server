@@ -203,7 +203,8 @@ class Controller(AbstractSortableStatusModel, VeilModel):
                 Controller.id == self.id).gino.status()
             updated_controller = await Controller.get(self.id)
         controller_is_ok = await updated_controller.check_controller()
-        send_cmd_to_ws_monitor(self.id, WsMonitorCmd.RESTART_MONITOR)  # на случай смены токены
+        # На случай смены токена
+        send_cmd_to_ws_monitor(self.id, WsMonitorCmd.RESTART_MONITOR)
         if controller_is_ok:
             await updated_controller.activate()
             # Получаем, сохраняем и проверяем допустимость версии
@@ -271,11 +272,11 @@ class Controller(AbstractSortableStatusModel, VeilModel):
 
     async def deactivate(self, status=Status.FAILED):
         """Деактивируем активный контроллер и его пулы."""
-        if self.stopped:
+        if self.stopped and status != Status.BAD_AUTH:
             return False
         # Деактивируем контроллер
         await self.set_status(status)
-        # Останавлием задачи связанные с контроллером
+        # Останавливаем задачи связанные с контроллером
         await send_cmd_to_cancel_tasks_associated_with_controller(controller_id=self.id, wait_for_result=True)
         # отключаем клиент
         await self.remove_client()

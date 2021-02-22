@@ -10,7 +10,7 @@ from common.veil.veil_gino import RoleTypeGraphene, Role, StatusGraphene, Status
 from common.veil.veil_validators import MutationValidation
 from common.veil.veil_errors import SimpleError, SilentError, ValidationError
 from common.veil.veil_decorators import administrator_required
-from common.veil.veil_graphene import VeilShortEntityType, VeilResourceType, VmState
+from common.veil.veil_graphene import VeilShortEntityType, VeilResourceType, VmState, VeilTagsType
 
 from common.models.auth import User, Entity
 from common.models.vm import Vm
@@ -66,13 +66,49 @@ class VmBackupType(VeilResourceType):
 
 
 class VmType(VeilResourceType):
+    id = graphene.UUID()
     verbose_name = graphene.String()
-    id = graphene.String()
-    user = graphene.Field(UserType)
     status = StatusGraphene()
-    # controller = graphene.Field(ControllerType)
+    controller = graphene.Field(VeilShortEntityType)
+    resource_pool = graphene.Field(VeilShortEntityType)
+    memory_count = graphene.Int()
+    cpu_count = graphene.Int()
+    template = graphene.Boolean()
+    # luns_count = graphene.Int()
+    # vfunctions_count = graphene.Int()
+    tags = graphene.List(graphene.String)
+    # vmachine_infs_count = graphene.Int()
+    hints = graphene.Int()
     user_power_state = VmState(description='Питание')
+    # vdisks_count = graphene.Int()
+    safety = graphene.Boolean()
+    boot_type = graphene.String()
+    start_on_boot = graphene.Boolean()
+    cloud_init = graphene.Boolean()
+    disastery_enabled = graphene.Boolean()
+    thin = graphene.Boolean()
+    ha_retrycount = graphene.Boolean()
+    ha_timeout = graphene.Int()
+    ha_enabled = graphene.Boolean()
+    clean_type = graphene.String()
+    machine = graphene.String()
+    graphics_password = graphene.String()
+    remote_access = graphene.Boolean()
+    bootmenu_timeout = graphene.Int()
+    os_type = graphene.String()
+    cpu_type = graphene.String()
+    description = graphene.String()
+    guest_agent = graphene.Boolean()
+    os_version = graphene.String()
+    spice_stream = graphene.Boolean()
+    tablet = graphene.Boolean()
+    parent = graphene.Field(VeilShortEntityType)
     parent_name = graphene.String(description='Родительская ВМ')
+    hostname = graphene.String()
+    address = graphene.List(graphene.String)
+    domain_tags = graphene.List(VeilTagsType)
+    user = graphene.Field(UserType)
+    # controller = graphene.Field(ControllerType)
     # qemu_state = graphene.Boolean(description='Состояние гостевого агента')
     qemu_state = VmState(description='Состояние гостевого агента')
     backups = graphene.List(VmBackupType)
@@ -306,6 +342,7 @@ class PoolType(graphene.ObjectType):
     template = graphene.Field(VeilShortEntityType)
     resource_pool = graphene.Field(VeilShortEntityType)
     vms = graphene.List(VmType)
+    vm = graphene.Field(VmType, vm_id=graphene.UUID(), controller_id=graphene.UUID())
 
     async def resolve_controller(self, info):
         controller_obj = await Controller.get(self.controller)
@@ -346,6 +383,45 @@ class PoolType(graphene.ObjectType):
 
         # TODO: получить список ВМ и статусов
         return vms_info
+
+    @classmethod
+    async def domain_info(cls, domain_id, controller_id):
+        controller = await Controller.get(controller_id)
+        vm = await Vm.get(domain_id)
+        # Прерываем выполнение при отсутствии клиента
+        if not controller.veil_client:
+            return
+        veil_domain = controller.veil_client.domain(domain_id=str(domain_id))
+        vm_info = await veil_domain.info()
+        if vm_info.success:
+            data = vm_info.value
+            response = await veil_domain.tags_list()
+            data['domain_tags'] = list()
+            for tag in response.response:
+                data['domain_tags'].append(
+                    {
+                        'colour': tag.colour,
+                        'verbose_name': tag.verbose_name,
+                        'slug': tag.slug
+                    })
+            data['controller'] = {'id': controller.id, 'verbose_name': controller.verbose_name}
+            data['cpu_count'] = veil_domain.cpu_count
+            data['parent_name'] = veil_domain.parent_name
+            data['status'] = vm.status
+            if veil_domain.guest_agent:
+                data['guest_agent'] = veil_domain.guest_agent.qemu_state
+            if veil_domain.powered:
+                data['hostname'] = veil_domain.hostname
+                data['address'] = veil_domain.guest_agent.ipv4
+            return VmType(**data)
+        else:
+            raise SilentError(_('VM is unreachable on ECP Veil.'))
+
+    @classmethod
+    @administrator_required
+    async def resolve_vm(cls, root, info, creator, vm_id, controller_id):
+        """Обёртка для получения информации о ВМ на ECP."""
+        return await cls.domain_info(domain_id=vm_id, controller_id=controller_id)
 
     async def resolve_vm_amount(self, _info):
         return await (db.select([db.func.count(Vm.id)]).where(Vm.pool_id == self.pool_id)).gino.scalar()
@@ -1014,7 +1090,7 @@ class PrepareVm(graphene.Mutation):
             vm = await Vm.get(vm_id)
             raise SilentError(_('Another task works on VM {}.').format(vm.verbose_name))
 
-        await Entity.create_ignoring_duplicate(vm_id, EntityType.VM)
+        await Entity.create(entity_uuid=vm_id, entity_type=EntityType.VM)
         await request_to_execute_pool_task(vm_id, PoolTaskType.VM_PREPARE)
         return PrepareVm(ok=True)
 
