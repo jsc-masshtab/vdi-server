@@ -34,11 +34,14 @@ class Entity(db.Model):
     entity_type = db.Column(AlchemyEnum(EntityType), nullable=False, index=True, default=EntityType.SYSTEM)
     entity_uuid = db.Column(UUID(), nullable=True, index=True)
 
-    @staticmethod
-    async def create_ignoring_duplicate(entity_uuid, entity_type):
-        entity = await Entity.query.where(Entity.entity_uuid == entity_uuid).gino.first()
+    @classmethod
+    async def create(cls, entity_uuid, entity_type):
+        entity = await Entity.query.where(
+            (Entity.entity_type == entity_type) & (Entity.entity_uuid == entity_uuid)
+        ).gino.first()
         if not entity:
-            await Entity.create(entity_type=entity_type, entity_uuid=entity_uuid)
+            entity = await super().create(entity_type=entity_type, entity_uuid=entity_uuid)
+        return entity
 
 
 class EntityOwner(db.Model):
