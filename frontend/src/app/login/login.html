@@ -1,10 +1,10 @@
-<!-- 
-	(c) 2017 АО "НИИ "МАСШТАБ" 
---> 
+<!--
+	(c) 2017 АО "НИИ "МАСШТАБ"
+-->
 
 <div class="linear-gradient">
 	<p class="login-title">
-		Virtual Desktop Infrastructure <b>VEIL</b>
+		Virtual Desktop Infrastructure <b>VeiL</b>
 	</p>
 
 	<div *ngIf="loaded" [@animForm]="loaded" class="form">
@@ -13,12 +13,12 @@
 			<p [style.font-size]="'10px'" [style.margin-top]="'10px'">(Заполните данные формы)</p>
 		</div>
 		<div class="form-fields" [formGroup]="loginForm">
-			<label class="field"> 
+			<label class="field">
 				<p class="field-name">Логин</p>
 				<input type="text" placeholder="Введите имя пользователя" formControlName="username">
 			</label>
 
-			<label class="field"> 
+			<label class="field">
 				<p class="field-name">Пароль</p>
 				<input type="password" placeholder="Введите пароль" formControlName="password" (keydown.enter)="send()">
 			</label>

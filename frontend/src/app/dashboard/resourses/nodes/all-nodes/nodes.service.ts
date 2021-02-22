@@ -64,6 +64,7 @@ export class NodesService {
             query: gql` query resources($id: UUID, $controller_address: UUID) {
                             node(node_id: $id, controller_id: $controller_address) {
                                 verbose_name
+                                description
                                 status
                                 cpu_count
                                 memory_count

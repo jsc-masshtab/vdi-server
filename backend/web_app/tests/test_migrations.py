@@ -16,7 +16,7 @@ pytestmark = [pytest.mark.migrations]
 
 def get_revisions():
     """
-    Создаем объект с конфигурацей alembic
+    Создаем объект с конфигурацией alembic
     """
     tmp_url = 'postgresql://{USER}:{PASS}@{HOST}/tests'.format(USER=DB_USER, PASS=DB_PASS, HOST=DB_HOST)
     options = SimpleNamespace(config='alembic.ini', pg_url=tmp_url,

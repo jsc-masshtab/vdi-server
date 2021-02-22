@@ -106,6 +106,7 @@ class ResourceDataPoolType(VeilResourceType):
 
     id = graphene.UUID()
     verbose_name = graphene.String()
+    description = graphene.String()
     status = StatusGraphene()
     controller = graphene.Field(VeilShortEntityType)
     tags = graphene.List(graphene.String)

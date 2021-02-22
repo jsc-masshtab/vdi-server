@@ -114,12 +114,7 @@ class Event(db.Model):
         async with db.transaction():  # noqa
             # 1. Создаем запись сущности
             if entity_dict and isinstance(entity_dict, dict):
-                entity = await Entity.query.where(  # noqa
-                    (Entity.entity_type == entity_dict['entity_type']) &  # noqa
-                    (Entity.entity_uuid == entity_dict.get('entity_uuid'))  # noqa
-                ).gino.first()  # noqa
-                if not entity:
-                    entity = await Entity.create(**entity_dict)
+                entity = await Entity.create(**entity_dict)
                 # 2. Создаем Евент
                 event = await Event.create(  # noqa
                     event_type=event_type,

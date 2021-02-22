@@ -689,4 +689,51 @@ export class PoolDetailsService {
             }
         });
     }
+
+    public getVm(pool_id: string, vm_id: string, controller_address: string): QueryRef<any, any> {
+        return  this.service.watchQuery({
+            query: gql` query pools($pool_id: String, $vm_id: UUID, $controller_address:UUID) {
+                                pool(pool_id: $pool_id) {
+                                  vm(vm_id: $vm_id, controller_id: $controller_address) {
+                                      id
+                                      verbose_name
+                                      description
+                                      os_type
+                                      os_version
+                                      cpu_count
+                                      memory_count
+                                      tablet
+                                      ha_enabled
+                                      disastery_enabled
+                                      guest_agent
+                                      remote_access
+                                      spice_stream
+                                      user_power_state
+                                      boot_type
+                                      start_on_boot
+                                      address
+                                      status
+                                      hostname
+                                      domain_tags {
+                                          colour
+                                          verbose_name
+                                          slug
+                                      }
+                                      parent_name
+                                      resource_pool {
+                                          id
+                                          verbose_name
+                                      }
+                                  }
+                                }
+                        }
+                    `,
+            variables: {
+                method: 'GET',
+                pool_id,
+                vm_id,
+                controller_address
+            }
+        });
+    }
 }
