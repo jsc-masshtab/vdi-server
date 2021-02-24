@@ -77,7 +77,7 @@ msgstr "Пользователь {username} был активирован в с�
 
 #: ../common/models/auth.py:280
 msgid "There is no more active superuser."
-msgstr "Больше нет активного суперпользователя."
+msgstr "Больше нет активного администратора."
 
 #: ../common/models/auth.py:285
 #, python-brace-format
@@ -126,12 +126,12 @@ msgstr "Роли: {}."
 #: ../common/models/auth.py:476
 #, python-brace-format
 msgid "User {username} has become a superuser."
-msgstr "Пользователь {username} стал суперпользователем."
+msgstr "Пользователь {username} стал администратором."
 
 #: ../common/models/auth.py:480
 #, python-brace-format
 msgid "User {username} is no longer a superuser."
-msgstr "Пользователь {username} перестал быть суперпользователем."
+msgstr "Пользователь {username} перестал быть администратором."
 
 #: ../common/models/auth.py:497
 #, python-brace-format
