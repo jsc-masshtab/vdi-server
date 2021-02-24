@@ -40,7 +40,7 @@ export class ClusterDetailsComponent implements OnInit, OnDestroy {
       type: 'string'
     },
     {
-      title: 'Оперативная память (Мб)',
+      title: 'Оперативная память (МБ)',
       property: 'memory_count',
       type: 'string'
     },

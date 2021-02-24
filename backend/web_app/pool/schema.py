@@ -415,7 +415,7 @@ class PoolType(graphene.ObjectType):
                 data['address'] = veil_domain.guest_agent.ipv4
             return VmType(**data)
         else:
-            raise SilentError(_('VM is unreachable on ECP Veil.'))
+            raise SilentError(_('VM is unreachable on ECP VeiL.'))
 
     @classmethod
     @administrator_required

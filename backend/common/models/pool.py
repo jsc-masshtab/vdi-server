@@ -744,7 +744,7 @@ class Pool(VeilModel):
         remove_response = await pool_tag.remove()
         if remove_response.success:
             await system_logger.info(
-                _('Tag {} removed from ECP Veil.').format(pool_tag.verbose_name), user='system', entity=self.entity)
+                _('Tag {} removed from ECP VeiL.').format(pool_tag.verbose_name), user='system', entity=self.entity)
         return remove_response.success
 
     async def tag_update(self, tag, verbose_name, creator):

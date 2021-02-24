@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-02-24 14:05+0300\n"
+"POT-Creation-Date: 2021-02-24 19:00+0300\n"
 "PO-Revision-Date: 2020-07-30 11:25+0300\n"
 "Last-Translator: Emil <emil@emil-pc>\n"
 "Language-Team: English\n"
@@ -250,8 +250,8 @@ msgid "role mapping value type: {}."
 msgstr "role mapping value type: {}."
 
 #: ../common/models/authentication_directory.py:339
-msgid "User veil groups: {}."
-msgstr "User veil groups: {}."
+msgid "User VeiL groups: {}."
+msgstr "User VeiL groups: {}."
 
 #: ../common/models/authentication_directory.py:346
 msgid "Attaching user {} to group: {}."
@@ -305,12 +305,12 @@ msgid "Controller {} has no api client."
 msgstr "Controller {} has no api client."
 
 #: ../common/models/controller.py:137
-msgid "Veil ECP version could not be obtained. Check your token."
-msgstr "Veil ECP version could not be obtained. Check your token."
+msgid "ECP VeiL version could not be obtained. Check your token."
+msgstr "ECP VeiL version could not be obtained. Check your token."
 
 #: ../common/models/controller.py:144
-msgid "Veil ECP version should be 4.3 or higher. Current version is incompatible."
-msgstr "Veil ECP version should be 4.3 or higher. Current version is incompatible."
+msgid "ECP VeiL version should be 4.3 or higher. Current version is incompatible."
+msgstr "ECP VeiL version should be 4.3 or higher. Current version is incompatible."
 
 #: ../common/models/controller.py:171
 msgid "Controller {} added."
@@ -336,15 +336,23 @@ msgstr "Controller {} has been activated."
 msgid "Controller {} status has been switched to {}."
 msgstr "Controller {} status has been switched to {}."
 
-#: ../common/models/event.py:206
+#: ../common/models/event.py:84
+msgid "Path {} is incorrect."
+msgstr "Path {} is incorrect."
+
+#: ../common/models/event.py:86
+msgid "Check date. Interval {} - {} is incorrect."
+msgstr "Check date. Interval {} - {} is incorrect."
+
+#: ../common/models/event.py:213
 msgid "Choose right period."
 msgstr "Choose right period."
 
-#: ../common/models/event.py:212
+#: ../common/models/event.py:219
 msgid "Count must be more than 1."
 msgstr "Count must be more than 1."
 
-#: ../common/models/event.py:215
+#: ../common/models/event.py:222
 msgid "Journal settings changed."
 msgstr "Journal settings changed."
 
@@ -407,8 +415,8 @@ msgid "Tag {name} created for pool {name}."
 msgstr "Tag {name} created for pool {name}."
 
 #: ../common/models/pool.py:747
-msgid "Tag {} removed from ECP Veil."
-msgstr "Tag {} removed from ECP Veil."
+msgid "Tag {} removed from ECP VeiL."
+msgstr "Tag {} removed from ECP VeiL."
 
 #: ../common/models/pool.py:755
 #, python-brace-format
@@ -743,8 +751,8 @@ msgid "{} {} has been disabled."
 msgstr "{} {} has been disabled."
 
 #: ../common/veil/veil_gino.py:202
-msgid "{} {} has`t been found in VeiL. Switched to FAILED."
-msgstr "{} {} has`t been found in VeiL. Switched to FAILED."
+msgid "{} {} has`t been found in ECP VeiL. Switched to FAILED."
+msgstr "{} {} has`t been found in ECP VeiL. Switched to FAILED."
 
 #: ../common/veil/veil_gino.py:211
 msgid "Soft_delete exception: {}."
@@ -820,8 +828,8 @@ msgid "Another task works on this VM."
 msgstr "Another task works on this VM."
 
 #: ../pool_worker/pool_tasks.py:369
-msgid "VeiL domain request error."
-msgstr "VeiL domain request error."
+msgid "ECP VeiL domain request error."
+msgstr "ECP VeiL domain request error."
 
 #: ../pool_worker/pool_tasks.py:372
 msgid "Task has`t been created."
@@ -1022,8 +1030,8 @@ msgstr "Write error."
 
 #: ../web_app/controller/resource_schema.py:434 ../web_app/pool/schema.py:418
 #: ../web_app/thin_client_api/handlers.py:138
-msgid "VM is unreachable on ECP Veil."
-msgstr "VM is unreachable on ECP Veil."
+msgid "VM is unreachable on ECP VeiL."
+msgstr "VM is unreachable on ECP VeiL."
 
 #: ../web_app/controller/schema.py:28
 msgid "name can`t be empty."

@@ -20,7 +20,7 @@
             <span class="ad-status-text" [class.ad-success]="connected" [class.ad-failed]="!connected" *ngIf="tested">{{ connected ? 'Успешно' : 'Нет соединения' }}</span>
           </button>
 
-        <div class="toggle">
+        <div class="toggle" title="Включенный сервисный режим деактивирует контроллер, все операции с контроллером становятся неактивными">
           <label class="switch">
             <input type="checkbox" [formControl]="is_service" [checked]="controller?.status == 'SERVICE'">
             <span class="slider"></span>

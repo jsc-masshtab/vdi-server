@@ -134,14 +134,14 @@ class Controller(AbstractSortableStatusModel, VeilModel):
         await controller_client.base_version()
         version = controller_client.version
         if not version:
-            msg = _('Veil ECP version could not be obtained. Check your token.')
+            msg = _('ECP VeiL version could not be obtained. Check your token.')
             await self.remove_client()
             raise ValidationError(msg)
         major_version, minor_version, patch_version = version.split('.')
         await self.update(version=version).apply()
         # Проверяем версию контроллера в пределах допустимой.
         if major_version != '4' or int(minor_version) < 3:
-            msg = _('Veil ECP version should be 4.3 or higher. Current version is incompatible.')
+            msg = _('ECP VeiL version should be 4.3 or higher. Current version is incompatible.')
             await self.remove_client()
             raise ValidationError(msg)
 

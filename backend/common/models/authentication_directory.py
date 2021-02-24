@@ -336,7 +336,7 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
             elif role_mapping.value_type == Mapping.ValueTypes.GROUP:
                 user_veil_groups = any([gr_name in escaped_values for gr_name in ad_groups])
 
-            await system_logger.debug(_('User veil groups: {}.').format(user_veil_groups))
+            await system_logger.debug(_('User VeiL groups: {}.').format(user_veil_groups))
 
             if user_veil_groups:
                 for group in await role_mapping.assigned_groups:
