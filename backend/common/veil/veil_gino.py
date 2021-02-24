@@ -199,8 +199,8 @@ class VeilModel(db.Model):
         from common.log.journal import system_logger
         await self.set_status(Status.FAILED)
         msg = _('{} {} has been disabled.').format(self.entity_name, self.verbose_name)
-        description = _('{} {} has`t been found in VeiL. Switched to FAILED.').format(self.entity_name,
-                                                                                      self.verbose_name)
+        description = _('{} {} has`t been found in ECP VeiL. Switched to FAILED.').format(self.entity_name,
+                                                                                          self.verbose_name)
         await system_logger.info(message=msg, description=description, entity=self.entity, user='system')
 
     async def soft_delete(self, creator):

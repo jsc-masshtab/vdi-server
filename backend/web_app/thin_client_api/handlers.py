@@ -135,7 +135,7 @@ class PoolGetVm(BaseHandler, ABC):
                 await vm.start()
 
         except client_exceptions.ServerDisconnectedError:
-            response = {'errors': [{'message': _('VM is unreachable on ECP Veil.'),
+            response = {'errors': [{'message': _('VM is unreachable on ECP VeiL.'),
                                     'code': '004'}]}
             return await self.log_finish(response)
         # Актуализируем данные для подключения

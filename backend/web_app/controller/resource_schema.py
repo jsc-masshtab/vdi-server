@@ -431,7 +431,7 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
                 resource_data['address'] = veil_domain.guest_agent.ipv4
             return ResourceVmType(**resource_data)
         else:
-            raise SilentError(_('VM is unreachable on ECP Veil.'))
+            raise SilentError(_('VM is unreachable on ECP VeiL.'))
 
     @classmethod
     @administrator_required

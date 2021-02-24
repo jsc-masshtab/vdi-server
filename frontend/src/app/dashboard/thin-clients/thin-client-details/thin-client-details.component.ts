@@ -17,10 +17,10 @@ export class ThinClientDetailsComponent implements OnInit {
   entity: any;
 
   menuActive: string = 'info';
-  
+
   public collection: object[] = [
     {
-      title: 'Ip адрес',
+      title: 'IP адрес',
       property: 'tk_ip',
       type: 'string'
     },
@@ -78,13 +78,13 @@ export class ThinClientDetailsComponent implements OnInit {
     private activatedRoute: ActivatedRoute,
     private router: Router,
     public dialog: MatDialog
-  ) { 
-    
+  ) {
+
   }
 
   ngOnInit() {
     this.activatedRoute.paramMap.subscribe((param: ParamMap) => {
-      
+
       this.id = param.get('id');
 
       if (history.state.thin_client) {
