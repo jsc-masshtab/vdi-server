@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-02-24 14:05+0300\n"
+"POT-Creation-Date: 2021-02-24 19:00+0300\n"
 "PO-Revision-Date: 2020-07-30 11:25+0300\n"
 "Last-Translator: Emil <emil@emil-pc>\n"
 "Language-Team: Russian\n"
@@ -77,7 +77,7 @@ msgstr "Пользователь {username} был активирован в с�
 
 #: ../common/models/auth.py:280
 msgid "There is no more active superuser."
-msgstr "Больше нет активного суперпользователя."
+msgstr "Больше нет активного администратора."
 
 #: ../common/models/auth.py:285
 #, python-brace-format
@@ -126,12 +126,12 @@ msgstr "Роли: {}."
 #: ../common/models/auth.py:476
 #, python-brace-format
 msgid "User {username} has become a superuser."
-msgstr "Пользователь {username} стал суперпользователем."
+msgstr "Пользователь {username} стал администратором."
 
 #: ../common/models/auth.py:480
 #, python-brace-format
 msgid "User {username} is no longer a superuser."
-msgstr "Пользователь {username} перестал быть суперпользователем."
+msgstr "Пользователь {username} перестал быть администратором."
 
 #: ../common/models/auth.py:497
 #, python-brace-format
@@ -250,8 +250,8 @@ msgid "role mapping value type: {}."
 msgstr "тип значений отображения роли: {}."
 
 #: ../common/models/authentication_directory.py:339
-msgid "User veil groups: {}."
-msgstr "Группы пользователей veil: {}."
+msgid "User VeiL groups: {}."
+msgstr "Группы пользователей VeiL: {}."
 
 #: ../common/models/authentication_directory.py:346
 msgid "Attaching user {} to group: {}."
@@ -305,12 +305,12 @@ msgid "Controller {} has no api client."
 msgstr "Контроллер {} не имеет подключения к ECP VeiL."
 
 #: ../common/models/controller.py:137
-msgid "Veil ECP version could not be obtained. Check your token."
-msgstr "Не удается получить версию Veil ECP. Проверьте свой токен."
+msgid "ECP VeiL version could not be obtained. Check your token."
+msgstr "Не удается получить версию ECP VeiL. Проверьте свой токен."
 
 #: ../common/models/controller.py:144
-msgid "Veil ECP version should be 4.3 or higher. Current version is incompatible."
-msgstr "Версия Veil ECP должна быть 4.3 или выше. Текущая версия не поддерживается."
+msgid "ECP VeiL version should be 4.3 or higher. Current version is incompatible."
+msgstr "Версия ECP VeiL должна быть 4.3 или выше. Текущая версия не поддерживается."
 
 #: ../common/models/controller.py:171
 msgid "Controller {} added."
@@ -336,15 +336,23 @@ msgstr "Контроллер {} активирован."
 msgid "Controller {} status has been switched to {}."
 msgstr "Статус контроллера {} изменен на {}."
 
-#: ../common/models/event.py:206
+#: ../common/models/event.py:84
+msgid "Path {} is incorrect."
+msgstr "Неверный путь: {}."
+
+#: ../common/models/event.py:86
+msgid "Check date. Interval {} - {} is incorrect."
+msgstr "Проверьте дату. Некорректный промежуток {} - {}."
+
+#: ../common/models/event.py:213
 msgid "Choose right period."
 msgstr "Выберите правильный период."
 
-#: ../common/models/event.py:212
+#: ../common/models/event.py:219
 msgid "Count must be more than 1."
 msgstr "Количество должно быть больше 1."
 
-#: ../common/models/event.py:215
+#: ../common/models/event.py:222
 msgid "Journal settings changed."
 msgstr "Настройки журнала изменены."
 
@@ -407,8 +415,8 @@ msgid "Tag {name} created for pool {name}."
 msgstr "Тэг {name} добавлен к пулу {name}."
 
 #: ../common/models/pool.py:747
-msgid "Tag {} removed from ECP Veil."
-msgstr "Тэг {} удален из ECP Veil."
+msgid "Tag {} removed from ECP VeiL."
+msgstr "Тэг {} удален из ECP VeiL."
 
 #: ../common/models/pool.py:755
 #, python-brace-format
@@ -743,8 +751,8 @@ msgid "{} {} has been disabled."
 msgstr "{} {} деактивирована."
 
 #: ../common/veil/veil_gino.py:202
-msgid "{} {} has`t been found in VeiL. Switched to FAILED."
-msgstr "{} {} не найдена на VeiL. Переключена в стутус FAILED."
+msgid "{} {} has`t been found in ECP VeiL. Switched to FAILED."
+msgstr "{} {} не найдена на ECP VeiL. Переключена в стутус FAILED."
 
 #: ../common/veil/veil_gino.py:211
 msgid "Soft_delete exception: {}."
@@ -820,8 +828,8 @@ msgid "Another task works on this VM."
 msgstr "ВМ заблокирована выполнением другой задачи."
 
 #: ../pool_worker/pool_tasks.py:369
-msgid "VeiL domain request error."
-msgstr "Ошибка запроса VeiL ВМ."
+msgid "ECP VeiL domain request error."
+msgstr "Ошибка запроса ECP VeiL ВМ."
 
 #: ../pool_worker/pool_tasks.py:372
 msgid "Task has`t been created."
@@ -1022,8 +1030,8 @@ msgstr "Ошибка записи."
 
 #: ../web_app/controller/resource_schema.py:434 ../web_app/pool/schema.py:418
 #: ../web_app/thin_client_api/handlers.py:138
-msgid "VM is unreachable on ECP Veil."
-msgstr "ВМ недоступна на ECP Veil."
+msgid "VM is unreachable on ECP VeiL."
+msgstr "ВМ недоступна на ECP VeiL."
 
 #: ../web_app/controller/schema.py:28
 msgid "name can`t be empty."

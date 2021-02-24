@@ -366,7 +366,7 @@ class PrepareVmTask(AbstractTask):
             # print('!!!action_response.success ', action_response.success, flush=True)
             if not action_response.success:
                 # Вернуть исключение?
-                raise ValueError(_('VeiL domain request error.'))
+                raise ValueError(_('ECP VeiL domain request error.'))
             if action_response.status_code == 200:
                 # Задача не встала в очередь, а выполнилась немедленно. Такого не должно быть.
                 raise ValueError(_('Task has`t been created.'))

@@ -32,7 +32,7 @@
 
     <label class="field">
       <p class="field-name">Путь</p>
-      <input type="text" placeholder="..." formControlName="path">
+      <input type="text" placeholder="{{ dir_path }}" formControlName="path">
 
       <ng-container *ngIf="form.hasError('required', 'path') && checkValid">
         <ng-container *ngTemplateOutlet="errorTemp"></ng-container>

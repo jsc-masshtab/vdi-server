@@ -480,9 +480,10 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
           idPool: this.idPool,
           username: vmActive.user.username,
           vms: vmActive
-      }
-    });
-  })}
+        }
+      });
+    })
+  }
 
   public actionEdit(method) {
     this[method]();
@@ -713,7 +714,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
           entity: 'pool-details',
           header: 'Изменение шаблона для ВМ',
           buttonAction: 'Изменить',
-          danger: "Произойдет переименование ВМ и переназначение hostname на VeiL ECP!",
+          danger: "Произойдет переименование ВМ и переназначение hostname на ECP VeiL!",
           form: [{
             tag: 'input',
             type: 'text',

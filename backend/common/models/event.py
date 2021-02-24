@@ -62,6 +62,7 @@ class Event(db.Model):
         :param finish: окончание периода ('2020-07-31T23:59:59.000001Z')
         :param path: путь для экспорта ('/tmp/')
         """
+        from common.veil.veil_errors import SilentError
         start_date = datetime.date(start)
         finish_date = datetime.date(finish)
         path = os.path.join(path, '')
@@ -72,12 +73,18 @@ class Event(db.Model):
         for event in query:
             export.append(event.__values__)
 
-        name = '{}events_{}-{}.csv'.format(path, start_date, finish_date)
-        with open('{}'.format(name), 'w') as f:
-            writer = csv.DictWriter(f, fieldnames=export[0])
-            writer.writeheader()
-            for row in export:
-                writer.writerow(row)
+        name = '{}events_{}-{}.csv'.format(path, start_date + timedelta(days=1), finish_date + timedelta(days=1))
+        try:
+            with open('{}'.format(name), 'w') as f:
+                writer = csv.DictWriter(f, fieldnames=export[0])
+                writer.writeheader()
+                for row in export:
+                    writer.writerow(row)
+        except FileNotFoundError:
+            raise SilentError(_('Path {} is incorrect.').format(path))
+        except IndexError:
+            raise SilentError(_('Check date. Interval {} - {} is incorrect.').format(start_date + timedelta(days=1),
+                                                                                     finish_date + timedelta(days=1)))
         return name
 
     @staticmethod
