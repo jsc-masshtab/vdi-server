@@ -216,7 +216,7 @@ class User(AbstractSortableStatusModel, VeilModel):
                     raise SimpleError(_('User {} already has permission {}.').format(
                         self.id, permission), user=creator)
 
-        permissions_str = ' '.join(permissions_list)
+        permissions_str = ', '.join(permissions_list)
         await system_logger.info(_('Permission(s) {} added to user {}.').
                                  format(permissions_str, self.username), user=creator, entity=self.entity)
 
@@ -231,7 +231,7 @@ class User(AbstractSortableStatusModel, VeilModel):
                 gino.status()
 
             # log
-            permissions_str = ' '.join(permissions_list)
+            permissions_str = ', '.join(permissions_list)
             await system_logger.info(_('Permission(s) {} removed from user {}.').format(
                 permissions_str, self.username), user=creator, entity=self.entity)
 
@@ -634,7 +634,7 @@ class Group(AbstractSortableStatusModel, VeilModel):
                     raise SimpleError(_('Group {} already has permission {}.').format(
                         self.id, permission), user=creator)
 
-        permissions_str = ' '.join(permissions_list)
+        permissions_str = ', '.join(permissions_list)
         await system_logger.info(_('Permission(s) {} added to group {}.').
                                  format(permissions_str, self.verbose_name), user=creator, entity=self.entity)
 
@@ -649,7 +649,7 @@ class Group(AbstractSortableStatusModel, VeilModel):
                 gino.status()
 
             # log
-            permissions_str = ' '.join(permissions_list)
+            permissions_str = ', '.join(permissions_list)
             await system_logger.info(_('Permission(s) {} removed from group {}.').format(
                 permissions_str, self.verbose_name), user=creator, entity=self.entity)
 

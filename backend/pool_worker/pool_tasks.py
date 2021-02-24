@@ -408,7 +408,7 @@ class BackupVmsTask(AbstractTask):
             ok = await pool.backup_vms(creator=self._creator)
 
         else:
-            raise RuntimeError(_('Wrong entity type'))
+            raise RuntimeError(_('Wrong entity type.'))
 
         if not ok:
             raise RuntimeError(_('Creating backup finished with error.'))
