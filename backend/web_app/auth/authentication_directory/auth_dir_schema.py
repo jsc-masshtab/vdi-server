@@ -150,7 +150,7 @@ class AuthenticationDirectorySyncGroupType(graphene.InputObjectType):
 
 
 class AuthenticationDirectoryType(graphene.ObjectType):
-    """Директория авторизации."""
+    """Служба каталогов."""
 
     id = graphene.UUID(description='Внутренний идентификатор')
     verbose_name = graphene.String(description='Имя')
@@ -319,7 +319,7 @@ class UpdateAuthenticationDirectoryMutation(graphene.Mutation, AuthenticationDir
 
 class AddAuthDirMappingMutation(graphene.Mutation, AuthenticationDirectoryValidator):
     class Arguments:
-        id = graphene.UUID(required=True, description='Внутренний идентификатор директории авторизации')
+        id = graphene.UUID(required=True, description='Внутренний идентификатор службы каталогов')
         verbose_name = graphene.String(required=True)
         groups = graphene.NonNull(graphene.List(graphene.NonNull(graphene.UUID)))
         values = graphene.NonNull(graphene.List(graphene.NonNull(graphene.String)))

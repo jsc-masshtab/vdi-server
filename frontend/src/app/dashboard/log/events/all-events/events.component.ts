@@ -78,7 +78,7 @@ export class EventsComponent implements OnInit {
     public dialog: MatDialog,
     private ws: WebsocketService
   ) {}
-  
+
   ngOnInit() {
     this.refresh();
     this.listenSockets()
@@ -199,7 +199,7 @@ export class EventsComponent implements OnInit {
 
   public openEventDetails(event: Event): void {
     this.dialog.open(InfoEventComponent, {
- 			disableClose: true, 
+ 			disableClose: true,
       width: '700px',
       data: {
         event

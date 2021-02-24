@@ -32,6 +32,13 @@ export class TemplatesComponent extends DetailsMove implements OnInit, OnDestroy
       sort: true
     },
     {
+      title: 'Контроллер',
+      property: 'controller',
+      property_lv2: 'verbose_name',
+      type: 'string',
+      sort: true
+    },
+    {
       title: 'Статус',
       property: 'status',
       sort: true
