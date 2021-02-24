@@ -17,8 +17,8 @@ export class ControllersService {
     public getAllControllers(): QueryRef<any, any> {
        return  this.service.watchQuery({
             query: gql`
-                query controllers {
-                    controllers {
+                query controllers($ordering:String) {
+                    controllers(ordering: $ordering) {
                         id
                         verbose_name
                         description
