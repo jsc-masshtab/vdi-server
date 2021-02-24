@@ -102,6 +102,7 @@ class ControllerClusterType(VeilResourceType):
 
     id = graphene.UUID()
     verbose_name = graphene.String()
+    description = graphene.String()
     nodes_count = graphene.Int()
     status = StatusGraphene()
     cpu_count = graphene.Int()
