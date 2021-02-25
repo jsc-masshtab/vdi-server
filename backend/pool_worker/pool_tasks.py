@@ -137,9 +137,6 @@ class InitPoolTask(AbstractTask):
         pool_lock = self._pool_locks.get_pool_lock(str(automated_pool.id))
         template_lock = self._pool_locks.get_template_lock(str(automated_pool.template_id))
 
-        # todo: Если захотеть,то еще можно посмотреть занят ли шаблон тасками расширения пулов. И если занят,
-        # то отменить эти таски как незначительные по сравнению с желанием создать новый пул.
-
         # лочим
         async with pool_lock:
             async with template_lock:
@@ -165,12 +162,19 @@ class InitPoolTask(AbstractTask):
             # Подготавливаем машины. Находимся на этом отступе так как нам нужен лок пула но не нужен лок шаблона
             try:
                 if automated_pool.prepare_vms:
-                    await automated_pool.prepare_initial_vms()
+                    results_future = await automated_pool.prepare_initial_vms()
+                    # Если есть отменненые корутины, то считаем, что инициализаия пула отменена
+                    for response in results_future:
+                        if isinstance(response, asyncio.CancelledError):
+                            raise asyncio.CancelledError
+
             except asyncio.CancelledError:
                 await automated_pool.deactivate()
                 raise
             except Exception as E:
+                await automated_pool.deactivate()
                 await system_logger.error(message=_('Pool initialization VM(s) preparation error.'), description=str(E))
+                raise E
 
         # Активируем пул
         await automated_pool.activate()
