@@ -423,8 +423,8 @@ class User(AbstractSortableStatusModel, VeilModel):
                                       description=err_msg)
             raise AssertionError(msg)
 
-        user_role = 'Superuser' if is_superuser else 'User'
-        info_message = _('{} {} created.').format(user_role, username)
+        user_role = _('Superuser.') if is_superuser else _('User.')
+        info_message = _('{} {} created.').format(user_role[:-1], username)
         await system_logger.info(info_message, entity=user_obj.entity, user=creator)
 
         # По дефолту пользователь получает все права на работу с тк
