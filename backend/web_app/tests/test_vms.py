@@ -26,9 +26,26 @@ class TestVmPermissionsSchema:
         return await vm.username
 
     async def test_vm_user_permission(self, snapshot, fixt_auth_context):  # noqa
-        # Проверяем, исходное количество пользователей на фикстурной VM
+        # Проверяем, исходное количество пользователей на VM
         current_user = await self.get_test_vm_username()
         assert current_user is None
+
+        # Проверяем запрет использования пула пользователем без прав
+        try:
+            query = """mutation{
+                                 assignVmToUser(vm_id: "10913d5d-ba7a-4049-88c5-769267a6cbe4", username: "test_user")
+                                 {ok, vm{user{username}}}}"""
+
+            await execute_scheme(pool_schema, query, context=fixt_auth_context)
+        except Exception:
+            assert True
+        else:
+            assert False
+
+        # Разрешаем пользователю пользоваться пулом
+        vm_obj = await Vm.get('10913d5d-ba7a-4049-88c5-769267a6cbe4')
+        pool_obj = await Pool.get(vm_obj.pool_id)
+        await pool_obj.add_user(user_id='10913d5d-ba7a-4049-88c5-769267a6cbe4', creator='system')
 
         # Закрепляем VM за пользователем
         query = """mutation{

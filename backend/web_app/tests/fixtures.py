@@ -15,6 +15,7 @@ from common.veil.veil_api import get_veil_client, stop_veil_client
 from common.veil.veil_redis import wait_for_task_result, REDIS_CLIENT
 
 from common.models.controller import Controller
+from common.models.pool import Pool
 from common.models.vm import Vm
 from common.models.auth import Group, User
 from common.models.authentication_directory import AuthenticationDirectory, Mapping
@@ -176,7 +177,7 @@ async def fixt_create_automated_pool(fixt_controller):
 @pytest.fixture
 @async_generator
 async def fixt_create_static_pool(fixt_controller):
-    """оздается пул, пул удаляется"""
+    """Создается пул, пул удаляется"""
     pool_main_resources = await get_resources_for_pool_test()
     controller_id = pool_main_resources['controller_id']
     resource_pool_id = pool_main_resources['resource_pool_id']
@@ -536,14 +537,14 @@ async def fixt_controller(fixt_veil_client):
 
 
 @pytest.fixture
-def fixt_vm(request, event_loop):
+def fixt_vm(request, event_loop, fixt_create_static_pool):
 
     id = '10913d5d-ba7a-4049-88c5-769267a6cbe4'
     verbose_name = 'test_vm'
-    pool_id = str(uuid.uuid4())
 
     async def setup():
-        await Vm.create(pool_id=pool_id, template_id=None, created_by_vdi=True, verbose_name=verbose_name, id=id)
+        pool_obj = await Pool.query.gino.first()
+        await Vm.create(pool_id=pool_obj.id, template_id=None, created_by_vdi=True, verbose_name=verbose_name, id=id)
     event_loop.run_until_complete(setup())
 
     def teardown():
