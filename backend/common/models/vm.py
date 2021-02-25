@@ -120,8 +120,15 @@ class Vm(VeilModel):
         except Exception as E:
             raise VmCreationError(str(E))
 
+        pool = await PoolModel.get(pool_id)
+        msg = _('VM {} created.').format(verbose_name)
+        description = _('VM {} created and added to the pool {}.').format(verbose_name,
+                                                                          pool.verbose_name)
+        await system_logger.info(message=msg,
+                                 description=description,
+                                 entity=vm.entity)
+
         if pool_tag:
-            pool = await PoolModel.get(pool_id)
             await pool.tag_add_entity(tag=pool_tag, entity_id=id, verbose_name=verbose_name)
 
         await EntityModel.create(entity_uuid=id, entity_type=EntityType.VM)
