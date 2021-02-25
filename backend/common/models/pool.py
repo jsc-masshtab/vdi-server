@@ -1156,9 +1156,12 @@ class AutomatedPool(db.Model):
             return
         active_directory_object = await AuthenticationDirectory.query.where(
             AuthenticationDirectory.status == Status.ACTIVE).gino.first()
-        await asyncio.gather(
+
+        results_future = await asyncio.gather(
             *[vm_object.prepare_with_timeout(active_directory_object, self.ad_cn_pattern) for vm_object in vm_objects],
             return_exceptions=True)
+
+        return results_future
 
     async def check_if_total_size_reached(self):
 
