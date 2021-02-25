@@ -42,5 +42,5 @@ tests_job:
       - merge_requests
       - schedules
     variables:
-      - $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^release.*$/
+      - $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^release.*$/ || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "dev"
       - $BY_SCHEDULE == "true"
