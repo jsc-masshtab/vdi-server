@@ -42,7 +42,7 @@ export class ResourcePoolsComponent extends DetailsMove implements OnInit, OnDes
       sort: true
     },
     {
-      title: 'Ограничение памяти',
+      title: 'Ограничение памяти (МБ)',
       property: 'memory_limit',
       type: 'string',
       sort: true

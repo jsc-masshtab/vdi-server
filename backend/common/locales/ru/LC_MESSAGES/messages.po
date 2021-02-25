@@ -425,7 +425,7 @@ msgstr "Тэг {name} обновлен для пула {name} и всех ВМ �
 
 #: ../common/models/pool.py:767
 msgid "Tag {} removed from VM {}."
-msgstr "Тэг {} удален для ВМ."
+msgstr "Тэг {} удален для ВМ {}."
 
 #: ../common/models/pool.py:779
 msgid "Tag {} added to VM {}."

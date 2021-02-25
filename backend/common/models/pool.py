@@ -1105,12 +1105,6 @@ class AutomatedPool(db.Model):
                                                      verbose_name=domain.verbose_name,
                                                      pool_tag=pool.tag)
                     vm_obj_list.append(vm_object)
-                    msg = _('VM {} created.').format(domain.verbose_name)
-                    description = _('VM {} created and added to the pool {}.').format(domain.verbose_name,
-                                                                                      pool.verbose_name)
-                    await system_logger.info(message=msg,
-                                             description=description,
-                                             entity=self.entity)
 
         # Логирование результата созданных ВМ (совпадение количества) происходит выше
         return vm_obj_list

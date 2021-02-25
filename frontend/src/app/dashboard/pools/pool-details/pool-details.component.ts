@@ -567,6 +567,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
           buttonAction: 'Изменить',
           form: [{
             tag: 'select',
+            multiple: true,
             title: 'Выбрать тип подключения',
             fieldName: 'connection_types',
             data: ['RDP', 'NATIVE_RDP', 'SPICE', 'SPICE_DIRECT'],
