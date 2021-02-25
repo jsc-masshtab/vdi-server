@@ -47,9 +47,9 @@ class Log:
 
     @staticmethod
     def __get_call_info():
-        """Получаем атрибуты функции из которой вызванг log.
+        """Получаем атрибуты функции из которой вызван log.
 
-        индекс стека установлен по принципу насследования (app -> Log -> debug -> __log_debug)
+        индекс стека установлен по принципу наследования (app -> Log -> debug -> __log_debug)
         :return: fn, func, ln
         """
         stack = inspect.stack()

@@ -22,9 +22,7 @@ from common.models.active_tk_connection import ActiveTkConnection
 from common.models.auth import User
 
 from veil_api_client import DomainTcpUsb, VeilRetryConfiguration
-
-from web_app.base_handlers import BaseWsHandler
-
+from common.veil.veil_handlers import BaseWsHandler
 from common.log.journal import system_logger
 from common.languages import lang_init
 
@@ -325,7 +323,7 @@ class ThinClientWsHandler(BaseWsHandler):
                 user_id=user_id,
                 veil_connect_version=self.get_query_argument('veil_connect_version'),
                 vm_id=self.get_query_argument(name='vm_id', default=None),
-                tk_ip=self.request.remote_ip,
+                tk_ip=self.remote_ip,
                 tk_os=self.get_query_argument('tk_os'))
             self.conn_id = tk_conn.id
 

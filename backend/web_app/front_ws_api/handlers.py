@@ -9,9 +9,9 @@ from tornado.web import Application
 
 from web_app.front_ws_api.subscription_sources import VDI_FRONT_ALLOWED_SUBSCRIPTIONS_LIST, SubscriptionCmd
 
+from common.veil.veil_handlers import BaseWsHandler
 from common.languages import lang_init
 from common.log.journal import system_logger
-from web_app.base_handlers import BaseWsHandler
 
 from common.veil.veil_redis import INTERNAL_EVENTS_CHANNEL, WS_MONITOR_CHANNEL_OUT, REDIS_CLIENT, a_redis_get_message
 
