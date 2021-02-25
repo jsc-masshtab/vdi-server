@@ -31,7 +31,7 @@
       <ng-container *ngIf="field.tag === 'select'">
         <mat-form-field>
           <mat-label>{{ field.title }}</mat-label>
-          <mat-select [multiple]="field.multiple ? true : false" [formControlName]="field.fieldName">
+           <mat-select [multiple]="field.multiple ? true : false" [formControlName]="field.fieldName">
             <mat-option  *ngFor="let option of field.data" [value]="option">
               {{option}}
             </mat-option>
