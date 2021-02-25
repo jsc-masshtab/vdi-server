@@ -16,7 +16,7 @@ export class InfoTaskComponent {
 
   public collection: any[] = [
     {
-      title: 'Событие',
+      title: 'Задача',
       property: 'message',
       type: 'string'
     },
@@ -39,6 +39,11 @@ export class InfoTaskComponent {
       title: 'Время завершения',
       property: 'finished',
       type: 'time'
+    },
+    {
+      title: 'Продолжительность',
+      property: 'duration',
+      type: 'string'
     }
   ];
 

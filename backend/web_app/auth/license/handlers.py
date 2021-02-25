@@ -64,5 +64,5 @@ class LicenseHandler(BaseHandler, ABC):
             await system_logger.error(msg)
         else:
             msg = _('Valid license key is uploaded.')
-            await system_logger.info(msg)
+            await system_logger.info(msg, user=user.username)
         return await self.log_finish(response)

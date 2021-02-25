@@ -34,6 +34,7 @@ class TaskType(graphene.ObjectType):
     priority = graphene.Int()
     progress = graphene.Int(default_value=0)
     message = graphene.String()
+    duration = graphene.String()
 
 
 class TaskQuery(graphene.ObjectType):
@@ -67,10 +68,12 @@ class TaskQuery(graphene.ObjectType):
         # request to db
         task_models = await query.limit(limit).offset(offset).gino.all()
         # conversion
-        task_graphene_types = [
-            convert_gino_model_to_graphene_type(task_model, TaskType)
-            for task_model in task_models
-        ]
+        task_graphene_types = []
+        for task_model in task_models:
+            task_graphene_type = convert_gino_model_to_graphene_type(task_model, TaskType)
+            task_graphene_type.duration = task_model.get_task_duration()
+            task_graphene_types.append(task_graphene_type)
+
         return task_graphene_types
 
     @administrator_required
@@ -80,7 +83,17 @@ class TaskQuery(graphene.ObjectType):
         if not task_model:
             entity = {'entity_type': EntityType.SYSTEM, 'entity_uuid': None}
             raise SimpleError(_('No such task.'), entity=entity)
-        return convert_gino_model_to_graphene_type(task_model, TaskType)
+
+        task_graphene_type = convert_gino_model_to_graphene_type(task_model, TaskType)
+        task_graphene_type.duration = task_model.get_task_duration()
+        return task_graphene_type
+
+    @staticmethod
+    def _calculate_task_duration(task_graphene_type):
+        duration = task_graphene_type.finished - task_graphene_type.started \
+            if (task_graphene_type.finished and task_graphene_type.started) else None
+
+        return duration
 
 
 class CancelTaskMutation(graphene.Mutation):
