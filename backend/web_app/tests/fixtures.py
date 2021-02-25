@@ -540,9 +540,10 @@ def fixt_vm(request, event_loop):
 
     id = '10913d5d-ba7a-4049-88c5-769267a6cbe4'
     verbose_name = 'test_vm'
+    pool_id = str(uuid.uuid4())
 
     async def setup():
-        await Vm.create(pool_id=None, template_id=None, created_by_vdi=True, verbose_name=verbose_name, id=id)
+        await Vm.create(pool_id=pool_id, template_id=None, created_by_vdi=True, verbose_name=verbose_name, id=id)
     event_loop.run_until_complete(setup())
 
     def teardown():
