@@ -57,6 +57,7 @@ export class TasksService {
                         finished
                         progress
                         message
+                        duration
                     },
                 }
             `,

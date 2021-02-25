@@ -65,6 +65,10 @@ class Task(db.Model, AbstractSortableStatusModel):
 
     message = db.Column(db.Unicode(length=256), nullable=True)
 
+    def get_task_duration(self):
+        duration = self.finished - self.started if (self.finished and self.started) else '0000'
+        return str(duration)[:-3]
+
     @redis_error_handle
     def publish_data_in_internal_channel(self, event_type: str):
         msg_dict = dict(
@@ -112,9 +116,6 @@ class Task(db.Model, AbstractSortableStatusModel):
         elif status == TaskStatus.FINISHED or status == TaskStatus.FAILED or status == TaskStatus.CANCELLED:
             # set finish time
             await self.update(finished=func.now()).apply()
-
-            duration = self.finished - self.started if (self.finished and self.started) else '0000'
-            message += _('  Duration: {}.').format(str(duration)[:-3])
 
             await self.set_progress(100)
 
