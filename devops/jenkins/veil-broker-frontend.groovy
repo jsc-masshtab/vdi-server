@@ -47,7 +47,7 @@ pipeline {
     parameters {
         string(      name: 'BRANCH',               defaultValue: 'dev',                   description: 'branch')
         string(      name: 'REPO',                 defaultValue: 'veil-broker-test',      description: 'repo for uploading')
-        string(      name: 'VERSION',              defaultValue: '2.2.2',                 description: 'base version')
+        string(      name: 'VERSION',              defaultValue: '3.0.0',                 description: 'base version')
         string(      name: 'AGENT',                defaultValue: 'bld-agent-02',          description: 'jenkins build agent')
     }
 
@@ -83,7 +83,7 @@ pipeline {
 
             steps {
                 sh script: '''
-                    sed -i "s:%%VER%%:$VERSION:g" "$DEB_ROOT/$PRJNAME/root/DEBIAN/control"
+                    sed -i "s:%%VER%%:${VERSION}-${BUILD_NUMBER}:g" "$DEB_ROOT/$PRJNAME/root/DEBIAN/control"
 
                     # clean npm cache
                     npm cache clean --force
@@ -110,9 +110,15 @@ pipeline {
         stage ('publish to repo') {
             steps {
                 sh script: '''
+                    # remove old debs
+                    curl -s "http://$APT_SRV:8008/api/repos/${REPO}/packages?q=${PRJNAME}" | jq -r '.[]' | while read KEY;
+                    do
+                        curl -X DELETE -H 'Content-Type: application/json' -d '{\"PackageRefs\":[\"'"$KEY"'\"]}' http://$APT_SRV:8008/api/repos/${REPO}/packages
+                    done
+
+                    # deploy new deb
                     DISTR=smolensk
                     DEB=$(ls -1 "${DEB_ROOT}/${PRJNAME}"/*.deb)
-
                     curl -sS -X POST -F file=@$DEB http://$APT_SRV:8008/api/files/${REPO}; echo ""
                     curl -sS -X POST http://$APT_SRV:8008/api/repos/${REPO}/file/${REPO}?forceReplace=1
                     JSON1="{\\"Name\\":\\"${REPO}-${DATE}\\"}"
