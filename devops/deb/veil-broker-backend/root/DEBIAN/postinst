@@ -11,10 +11,6 @@ configure_users()
 	groupadd vdi-web-admin
 	useradd -G vdi-web,vdi-web-admin,shadow $VDIADMIN
 	echo "$VDIADMIN:$VDIADMIN_PASS" | chpasswd
-
-	# разрешаем вход по ssh только пользователю user
-	echo "AllowUsers user" >> /etc/ssh/sshd_config
-	service ssh restart
 }
 
 configure_secrets()
@@ -46,32 +42,10 @@ configure_redis()
 	systemctl restart redis-server
 }
 
-configure_postgres()
-{
-	cp /opt/veil-vdi/other/vdi.postgresql /etc/postgresql/9.6/main/postgresql.conf
-
-	#fix locale
-    localedef -i en_US -f UTF-8 en_US.UTF-8
-	
-	systemctl restart postgresql
-
-	echo 'postgres:postgres' | sudo chpasswd
-	sudo -u postgres -i psql -c "ALTER ROLE postgres PASSWORD '${DB_PASS}';"
-
-	# на астре нету бездуховной кодировки en_US.UTF-8. Есть C.UTF-8
-	sudo -u postgres -i psql -c "create database vdi encoding 'utf8' lc_collate = 'en_US.UTF-8' lc_ctype = 'en_US.UTF-8' template template0;" || true
-
-	# apply database migrations
-
-	export PYTHONPATH=/opt/veil-vdi/app
-	cd /opt/veil-vdi/app/common/migrations
-	/opt/veil-vdi/env/bin/python /opt/veil-vdi/env/bin/alembic upgrade head
-}
-
 configure_logs()
 {
-	# creating logs directory at /var/log/veil-vdi/
-	mkdir -p /var/log/veil-vdi/ || true
+	# creating logs directory at /var/log/veil-vdi
+	mkdir -p /var/log/veil-vdi
 	chown -R $VDIADMIN:$VDIADMIN /var/log/veil-vdi
 
 	touch /var/log/faillog
@@ -84,8 +58,7 @@ configure_logs()
 configure_systemd()
 {
 	systemctl daemon-reload
-	systemctl enable vdi-web && systemctl enable vdi-pool_worker && systemctl enable vdi-ws_listener
-#	systemctl restart vdi-web && systemctl restart vdi-pool_worker && systemctl restart vdi-ws_listener
+	systemctl enable vdi-web vdi-pool_worker vdi-ws_listener
 }
 
 configure_crontab()
@@ -104,7 +77,7 @@ configure_apache2()
 	cp /opt/veil-vdi/apache2-configs/vdi*.conf /etc/apache2/sites-available
 	ln -sf /etc/apache2/sites-available/*.conf /etc/apache2/sites-enabled/
 
-	# отключаем режим AstraMode для astra linux
+	# отключаем режим AstraMode для Astra Linux
 	if [ -f /etc/astra_version ] ; then
 	    echo "AstraMode off" >> /etc/apache2/apache2.conf
 	fi
@@ -114,22 +87,34 @@ configure_apache2()
 	systemctl restart apache2
 }
 
+db_migrations()
+{
+	systemctl stop vdi-web vdi-pool_worker vdi-ws_listener
+
+	echo "Apply database migrations..."
+	export PYTHONPATH=/opt/veil-vdi/app
+	cd /opt/veil-vdi/app/common/migrations
+	/opt/veil-vdi/env/bin/python /opt/veil-vdi/env/bin/alembic upgrade head
+
+	systemctl start vdi-web vdi-pool_worker vdi-ws_listener
+}
+
 case "$1" in
 	configure)
 		# действия и при установке и при обновлении
-
 		configure_systemd
 
-		# действия только при установке
-		if [ ! -n "$2" ] ; then
+		if [ -z "$2" ] ; then
+		    # действия только при установке
 		    configure_users
 			configure_secrets
 			configure_redis
-#			configure_postgres
 			configure_logs
-			configure_systemd
 			configure_crontab
 			configure_apache2
+		else
+		    # действия только при обновлении
+            db_migrations
 		fi
 
 		exit 0
