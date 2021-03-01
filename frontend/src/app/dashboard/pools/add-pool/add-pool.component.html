@@ -178,7 +178,7 @@
 
       <label class="field">
         <p class="field-name">Максимальное количество создаваемых ВМ</p>
-        <input type="number" formControlName="total_size" min="1" max="10000">
+        <input #total_size type="number" formControlName="total_size" min="1" max="10000">
 
         <ng-container *ngIf="dynamicPool.hasError('required', 'total_size') && checkValid">
           <ng-container *ngTemplateOutlet="errorTemp"></ng-container>
@@ -218,7 +218,9 @@
         </ng-container>
 
         <ng-container *ngIf="dynamicPool.get('reserve_size').touched && dynamicPool.get('reserve_size').dirty">
-          <div class="error" [@animForm]="error" *ngIf="dynamicPool.hasError('min', 'reserve_size') ||  dynamicPool.hasError('max', 'reserve_size')">
+          <div class="error" [@animForm]="error" *ngIf="(dynamicPool.hasError('min', 'reserve_size') || dynamicPool.hasError('max', 'reserve_size')) && (total_size.value != 0)">
+            Пороговое количество свободных ВМ должно быть в интервале 1-{{total_size.value}}</div>
+          <div class="error" [@animForm]="error" *ngIf="(dynamicPool.hasError('min', 'reserve_size') || dynamicPool.hasError('max', 'reserve_size')) && (!total_size.value || (total_size.value == 0))">
             Пороговое количество свободных ВМ должно быть в интервале 1-200</div>
           <div class="error" [@animForm]="error" *ngIf="dynamicPool?.errors?.ReserveLessMax">
             Пороговое количество свободных ВМ не может быть больше максимального количества ВМ</div>

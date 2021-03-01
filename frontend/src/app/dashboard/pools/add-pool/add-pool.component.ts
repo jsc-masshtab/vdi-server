@@ -87,10 +87,10 @@ export class PoolAddComponent {
       template_id: ['', Validators.required],
       vm_name_template: ['', [Validators.required, Validators.pattern(/^([a-zA-Z]+[a-zA-Z0-9-]*){0,63}$/)]],
       ad_cn_pattern: [''],
-      increase_step: ['', [Validators.required, Validators.max(200), Validators.min(1)]],
-      reserve_size: ['', [Validators.required, Validators.max(200), Validators.min(1)]],
-      initial_size: [0, [Validators.required, Validators.max(200), Validators.min(1)]],
-      total_size: ['', [Validators.required, Validators.max(10000), Validators.min(1)]],
+      increase_step: [1, [Validators.required, Validators.max(200), Validators.min(1)]],
+      reserve_size: [1, [Validators.required, Validators.max(200), Validators.min(1)]],
+      initial_size: [1, [Validators.required, Validators.max(200), Validators.min(1)]],
+      total_size: [1, [Validators.required, Validators.max(10000), Validators.min(1)]],
 
       create_thin_clones: true,
       prepare_vms: true,
@@ -130,7 +130,7 @@ export class PoolAddComponent {
     switch (step) {
       case 'type': {
 
-        /* Установка начальных занчений */
+        /* Установка начальных значений */
 
         this.resetData();
         this.checkValid = false;
@@ -198,6 +198,10 @@ export class PoolAddComponent {
       } break;
 
       case 'dynamic': {
+        this.dynamicPool.get('increase_step').setValue(1)
+        this.dynamicPool.get('initial_size').setValue(1)
+        this.dynamicPool.get('total_size').setValue(1)
+        this.dynamicPool.get('reserve_size').setValue(1)
         this.dynamicPool.get('create_thin_clones').setValue(true)
         this.dynamicPool.get('prepare_vms').setValue(true)
       } break;
