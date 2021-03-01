@@ -256,7 +256,7 @@ export class UsersService  {
 
     public addPermission(id, permissions) {
         return this.service.mutate<any>({
-            mutation: gql` 
+            mutation: gql`
             mutation users($id: UUID!, $permissions: [TkPermission!]!){
                 addUserPermission(id: $id, permissions: $permissions) {
                     ok
@@ -272,7 +272,7 @@ export class UsersService  {
 
     public removePermission(id, permissions) {
         return this.service.mutate<any>({
-            mutation: gql` 
+            mutation: gql`
             mutation users($id: UUID!, $permissions: [TkPermission!]!){
                 removeUserPermission(id: $id, permissions: $permissions) {
                     ok
