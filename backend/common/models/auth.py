@@ -503,15 +503,18 @@ class User(AbstractSortableStatusModel, VeilModel):
 
         GECOS: https://en.wikipedia.org/wiki/Gecos_field
         """
-        # full_name = ' '.join([self.last_name, self.first_name])
-        # gecos = '"{}",VDI,,,{}'.format(full_name, self.email)  # type: str
-        gecos = ",VDI,,,{}".format(self.email)  # type: str
-        result = await veil_auth_class.user_create_new(
-            username=self.username,
-            password=raw_password,
-            gecos=gecos,
-            group=PAM_USER_GROUP,
-        )
+        gecos = ",VDI,,,{}".format(self.email) if self.email else ",VDI,,,"
+        if raw_password:
+            result = await veil_auth_class.user_create_new(
+                username=self.username,
+                password=raw_password,
+                gecos=gecos,
+                group=PAM_USER_GROUP,
+            )
+        else:
+            result = await veil_auth_class.user_create(username=self.username,
+                                                       group=PAM_USER_GROUP,
+                                                       gecos=gecos)
         if result.success and superuser:
             pam_result = await self.pam_user_add_group(PAM_SUPERUSER_GROUP)
             if not pam_result.success:
@@ -531,7 +534,7 @@ class User(AbstractSortableStatusModel, VeilModel):
         id=None,
         is_active=True,
     ):
-        """Если password будет None, то make_password вернет unusable password"""
+        """Если password будет None, то make_password вернет unusable password."""
         encoded_password = hashers.make_password(password, salt=SECRET_KEY)
         user_kwargs = {
             "username": username,
@@ -625,7 +628,9 @@ class User(AbstractSortableStatusModel, VeilModel):
                         )
                     elif "email" in update_dict and update_dict.get("email"):
                         pam_result = await update_type.pam_user_set_email(email=email)
-                    if not pam_result.success:
+                    else:
+                        pam_result = None
+                    if pam_result and not pam_result.success:
                         raise PamError(pam_result)
 
         except PamError as err_msg:
