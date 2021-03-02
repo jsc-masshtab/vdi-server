@@ -7,7 +7,14 @@ from tornado.ioloop import IOLoop
 from tornado.options import define, options
 from tornado.process import task_id
 
-from common.settings import WS_PING_INTERVAL, WS_PING_TIMEOUT, AUTH_ENABLED, DEBUG, SSL_CRT_FPATH, SSL_KEY_FPATH
+from common.settings import (
+    WS_PING_INTERVAL,
+    WS_PING_TIMEOUT,
+    AUTH_ENABLED,
+    DEBUG,
+    SSL_CRT_FPATH,
+    SSL_KEY_FPATH,
+)
 from common.log.journal import system_logger
 from common.languages import lang_init
 
@@ -37,21 +44,37 @@ from common.utils import init_signals
 _ = lang_init()
 
 define("port", default=8888, help="port to listen on")
-define("address", default='127.0.0.1', help="address to listen on")
+define("address", default="127.0.0.1", help="address to listen on")
 define("autoreload", default=True, help="autoreload application")
 define("workers", default=1, help="num of process forks. 0 forks one process per cpu")
 define("ssl", default=False, help="force https")
 
 handlers = [
-    (r'/controllers', VdiTornadoGraphQLHandler, dict(graphiql=True, schema=controller_schema)),
-    (r'/resources', VdiTornadoGraphQLHandler, dict(graphiql=True, schema=resources_schema)),
-    (r'/users', VdiTornadoGraphQLHandler, dict(graphiql=True, schema=user_schema)),
-    (r'/groups', VdiTornadoGraphQLHandler, dict(graphiql=True, schema=group_schema)),
-    (r'/auth_dirs', VdiTornadoGraphQLHandler, dict(graphiql=True, schema=auth_dir_schema)),
-    (r'/pools', VdiTornadoGraphQLHandler, dict(graphiql=True, schema=pool_schema)),
-    (r'/events', VdiTornadoGraphQLHandler, dict(graphiql=True, schema=event_schema)),
-    (r'/tasks', VdiTornadoGraphQLHandler, dict(graphiql=True, schema=task_schema)),
-    (r'/thin_clients', VdiTornadoGraphQLHandler, dict(graphiql=True, schema=thin_client_schema)),
+    (
+        r"/controllers",
+        VdiTornadoGraphQLHandler,
+        dict(graphiql=True, schema=controller_schema),
+    ),
+    (
+        r"/resources",
+        VdiTornadoGraphQLHandler,
+        dict(graphiql=True, schema=resources_schema),
+    ),
+    (r"/users", VdiTornadoGraphQLHandler, dict(graphiql=True, schema=user_schema)),
+    (r"/groups", VdiTornadoGraphQLHandler, dict(graphiql=True, schema=group_schema)),
+    (
+        r"/auth_dirs",
+        VdiTornadoGraphQLHandler,
+        dict(graphiql=True, schema=auth_dir_schema),
+    ),
+    (r"/pools", VdiTornadoGraphQLHandler, dict(graphiql=True, schema=pool_schema)),
+    (r"/events", VdiTornadoGraphQLHandler, dict(graphiql=True, schema=event_schema)),
+    (r"/tasks", VdiTornadoGraphQLHandler, dict(graphiql=True, schema=task_schema)),
+    (
+        r"/thin_clients",
+        VdiTornadoGraphQLHandler,
+        dict(graphiql=True, schema=thin_client_schema),
+    ),
 ]
 
 handlers += auth_api_urls
@@ -68,11 +91,13 @@ def make_app():
         autoreload = options.autoreload
     else:
         autoreload = False
-    return Application(handlers,
-                       debug=DEBUG,
-                       websocket_ping_interval=WS_PING_INTERVAL,
-                       websocket_ping_timeout=WS_PING_TIMEOUT,
-                       autoreload=autoreload)
+    return Application(
+        handlers,
+        debug=DEBUG,
+        websocket_ping_interval=WS_PING_INTERVAL,
+        websocket_ping_timeout=WS_PING_TIMEOUT,
+        autoreload=autoreload,
+    )
 
 
 def make_ssl():
@@ -92,7 +117,7 @@ def exit_handler(sig, frame):  # noqa
     async def shutdown():
         REDIS_POOL.disconnect()
         await stop_veil_client()
-        await system_logger.info(_('VDI broker stopped.'))
+        await system_logger.info(_("VDI broker stopped."))
         await stop_gino()
         io_loop.stop()
 
@@ -102,15 +127,20 @@ def exit_handler(sig, frame):  # noqa
 async def startup_alerts(vdi_license):
     """Выводим сообщения только в первом процессе. Если task_id None, значит процесс 1, если > 0, значит больше 1."""
     if not task_id():
-        await system_logger.info(_('VDI broker started with {} worker(s).').format(options.workers))
+        await system_logger.info(
+            _("VDI broker started with {} worker(s).").format(options.workers)
+        )
         # Проверка настроек
         if not AUTH_ENABLED:
-            await system_logger.warning(_('Authentication system is disabled.'))
+            await system_logger.warning(_("Authentication system is disabled."))
         if vdi_license.expired:
             await system_logger.warning(
-                _('The license is expired. Some functions will be blocked. Contact your dealer.'))
+                _(
+                    "The license is expired. Some functions will be blocked. Contact your dealer."
+                )
+            )
         if DEBUG:
-            await system_logger.warning(_('DEBUG mode is enabled.'))
+            await system_logger.warning(_("DEBUG mode is enabled."))
 
 
 async def startup_server():
@@ -138,7 +168,7 @@ async def startup_server():
     await startup_alerts(vdi_license)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     uvloop.install()
     IOLoop.current().run_sync(startup_server)
     IOLoop.current().start()

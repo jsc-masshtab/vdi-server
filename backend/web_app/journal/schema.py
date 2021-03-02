@@ -19,7 +19,9 @@ from common.log.journal import system_logger
 _ = lang_init()
 
 
-def build_filters(event_type, start_date, end_date, user, read_by, entity_type, entity=None):
+def build_filters(
+    event_type, start_date, end_date, user, read_by, entity_type, entity=None
+):
     filters = []
     if event_type is not None:
         filters.append((Event.event_type == event_type))
@@ -76,7 +78,8 @@ class EventQuery(graphene.ObjectType):
         user=graphene.String(),
         read_by=graphene.UUID(),
         entity_type=graphene.String(),
-        entity=graphene.UUID())
+        entity=graphene.UUID(),
+    )
 
     events = graphene.List(
         lambda: EventType,
@@ -89,11 +92,10 @@ class EventQuery(graphene.ObjectType):
         read_by=graphene.UUID(),
         entity=graphene.UUID(),
         entity_type=graphene.String(),
-        ordering=graphene.String())
+        ordering=graphene.String(),
+    )
 
-    event = graphene.Field(
-        lambda: EventType,
-        id=graphene.UUID())
+    event = graphene.Field(lambda: EventType, id=graphene.UUID())
 
     entity_types = graphene.List(
         graphene.String,
@@ -102,7 +104,7 @@ class EventQuery(graphene.ObjectType):
         end_date=graphene.DateTime(),
         user=graphene.String(),
         read_by=graphene.UUID(),
-        entity_type=graphene.String()
+        entity_type=graphene.String(),
     )
 
     journal_settings = graphene.Field(JournalSettingsType)
@@ -116,80 +118,159 @@ class EventQuery(graphene.ObjectType):
         return settings_list
 
     @operator_required
-    async def resolve_count(self, _info, event_type=None, start_date=None,
-                            end_date=None, user=None, read_by=None, entity_type=None, entity=None, **kwargs):
-        filters = build_filters(event_type, start_date, end_date, user, read_by, entity_type, entity)
-        query = Event.outerjoin(EventReadByUser).outerjoin(User).outerjoin(Entity).select().where(and_(*filters)).where(Entity.entity_type != None)  # noqa
-        event_count = await db.select([db.func.count()]).select_from(query.alias()).gino.scalar()
+    async def resolve_count(
+        self,
+        _info,
+        event_type=None,
+        start_date=None,
+        end_date=None,
+        user=None,
+        read_by=None,
+        entity_type=None,
+        entity=None,
+        **kwargs
+    ):
+        filters = build_filters(
+            event_type, start_date, end_date, user, read_by, entity_type, entity
+        )
+        query = (
+            Event.outerjoin(EventReadByUser)
+            .outerjoin(User)
+            .outerjoin(Entity)
+            .select()
+            .where(and_(*filters))
+            .where(Entity.entity_type != None)  # noqa: E711
+        )
+        event_count = (
+            await db.select([db.func.count()]).select_from(query.alias()).gino.scalar()
+        )
         return event_count
 
     @operator_required
-    async def resolve_entity_types(self, _info, event_type=None, start_date=None,
-                                   end_date=None, user=None, read_by=None, entity_type=None, **kwargs):
+    async def resolve_entity_types(
+        self,
+        _info,
+        event_type=None,
+        start_date=None,
+        end_date=None,
+        user=None,
+        read_by=None,
+        entity_type=None,
+        **kwargs
+    ):
         # TODO: refactor me
-        filters = build_filters(event_type, start_date, end_date, user, read_by, entity_type)
+        filters = build_filters(
+            event_type, start_date, end_date, user, read_by, entity_type
+        )
 
-        query = Event.outerjoin(EventReadByUser).outerjoin(User).outerjoin(Entity).select().where(
-            and_(*filters)
-        ).where(Entity.entity_type != None)  # noqa
+        query = (
+            Event.outerjoin(EventReadByUser)
+            .outerjoin(User)
+            .outerjoin(Entity)
+            .select()
+            .where(and_(*filters))
+            .where(Entity.entity_type != None)  # noqa: E711
+        )
 
-        query = db.select([text('anon_1.entity_type')]).select_from(query.alias()).group_by(text('anon_1.entity_type'))
+        query = (
+            db.select([text("anon_1.entity_type")])
+            .select_from(query.alias())
+            .group_by(text("anon_1.entity_type"))
+        )
 
         entity_types = await query.gino.all()
         return [entity[0] for entity in entity_types]
 
     @operator_required
-    async def resolve_events(self, _info, limit, offset, event_type=None,
-                             start_date=None, end_date=None, user=None,
-                             read_by=None, entity_type=None, ordering=None, entity=None, **kwargs):
-        filters = build_filters(event_type, start_date, end_date, user, read_by, entity_type, entity)
+    async def resolve_events(
+        self,
+        _info,
+        limit,
+        offset,
+        event_type=None,
+        start_date=None,
+        end_date=None,
+        user=None,
+        read_by=None,
+        entity_type=None,
+        ordering=None,
+        entity=None,
+        **kwargs
+    ):
+        filters = build_filters(
+            event_type, start_date, end_date, user, read_by, entity_type, entity
+        )
 
-        query = Event.outerjoin(EventReadByUser).outerjoin(User).outerjoin(Entity).select()
+        query = (
+            Event.outerjoin(EventReadByUser).outerjoin(User).outerjoin(Entity).select()
+        )
 
-        events = await query.where(
-            and_(*filters)
-        ).order_by(desc(Event.created)).limit(limit).offset(offset).gino.load(
-            Event.distinct(Event.id).load(add_read_by=User.distinct(User.id),
-                                          add_entity=Entity)
-        ).all()
+        events = (
+            await query.where(and_(*filters))
+            .order_by(desc(Event.created))
+            .limit(limit)
+            .offset(offset)
+            .gino.load(
+                Event.distinct(Event.id).load(
+                    add_read_by=User.distinct(User.id), add_entity=Entity
+                )
+            )
+            .all()
+        )
         event_type_list = [
             EventType(
                 read_by=[UserType(**user.__values__) for user in event.read_by],
                 entity=[EntityType(**entity.__values__) for entity in event.entity],
-                **event.__values__)
+                **event.__values__
+            )
             for event in events
         ]
 
         if ordering:
             (ordering, reverse) = extract_ordering_data(ordering)
 
-            if ordering == 'user':
-                def sort_lam(event): return event.user if event.user else DEFAULT_NAME
+            if ordering == "user":
+
+                def sort_lam(event):
+                    return event.user if event.user else DEFAULT_NAME
+
             # elif ordering == 'message':
             #     def sort_lam(event): return event.message if event.message else DEFAULT_NAME
-            elif ordering == 'created':
-                def sort_lam(event): return event.created if event.created else "2000-01-01T00:00:01Z"
+            elif ordering == "created":
+
+                def sort_lam(event):
+                    return event.created if event.created else "2000-01-01T00:00:01Z"
+
             else:
-                raise SimpleError(_('The sort parameter is incorrect.'))
+                raise SimpleError(_("The sort parameter is incorrect."))
             event_type_list = sorted(event_type_list, key=sort_lam, reverse=reverse)
 
         return event_type_list
 
     @operator_required
     async def resolve_event(self, _info, id, **kwargs):
-        query = Event.outerjoin(EventReadByUser).outerjoin(User).outerjoin(Entity).select().where(Event.id == id)
+        query = (
+            Event.outerjoin(EventReadByUser)
+            .outerjoin(User)
+            .outerjoin(Entity)
+            .select()
+            .where(Event.id == id)
+        )
 
         event = await query.gino.load(
-            Event.distinct(Event.id).load(add_read_by=User.distinct(User.id), add_entity=Entity)
+            Event.distinct(Event.id).load(
+                add_read_by=User.distinct(User.id), add_entity=Entity
+            )
         ).first()
 
         if not event:
-            raise GraphQLError(_('No such event.'))
+            raise GraphQLError(_("No such event."))
 
         event_type = EventType(
             read_by=[UserType(**user.__values__) for user in event.read_by],
             entity=[entity for entity in event.entity],
-            **event.__values__)
+            **event.__values__
+        )
 
         return event_type
 
@@ -235,26 +316,32 @@ class UnmarkEventsReadByMutation(graphene.Mutation):
 
 class EventExportMutation(graphene.Mutation):
     class Arguments:
-        start = graphene.DateTime(description='Дата начала периода для экспорта журнала')
-        finish = graphene.DateTime(description='Дата окончания периода для экспорта журнала')
-        path = graphene.String(description='Адрес директории для экспорта журнала')
+        start = graphene.DateTime(
+            description="Дата начала периода для экспорта журнала"
+        )
+        finish = graphene.DateTime(
+            description="Дата окончания периода для экспорта журнала"
+        )
+        path = graphene.String(description="Адрес директории для экспорта журнала")
 
     ok = graphene.Boolean()
 
     @operator_required
-    async def mutate(self, _info, start, finish, path='/tmp/', **kwargs):
+    async def mutate(self, _info, start, finish, path="/tmp/", **kwargs):
         name = await Event.event_export(start, finish, path)
-        entity = {'entity_type': 'SECURITY', 'entity_uuid': None}
-        await system_logger.info(_('Journal is exported.'), description=name, entity=entity)
+        entity = {"entity_type": "SECURITY", "entity_uuid": None}
+        await system_logger.info(
+            _("Journal is exported."), description=name, entity=entity
+        )
         return EventExportMutation(ok=True)
 
 
 class ChangeJournalSettingsMutation(graphene.Mutation):
     class Arguments:
-        dir_path = graphene.String(description='Адрес директории для архивации журнала')
-        period = graphene.String(description='Период для архивации')
-        by_count = graphene.Boolean(description='Принцип архивации')
-        count = graphene.Int(description='Количество записей для архивации')
+        dir_path = graphene.String(description="Адрес директории для архивации журнала")
+        period = graphene.String(description="Период для архивации")
+        by_count = graphene.Boolean(description="Принцип архивации")
+        count = graphene.Int(description="Количество записей для архивации")
 
     ok = graphene.Boolean()
 
@@ -272,6 +359,6 @@ class EventMutations(graphene.ObjectType):
     changeJournalSettings = ChangeJournalSettingsMutation.Field()
 
 
-event_schema = graphene.Schema(query=EventQuery,
-                               mutation=EventMutations,
-                               auto_camelcase=False)
+event_schema = graphene.Schema(
+    query=EventQuery, mutation=EventMutations, auto_camelcase=False
+)

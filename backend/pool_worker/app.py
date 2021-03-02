@@ -38,5 +38,5 @@ def main():
     loop.run_until_complete(stop_gino())
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -41,12 +41,10 @@ class BackendError(Exception):
 
     @property
     def type_info(self):
-        return {'type': self.__class__.__name__}
+        return {"type": self.__class__.__name__}
 
     def format_error(self):
-        return {
-            **self.__dict__, **self.type_info
-        }
+        return {**self.__dict__, **self.type_info}
 
 
 class FieldError(BackendError):
@@ -54,15 +52,15 @@ class FieldError(BackendError):
         self.data = kwargs
 
     def format_error(self):
-        return {
-            'data': self.data, **self.type_info
-        }
+        return {"data": self.data, **self.type_info}
 
 
 class SimpleError(BackendError):
     def __init__(self, message, **kwargs):
         native_loop = asyncio.get_event_loop()
-        self.create_event = native_loop.create_task(self.create_error_event(message, **kwargs))
+        self.create_event = native_loop.create_task(
+            self.create_error_event(message, **kwargs)
+        )
         self.message = message
 
     def format_error(self):
@@ -85,8 +83,8 @@ class SilentError(BackendError):
 
 
 class FetchException(BackendError):
-    http_error = None   # HTTPClientError
-    url = ''
+    http_error = None  # HTTPClientError
+    url = ""
     data = dict()
 
     @property
@@ -94,15 +92,10 @@ class FetchException(BackendError):
         return self.http_error.code
 
     def format_error(self):
-        return {
-            'code': self.code,
-            'url': self.url,
-            **self.data,
-            **self.type_info
-        }
+        return {"code": self.code, "url": self.url, **self.data, **self.type_info}
 
     def __repr__(self):
-        return 'FetchException{}'.format(repr(self.__dict__))
+        return "FetchException{}".format(repr(self.__dict__))
 
 
 class HttpError(BackendError):
@@ -121,9 +114,7 @@ class HttpError(BackendError):
         raise NotImplementedError
 
     def format_error(self):
-        return {
-            'type': 'HttpError', 'code': self.code, 'message': self.message,
-        }
+        return {"type": "HttpError", "code": self.code, "message": self.message}
 
 
 class NotFound(HttpError):
@@ -138,9 +129,7 @@ class NotFound(HttpError):
         return 404
 
     def format_error(self):
-        return {
-            **super().format_error(), **self.__dict__
-        }
+        return {**super().format_error(), **self.__dict__}
 
     @staticmethod
     async def create_error_event(message):
@@ -149,7 +138,7 @@ class NotFound(HttpError):
 
 class BadRequest(HttpError):
     def __init__(self, errors):
-        system_logger._debug('BadRequest: {}'.format(errors))
+        system_logger._debug("BadRequest: {}".format(errors))
         self.errors = errors
 
     def code(self):
@@ -157,12 +146,10 @@ class BadRequest(HttpError):
 
     @classmethod
     def fetch_failed(cls, fetch_exc):
-        return cls(errors=fetch_exc.data['errors'])
+        return cls(errors=fetch_exc.data["errors"])
 
     def format_error(self):
-        return {
-            'type': 'HttpError', 'code': self.code, **self.errors
-        }
+        return {"type": "HttpError", "code": self.code, **self.errors}
 
 
 # class ControllerNotAccessible(HttpError):
@@ -192,7 +179,7 @@ class Forbidden(AuthError):
 
 class Unauthorized(AuthError):
     code = 401
-    message = _('401: Unauthorized.')
+    message = _("401: Unauthorized.")
     # TODO: раскомментируй меня (26.07.2020)
     # system_logger._debug(message)
 

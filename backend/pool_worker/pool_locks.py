@@ -55,8 +55,12 @@ class PoolLocks:
 
     async def _get_pools_data_from_db(self):
         from common.models.pool import AutomatedPool
-        auto_pools_data = await db.select([AutomatedPool.id, AutomatedPool.template_id]).\
-            select_from(AutomatedPool).gino.all()
+
+        auto_pools_data = (
+            await db.select([AutomatedPool.id, AutomatedPool.template_id])
+            .select_from(AutomatedPool)
+            .gino.all()
+        )
         return auto_pools_data
 
     def _add_data(self, pool_id: str, template_id: str):

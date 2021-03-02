@@ -11,13 +11,14 @@ from web_app.app import make_app
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
-main_option = config.get_main_option('sqlalchemy.url')
+main_option = config.get_main_option("sqlalchemy.url")
 
 # Если не тестовая БД, то формат из settings
-if main_option is None or main_option.upper().find('TESTS') == -1:
-    alchemy_url = 'postgres://{USER}:{PASS}@{HOST}:{PORT}/{NAME}'.format(USER=DB_USER, PASS=DB_PASS, HOST=DB_HOST,
-                                                                         PORT=DB_PORT, NAME=DB_NAME)
-    config.set_main_option('sqlalchemy.url', alchemy_url)
+if main_option is None or main_option.upper().find("TESTS") == -1:
+    alchemy_url = "postgres://{USER}:{PASS}@{HOST}:{PORT}/{NAME}".format(
+        USER=DB_USER, PASS=DB_PASS, HOST=DB_HOST, PORT=DB_PORT, NAME=DB_NAME
+    )
+    config.set_main_option("sqlalchemy.url", alchemy_url)
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
@@ -55,7 +56,7 @@ def run_migrations_offline():
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
-        compare_type=True
+        compare_type=True,
     )
 
     with context.begin_transaction():
@@ -77,9 +78,7 @@ def run_migrations_online():
 
     with connectable.connect() as connection:
         context.configure(
-            connection=connection,
-            target_metadata=target_metadata,
-            compare_type=True
+            connection=connection, target_metadata=target_metadata, compare_type=True
         )
 
         with context.begin_transaction():

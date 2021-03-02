@@ -6,9 +6,18 @@ from veil_api_client import VeilClient, VeilRetryConfiguration
 
 from common.database import db
 from common.veil.veil_api import get_veil_client
-from common.veil.veil_redis import send_cmd_to_ws_monitor, send_cmd_to_cancel_tasks_associated_with_controller, \
-    send_cmd_to_resume_tasks_associated_with_controller, WsMonitorCmd
-from common.veil.veil_gino import Status, EntityType, VeilModel, AbstractSortableStatusModel
+from common.veil.veil_redis import (
+    send_cmd_to_ws_monitor,
+    send_cmd_to_cancel_tasks_associated_with_controller,
+    send_cmd_to_resume_tasks_associated_with_controller,
+    WsMonitorCmd,
+)
+from common.veil.veil_gino import (
+    Status,
+    EntityType,
+    VeilModel,
+    AbstractSortableStatusModel,
+)
 from common.veil.veil_errors import ValidationError
 
 from common.languages import lang_init
@@ -25,6 +34,7 @@ _ = lang_init()
 #  Нужно сделать, чтобы деактивация контроллера останавливала создание пула и скидывала задачу в очередь.
 #  При активации контроллера нужно брать задачи в очереди.
 
+
 class Controller(AbstractSortableStatusModel, VeilModel):
     """Сущность VeiL контроллера на ECP VeiL.
 
@@ -39,7 +49,8 @@ class Controller(AbstractSortableStatusModel, VeilModel):
         Status.CREATING
         Status.DELETING
     """
-    __tablename__ = 'controller'
+
+    __tablename__ = "controller"
 
     id = db.Column(UUID(), primary_key=True, default=uuid.uuid4)
     verbose_name = db.Column(db.Unicode(length=128), nullable=False, unique=True)
@@ -55,7 +66,7 @@ class Controller(AbstractSortableStatusModel, VeilModel):
         return str(self.id)
 
     @property
-    def veil_client(self) -> 'VeilClient':
+    def veil_client(self) -> "VeilClient":
         """Клиент не сломанного контроллера."""
         if self.stopped:
             return
@@ -92,8 +103,12 @@ class Controller(AbstractSortableStatusModel, VeilModel):
         try:
             await self.remove_client()
             veil_client = get_veil_client()
-            client = veil_client.add_client(server_address=self.address, token=self.token)
-            is_ok = await client.controller(self.id, retry_opts=VeilRetryConfiguration(num_of_attempts=0)).is_ok()
+            client = veil_client.add_client(
+                server_address=self.address, token=self.token
+            )
+            is_ok = await client.controller(
+                self.id, retry_opts=VeilRetryConfiguration(num_of_attempts=0)
+            ).is_ok()
         except Exception:
             await self.remove_client()
             is_ok = False
@@ -115,46 +130,58 @@ class Controller(AbstractSortableStatusModel, VeilModel):
     async def get_addresses(status=Status.ACTIVE):
         """Возвращает ip-контроллеров находящихся в переданном статусе"""
         # TODO: выпилить?
-        query = Controller.select('address').where(Controller.status == status)
+        query = Controller.select("address").where(Controller.status == status)
         addresses = await query.gino.all()
         return [address[0] for address in addresses]
 
     @staticmethod
     async def get_controller_id_by_ip(ip_address):
         # TODO: remove
-        return await Controller.select('id').where(Controller.address == ip_address).gino.scalar()
+        return (
+            await Controller.select("id")
+            .where(Controller.address == ip_address)
+            .gino.scalar()
+        )
 
     async def get_version(self):
         """Проверяем допустимость версии контроллера."""
         # Получаем инстанс клиента
         controller_client = self.controller_client
         if not controller_client:
-            raise ValidationError(_('Controller {} has no api client.').format(self.verbose_name))
+            raise ValidationError(
+                _("Controller {} has no api client.").format(self.verbose_name)
+            )
         # Получаем версию контроллера
         await controller_client.base_version()
         version = controller_client.version
         if not version:
-            msg = _('ECP VeiL version could not be obtained. Check your token.')
+            msg = _("ECP VeiL version could not be obtained. Check your token.")
             await self.remove_client()
             raise ValidationError(msg)
-        major_version, minor_version, patch_version = version.split('.')
+        major_version, minor_version, patch_version = version.split(".")
         await self.update(version=version).apply()
         # Проверяем версию контроллера в пределах допустимой.
-        if major_version != '4' or int(minor_version) < 3:
-            msg = _('ECP VeiL version should be 4.3 or higher. Current version is incompatible.')
+        if major_version != "4" or int(minor_version) < 3:
+            msg = _(
+                "ECP VeiL version should be 4.3 or higher. Current version is incompatible."
+            )
             await self.remove_client()
             raise ValidationError(msg)
 
     @classmethod
-    async def soft_create(cls, verbose_name, address, token: str, description=None, creator='system'):
+    async def soft_create(
+        cls, verbose_name, address, token: str, description=None, creator="system"
+    ):
         """Создание сущности Controller."""
         async with db.transaction():
             # Создаем запись
-            controller = await cls.create(verbose_name=verbose_name,
-                                          address=address,
-                                          description=description,
-                                          status=Status.CREATING,
-                                          token=token)
+            controller = await cls.create(
+                verbose_name=verbose_name,
+                address=address,
+                description=description,
+                status=Status.CREATING,
+                token=token,
+            )
             # Получаем, сохраняем и проверяем допустимость версии
             await controller.get_version()
 
@@ -168,13 +195,15 @@ class Controller(AbstractSortableStatusModel, VeilModel):
             send_cmd_to_ws_monitor(controller.id, WsMonitorCmd.ADD_CONTROLLER)
 
         # Логгируем результат операции
-        msg = _('Controller {} added.').format(verbose_name)
+        msg = _("Controller {} added.").format(verbose_name)
         await system_logger.info(msg, user=creator, entity=controller.entity)
 
         # Возвращаем инстанс созданного контроллера
         return controller
 
-    async def soft_update(self, creator, verbose_name=None, address=None, description=None, token=None):
+    async def soft_update(
+        self, creator, verbose_name=None, address=None, description=None, token=None
+    ):
         """Редактирование сущности Controller.
 
         1. Собираются параметры для редактирования
@@ -184,13 +213,13 @@ class Controller(AbstractSortableStatusModel, VeilModel):
         # Параметры, которые нужно записать в контроллер
         controller_kwargs = dict()
         if verbose_name:
-            controller_kwargs['verbose_name'] = verbose_name
+            controller_kwargs["verbose_name"] = verbose_name
         if address:
-            controller_kwargs['address'] = address
+            controller_kwargs["address"] = address
         if description:
-            controller_kwargs['description'] = description
+            controller_kwargs["description"] = description
         if token:
-            controller_kwargs['token'] = token
+            controller_kwargs["token"] = token
         # Если параметров нет - прерываем редактирование
         if not controller_kwargs:
             return False
@@ -200,7 +229,8 @@ class Controller(AbstractSortableStatusModel, VeilModel):
         # Редактируем параметры записи в БД
         async with db.transaction():
             await Controller.update.values(**controller_kwargs).where(
-                Controller.id == self.id).gino.status()
+                Controller.id == self.id
+            ).gino.status()
             updated_controller = await Controller.get(self.id)
         controller_is_ok = await updated_controller.check_controller()
         # На случай смены токена
@@ -210,14 +240,18 @@ class Controller(AbstractSortableStatusModel, VeilModel):
             # Получаем, сохраняем и проверяем допустимость версии
             await updated_controller.get_version()
         # Мы не хотим видеть токен в логе
-        if controller_kwargs.get('token'):
-            controller_kwargs.pop('token')
+        if controller_kwargs.get("token"):
+            controller_kwargs.pop("token")
         # Протоколируем результат операции
         if controller_is_ok:
-            msg = _('Controller {} has been successfully updated.').format(self.verbose_name)
+            msg = _("Controller {} has been successfully updated.").format(
+                self.verbose_name
+            )
         else:
-            msg = _('Controller {} update failed.').format(self.verbose_name)
-        await system_logger.info(msg, description=str(controller_kwargs), user=creator, entity=self.entity)
+            msg = _("Controller {} update failed.").format(self.verbose_name)
+        await system_logger.info(
+            msg, description=str(controller_kwargs), user=creator, entity=self.entity
+        )
         return updated_controller
 
     async def full_delete_pools(self, creator):
@@ -229,7 +263,9 @@ class Controller(AbstractSortableStatusModel, VeilModel):
     async def full_delete(self, creator):
         """Удаление сущности с удалением зависимых сущностей."""
         # Останавлием задачи связанные с контроллером
-        await send_cmd_to_cancel_tasks_associated_with_controller(controller_id=self.id, wait_for_result=True)
+        await send_cmd_to_cancel_tasks_associated_with_controller(
+            controller_id=self.id, wait_for_result=True
+        )
         # Удаляем контроллер из монитора
         send_cmd_to_ws_monitor(self.id, WsMonitorCmd.REMOVE_CONTROLLER)
         # Переключаем статус
@@ -240,17 +276,20 @@ class Controller(AbstractSortableStatusModel, VeilModel):
         await self.remove_client()
         # Удаляем запись
         status = await super().soft_delete(creator=creator)
-        await system_logger.info(message=_('Controller {} has been removed.').format(self.verbose_name), user=creator,
-                                 entity=self.entity)
+        await system_logger.info(
+            message=_("Controller {} has been removed.").format(self.verbose_name),
+            user=creator,
+            entity=self.entity,
+        )
         return status
 
-    async def enable(self, creator='system'):
+    async def enable(self, creator="system"):
         connection_is_ok = await self.is_ok()
         if connection_is_ok:
             return await self.activate(creator=creator)
         return False
 
-    async def activate(self, creator='system'):
+    async def activate(self, creator="system"):
 
         """Активируем не активный контроллер и его пулы."""
         if self.active:
@@ -266,8 +305,11 @@ class Controller(AbstractSortableStatusModel, VeilModel):
 
         # Возобновляем задачи связанные с контроллером
         send_cmd_to_resume_tasks_associated_with_controller(self.id)
-        await system_logger.info(_('Controller {} has been activated.').format(self.verbose_name),
-                                 entity=self.entity, user=creator)
+        await system_logger.info(
+            _("Controller {} has been activated.").format(self.verbose_name),
+            entity=self.entity,
+            user=creator,
+        )
         return True
 
     async def deactivate(self, status=Status.FAILED):
@@ -277,7 +319,9 @@ class Controller(AbstractSortableStatusModel, VeilModel):
         # Деактивируем контроллер
         await self.set_status(status)
         # Останавливаем задачи связанные с контроллером
-        await send_cmd_to_cancel_tasks_associated_with_controller(controller_id=self.id, wait_for_result=True)
+        await send_cmd_to_cancel_tasks_associated_with_controller(
+            controller_id=self.id, wait_for_result=True
+        )
         # отключаем клиент
         await self.remove_client()
         # Деактивируем пулы
@@ -285,16 +329,21 @@ class Controller(AbstractSortableStatusModel, VeilModel):
         for pool_obj in pools:
             await pool_obj.deactivate(pool_obj.id)
         await system_logger.warning(
-            _('Controller {} status has been switched to {}.').format(self.verbose_name, status.name),
-            entity=self.entity)
+            _("Controller {} status has been switched to {}.").format(
+                self.verbose_name, status.name
+            ),
+            entity=self.entity,
+        )
         return True
 
-    async def service(self, status=Status.SERVICE, creator='system'):
+    async def service(self, status=Status.SERVICE, creator="system"):
         """Переводим контроллер и его пулы в статус SERVICE."""
         # Переводим контроллер в статус сервис
         await self.set_status(status)
         # Останавлием задачи связанные с контроллером
-        await send_cmd_to_cancel_tasks_associated_with_controller(controller_id=self.id, wait_for_result=True)
+        await send_cmd_to_cancel_tasks_associated_with_controller(
+            controller_id=self.id, wait_for_result=True
+        )
         # отключаем клиент
         await self.remove_client()
         # Переводим пулы в статус сервис
@@ -307,8 +356,12 @@ class Controller(AbstractSortableStatusModel, VeilModel):
                 if vm.status != Status.RESERVED:
                     await vm.update(status=Status.SERVICE).apply()
         await system_logger.info(
-            _('Controller {} status has been switched to {}.').format(self.verbose_name, status.name),
-            entity=self.entity, user=creator)
+            _("Controller {} status has been switched to {}.").format(
+                self.verbose_name, status.name
+            ),
+            entity=self.entity,
+            user=creator,
+        )
         return True
 
     def get_resource_type(self):

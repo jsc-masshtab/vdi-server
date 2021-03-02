@@ -22,9 +22,11 @@ def singleton(cls):
 
 def cut_message(func):
     """Декоратор, который обрезает хвост сообщения."""
+
     def wrapper(self, message, *args, **kwargs):
         message = message[:255]
         return func(self, message, *args, **kwargs)
+
     return wrapper
 
 
@@ -32,12 +34,12 @@ def cut_message(func):
 class Log:
     """Системный журнал.
 
-    Одноврмеменно может существовать только 1 инстанс (для этого декоратор синглтон).
+    Одновременно может существовать только 1 инстанс (для этого декоратор синглтон).
     Все методы асинхронные для универсализации запуска.
 
     Аргументы:
-        log_level: уровень логгирования для логгера (можно задать аргументом запуска app)
-        debug: передастся в propagate для логгеров
+        log_level: уровень логирования (можно задать аргументом запуска app)
+        debug: передастся в propagate
     """
 
     __TYPE_INFO = 0
@@ -59,7 +61,7 @@ class Log:
         if line and not isinstance(line, str):
             line = str(line)
         # return file_name, func, line
-        return ' '.join([file_name, func, line])
+        return " ".join([file_name, func, line])
 
     @staticmethod
     def __set_propagate(val: bool):
@@ -67,7 +69,7 @@ class Log:
         for logger_name in logging.root.manager.loggerDict:
             logging.getLogger(logger_name).propagate = val
         # gino нет в списке логгеров, не стал выяснять почему
-        logging.getLogger('gino').propagate = False
+        logging.getLogger("gino").propagate = False
 
     def __init__(self):
         # Set propagate level for inner loggers.
@@ -80,9 +82,7 @@ class Log:
         logging.basicConfig(
             # level=LOG_LEVEL, # прокинется из tornado_options
             format="%(asctime)s [%(levelname)s] %(message)s",
-            handlers=[
-                logging.StreamHandler(stream=sys.stdout)
-            ]
+            handlers=[logging.StreamHandler(stream=sys.stdout)],
         )
         self.__debug_enabled = DEBUG
         self.__logger = root_logger
@@ -90,46 +90,90 @@ class Log:
     def __log_debug(self, message: str):
         if self.__debug_enabled:
             call_info = self.__get_call_info()
-            message = ' '.join([call_info, message])
+            message = " ".join([call_info, message])
         self.__logger.debug(message)
 
     def __log_info(self, message: str):
         if self.__debug_enabled:
             call_info = self.__get_call_info()
-            message = ' '.join([call_info, message])
+            message = " ".join([call_info, message])
         self.__logger.info(message)
 
     def __log_warning(self, message: str):
         if self.__debug_enabled:
             call_info = self.__get_call_info()
-            message = ' '.join([call_info, message])
+            message = " ".join([call_info, message])
         self.__logger.warning(message)
 
     def __log_error(self, message: str):
         if self.__debug_enabled:
             call_info = self.__get_call_info()
-            message = ' '.join([call_info, message])
+            message = " ".join([call_info, message])
         self.__logger.error(message)
 
     @cut_message
-    async def __event_info(self, message: str, description: str = None, user: str = 'system', entity: dict = None):
-        await Event.create_event(event_type=self.__TYPE_INFO, msg=message, description=description, user=user,
-                                 entity_dict=entity)
+    async def __event_info(
+        self,
+        message: str,
+        description: str = None,
+        user: str = "system",
+        entity: dict = None,
+    ):
+        await Event.create_event(
+            event_type=self.__TYPE_INFO,
+            msg=message,
+            description=description,
+            user=user,
+            entity_dict=entity,
+        )
 
     @cut_message
-    async def __event_warning(self, message: str, description: str = None, user: str = 'system', entity: dict = None):
-        await Event.create_event(event_type=self.__TYPE_WARNING, msg=message, description=description, user=user,
-                                 entity_dict=entity)
+    async def __event_warning(
+        self,
+        message: str,
+        description: str = None,
+        user: str = "system",
+        entity: dict = None,
+    ):
+        await Event.create_event(
+            event_type=self.__TYPE_WARNING,
+            msg=message,
+            description=description,
+            user=user,
+            entity_dict=entity,
+        )
 
     @cut_message
-    async def __event_error(self, message: str, description: str = None, user: str = 'system', entity: dict = None):
-        await Event.create_event(event_type=self.__TYPE_ERROR, msg=message, description=description, user=user,
-                                 entity_dict=entity)
+    async def __event_error(
+        self,
+        message: str,
+        description: str = None,
+        user: str = "system",
+        entity: dict = None,
+    ):
+        await Event.create_event(
+            event_type=self.__TYPE_ERROR,
+            msg=message,
+            description=description,
+            user=user,
+            entity_dict=entity,
+        )
 
     @cut_message
-    async def __event_debug(self, message: str, description: str = None, user: str = 'system', entity: dict = None):
-        await Event.create_event(event_type=self.__TYPE_DEBUG, msg=message, description=description, user=user,
-                                 entity_dict=entity)
+    async def __event_debug(
+        self,
+        message: str,
+        description: str = None,
+        user: str = "system",
+        entity: dict = None,
+    ):
+        await Event.create_event(
+            event_type=self.__TYPE_DEBUG,
+            msg=message,
+            description=description,
+            user=user,
+            entity_dict=entity,
+        )
 
     def _debug(self, message: str):
         """Синхронно запишет сообщение в logging с уровнем DEBUG."""
@@ -137,7 +181,13 @@ class Log:
             message = str(message)
         self.__log_debug(message)
 
-    async def debug(self, message: str, entity: dict = None, description: str = None, user: str = 'system'):
+    async def debug(
+        self,
+        message: str,
+        entity: dict = None,
+        description: str = None,
+        user: str = "system",
+    ):
         """Запишет сообщение в logging и таблицу Event с уровнем DEBUG."""
         if message and not isinstance(message, str):
             message = str(message)
@@ -146,13 +196,19 @@ class Log:
         self.__log_debug(message)
         if DEBUG:
             if not entity:
-                entity = {'entity_type': EntityType.SECURITY, 'entity_uuid': None}
+                entity = {"entity_type": EntityType.SECURITY, "entity_uuid": None}
             await self.__event_debug(message, description, user, entity)
 
-    async def info(self, message: str, entity: dict = None, description: str = None, user: str = 'system'):
+    async def info(
+        self,
+        message: str,
+        entity: dict = None,
+        description: str = None,
+        user: str = "system",
+    ):
         """Запишет сообщение в logging и таблицу Event с уровнем INFO."""
         if not entity:
-            entity = {'entity_type': EntityType.SECURITY, 'entity_uuid': None}
+            entity = {"entity_type": EntityType.SECURITY, "entity_uuid": None}
         if message and not isinstance(message, str):
             message = str(message)
         if description and not isinstance(description, str):
@@ -160,10 +216,16 @@ class Log:
         self.__log_info(message)
         await self.__event_info(message, description, user, entity)
 
-    async def warning(self, message: str, entity: dict = None, description: str = None, user: str = 'system'):
+    async def warning(
+        self,
+        message: str,
+        entity: dict = None,
+        description: str = None,
+        user: str = "system",
+    ):
         """Запишет сообщение в logging и таблицу Event с уровнем WARNING."""
         if not entity:
-            entity = {'entity_type': EntityType.SECURITY, 'entity_uuid': None}
+            entity = {"entity_type": EntityType.SECURITY, "entity_uuid": None}
         if message and not isinstance(message, str):
             message = str(message)
         if description and not isinstance(description, str):
@@ -171,10 +233,16 @@ class Log:
         self.__log_warning(message)
         await self.__event_warning(message, description, user, entity)
 
-    async def error(self, message: str, entity: dict = None, description: str = None, user: str = 'system'):
+    async def error(
+        self,
+        message: str,
+        entity: dict = None,
+        description: str = None,
+        user: str = "system",
+    ):
         """Запишет сообщение в logging и таблицу Event с уровнем ERROR."""
         if not entity:
-            entity = {'entity_type': EntityType.SECURITY, 'entity_uuid': None}
+            entity = {"entity_type": EntityType.SECURITY, "entity_uuid": None}
         if message and not isinstance(message, str):
             message = str(message)
         if description and not isinstance(description, str):

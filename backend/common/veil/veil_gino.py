@@ -29,34 +29,34 @@ async def get_list_of_values_from_db(db_model, column):
 class EntityType(Enum):
     """Базовые виды сущностей"""
 
-    CONTROLLER = 'CONTROLLER'
-    SECURITY = 'SECURITY'
-    POOL = 'POOL'
-    SYSTEM = 'SYSTEM'
-    VM = 'VM'
-    USER = 'USER'
-    GROUP = 'GROUP'
-    AUTH = 'AUTH'
+    CONTROLLER = "CONTROLLER"
+    SECURITY = "SECURITY"
+    POOL = "POOL"
+    SYSTEM = "SYSTEM"
+    VM = "VM"
+    USER = "USER"
+    GROUP = "GROUP"
+    AUTH = "AUTH"
 
 
 class Status(Enum):
 
-    CREATING = 'CREATING'
-    ACTIVE = 'ACTIVE'
-    FAILED = 'FAILED'
-    DELETING = 'DELETING'
-    SERVICE = 'SERVICE'
-    PARTIAL = 'PARTIAL'
-    BAD_AUTH = 'BAD_AUTH'
-    RESERVED = 'RESERVED'
+    CREATING = "CREATING"
+    ACTIVE = "ACTIVE"
+    FAILED = "FAILED"
+    DELETING = "DELETING"
+    SERVICE = "SERVICE"
+    PARTIAL = "PARTIAL"
+    BAD_AUTH = "BAD_AUTH"
+    RESERVED = "RESERVED"
 
 
 class Role(Enum):
     """Перечисление системных и не редактируемых ролей."""
 
-    SECURITY_ADMINISTRATOR = 'SECURITY_ADMINISTRATOR'
-    OPERATOR = 'OPERATOR'
-    ADMINISTRATOR = 'ADMINISTRATOR'
+    SECURITY_ADMINISTRATOR = "SECURITY_ADMINISTRATOR"
+    OPERATOR = "OPERATOR"
+    ADMINISTRATOR = "ADMINISTRATOR"
 
 
 class AbstractSortableStatusModel:
@@ -64,7 +64,7 @@ class AbstractSortableStatusModel:
 
     @property
     def has_status_field(self):
-        model_field = self._get_table_field('is_active')
+        model_field = self._get_table_field("is_active")
         return isinstance(model_field, Column)
 
     @classmethod
@@ -77,22 +77,24 @@ class AbstractSortableStatusModel:
 
     @classmethod
     def get_order_field(cls, field_name):
-        from common.veil.veil_errors import SimpleError
         """Соответствие переданного наименования поля полю модели, чтобы не использовать raw_sql в order"""
+        from common.veil.veil_errors import SimpleError
+
         field = cls._get_table_field(field_name)
         if field is None:
             # TODO: switch SimpleError to FieldError
-            raise SimpleError(_('Incorrect sort parameter {}.').format(field_name))
+            raise SimpleError(_("Incorrect sort parameter {}.").format(field_name))
         return field
 
     @classmethod
     def get_query_field(cls, field_name):
-        from common.veil.veil_errors import SimpleError
         """Соответствие переданного наименования поля полю модели, чтобы не использовать raw_sql в where"""
+        from common.veil.veil_errors import SimpleError
+
         field = cls._get_table_field(field_name)
         if field is None:
             # TODO: switch SimpleError to FieldError
-            raise SimpleError(_('Incorrect request parameter {}.').format(field_name))
+            raise SimpleError(_("Incorrect request parameter {}.").format(field_name))
         return field
 
     @classmethod
@@ -107,7 +109,7 @@ class AbstractSortableStatusModel:
             return query
 
         reversed_order = False
-        if ordering.find('-', 0, 1) == 0:
+        if ordering.find("-", 0, 1) == 0:
             reversed_order = True
             ordering = ordering[1:]
 
@@ -135,7 +137,13 @@ class AbstractSortableStatusModel:
         return query
 
     @classmethod
-    async def get_object(cls, id_=None, extra_field_name=None, extra_field_value=None, include_inactive=False):
+    async def get_object(
+        cls,
+        id_=None,
+        extra_field_name=None,
+        extra_field_value=None,
+        include_inactive=False,
+    ):
         query = cls.get_query(include_inactive=include_inactive)
         if id_:
             query = query.where(cls.id == id_)
@@ -146,28 +154,35 @@ class AbstractSortableStatusModel:
         return obj
 
     @classmethod
-    async def get_objects(cls, limit=100, offset=0, name=None, filters=None, ordering=None, first=False,
-                          include_inactive=False):
+    async def get_objects(
+        cls,
+        limit=100,
+        offset=0,
+        name=None,
+        filters=None,
+        ordering=None,
+        first=False,
+        include_inactive=False,
+    ):
         query = cls.get_query(ordering=ordering, include_inactive=include_inactive)
         if name:
-            if hasattr(cls, 'username'):
-                query = query.where(cls.username.ilike('%{}%'.format(name)))
-            elif hasattr(cls, 'verbose_name'):
-                query = query.where(cls.verbose_name.ilike('%{}%'.format(name)))
+            if hasattr(cls, "username"):
+                query = query.where(cls.username.ilike("%{}%".format(name)))
+            elif hasattr(cls, "verbose_name"):
+                query = query.where(cls.verbose_name.ilike("%{}%".format(name)))
         if filters:
             query = query.where(and_(*filters))
         if first:
             return await query.gino.first()
         if not ordering:
-            if hasattr(cls, 'username'):
+            if hasattr(cls, "username"):
                 query = query.order_by(cls.username)
-            elif hasattr(cls, 'verbose_name'):
+            elif hasattr(cls, "verbose_name"):
                 query = query.order_by(cls.verbose_name)
         return await query.limit(limit).offset(offset).gino.all()
 
 
 class VeilModel(db.Model):
-
     @property
     def entity_type(self):
         return EntityType.SECURITY
@@ -178,13 +193,15 @@ class VeilModel(db.Model):
 
     @property
     def entity(self):
-        return {'entity_type': self.entity_type, 'entity_uuid': self.id}
+        return {"entity_type": self.entity_type, "entity_uuid": self.id}
 
     @property
     async def entity_obj(self):
         from common.models.auth import Entity
+
         return await Entity.query.where(
-            (Entity.entity_type == self.entity_type) & (Entity.entity_uuid == self.id)).gino.first()
+            (Entity.entity_type == self.entity_type) & (Entity.entity_uuid == self.id)
+        ).gino.first()
 
     @property
     def active(self):
@@ -192,29 +209,38 @@ class VeilModel(db.Model):
 
     @property
     def stopped(self):
-        return self.status == Status.FAILED or self.status == Status.BAD_AUTH or self.status == Status.SERVICE
+        return (
+            self.status == Status.FAILED  # noqa: W503
+            or self.status == Status.BAD_AUTH  # noqa: W503
+            or self.status == Status.SERVICE  # noqa: W503
+        )
 
     async def make_failed(self):
         """Переключает в статус FAILED."""
         from common.log.journal import system_logger
+
         await self.set_status(Status.FAILED)
-        msg = _('{} {} has been disabled.').format(self.entity_name, self.verbose_name)
-        description = _('{} {} has`t been found in ECP VeiL. Switched to FAILED.').format(self.entity_name,
-                                                                                          self.verbose_name)
-        await system_logger.info(message=msg, description=description, entity=self.entity, user='system')
+        msg = _("{} {} has been disabled.").format(self.entity_name, self.verbose_name)
+        description = _(
+            "{} {} has`t been found in ECP VeiL. Switched to FAILED."
+        ).format(self.entity_name, self.verbose_name)
+        await system_logger.info(
+            message=msg, description=description, entity=self.entity, user="system"
+        )
 
     async def soft_delete(self, creator):
         from common.log.journal import system_logger
+
         try:
             await self.delete()
         except DataError as db_error:
-            await system_logger.debug(_('Soft_delete exception: {}.').format(db_error))
+            await system_logger.debug(_("Soft_delete exception: {}.").format(db_error))
             return False
         return True
 
     @classmethod
     async def soft_update(cls, id=None, **kwargs):
-        creator = kwargs.pop('creator', None)
+        creator = kwargs.pop("creator", None)
         dict_kwargs = kwargs
         update_dict = dict()
         for key, value in dict_kwargs.items():
@@ -224,7 +250,7 @@ class VeilModel(db.Model):
             await cls.update.values(**update_dict).where(cls.id == id).gino.status()
 
         update_type = await cls.get(id)
-        update_dict['creator'] = creator
+        update_dict["creator"] = creator
         return update_type, update_dict
 
     async def add_users(self, users_list: list, creator):
@@ -250,7 +276,7 @@ class VeilModel(db.Model):
     # virtual
     def get_resource_type(self):
         """Используется для ws. По типу фронт различает собщения"""
-        return 'UNKNOWN'
+        return "UNKNOWN"
 
     # virtual
     async def additional_model_to_json_data(self):
@@ -262,9 +288,7 @@ class VeilModel(db.Model):
         Anybody can get messages from this channel. For example vdi frontend"""
 
         msg_dict = dict(
-            resource=self.get_resource_type(),
-            mgs_type='data',
-            event=event_type
+            resource=self.get_resource_type(), mgs_type="data", event=event_type
         )
         msg_dict.update(gino_model_to_json_serializable_dict(self))
         additional_data = await self.additional_model_to_json_data()
@@ -277,7 +301,7 @@ class VeilModel(db.Model):
             return
         await self.update(status=status).apply()
 
-        await self.publish_data_in_internal_channel('UPDATED')
+        await self.publish_data_in_internal_channel("UPDATED")
 
 
 StatusGraphene = GrapheneEnum.from_enum(Status)

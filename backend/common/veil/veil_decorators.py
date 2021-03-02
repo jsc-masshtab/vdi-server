@@ -21,7 +21,9 @@ def context(f):
         def wrapper(*args, **kwargs):
             info = next(arg for arg in args if isinstance(arg, ResolveInfo))
             return func(info.context, *args, **kwargs)
+
         return wrapper
+
     return decorator
 
 
@@ -36,19 +38,24 @@ def user_passes_test(test_func, exc=Unauthorized):  # noqa
         async def wrapper(cntxt, *args, **kwargs):  # noqa
             if AUTH_ENABLED:
                 user = await extract_user_object(cntxt.headers)
-                kwargs['creator'] = user.username
+                kwargs["creator"] = user.username
                 if user and isinstance(user, User):
                     if test_func(await user.roles):
                         return f(*args, **kwargs)
                 await system_logger.warning(
-                    message=_('Invalid permissions.'),
-                    description=_('IP: {}. username: {}.').format(cntxt.remote_ip, user.username),
-                    entity={'entity_type': EntityType.SECURITY, 'entity_uuid': None})
-                raise exc(_('Invalid permissions.'))
+                    message=_("Invalid permissions."),
+                    description=_("IP: {}. username: {}.").format(
+                        cntxt.remote_ip, user.username
+                    ),
+                    entity={"entity_type": EntityType.SECURITY, "entity_uuid": None},
+                )
+                raise exc(_("Invalid permissions."))
             else:
-                kwargs['creator'] = 'system'
+                kwargs["creator"] = "system"
                 return f(*args, **kwargs)
+
         return wrapper
+
     return decorator
 
 
@@ -65,5 +72,7 @@ def is_operator(roles) -> bool:
 
 
 administrator_required = user_passes_test(lambda roles: is_administrator(roles))
-security_administrator_required = user_passes_test(lambda roles: is_security_administrator(roles))
+security_administrator_required = user_passes_test(
+    lambda roles: is_security_administrator(roles)
+)
 operator_required = user_passes_test(lambda roles: is_operator(roles))
