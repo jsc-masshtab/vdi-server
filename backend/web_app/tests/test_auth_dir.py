@@ -5,14 +5,16 @@
 
 import pytest
 
-from web_app.tests.fixtures import (fixt_db,  # noqa
-                            fixt_auth_context, # noqa
-                            fixt_group,  # noqa
-                            fixt_local_group,  # noqa
-                            fixt_auth_dir,  # noqa
-                            fixt_auth_dir_with_pass,  # noqa
-                            fixt_auth_dir_with_pass_bad,  # noqa
-                            fixt_mapping)  # noqa
+from web_app.tests.fixtures import (
+    fixt_db,  # noqa
+    fixt_auth_context,  # noqa
+    fixt_group,  # noqa
+    fixt_local_group,  # noqa
+    fixt_auth_dir,  # noqa
+    fixt_auth_dir_with_pass,  # noqa
+    fixt_auth_dir_with_pass_bad,  # noqa
+    fixt_mapping,
+)  # noqa
 
 from web_app.tests.utils import execute_scheme, ExecError
 
@@ -26,11 +28,15 @@ from common.languages import lang_init
 
 _ = lang_init()
 
-pytestmark = [pytest.mark.asyncio, pytest.mark.auth_dir, pytest.mark.auth,
-              pytest.mark.skipif(PAM_AUTH, reason="not finished yet")]
+pytestmark = [
+    pytest.mark.asyncio,
+    pytest.mark.auth_dir,
+    pytest.mark.auth,
+    pytest.mark.skipif(PAM_AUTH, reason="not finished yet"),
+]
 
 
-@pytest.mark.usefixtures('fixt_db')
+@pytest.mark.usefixtures("fixt_db")
 class TestAuthenticationDirectoryCreate:
     """Опции создания Authentication Directory."""
 
@@ -46,15 +52,19 @@ class TestAuthenticationDirectoryCreate:
                     ) {
                       ok
                     }}"""
-        executed = await execute_scheme(auth_dir_schema, query, context=fixt_auth_context)
+        executed = await execute_scheme(
+            auth_dir_schema, query, context=fixt_auth_context
+        )
         snapshot.assert_match(executed)
-        ad = await AuthenticationDirectory.query.where(AuthenticationDirectory.verbose_name == 'test').gino.first()
+        ad = await AuthenticationDirectory.query.where(
+            AuthenticationDirectory.verbose_name == "test"
+        ).gino.first()
         assert ad
         await ad.delete()
 
     async def test_auth_dir_create_no_pass(self, snapshot, fixt_auth_context):  # noqa
         """Допонительно проверяет шифрование пароля Authentication Directory."""
-        test_password = 'Bazalt1!'
+        test_password = "Bazalt1!"
         query = """mutation {createAuthDir(
                       domain_name: "bazalt"
                       dc_str: "dc=bazalt,dc=team"
@@ -63,10 +73,16 @@ class TestAuthenticationDirectoryCreate:
                       connection_type: LDAP
                       directory_type: ActiveDirectory
                       service_username: "ad120"
-                      service_password: "%s"){ok}}""" % (test_password,)
-        executed = await execute_scheme(auth_dir_schema, query, context=fixt_auth_context)
+                      service_password: "%s"){ok}}""" % (
+            test_password,
+        )
+        executed = await execute_scheme(
+            auth_dir_schema, query, context=fixt_auth_context
+        )
         snapshot.assert_match(executed)
-        ad = await AuthenticationDirectory.query.where(AuthenticationDirectory.verbose_name == 'test').gino.first()
+        ad = await AuthenticationDirectory.query.where(
+            AuthenticationDirectory.verbose_name == "test"
+        ).gino.first()
         assert ad
         # Проверка, что пароль зашифровался
         assert ad.service_password != test_password
@@ -74,7 +90,7 @@ class TestAuthenticationDirectoryCreate:
 
     async def test_auth_dir_bad_pass_create(self, snapshot, fixt_auth_context):  # noqa
         """При создании с неправильным паролем статус должен быть BAD_AUTH."""
-        test_password = 'bad'
+        test_password = "bad"
         query = """mutation {createAuthDir(
                              domain_name: "bazalt"
                              dc_str: "dc=bazalt,dc=team"
@@ -83,16 +99,24 @@ class TestAuthenticationDirectoryCreate:
                              connection_type: LDAP
                              directory_type: ActiveDirectory
                              service_username: "ad120"
-                             service_password: "%s"){ok,auth_dir{status}}}""" % (test_password,)
-        executed = await execute_scheme(auth_dir_schema, query, context=fixt_auth_context)
+                             service_password: "%s"){ok,auth_dir{status}}}""" % (
+            test_password,
+        )
+        executed = await execute_scheme(
+            auth_dir_schema, query, context=fixt_auth_context
+        )
         snapshot.assert_match(executed)
-        ad = await AuthenticationDirectory.query.where(AuthenticationDirectory.verbose_name == 'test').gino.first()
+        ad = await AuthenticationDirectory.query.where(
+            AuthenticationDirectory.verbose_name == "test"
+        ).gino.first()
         assert ad
         # Проверка избыточна, в ответе GraphQL уже будет статус, но мне так хочется
         assert ad.status == Status.BAD_AUTH
         await ad.delete()
 
-    async def test_auth_dir_bad_address_create(self, snapshot, fixt_auth_context):  # noqa
+    async def test_auth_dir_bad_address_create(
+        self, snapshot, fixt_auth_context
+    ):  # noqa
         """При создании с неправильным паролем статус должен быть FAILED."""
         query = """mutation {createAuthDir(
                               domain_name: "bazalt"
@@ -102,9 +126,13 @@ class TestAuthenticationDirectoryCreate:
                               connection_type: LDAP
                               directory_type: ActiveDirectory
                             ){ok,auth_dir{status}}}"""
-        executed = await execute_scheme(auth_dir_schema, query, context=fixt_auth_context)
+        executed = await execute_scheme(
+            auth_dir_schema, query, context=fixt_auth_context
+        )
         snapshot.assert_match(executed)
-        ad = await AuthenticationDirectory.query.where(AuthenticationDirectory.verbose_name == 'test').gino.first()
+        ad = await AuthenticationDirectory.query.where(
+            AuthenticationDirectory.verbose_name == "test"
+        ).gino.first()
         assert ad
         await ad.delete()
 
@@ -123,20 +151,28 @@ class TestAuthenticationDirectoryCreate:
         try:
             await execute_scheme(auth_dir_schema, query, context=fixt_auth_context)
         except ExecError as E:
-            assert _('More than one authentication directory can not be created.') in str(E)
+            assert _(
+                "More than one authentication directory can not be created."
+            ) in str(E)
 
 
-@pytest.mark.usefixtures('fixt_db')
+@pytest.mark.usefixtures("fixt_db")
 class TestAuthenticationDirectoryQuery:
     """Проверка опций просмотра информации Authentication Directory."""
 
-    async def test_auth_dirs_list(self, snapshot, fixt_auth_context, fixt_auth_dir):  # noqa
+    async def test_auth_dirs_list(
+        self, snapshot, fixt_auth_context, fixt_auth_dir
+    ):  # noqa
         """Проверяем что выводятся поля, которые есть в таблице на фронте."""
         query = """query{auth_dirs{id, verbose_name, status}}"""
-        executed = await execute_scheme(auth_dir_schema, query, context=fixt_auth_context)
+        executed = await execute_scheme(
+            auth_dir_schema, query, context=fixt_auth_context
+        )
         snapshot.assert_match(executed)
 
-    async def test_auth_dir_get_by_id(self, snapshot, fixt_auth_context, fixt_auth_dir):  # noqa
+    async def test_auth_dir_get_by_id(
+        self, snapshot, fixt_auth_context, fixt_auth_dir
+    ):  # noqa
         """Проверяем что работает поиск по id без service_password."""
         query = """{auth_dir(id: "10913d5d-ba7a-4049-88c5-769267a6cbe4") {
                         verbose_name
@@ -161,20 +197,28 @@ class TestAuthenticationDirectoryQuery:
                             }
                           }
                     }}"""
-        executed = await execute_scheme(auth_dir_schema, query, context=fixt_auth_context)
+        executed = await execute_scheme(
+            auth_dir_schema, query, context=fixt_auth_context
+        )
         snapshot.assert_match(executed)
 
-    async def test_auth_dir_get_possible_ad_groups(self, snapshot, fixt_auth_context, fixt_auth_dir_with_pass):  # noqa
+    async def test_auth_dir_get_possible_ad_groups(
+        self, snapshot, fixt_auth_context, fixt_auth_dir_with_pass
+    ):  # noqa
         """Проверяем что работает поиск по id и просмотр доступных для назначения групп."""
         query = """{auth_dir(id: "10913d5d-ba7a-4049-88c5-769267a6cbe5")
         {id,
                     assigned_ad_groups{ad_guid,verbose_name}
                     possible_ad_groups{ad_guid,verbose_name}
                     status}}"""
-        executed = await execute_scheme(auth_dir_schema, query, context=fixt_auth_context)
+        executed = await execute_scheme(
+            auth_dir_schema, query, context=fixt_auth_context
+        )
         snapshot.assert_match(executed)
 
-    async def test_auth_dir_get_possible_ad_groups_no_pass(self, snapshot, fixt_auth_context, fixt_auth_dir):  # noqa
+    async def test_auth_dir_get_possible_ad_groups_no_pass(
+        self, snapshot, fixt_auth_context, fixt_auth_dir
+    ):  # noqa
         """При отсутствующем пароле список групп будет пустой."""
         query = """{auth_dir(id:"10913d5d-ba7a-4049-88c5-769267a6cbe4"){id,
                     assigned_ad_groups{ad_guid,verbose_name},
@@ -183,38 +227,50 @@ class TestAuthenticationDirectoryQuery:
         try:
             await execute_scheme(auth_dir_schema, query, context=fixt_auth_context)
         except Exception as E:
-            assert 'Имя пользователя и пароль LDAP не могут быть пустыми' in str(E)
+            assert "Имя пользователя и пароль LDAP не могут быть пустыми" in str(E)
         else:
             raise AssertionError()
 
-    async def test_auth_dir_get_possible_ad_groups_bad_pass(self, snapshot, fixt_auth_context, fixt_auth_dir_with_pass_bad):  # noqa
+    async def test_auth_dir_get_possible_ad_groups_bad_pass(
+        self, snapshot, fixt_auth_context, fixt_auth_dir_with_pass_bad
+    ):  # noqa
         """При неправильном пароле список групп будет пустой."""
         query = """{auth_dir(id:"10913d5d-ba7a-4049-88c5-769267a6cbe6"){id,
                     assigned_ad_groups{ad_guid,verbose_name},
                     possible_ad_groups{ad_guid,verbose_name},
                     status}}"""
-        executed = await execute_scheme(auth_dir_schema, query, context=fixt_auth_context)
+        executed = await execute_scheme(
+            auth_dir_schema, query, context=fixt_auth_context
+        )
         snapshot.assert_match(executed)
 
 
-@pytest.mark.usefixtures('fixt_db')
+@pytest.mark.usefixtures("fixt_db")
 class TestAuthenticationDirectoryDelete:
     """Проверка удаления Authentication Directory."""
 
-    async def test_drop_auth_dir(self, snapshot, fixt_auth_context, fixt_auth_dir):  # noqa
+    async def test_drop_auth_dir(
+        self, snapshot, fixt_auth_context, fixt_auth_dir
+    ):  # noqa
         """Запись должна удалиться."""
         query = """mutation{deleteAuthDir(id: "10913d5d-ba7a-4049-88c5-769267a6cbe4"){ok}}"""
-        executed = await execute_scheme(auth_dir_schema, query, context=fixt_auth_context)
+        executed = await execute_scheme(
+            auth_dir_schema, query, context=fixt_auth_context
+        )
         snapshot.assert_match(executed)
 
-    async def test_drop_auth_dir_with_synced_group(self, snapshot, fixt_auth_context, fixt_auth_dir, fixt_group):  # noqa
+    async def test_drop_auth_dir_with_synced_group(
+        self, snapshot, fixt_auth_context, fixt_auth_dir, fixt_group
+    ):  # noqa
         """Запись должна удалиться, а у группы ad_guid должен обнулиться."""
         # Проверяем, что запись есть
         group = await Group.get("10913d5d-ba7a-4049-88c5-769267a6cbe4")
         assert group
         group_ad_guid = group.ad_guid
         query = """mutation{deleteAuthDir(id: "10913d5d-ba7a-4049-88c5-769267a6cbe4"){ok}}"""
-        executed = await execute_scheme(auth_dir_schema, query, context=fixt_auth_context)
+        executed = await execute_scheme(
+            auth_dir_schema, query, context=fixt_auth_context
+        )
         snapshot.assert_match(executed)
         # Актуализируем значение идентификатора из AD
         group = await Group.get("10913d5d-ba7a-4049-88c5-769267a6cbe4")
@@ -222,11 +278,13 @@ class TestAuthenticationDirectoryDelete:
         assert group.ad_guid is None
 
 
-@pytest.mark.usefixtures('fixt_db')
+@pytest.mark.usefixtures("fixt_db")
 class TestAuthenticationDirectoryEdit:
     """Проверка редактирования Authentication Directory."""
 
-    async def test_auth_dir_edit(self, snapshot, fixt_auth_context, fixt_auth_dir):  # noqa
+    async def test_auth_dir_edit(
+        self, snapshot, fixt_auth_context, fixt_auth_dir
+    ):  # noqa
         query = """mutation {updateAuthDir(
                       id: "10913d5d-ba7a-4049-88c5-769267a6cbe4"
                       verbose_name: "tst_verbose_name"
@@ -234,31 +292,43 @@ class TestAuthenticationDirectoryEdit:
                       domain_name: "bazalt"
                       dc_str: "bazalt.local"
                     ) {ok, auth_dir{status}}}"""
-        executed = await execute_scheme(auth_dir_schema, query, context=fixt_auth_context)
+        executed = await execute_scheme(
+            auth_dir_schema, query, context=fixt_auth_context
+        )
         snapshot.assert_match(executed)
 
-    async def test_auth_dir_edit_bad_address(self, snapshot, fixt_auth_context, fixt_auth_dir):  # noqa
+    async def test_auth_dir_edit_bad_address(
+        self, snapshot, fixt_auth_context, fixt_auth_dir
+    ):  # noqa
         query = """mutation {updateAuthDir(
                       id: "10913d5d-ba7a-4049-88c5-769267a6cbe4"
                       directory_url: "ldap://127.0.0.1"
                     ) {ok, auth_dir{status}}}"""
-        executed = await execute_scheme(auth_dir_schema, query, context=fixt_auth_context)
+        executed = await execute_scheme(
+            auth_dir_schema, query, context=fixt_auth_context
+        )
         snapshot.assert_match(executed)
 
-    async def test_auth_dir_edit_bad_pass(self, snapshot, fixt_auth_context, fixt_auth_dir):  # noqa
+    async def test_auth_dir_edit_bad_pass(
+        self, snapshot, fixt_auth_context, fixt_auth_dir
+    ):  # noqa
         query = """mutation {updateAuthDir(
                       id: "10913d5d-ba7a-4049-88c5-769267a6cbe4"
                       service_username: "tst"
                     ) {ok, auth_dir{status}}}"""
-        executed = await execute_scheme(auth_dir_schema, query, context=fixt_auth_context)
+        executed = await execute_scheme(
+            auth_dir_schema, query, context=fixt_auth_context
+        )
         snapshot.assert_match(executed)
 
 
-@pytest.mark.usefixtures('fixt_db')
+@pytest.mark.usefixtures("fixt_db")
 class TestAuthenticationDirectoryMappings:
     """Проверки мэппингов."""
 
-    async def test_add_auth_dir_mapp(self, snapshot, fixt_auth_context, fixt_group, fixt_auth_dir):  # noqa
+    async def test_add_auth_dir_mapp(
+        self, snapshot, fixt_auth_context, fixt_group, fixt_auth_dir
+    ):  # noqa
         query = """mutation {
                         addAuthDirMapping(
                             id: "10913d5d-ba7a-4049-88c5-769267a6cbe4"
@@ -277,11 +347,15 @@ class TestAuthenticationDirectoryMappings:
                             }
                           }
                         }"""
-        executed = await execute_scheme(auth_dir_schema, query, context=fixt_auth_context)
+        executed = await execute_scheme(
+            auth_dir_schema, query, context=fixt_auth_context
+        )
         snapshot.assert_match(executed)
         await Mapping.delete.gino.status()
 
-    async def test_edit_auth_dir_mapp(self, snapshot, fixt_auth_context, fixt_auth_dir, fixt_group, fixt_mapping):  # noqa
+    async def test_edit_auth_dir_mapp(
+        self, snapshot, fixt_auth_context, fixt_auth_dir, fixt_group, fixt_mapping
+    ):  # noqa
         query = """mutation {
                       editAuthDirMapping(
                         id: "10913d5d-ba7a-4049-88c5-769267a6cbe4",
@@ -305,10 +379,14 @@ class TestAuthenticationDirectoryMappings:
                         }
                       }
                     }"""
-        executed = await execute_scheme(auth_dir_schema, query, context=fixt_auth_context)
+        executed = await execute_scheme(
+            auth_dir_schema, query, context=fixt_auth_context
+        )
         snapshot.assert_match(executed)
 
-    async def test_del_auth_dir_mapp(self, snapshot, fixt_auth_context, fixt_auth_dir, fixt_group, fixt_mapping):  # noqa
+    async def test_del_auth_dir_mapp(
+        self, snapshot, fixt_auth_context, fixt_auth_dir, fixt_group, fixt_mapping
+    ):  # noqa
         query = """mutation {
                       deleteAuthDirMapping(
                         id: "10913d5d-ba7a-4049-88c5-769267a6cbe4",
@@ -330,38 +408,53 @@ class TestAuthenticationDirectoryMappings:
                         }
                       }
                     }"""
-        executed = await execute_scheme(auth_dir_schema, query, context=fixt_auth_context)
+        executed = await execute_scheme(
+            auth_dir_schema, query, context=fixt_auth_context
+        )
         snapshot.assert_match(executed)
 
 
-@pytest.mark.usefixtures('fixt_db')
+@pytest.mark.usefixtures("fixt_db")
 class TestAuthenticationDirectoryUtils:
-
-    async def test_auth_dir_check(self, snapshot, fixt_auth_context, fixt_auth_dir):  # noqa
+    async def test_auth_dir_check(
+        self, snapshot, fixt_auth_context, fixt_auth_dir
+    ):  # noqa
         """Проверка соединения без пароля (не требует авторизации в MS Active Directory)."""
         query = """mutation{
                         testAuthDir(id: "10913d5d-ba7a-4049-88c5-769267a6cbe4")
                     {ok, auth_dir{status}}}"""
-        executed = await execute_scheme(auth_dir_schema, query, context=fixt_auth_context)
+        executed = await execute_scheme(
+            auth_dir_schema, query, context=fixt_auth_context
+        )
         snapshot.assert_match(executed)
 
-    async def test_auth_dir_with_pass_check(self, snapshot, fixt_auth_context, fixt_auth_dir_with_pass):  # noqa
+    async def test_auth_dir_with_pass_check(
+        self, snapshot, fixt_auth_context, fixt_auth_dir_with_pass
+    ):  # noqa
         """Проверка соединения с паролем (требует авторизации в MS Active Directory)."""
         query = """mutation{
                                 testAuthDir(id: "10913d5d-ba7a-4049-88c5-769267a6cbe5")
                             {ok, auth_dir{status}}}"""
-        executed = await execute_scheme(auth_dir_schema, query, context=fixt_auth_context)
+        executed = await execute_scheme(
+            auth_dir_schema, query, context=fixt_auth_context
+        )
         snapshot.assert_match(executed)
 
-    async def test_auth_dir_with_bad_pass_check(self, snapshot, fixt_auth_context, fixt_auth_dir_with_pass_bad):  # noqa
+    async def test_auth_dir_with_bad_pass_check(
+        self, snapshot, fixt_auth_context, fixt_auth_dir_with_pass_bad
+    ):  # noqa
         """Проверка соединения с неправильным паролем (требует авторизации в MS Active Directory)."""
         query = """mutation{
                             testAuthDir(id: "10913d5d-ba7a-4049-88c5-769267a6cbe6")
                             {ok, auth_dir{status}}}"""
-        executed = await execute_scheme(auth_dir_schema, query, context=fixt_auth_context)
+        executed = await execute_scheme(
+            auth_dir_schema, query, context=fixt_auth_context
+        )
         snapshot.assert_match(executed)
 
-    async def test_auth_dir_sync_new_only_group(self, snapshot, fixt_auth_context, fixt_auth_dir_with_pass):  # noqa
+    async def test_auth_dir_sync_new_only_group(
+        self, snapshot, fixt_auth_context, fixt_auth_dir_with_pass
+    ):  # noqa
         """Должна создаться новая группа без пользователей."""
         query = """mutation{syncAuthDirGroupUsers(
                     auth_dir_id: "10913d5d-ba7a-4049-88c5-769267a6cbe5",
@@ -370,13 +463,19 @@ class TestAuthenticationDirectoryUtils:
                          group_verbose_name: "veil-ad-users",
                          group_members: []})
                     {ok}}"""
-        executed = await execute_scheme(auth_dir_schema, query, context=fixt_auth_context)
+        executed = await execute_scheme(
+            auth_dir_schema, query, context=fixt_auth_context
+        )
         snapshot.assert_match(executed)
-        group = await Group.query.where(Group.ad_guid == "ec0efca9-5878-4ab4-bb8f-149af659e115").gino.first()
+        group = await Group.query.where(
+            Group.ad_guid == "ec0efca9-5878-4ab4-bb8f-149af659e115"
+        ).gino.first()
         assert group
         await group.delete()
 
-    async def test_auth_dir_sync_new_only_group(self, snapshot, fixt_auth_context, fixt_auth_dir_with_pass, fixt_local_group):  # noqa
+    async def test_auth_dir_sync_new_only_group(
+        self, snapshot, fixt_auth_context, fixt_auth_dir_with_pass, fixt_local_group
+    ):  # noqa
         """Должна создаться новая группа без пользователей."""
         query = """mutation{syncAuthDirGroupUsers(
                     auth_dir_id: "10913d5d-ba7a-4049-88c5-769267a6cbe5",
@@ -388,11 +487,13 @@ class TestAuthenticationDirectoryUtils:
         try:
             await execute_scheme(auth_dir_schema, query, context=fixt_auth_context)
         except Exception as ex_msg:
-            assert 'В группе не найдены пользователи для синхронизации' in str(ex_msg)
+            assert "В группе не найдены пользователи для синхронизации" in str(ex_msg)
         else:
             raise AssertionError()
 
-    async def test_auth_dir_sync_group_and_users(self, snapshot, fixt_auth_context, fixt_auth_dir_with_pass):  # noqa
+    async def test_auth_dir_sync_group_and_users(
+        self, snapshot, fixt_auth_context, fixt_auth_dir_with_pass
+    ):  # noqa
         """Должна создаться новая группа и пользователи из AD."""
         query = """mutation{syncAuthDirGroupUsers(
                            auth_dir_id: "10913d5d-ba7a-4049-88c5-769267a6cbe5",
@@ -401,13 +502,17 @@ class TestAuthenticationDirectoryUtils:
                                 group_verbose_name: "veil-ad-users",
                                 group_ad_cn: "CN=veil-ad-users,CN=Users,DC=bazalt,DC=local"})
                            {ok}}"""
-        executed = await execute_scheme(auth_dir_schema, query, context=fixt_auth_context)
+        executed = await execute_scheme(
+            auth_dir_schema, query, context=fixt_auth_context
+        )
         snapshot.assert_match(executed)
         # Проверяем что группа создалась
-        group = await Group.query.where(Group.ad_guid == "ec0efca9-5878-4ab4-bb8f-149af659e115").gino.first()
+        group = await Group.query.where(
+            Group.ad_guid == "ec0efca9-5878-4ab4-bb8f-149af659e115"
+        ).gino.first()
         assert group
         # Проверяем что пользователь создался
-        user = await User.query.where(User.username == 'ad180').gino.first()
+        user = await User.query.where(User.username == "ad180").gino.first()
         assert user
         # Проверяем что пользователь в группе
         user_groups = await user.assigned_groups
@@ -415,5 +520,5 @@ class TestAuthenticationDirectoryUtils:
         assert isinstance(user_groups, list)
         assert group.id == user_groups[0].id
         # Чистим
-        await User.delete.where(User.username != 'vdiadmin').gino.status()
+        await User.delete.where(User.username != "vdiadmin").gino.status()
         await group.delete()

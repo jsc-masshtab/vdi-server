@@ -25,14 +25,14 @@ _ = lang_init()
 
 
 class Event(db.Model):
-    __tablename__ = 'event'
+    __tablename__ = "event"
     id = db.Column(UUID(), primary_key=True, default=uuid.uuid4)
     event_type = db.Column(db.Integer(), nullable=False)
     message = db.Column(db.Unicode(length=256), nullable=False)
     description = db.Column(db.Unicode())
     created = db.Column(db.DateTime(timezone=True), server_default=func.now())
-    user = db.Column(db.Unicode(length=128), default='system')
-    entity_id = db.Column(UUID(), db.ForeignKey('entity.id'), default=uuid.uuid4)
+    user = db.Column(db.Unicode(length=128), default="system")
+    entity_id = db.Column(UUID(), db.ForeignKey("entity.id"), default=uuid.uuid4)
 
     def __init__(self, **kw):
         super().__init__(**kw)
@@ -63,28 +63,36 @@ class Event(db.Model):
         :param path: путь для экспорта ('/tmp/')
         """
         from common.veil.veil_errors import SilentError
+
         start_date = datetime.date(start)
         finish_date = datetime.date(finish)
-        path = os.path.join(path, '')
+        path = os.path.join(path, "")
 
-        query = await Event.query.where(between(Event.created, start, finish + timedelta(days=1))).gino.all()
+        query = await Event.query.where(
+            between(Event.created, start, finish + timedelta(days=1))
+        ).gino.all()
 
         export = []
         for event in query:
             export.append(event.__values__)
 
-        name = '{}events_{}-{}.csv'.format(path, start_date + timedelta(days=1), finish_date + timedelta(days=1))
+        name = "{}events_{}-{}.csv".format(
+            path, start_date + timedelta(days=1), finish_date + timedelta(days=1)
+        )
         try:
-            with open('{}'.format(name), 'w') as f:
+            with open("{}".format(name), "w") as f:
                 writer = csv.DictWriter(f, fieldnames=export[0])
                 writer.writeheader()
                 for row in export:
                     writer.writerow(row)
         except FileNotFoundError:
-            raise SilentError(_('Path {} is incorrect.').format(path))
+            raise SilentError(_("Path {} is incorrect.").format(path))
         except IndexError:
-            raise SilentError(_('Check date. Interval {} - {} is incorrect.').format(start_date + timedelta(days=1),
-                                                                                     finish_date + timedelta(days=1)))
+            raise SilentError(
+                _("Check date. Interval {} - {} is incorrect.").format(
+                    start_date + timedelta(days=1), finish_date + timedelta(days=1)
+                )
+            )
         return name
 
     @staticmethod
@@ -93,13 +101,18 @@ class Event(db.Model):
             Если списка нет, то отмечаем ВСЁ
         """
         if not events_id_list:
-            results = await Event.select('id').gino.all()
+            results = await Event.select("id").gino.all()
             events_id_list = [value for value, in results]
         async with db.transaction():
             for event_id in events_id_list:
                 # get_or_create
-                filters = [(EventReadByUser.event == event_id), (EventReadByUser.user == user_id)]
-                relation = await EventReadByUser.query.where(and_(*filters)).gino.first()
+                filters = [
+                    (EventReadByUser.event == event_id),
+                    (EventReadByUser.user == user_id),
+                ]
+                relation = await EventReadByUser.query.where(
+                    and_(*filters)
+                ).gino.first()
                 if relation is None:
                     await EventReadByUser.create(event=event_id, user=user_id)
 
@@ -118,6 +131,7 @@ class Event(db.Model):
     @classmethod
     async def soft_create(cls, event_type, msg, description, user, entity_dict: dict):
         from common.models.auth import Entity
+
         async with db.transaction():  # noqa
             # 1. Создаем запись сущности
             if entity_dict and isinstance(entity_dict, dict):
@@ -128,20 +142,24 @@ class Event(db.Model):
                     message=msg,
                     description=description,
                     user=user,
-                    entity_id=entity.id
+                    entity_id=entity.id,
                 )
                 # 3. Создаем связь
                 # await EventEntity.create(entity_id=entity.id, event_id=event.id)
             return event
 
     @classmethod
-    async def create_event(cls, msg, event_type, description, user, entity_dict):  # noqa
+    async def create_event(
+        cls, msg, event_type, description, user, entity_dict
+    ):  # noqa
 
-        msg_dict = dict(event_type=event_type,
-                        event='event',
-                        resource=EVENTS_SUBSCRIPTION)
+        msg_dict = dict(
+            event_type=event_type, event="event", resource=EVENTS_SUBSCRIPTION
+        )
 
-        event_obj = await cls.soft_create(event_type, msg, description, user, entity_dict)
+        event_obj = await cls.soft_create(
+            event_type, msg, description, user, entity_dict
+        )
         msg_dict.update(gino_model_to_json_serializable_dict(event_obj))
 
         try:
@@ -159,13 +177,14 @@ class Event(db.Model):
 
 class EventReadByUser(db.Model):
     """Связывающая сущность"""
-    __tablename__ = 'event_read_by_user'
-    event = db.Column(UUID(), db.ForeignKey('event.id'), nullable=False)
-    user = db.Column(UUID(), db.ForeignKey('user.id'), nullable=False)
+
+    __tablename__ = "event_read_by_user"
+    event = db.Column(UUID(), db.ForeignKey("event.id"), nullable=False)
+    user = db.Column(UUID(), db.ForeignKey("user.id"), nullable=False)
 
 
 class JournalSettings(db.Model):
-    __tablename__ = 'journal_settings'
+    __tablename__ = "journal_settings"
     id = db.Column(UUID(), primary_key=True)
     interval = db.Column(db.Unicode(length=128), nullable=False)
     period = db.Column(db.Unicode(length=128), nullable=False)
@@ -177,47 +196,55 @@ class JournalSettings(db.Model):
     create_date = db.Column(db.DateTime(timezone=True), nullable=False)
 
     @classmethod
-    async def change_journal_settings(cls, dir_path: str = None,
-                                      period: str = None,
-                                      by_count: bool = None,
-                                      count: int = None, **kwargs):
+    async def change_journal_settings(
+        cls,
+        dir_path: str = None,
+        period: str = None,
+        by_count: bool = None,
+        count: int = None,
+        **kwargs
+    ):
         from common.log.journal import system_logger
         from common.veil.veil_errors import SilentError
 
         settings = dict()
         if dir_path:
-            settings['dir_path'] = dir_path
+            settings["dir_path"] = dir_path
         if period and not by_count:
-            settings['by_count'] = by_count
+            settings["by_count"] = by_count
             if period == "day":
-                settings['period'] = period
-                settings['interval'] = '1 day'
-                settings['form'] = 'YYYY_MM_DD'
-                settings['duration'] = 1095
+                settings["period"] = period
+                settings["interval"] = "1 day"
+                settings["form"] = "YYYY_MM_DD"
+                settings["duration"] = 1095
             elif period == "week":
-                settings['period'] = period
-                settings['interval'] = '1 week'
-                settings['form'] = 'YYYY_MM_DD'
-                settings['duration'] = 156
+                settings["period"] = period
+                settings["interval"] = "1 week"
+                settings["form"] = "YYYY_MM_DD"
+                settings["duration"] = 156
             elif period == "month":
-                settings['period'] = period
-                settings['interval'] = '1 month'
-                settings['form'] = 'YYYY_MM'
-                settings['duration'] = 36
+                settings["period"] = period
+                settings["interval"] = "1 month"
+                settings["form"] = "YYYY_MM"
+                settings["duration"] = 36
             elif period == "year":
-                settings['period'] = period
-                settings['interval'] = '1 year'
-                settings['form'] = 'YYYY'
-                settings['duration'] = 3
+                settings["period"] = period
+                settings["interval"] = "1 year"
+                settings["form"] = "YYYY"
+                settings["duration"] = 3
             else:
-                raise SilentError(_('Choose right period.'))
+                raise SilentError(_("Choose right period."))
         if by_count and count:
-            settings['by_count'] = by_count
+            settings["by_count"] = by_count
             if count > 1:
-                settings['count'] = count
+                settings["count"] = count
             else:
-                raise SilentError(_('Count must be more than 1.'))
+                raise SilentError(_("Count must be more than 1."))
         await cls.update.values(**settings).gino.status()
-        entity = {'entity_type': 'SECURITY', 'entity_uuid': None}
-        await system_logger.info(_('Journal settings changed.'), description=settings,
-                                 entity=entity, user=kwargs['creator'])
+        entity = {"entity_type": "SECURITY", "entity_uuid": None}
+        await system_logger.info(
+            _("Journal settings changed."),
+            description=settings,
+            entity=entity,
+            user=kwargs["creator"],
+        )

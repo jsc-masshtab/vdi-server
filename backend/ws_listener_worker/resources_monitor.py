@@ -4,6 +4,7 @@ import asyncio
 from web_app.front_ws_api.subscription_sources import SubscriptionCmd
 
 from tornado.websocket import WebSocketClosedError
+
 # from tornado.websocket import WebSocketError
 from tornado.websocket import websocket_connect
 from common.settings import WS_PING_INTERVAL, WS_PING_TIMEOUT
@@ -30,6 +31,7 @@ class ResourcesMonitor:
     """
     monitoring of controller events
     """
+
     RECONNECT_TIMEOUT = 15
     CONTROLLER_CHECK_TIMEOUT = 15
 
@@ -50,9 +52,13 @@ class ResourcesMonitor:
 
         native_loop = asyncio.get_event_loop()
         # controller check
-        self._controller_online_task = native_loop.create_task(self._controller_online_checking())
+        self._controller_online_task = native_loop.create_task(
+            self._controller_online_checking()
+        )
         # ws data
-        self._resources_monitor_task = native_loop.create_task(self._processing_ws_messages())
+        self._resources_monitor_task = native_loop.create_task(
+            self._processing_ws_messages()
+        )
 
     async def stop(self):
 
@@ -103,7 +109,9 @@ class ResourcesMonitor:
         """
         while self._running_flag:
             is_connected = await self._connect()
-            await system_logger.debug(_('{} is connected: {}.').format(__class__.__name__, is_connected))  # noqa
+            await system_logger.debug(
+                _("{} is connected: {}.").format(__class__.__name__, is_connected)
+            )  # noqa
             # reconnect if not connected
             if not is_connected:
                 await asyncio.sleep(self.RECONNECT_TIMEOUT)
@@ -113,10 +121,16 @@ class ResourcesMonitor:
             while self._running_flag:
                 msg = await self._ws_connection.read_message()
                 if msg is None:  # according to doc it means that connection closed
-                    await system_logger.debug('{} Probably connection is closed by server.'.format(__class__.__name__))  # noqa
+                    await system_logger.debug(
+                        "{} Probably connection is closed by server.".format(
+                            __class__.__name__
+                        )
+                    )  # noqa
                     break
-                elif 'token error' in msg:
-                    await system_logger.debug('{} token error. Closing connection.'.format(__class__.__name__))  # noqa
+                elif "token error" in msg:
+                    await system_logger.debug(
+                        "{} token error. Closing connection.".format(__class__.__name__)
+                    )  # noqa
                     # Если токен эррор, то закрываем соединение и и переходим к попыткам коннекта (начало первого while)
                     await self._close_connection()
                     break
@@ -136,20 +150,24 @@ class ResourcesMonitor:
         try:
             token = controller.token.split()[1]
         except IndexError:
-            await system_logger.debug('{} Cant get token for controller.').format(__class__.__name__)
+            await system_logger.debug("{} Cant get token for controller.").format(
+                __class__.__name__
+            )
             return False
 
         # create ws connection
         try:
-            connect_url = 'ws://{}/ws/?token={}'.format(controller.address, token)
+            connect_url = "ws://{}/ws/?token={}".format(controller.address, token)
             # await system_logger.debug('ws connection url is {}'.format(connect_url))
-            self._ws_connection = await websocket_connect(url=connect_url,
-                                                          ping_interval=WS_PING_INTERVAL,
-                                                          ping_timeout=WS_PING_TIMEOUT)
+            self._ws_connection = await websocket_connect(
+                url=connect_url,
+                ping_interval=WS_PING_INTERVAL,
+                ping_timeout=WS_PING_TIMEOUT,
+            )
         except Exception:  # noqa
             # Причин для исключения может быть множество включая OS specific
-            msg = _('Resource monitor can`t connect to controller.')
-            description = _('Can`t connect to {}.').format(controller.address)
+            msg = _("Resource monitor can`t connect to controller.")
+            description = _("Can`t connect to {}.").format(controller.address)
             await system_logger.error(message=msg, description=description)
             return False
 
@@ -157,7 +175,8 @@ class ResourcesMonitor:
         try:
             for subscription_name in CONTROLLER_SUBSCRIPTIONS_LIST:
                 await self._ws_connection.write_message(
-                    SubscriptionCmd.add + ' ' + format(subscription_name))
+                    SubscriptionCmd.add + " " + format(subscription_name)
+                )
         except WebSocketClosedError as ws_error:
             await system_logger.error(ws_error)
             return False
@@ -170,7 +189,9 @@ class ResourcesMonitor:
 
     async def _close_connection(self):
         if self._ws_connection:
-            await system_logger.debug(_('Closing ws connection {}.').format(self._controller_id))
+            await system_logger.debug(
+                _("Closing ws connection {}.").format(self._controller_id)
+            )
             try:
                 self._ws_connection.close()
             except Exception as E:

@@ -9,7 +9,10 @@ from sqlalchemy import and_
 
 from common.veil.veil_errors import SimpleError
 from common.veil.veil_decorators import administrator_required
-from common.veil.veil_redis import send_cmd_to_cancel_tasks, send_cmd_to_cancel_tasks_associated_with_controller
+from common.veil.veil_redis import (
+    send_cmd_to_cancel_tasks,
+    send_cmd_to_cancel_tasks_associated_with_controller,
+)
 from common.veil.veil_gino import EntityType
 from common.utils import convert_gino_model_to_graphene_type
 
@@ -38,9 +41,14 @@ class TaskType(graphene.ObjectType):
 
 
 class TaskQuery(graphene.ObjectType):
-    tasks = graphene.List(TaskType, limit=graphene.Int(default_value=100),
-                          offset=graphene.Int(default_value=0), status=TaskStatusGraphene(),
-                          task_type=TaskTypeGraphene(), ordering=graphene.String())
+    tasks = graphene.List(
+        TaskType,
+        limit=graphene.Int(default_value=100),
+        offset=graphene.Int(default_value=0),
+        status=TaskStatusGraphene(),
+        task_type=TaskTypeGraphene(),
+        ordering=graphene.String(),
+    )
 
     task = graphene.Field(TaskType, id=graphene.UUID())
 
@@ -55,7 +63,16 @@ class TaskQuery(graphene.ObjectType):
         return filters
 
     @administrator_required
-    async def resolve_tasks(self, _info, limit, offset, status=None, task_type=None, ordering='-created', **kwargs):
+    async def resolve_tasks(
+        self,
+        _info,
+        limit,
+        offset,
+        status=None,
+        task_type=None,
+        ordering="-created",
+        **kwargs
+    ):
 
         query = Task.query
 
@@ -70,7 +87,9 @@ class TaskQuery(graphene.ObjectType):
         # conversion
         task_graphene_types = []
         for task_model in task_models:
-            task_graphene_type = convert_gino_model_to_graphene_type(task_model, TaskType)
+            task_graphene_type = convert_gino_model_to_graphene_type(
+                task_model, TaskType
+            )
             task_graphene_type.duration = task_model.get_task_duration()
             task_graphene_types.append(task_graphene_type)
 
@@ -81,8 +100,8 @@ class TaskQuery(graphene.ObjectType):
 
         task_model = await Task.get(id)
         if not task_model:
-            entity = {'entity_type': EntityType.SYSTEM, 'entity_uuid': None}
-            raise SimpleError(_('No such task.'), entity=entity)
+            entity = {"entity_type": EntityType.SYSTEM, "entity_uuid": None}
+            raise SimpleError(_("No such task."), entity=entity)
 
         task_graphene_type = convert_gino_model_to_graphene_type(task_model, TaskType)
         task_graphene_type.duration = task_model.get_task_duration()
@@ -90,14 +109,18 @@ class TaskQuery(graphene.ObjectType):
 
     @staticmethod
     def _calculate_task_duration(task_graphene_type):
-        duration = task_graphene_type.finished - task_graphene_type.started \
-            if (task_graphene_type.finished and task_graphene_type.started) else None
+        duration = (
+            task_graphene_type.finished - task_graphene_type.started
+            if (task_graphene_type.finished and task_graphene_type.started)
+            else None
+        )
 
         return duration
 
 
 class CancelTaskMutation(graphene.Mutation):
     """Отменяем задачу"""
+
     class Arguments:
         task = graphene.UUID()
 
@@ -108,12 +131,19 @@ class CancelTaskMutation(graphene.Mutation):
 
         # Check if task exists and has status IN_PROGRESS
         progressing_task_id = await Task.query.where(
-            (Task.id == task) & (Task.status == TaskStatus.IN_PROGRESS)).gino.scalar()
+            (Task.id == task) & (Task.status == TaskStatus.IN_PROGRESS)
+        ).gino.scalar()
         # print("progressing_task_id ", progressing_task_id, flush=True)
         if not progressing_task_id:
-            entity = {'entity_type': EntityType.SYSTEM, 'entity_uuid': None}
-            raise SimpleError(_('No such task or status of task {} is not {}.'.format(
-                task, TaskStatus.IN_PROGRESS.name)), entity=entity)
+            entity = {"entity_type": EntityType.SYSTEM, "entity_uuid": None}
+            raise SimpleError(
+                _(
+                    "No such task or status of task {} is not {}.".format(
+                        task, TaskStatus.IN_PROGRESS.name
+                    )
+                ),
+                entity=entity,
+            )
 
         # send cmd
         task_id_str_list = [str(task)]
@@ -122,7 +152,6 @@ class CancelTaskMutation(graphene.Mutation):
 
 
 class CancelTaskAssocWithContMutation(graphene.Mutation):
-
     class Arguments:
         controller = graphene.UUID()
 
@@ -139,4 +168,6 @@ class TaskMutations(graphene.ObjectType):
     cancelTaskAssocWith = CancelTaskAssocWithContMutation.Field()
 
 
-task_schema = graphene.Schema(query=TaskQuery, mutation=TaskMutations, auto_camelcase=False)
+task_schema = graphene.Schema(
+    query=TaskQuery, mutation=TaskMutations, auto_camelcase=False
+)

@@ -7,7 +7,7 @@ import secrets
 from common.settings import SECRET_KEY
 
 
-def force_bytes(s, encoding='utf-8', errors='strict'):
+def force_bytes(s, encoding="utf-8", errors="strict"):
     """
     Similar to smart_bytes, except that lazy instances are resolved to
     strings, rather than kept as lazy objects.
@@ -16,10 +16,10 @@ def force_bytes(s, encoding='utf-8', errors='strict'):
     """
     # Handle the common case first for performance reasons.
     if isinstance(s, bytes):
-        if encoding == 'utf-8':
+        if encoding == "utf-8":
             return s
         else:
-            return s.decode('utf-8', errors).encode(encoding, errors)
+            return s.decode("utf-8", errors).encode(encoding, errors)
     if isinstance(s, memoryview):
         return bytes(s)
     return str(s).encode(encoding, errors)
@@ -50,16 +50,17 @@ def salted_hmac(key_salt, value, secret=None):
     return hmac.new(key, msg=force_bytes(value), digestmod=hashlib.sha1)
 
 
-def get_random_string(length=50,
-                      allowed_chars='abcdefghijklmnopqrstuvwxyz'
-                                    'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'):
+def get_random_string(
+    length=50,
+    allowed_chars="abcdefghijklmnopqrstuvwxyz" "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",
+):
     """
     Return a securely generated random string.
 
     The default length of 12 with the a-z, A-Z, 0-9 character set returns
     a 71-bit value. log_2((26+26+10)^12) =~ 71 bits
     """
-    return ''.join(secrets.choice(allowed_chars) for i in range(length))
+    return "".join(secrets.choice(allowed_chars) for i in range(length))
 
 
 def constant_time_compare(val1, val2):

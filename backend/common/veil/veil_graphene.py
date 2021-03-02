@@ -9,7 +9,11 @@ class VeilResourceType(graphene.ObjectType):
 
     def __init__(self, **kwargs):
         # TODO: args?
-        filtered = {attr: attr_value for attr, attr_value in kwargs.items() if attr in self.__class__.__dict__}
+        filtered = {
+            attr: attr_value
+            for attr, attr_value in kwargs.items()
+            if attr in self.__class__.__dict__
+        }
         super().__init__(**filtered)
 
 
