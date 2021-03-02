@@ -9,7 +9,11 @@ from common.models.auth import Group
 from common.models.event import Event
 from common.settings import PAM_AUTH
 
-pytestmark = [pytest.mark.asyncio, pytest.mark.creator, pytest.mark.skipif(PAM_AUTH, reason="not finished yet")]
+pytestmark = [
+    pytest.mark.asyncio,
+    pytest.mark.creator,
+    pytest.mark.skipif(PAM_AUTH, reason="not finished yet"),
+]
 
 
 @pytest.mark.asyncio
@@ -17,7 +21,7 @@ async def test_event_creator(snapshot, fixt_db, fixt_auth_context):  # noqa
     fst = datetime.now() - timedelta(minutes=181)
     lst = fst + timedelta(minutes=182)
 
-    await Group.soft_create('test', 'test_admin')
+    await Group.soft_create("test", "test_admin")
 
     try:
         query = """{
@@ -27,13 +31,20 @@ async def test_event_creator(snapshot, fixt_db, fixt_auth_context):  # noqa
                     description,
                     user
                   }
-                }""" % (fst.replace(microsecond=0).isoformat(), lst.replace(microsecond=0).isoformat())
+                }""" % (
+            fst.replace(microsecond=0).isoformat(),
+            lst.replace(microsecond=0).isoformat(),
+        )
 
         executed = await execute_scheme(event_schema, query, context=fixt_auth_context)
         snapshot.assert_match(executed)
     except:  # noqa
         raise
     finally:
-        await Event.delete.where(Event.user == 'test_admin').gino.status()
-        group = await Group.get_object(include_inactive=True, extra_field_name='verbose_name', extra_field_value='test')
+        await Event.delete.where(Event.user == "test_admin").gino.status()
+        group = await Group.get_object(
+            include_inactive=True,
+            extra_field_name="verbose_name",
+            extra_field_value="test",
+        )
         await group.delete()

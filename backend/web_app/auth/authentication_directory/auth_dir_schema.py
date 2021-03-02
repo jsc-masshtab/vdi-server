@@ -17,7 +17,9 @@ from common.languages import lang_init
 
 _ = lang_init()
 
-ConnectionTypesGraphene = GrapheneEnum.from_enum(AuthenticationDirectory.ConnectionTypes)
+ConnectionTypesGraphene = GrapheneEnum.from_enum(
+    AuthenticationDirectory.ConnectionTypes
+)
 DirectoryTypesGraphene = GrapheneEnum.from_enum(AuthenticationDirectory.DirectoryTypes)
 MappingTypesGraphene = GrapheneEnum.from_enum(Mapping.ValueTypes)
 
@@ -30,26 +32,28 @@ class AuthenticationDirectoryValidator(MutationValidation):
         ad = await AuthenticationDirectory.get_object(id_=value, include_inactive=True)
         if ad:
             return value
-        raise ValidationError(_('No such Authentication Directory.'))
+        raise ValidationError(_("No such Authentication Directory."))
 
     @staticmethod
     async def validate_directory_url(obj_dict, value):
-        if not re.match(r'^ldap[s]?://[\S]+$', value):
+        if not re.match(r"^ldap[s]?://[\S]+$", value):
             raise ValidationError(
-                _('Authentication directory URL should start with ldap(s)://.'))
+                _("Authentication directory URL should start with ldap(s)://.")
+            )
         return value
 
     @staticmethod
     async def validate_verbose_name(obj_dict, value):
         if len(value) == 0:
-            raise ValidationError(
-                _('Verbose name should not be empty.'))
+            raise ValidationError(_("Verbose name should not be empty."))
         return value
 
     @staticmethod
     async def validate_domain_name(obj_dict, value):
-        if not re.match(r'^[a-zA-Z0-9\-_\.]{1,63}$', value):
-            raise ValidationError(_('Value should be 1-63 latin characters, -, . or _.'))
+        if not re.match(r"^[a-zA-Z0-9\-_\.]{1,63}$", value):
+            raise ValidationError(
+                _("Value should be 1-63 latin characters, -, . or _.")
+            )
         return value
 
     @staticmethod
@@ -63,30 +67,34 @@ class AuthenticationDirectoryValidator(MutationValidation):
         value_count = len(value)
         if value_count > 0 and isinstance(value, list):
             # Нет желания явно проверять каждого пользователя на присутствие
-            exists_count = await db.select([db.func.count()]).where(Group.id.in_(value)).gino.scalar()
+            exists_count = (
+                await db.select([db.func.count()])
+                .where(Group.id.in_(value))
+                .gino.scalar()
+            )
             if exists_count != value_count:
-                raise ValidationError(_('users count not much with db count.'))
+                raise ValidationError(_("users count not much with db count."))
             return value
-        raise ValidationError(_('groups list is empty.'))
+        raise ValidationError(_("groups list is empty."))
 
     @staticmethod
     async def validate_mapping_id(obj_dict, value):
         mapping = await Mapping.get(value)
         if mapping:
             return value
-        raise ValidationError(_('No such mapping.'))
+        raise ValidationError(_("No such mapping."))
 
     @staticmethod
     async def validate_dc_str(obj_dict, value):
         if len(value) == 0:
-            raise ValidationError(
-                _('DC should not be empty.'))
+            raise ValidationError(_("DC should not be empty."))
         return value
 
 
 class MappingGroupType(graphene.ObjectType):
     """Намеренное дублирование GroupType с сокращением доступных полей.
     Нет понимания в целесообразности абстрактного класса для обоих типов."""
+
     id = graphene.UUID(required=True)
     verbose_name = graphene.String()
     description = graphene.String()
@@ -144,6 +152,7 @@ class AuthenticationDirectoryGroupType(graphene.ObjectType):
 
 class AuthenticationDirectorySyncGroupType(graphene.InputObjectType):
     """Тип для мутации синхронизации групп/пользователей из Authentication Directory."""
+
     group_ad_guid = graphene.UUID(required=True)
     group_verbose_name = graphene.String(required=True)
     group_ad_cn = graphene.String(required=True)
@@ -152,26 +161,34 @@ class AuthenticationDirectorySyncGroupType(graphene.InputObjectType):
 class AuthenticationDirectoryType(graphene.ObjectType):
     """Служба каталогов."""
 
-    id = graphene.UUID(description='Внутренний идентификатор')
-    verbose_name = graphene.String(description='Имя')
-    directory_url = graphene.String(description='Адрес службы каталогов')
-    connection_type = ConnectionTypesGraphene(description='Тип подключения')
-    description = graphene.String(description='Описание')
-    directory_type = DirectoryTypesGraphene(description='Тип службы каталогов')
-    domain_name = graphene.String(description='Имя контроллера доменов')
-    dc_str = graphene.String(description='Класс объекта домена')
-    service_username = graphene.String(description='Пользователь имеющий права для управления AD')
-    service_password = graphene.String(description='Пароль пользователя имеющего права для управления AD')
-    status = StatusGraphene(description='Статус')
+    id = graphene.UUID(description="Внутренний идентификатор")
+    verbose_name = graphene.String(description="Имя")
+    directory_url = graphene.String(description="Адрес службы каталогов")
+    connection_type = ConnectionTypesGraphene(description="Тип подключения")
+    description = graphene.String(description="Описание")
+    directory_type = DirectoryTypesGraphene(description="Тип службы каталогов")
+    domain_name = graphene.String(description="Имя контроллера доменов")
+    dc_str = graphene.String(description="Класс объекта домена")
+    service_username = graphene.String(
+        description="Пользователь имеющий права для управления AD"
+    )
+    service_password = graphene.String(
+        description="Пароль пользователя имеющего права для управления AD"
+    )
+    status = StatusGraphene(description="Статус")
 
-    mappings = graphene.List(MappingType, limit=graphene.Int(default_value=100), offset=graphene.Int(default_value=0))
+    mappings = graphene.List(
+        MappingType,
+        limit=graphene.Int(default_value=100),
+        offset=graphene.Int(default_value=0),
+    )
 
     assigned_ad_groups = graphene.List(AuthenticationDirectoryGroupType)
     possible_ad_groups = graphene.List(AuthenticationDirectoryGroupType)
 
     async def resolve_service_password(self, _info):
         """Dummy value for not displayed field."""
-        return '*' * 7
+        return "*" * 7
 
     async def resolve_mappings(self, _info, limit, offset):
         auth_dir = await AuthenticationDirectory.get(self.id)
@@ -192,9 +209,12 @@ class AuthenticationDirectoryType(graphene.ObjectType):
 
 
 class AuthenticationDirectoryQuery(graphene.ObjectType):
-    auth_dirs = graphene.List(AuthenticationDirectoryType, limit=graphene.Int(default_value=100),
-                              offset=graphene.Int(default_value=0),
-                              ordering=graphene.String())
+    auth_dirs = graphene.List(
+        AuthenticationDirectoryType,
+        limit=graphene.Int(default_value=100),
+        offset=graphene.Int(default_value=0),
+        ordering=graphene.String(),
+    )
     auth_dir = graphene.Field(AuthenticationDirectoryType, id=graphene.UUID())
 
     @staticmethod
@@ -204,16 +224,18 @@ class AuthenticationDirectoryQuery(graphene.ObjectType):
     @security_administrator_required
     async def resolve_auth_dir(self, info, creator, id=None):
         if not id:
-            raise SilentError(_('Specify id.'))
+            raise SilentError(_("Specify id."))
 
         auth_dir = await AuthenticationDirectory.get_object(id)
         if not auth_dir:
-            raise SilentError(_('No such Authentication Directory.'))
+            raise SilentError(_("No such Authentication Directory."))
         return AuthenticationDirectoryQuery.instance_to_type(auth_dir)
 
     @security_administrator_required
     async def resolve_auth_dirs(self, info, limit, offset, creator, ordering=None):
-        auth_dirs = await AuthenticationDirectory.get_objects(limit, offset, ordering=ordering)
+        auth_dirs = await AuthenticationDirectory.get_objects(
+            limit, offset, ordering=ordering
+        )
         objects = [
             AuthenticationDirectoryQuery.instance_to_type(auth_dir)
             for auth_dir in auth_dirs
@@ -221,17 +243,27 @@ class AuthenticationDirectoryQuery(graphene.ObjectType):
         return objects
 
 
-class CreateAuthenticationDirectoryMutation(graphene.Mutation, AuthenticationDirectoryValidator):
+class CreateAuthenticationDirectoryMutation(
+    graphene.Mutation, AuthenticationDirectoryValidator
+):
     class Arguments:
-        verbose_name = graphene.String(required=True, description='Имя')
-        description = graphene.String(description='Описание')
-        directory_url = graphene.String(required=True, description='Адрес службы каталогов')
-        connection_type = ConnectionTypesGraphene(description='Тип подключения')
-        directory_type = DirectoryTypesGraphene(description='Тип службы каталогов')
-        domain_name = graphene.String(required=True, description='Имя контроллера доменов')
-        dc_str = graphene.String(required=True, description='Класс объекта домена')
-        service_username = graphene.String(description='пользователь имеющий права для управления AD')
-        service_password = graphene.String(description='пароль пользователя имеющего права для управления AD')
+        verbose_name = graphene.String(required=True, description="Имя")
+        description = graphene.String(description="Описание")
+        directory_url = graphene.String(
+            required=True, description="Адрес службы каталогов"
+        )
+        connection_type = ConnectionTypesGraphene(description="Тип подключения")
+        directory_type = DirectoryTypesGraphene(description="Тип службы каталогов")
+        domain_name = graphene.String(
+            required=True, description="Имя контроллера доменов"
+        )
+        dc_str = graphene.String(required=True, description="Класс объекта домена")
+        service_username = graphene.String(
+            description="пользователь имеющий права для управления AD"
+        )
+        service_password = graphene.String(
+            description="пароль пользователя имеющего права для управления AD"
+        )
 
     auth_dir = graphene.Field(lambda: AuthenticationDirectoryType)
     ok = graphene.Boolean(default_value=False)
@@ -242,13 +274,15 @@ class CreateAuthenticationDirectoryMutation(graphene.Mutation, AuthenticationDir
         await cls.validate(**kwargs)
         auth_dir = await AuthenticationDirectory.soft_create(creator=creator, **kwargs)
         return CreateAuthenticationDirectoryMutation(
-            auth_dir=AuthenticationDirectoryType(**auth_dir.__values__),
-            ok=True)
+            auth_dir=AuthenticationDirectoryType(**auth_dir.__values__), ok=True
+        )
 
 
-class DeleteAuthenticationDirectoryMutation(graphene.Mutation, AuthenticationDirectoryValidator):
+class DeleteAuthenticationDirectoryMutation(
+    graphene.Mutation, AuthenticationDirectoryValidator
+):
     class Arguments:
-        id = graphene.UUID(required=True, description='Внутренний идентификатор')
+        id = graphene.UUID(required=True, description="Внутренний идентификатор")
 
     ok = graphene.Boolean()
 
@@ -256,16 +290,18 @@ class DeleteAuthenticationDirectoryMutation(graphene.Mutation, AuthenticationDir
     @security_administrator_required
     async def mutate(cls, root, info, creator, **kwargs):
         await cls.validate(**kwargs)
-        auth_dir = await AuthenticationDirectory.get(kwargs['id'])
+        auth_dir = await AuthenticationDirectory.get(kwargs["id"])
         if not auth_dir:
-            raise SilentError(_('No such Authentication Directory.'))
+            raise SilentError(_("No such Authentication Directory."))
         status = await auth_dir.soft_delete(creator=creator)
         return DeleteAuthenticationDirectoryMutation(ok=status)
 
 
-class TestAuthenticationDirectoryMutation(graphene.Mutation, AuthenticationDirectoryValidator):
+class TestAuthenticationDirectoryMutation(
+    graphene.Mutation, AuthenticationDirectoryValidator
+):
     class Arguments:
-        id = graphene.UUID(required=True, description='Внутренний идентификатор')
+        id = graphene.UUID(required=True, description="Внутренний идентификатор")
 
     auth_dir = graphene.Field(lambda: AuthenticationDirectoryType)
     ok = graphene.Boolean()
@@ -274,24 +310,30 @@ class TestAuthenticationDirectoryMutation(graphene.Mutation, AuthenticationDirec
     @security_administrator_required
     async def mutate(cls, root, info, creator, **kwargs):
         await cls.validate(**kwargs)
-        auth_dir = await AuthenticationDirectory.get_object(kwargs['id'])
+        auth_dir = await AuthenticationDirectory.get_object(kwargs["id"])
         connection_ok = await auth_dir.test_connection()
         auth_dir = await AuthenticationDirectory.get(auth_dir.id)
         return TestAuthenticationDirectoryMutation(ok=connection_ok, auth_dir=auth_dir)
 
 
-class UpdateAuthenticationDirectoryMutation(graphene.Mutation, AuthenticationDirectoryValidator):
+class UpdateAuthenticationDirectoryMutation(
+    graphene.Mutation, AuthenticationDirectoryValidator
+):
     class Arguments:
-        id = graphene.UUID(required=True, description='Внутренний идентификатор')
-        verbose_name = graphene.String(description='Имя')
-        directory_url = graphene.String(description='Адрес службы каталогов')
-        connection_type = ConnectionTypesGraphene(description='Тип подключения')
-        description = graphene.String(description='Описание')
-        directory_type = DirectoryTypesGraphene(description='Тип службы каталогов')
-        domain_name = graphene.String(description='Имя контроллера доменов')
-        dc_str = graphene.String(description='Класс объекта домена')
-        service_username = graphene.String(description='Пользователь имеющий права для управления AD')
-        service_password = graphene.String(description='Пароль пользователя имеющего права для управления AD')
+        id = graphene.UUID(required=True, description="Внутренний идентификатор")
+        verbose_name = graphene.String(description="Имя")
+        directory_url = graphene.String(description="Адрес службы каталогов")
+        connection_type = ConnectionTypesGraphene(description="Тип подключения")
+        description = graphene.String(description="Описание")
+        directory_type = DirectoryTypesGraphene(description="Тип службы каталогов")
+        domain_name = graphene.String(description="Имя контроллера доменов")
+        dc_str = graphene.String(description="Класс объекта домена")
+        service_username = graphene.String(
+            description="Пользователь имеющий права для управления AD"
+        )
+        service_password = graphene.String(
+            description="Пароль пользователя имеющего права для управления AD"
+        )
 
     auth_dir = graphene.Field(lambda: AuthenticationDirectoryType)
     ok = graphene.Boolean(default_value=False)
@@ -300,26 +342,29 @@ class UpdateAuthenticationDirectoryMutation(graphene.Mutation, AuthenticationDir
     @security_administrator_required
     async def mutate(cls, root, info, creator, **kwargs):
         await cls.validate(**kwargs)
-        auth_dir = await AuthenticationDirectory.soft_update(kwargs['id'],
-                                                             verbose_name=kwargs.get('verbose_name'),
-                                                             directory_url=kwargs.get('directory_url'),
-                                                             connection_type=kwargs.get('connection_type'),
-                                                             description=kwargs.get('description'),
-                                                             directory_type=kwargs.get('directory_type'),
-                                                             domain_name=kwargs.get('domain_name'),
-                                                             service_username=kwargs.get('service_username'),
-                                                             service_password=kwargs.get('service_password'),
-                                                             dc_str=kwargs.get('dc_str'),
-                                                             creator=creator
-                                                             )
+        auth_dir = await AuthenticationDirectory.soft_update(
+            kwargs["id"],
+            verbose_name=kwargs.get("verbose_name"),
+            directory_url=kwargs.get("directory_url"),
+            connection_type=kwargs.get("connection_type"),
+            description=kwargs.get("description"),
+            directory_type=kwargs.get("directory_type"),
+            domain_name=kwargs.get("domain_name"),
+            service_username=kwargs.get("service_username"),
+            service_password=kwargs.get("service_password"),
+            dc_str=kwargs.get("dc_str"),
+            creator=creator,
+        )
         return UpdateAuthenticationDirectoryMutation(
-            auth_dir=AuthenticationDirectoryType(**auth_dir.__values__),
-            ok=True)
+            auth_dir=AuthenticationDirectoryType(**auth_dir.__values__), ok=True
+        )
 
 
 class AddAuthDirMappingMutation(graphene.Mutation, AuthenticationDirectoryValidator):
     class Arguments:
-        id = graphene.UUID(required=True, description='Внутренний идентификатор службы каталогов')
+        id = graphene.UUID(
+            required=True, description="Внутренний идентификатор службы каталогов"
+        )
         verbose_name = graphene.String(required=True)
         groups = graphene.NonNull(graphene.List(graphene.NonNull(graphene.UUID)))
         values = graphene.NonNull(graphene.List(graphene.NonNull(graphene.String)))
@@ -338,17 +383,16 @@ class AddAuthDirMappingMutation(graphene.Mutation, AuthenticationDirectoryValida
     async def mutate(cls, root, info, creator, **kwargs):
         await cls.validate(**kwargs)
         mapping_dict = {
-            'verbose_name': kwargs['verbose_name'],
-            'description': kwargs.get('description'),
-            'value_type': kwargs['value_type'],
-            'values': kwargs['values'],
-            'priority': kwargs['priority']
+            "verbose_name": kwargs["verbose_name"],
+            "description": kwargs.get("description"),
+            "value_type": kwargs["value_type"],
+            "values": kwargs["values"],
+            "priority": kwargs["priority"],
         }
-        auth_dir = await AuthenticationDirectory.get(kwargs['id'])
-        await auth_dir.add_mapping(mapping=mapping_dict,
-                                   groups=kwargs['groups'],
-                                   creator=creator
-                                   )
+        auth_dir = await AuthenticationDirectory.get(kwargs["id"])
+        await auth_dir.add_mapping(
+            mapping=mapping_dict, groups=kwargs["groups"], creator=creator
+        )
         return AddAuthDirMappingMutation(ok=True, auth_dir=auth_dir)
 
 
@@ -365,8 +409,8 @@ class DeleteAuthDirMappingMutation(graphene.Mutation, AuthenticationDirectoryVal
     async def mutate(cls, root, info, creator, **kwargs):
         await cls.validate(**kwargs)
 
-        mapping = await Mapping.get(kwargs['mapping_id'])
-        auth_dir = await AuthenticationDirectory.get(kwargs['id'])
+        mapping = await Mapping.get(kwargs["mapping_id"])
+        auth_dir = await AuthenticationDirectory.get(kwargs["id"])
         status = await mapping.soft_delete(creator=creator)
         return DeleteAuthDirMappingMutation(ok=status, auth_dir=auth_dir)
 
@@ -392,19 +436,18 @@ class EditAuthDirMappingMutation(graphene.Mutation, AuthenticationDirectoryValid
         await cls.validate(**kwargs)
 
         mapping_dict = {
-            'verbose_name': kwargs.get('verbose_name'),
-            'description': kwargs.get('description'),
-            'value_type': kwargs.get('value_type'),
-            'values': kwargs.get('values'),
-            'priority': kwargs.get('priority'),
-            'mapping_id': kwargs['mapping_id']
+            "verbose_name": kwargs.get("verbose_name"),
+            "description": kwargs.get("description"),
+            "value_type": kwargs.get("value_type"),
+            "values": kwargs.get("values"),
+            "priority": kwargs.get("priority"),
+            "mapping_id": kwargs["mapping_id"],
         }
 
-        auth_dir = await AuthenticationDirectory.get(kwargs['id'])
-        await auth_dir.edit_mapping(mapping=mapping_dict,
-                                    groups=kwargs.get('groups'),
-                                    creator=creator
-                                    )
+        auth_dir = await AuthenticationDirectory.get(kwargs["id"])
+        await auth_dir.edit_mapping(
+            mapping=mapping_dict, groups=kwargs.get("groups"), creator=creator
+        )
 
         return EditAuthDirMappingMutation(ok=True, auth_dir=auth_dir)
 
@@ -420,7 +463,7 @@ class SyncAuthenticationDirectoryGroupUsers(graphene.Mutation):
     async def mutate(self, _info, auth_dir_id, sync_data, **kwargs):
         auth_dir = await AuthenticationDirectory.get(auth_dir_id)
         if not auth_dir:
-            raise SilentError(_('No such Authentication Directory.'))
+            raise SilentError(_("No such Authentication Directory."))
         await auth_dir.synchronize(sync_data)
         return SyncAuthenticationDirectoryGroupUsers(ok=True)
 
@@ -438,7 +481,7 @@ class SyncExistingAuthenticationDirectoryGroupUsers(graphene.Mutation):
     async def mutate(self, info, auth_dir_id, group_id, **kwargs):
         auth_dir = await AuthenticationDirectory.get(auth_dir_id)
         if not auth_dir:
-            raise SilentError(_('No such Authentication Directory.'))
+            raise SilentError(_("No such Authentication Directory."))
         await auth_dir.synchronize_group(group_id)
         return SyncAuthenticationDirectoryGroupUsers(ok=True)
 
@@ -455,6 +498,8 @@ class AuthenticationDirectoryMutations(graphene.ObjectType):
     syncExistAuthDirGroupUsers = SyncExistingAuthenticationDirectoryGroupUsers.Field()
 
 
-auth_dir_schema = graphene.Schema(mutation=AuthenticationDirectoryMutations,
-                                  query=AuthenticationDirectoryQuery,
-                                  auto_camelcase=False)
+auth_dir_schema = graphene.Schema(
+    mutation=AuthenticationDirectoryMutations,
+    query=AuthenticationDirectoryQuery,
+    auto_camelcase=False,
+)

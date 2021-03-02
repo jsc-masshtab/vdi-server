@@ -50,3 +50,13 @@ services:
       - vdi-test-postgres
       - vdi-test-redis
       - vdi-test-veil-server
+#  vdi-black:
+#    image: mercutiodesign/docker-black
+#    container_name: vdi-black
+#    network_mode: "host"
+#    environment:
+#      - PYTHONPATH=/opt/veil-vdi/app
+#    working_dir: /opt/veil-vdi/app
+#    volumes:
+#      - ../../backend:/opt/veil-vdi/app
+#    command: sh -c "black ."

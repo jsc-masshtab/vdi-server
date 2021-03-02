@@ -8,7 +8,12 @@ from tornado.web import RequestHandler
 from tornado.escape import json_decode
 from graphene_tornado.tornado_graphql_handler import TornadoGraphQLHandler
 
-from common.veil.auth.veil_jwt import extract_user, jwtauth, extract_user_object, decode_jwt
+from common.veil.auth.veil_jwt import (
+    extract_user,
+    jwtauth,
+    extract_user_object,
+    decode_jwt,
+)
 from common.veil.veil_errors import ValidationError, InvalidUserError
 
 from common.models.auth import User, UserJwtInfo
@@ -24,7 +29,10 @@ class BaseHandler(RequestHandler, ABC):
     args = dict()
 
     def prepare(self):
-        if self.request.headers.get('Content-Type') == 'application/json' and self.request.body:
+        if (
+            self.request.headers.get("Content-Type") == "application/json"
+            and self.request.body  # noqa: W503
+        ):
             self.args = json_decode(self.request.body)
 
     def get_current_user(self):
@@ -36,30 +44,37 @@ class BaseHandler(RequestHandler, ABC):
         # Извлекаем username из токена
         username = extract_user(self.request.headers)
         # Формируем запрос
-        user = await User.query.where(User.username == username).where(User.is_active).gino.first()
+        user = (
+            await User.query.where(User.username == username)
+            .where(User.is_active)
+            .gino.first()
+        )
 
         if not user:
-            raise InvalidUserError(_('User {} not found.').format(username))
+            raise InvalidUserError(_("User {} not found.").format(username))
 
         return user
 
     async def log_finish(self, response):
-        if 'data' in response:
-            await system_logger.debug('BaseHandler data: {}'.format(response))
+        if "data" in response:
+            await system_logger.debug("BaseHandler data: {}".format(response))
         else:
-            await system_logger.debug('BaseHandler error: {}'.format(response))
+            await system_logger.debug("BaseHandler error: {}".format(response))
         return self.finish(response)
 
     @property
     def remote_ip(self):
-        remote_ip = self.request.headers.get("X-Real-IP") or self.request.headers.get(
-            "X-Forwarded-For") or self.request.remote_ip
+        remote_ip = (
+            self.request.headers.get("X-Real-IP")
+            or self.request.headers.get("X-Forwarded-For")  # noqa: W503
+            or self.request.remote_ip  # noqa: W503
+        )
         return remote_ip
 
     @property
     def client_type(self):
-        client_type = self.request.headers.get('User-Agent')
-        return client_type if client_type else 'Unknown'
+        client_type = self.request.headers.get("User-Agent")
+        return client_type if client_type else "Unknown"
 
     @property
     def headers(self):
@@ -72,36 +87,38 @@ class BaseHandler(RequestHandler, ABC):
 
         parameter_value = self.args.get(parameter_name, default_value)
         if parameter_value is None:
-            raise ValidationError('Parameter {} required.'.format(parameter_name))
+            raise ValidationError("Parameter {} required.".format(parameter_name))
 
         return parameter_value
 
     @staticmethod
     async def validate_and_get_vm(user, pool_id):
         if not user:
-            raise InvalidUserError(_('User {} not found.'))
+            raise InvalidUserError(_("User {} not found."))
 
         pool = await Pool.get(pool_id)
         if not pool:
-            raise ValidationError(_('There is no pool with id: {}.').format(pool_id))
+            raise ValidationError(_("There is no pool with id: {}.").format(pool_id))
         vm = await pool.get_vm(user_id=user.id)
         if not vm:
-            raise ValidationError(_('User {} has no VM on pool {}.').format(user.username, pool.id))
+            raise ValidationError(
+                _("User {} has no VM on pool {}.").format(user.username, pool.id)
+            )
 
         return vm
 
     def write_error(self, status_code, **kwargs):
         """Согласно доке вызывается если возникло неотработанное исключение при обработка запроса"""
-        message = 'Uncaught exception'
+        message = "Uncaught exception"
         try:
             exc_info = kwargs["exc_info"]
             (_, exc, _) = exc_info
-            message = 'Server error: ' + str(exc)
+            message = "Server error: " + str(exc)
         except Exception:  # noqa
             pass
         finally:
             shorten_msg = textwrap.shorten(message, width=80)
-            response = {'errors': [{'message': shorten_msg}]}
+            response = {"errors": [{"message": shorten_msg}]}
             self.write(response)
 
 
@@ -111,7 +128,6 @@ class VdiTornadoGraphQLHandler(TornadoGraphQLHandler, ABC):
 
 
 class BaseWsHandler(websocket.WebSocketHandler, ABC):
-
     def check_origin(self, origin):
         # TODO: временное решение
         return True
@@ -119,24 +135,24 @@ class BaseWsHandler(websocket.WebSocketHandler, ABC):
     async def _validate_token(self):
         """Проверить токен. Вернуть token, если валидация прошла. Иначе None"""
         try:
-            token = self.get_query_argument('token')
+            token = self.get_query_argument("token")
             if not token:
-                raise AssertionError('Jwt token must be send as query param')
-            if token and 'jwt' in token:
-                token = token.replace('jwt', '')
-            token = token.replace(' ', '')
+                raise AssertionError("Jwt token must be send as query param")
+            if token and "jwt" in token:
+                token = token.replace("jwt", "")
+            token = token.replace(" ", "")
 
             # token checking
             payload = decode_jwt(token)
-            payload_user = payload.get('username')
+            payload_user = payload.get("username")
             is_valid = await UserJwtInfo.check_token(payload_user, token)
             if not is_valid:
-                raise AssertionError('Auth failed. Wrong jwt token')
+                raise AssertionError("Auth failed. Wrong jwt token")
 
             return token
 
         except Exception as ex:  # noqa
-            await self._write_msg('Token validation error. {}.'.format(str(ex)))
+            await self._write_msg("Token validation error. {}.".format(str(ex)))
             self.close()
             return None
 
@@ -144,7 +160,7 @@ class BaseWsHandler(websocket.WebSocketHandler, ABC):
         try:
             await self.write_message(msg)
         except websocket.WebSocketError:
-            await system_logger.debug(_('Write error.'))
+            await system_logger.debug(_("Write error."))
 
     # unused abstract method implementation
     def data_received(self, chunk: bytes) -> Optional[Awaitable[None]]:
@@ -152,6 +168,9 @@ class BaseWsHandler(websocket.WebSocketHandler, ABC):
 
     @property
     def remote_ip(self):
-        remote_ip = self.request.headers.get("X-Real-IP") or self.request.headers.get(
-            "X-Forwarded-For") or self.request.remote_ip
+        remote_ip = (
+            self.request.headers.get("X-Real-IP")
+            or self.request.headers.get("X-Forwarded-For")  # noqa: W503
+            or self.request.remote_ip  # noqa: W503
+        )
         return remote_ip

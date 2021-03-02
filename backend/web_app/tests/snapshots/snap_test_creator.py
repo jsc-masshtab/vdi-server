@@ -7,13 +7,13 @@ from snapshottest import Snapshot
 
 snapshots = Snapshot()
 
-snapshots['test_event_creator 1'] = {
-    'events': [
+snapshots["test_event_creator 1"] = {
+    "events": [
         {
-            'description': None,
-            'event_type': 0,
-            'message': 'Группа test создана.',
-            'user': 'test_admin'
+            "description": None,
+            "event_type": 0,
+            "message": "Группа test создана.",
+            "user": "test_admin",
         }
     ]
 }
