@@ -15,8 +15,8 @@ import uuid
 from datetime import datetime
 
 # revision identifiers, used by Alembic.
-revision = '07972ddc0722'
-down_revision = 'b58c521ba8d4'
+revision = "07972ddc0722"
+down_revision = "b58c521ba8d4"
 branch_labels = None
 depends_on = None
 _ = lang_init()
@@ -24,7 +24,7 @@ _ = lang_init()
 
 def upgrade():
     # Уникальный хэш для установки
-    hashed_password = make_password(password='Bazalt1!', salt=SECRET_KEY)
+    hashed_password = make_password(password="Bazalt1!", salt=SECRET_KEY)
     # Создаем пользователя аналогично пользователю из установки
     sql = """insert
                  into
@@ -34,7 +34,9 @@ def upgrade():
                     'vdiadmin',
                     '{}',
                     true,
-                    true);""".format(hashed_password)
+                    true);""".format(
+        hashed_password
+    )
     op.execute(sql)
     # Параметры журнала
     sql = """insert
@@ -43,15 +45,18 @@ def upgrade():
                      (id, interval, period, form, duration, by_count, count, dir_path, create_date)
                      values
                      ('{uuid}', '1 month', 'month', 'YYYY_MM', 36, FALSE, 1000, '/tmp/', '{date}');
-              """.format(uuid=uuid.uuid4(), date=datetime.now().date())
+              """.format(
+        uuid=uuid.uuid4(), date=datetime.now().date()
+    )
     op.execute(sql)
     # объединенные миграции журнала
-    msg_str = _('Add new journal archive.')
-    name_str = _('Archive name:')
-    path_str = _('path:')
+    msg_str = _("Add new journal archive.")
+    name_str = _("Archive name:")
+    path_str = _("path:")
 
     # Архивирование предыдущих N записей (формат csv)
-    op.execute("""CREATE OR REPLACE FUNCTION archived(partition_date timestamp)
+    op.execute(
+        """CREATE OR REPLACE FUNCTION archived(partition_date timestamp)
                             RETURNS VOID AS
                             $BODY$
                             DECLARE
@@ -136,10 +141,14 @@ def upgrade():
                               END IF;
                             END;
                             $BODY$
-                            LANGUAGE plpgsql;""".format(message=msg_str, name_str=name_str, path_str=path_str))
+                            LANGUAGE plpgsql;""".format(
+            message=msg_str, name_str=name_str, path_str=path_str
+        )
+    )
 
     # Вставка данных в дочернюю таблицу
-    op.execute("""CREATE OR REPLACE FUNCTION insert_row()
+    op.execute(
+        """CREATE OR REPLACE FUNCTION insert_row()
                             RETURNS TRIGGER AS
                             $BODY$
                             DECLARE
@@ -193,10 +202,14 @@ def upgrade():
                               END IF;
                             END;
                             $BODY$
-                            LANGUAGE plpgsql;""".format(db_user=DB_USER))
+                            LANGUAGE plpgsql;""".format(
+            db_user=DB_USER
+        )
+    )
 
     # Создание новой таблицы, наследованной от основной таблицы event
-    op.execute("""CREATE OR REPLACE FUNCTION create_new_partition(partition_date timestamp, partition_name text)
+    op.execute(
+        """CREATE OR REPLACE FUNCTION create_new_partition(partition_date timestamp, partition_name text)
                         RETURNS VOID AS
                         $BODY$
                         DECLARE
@@ -213,9 +226,11 @@ def upgrade():
                           PERFORM index_partition(partition_name);
                         END;
                         $BODY$
-                        LANGUAGE plpgsql;""")
+                        LANGUAGE plpgsql;"""
+    )
 
-    op.execute("""CREATE OR REPLACE FUNCTION index_partition(partition_name text)
+    op.execute(
+        """CREATE OR REPLACE FUNCTION index_partition(partition_name text)
                     RETURNS VOID AS
                     $BODY$
                     -- индекс по дате создания события
@@ -223,13 +238,17 @@ def upgrade():
                         EXECUTE 'CREATE INDEX IF NOT EXISTS ' || partition_name || '_idx ON ' || partition_name || ' (timezone(''UTC''::text, created))';
                     END;
                     $BODY$
-                    LANGUAGE plpgsql;""")
+                    LANGUAGE plpgsql;"""
+    )
 
-    op.execute("""CREATE TRIGGER before_insert_row_trigger
+    op.execute(
+        """CREATE TRIGGER before_insert_row_trigger
                     BEFORE INSERT ON event
-                    FOR EACH ROW EXECUTE PROCEDURE insert_row();""")
+                    FOR EACH ROW EXECUTE PROCEDURE insert_row();"""
+    )
 
-    op.execute("""CREATE OR REPLACE FUNCTION delete_parent_row()
+    op.execute(
+        """CREATE OR REPLACE FUNCTION delete_parent_row()
                     RETURNS TRIGGER AS
                     $BODY$
                     -- удаление дублирующихся записей в родительской таблице
@@ -238,14 +257,18 @@ def upgrade():
                         RETURN null;
                     END;
                     $BODY$
-                    LANGUAGE plpgsql;""")
+                    LANGUAGE plpgsql;"""
+    )
 
-    op.execute("""CREATE TRIGGER after_insert_row_trigger
+    op.execute(
+        """CREATE TRIGGER after_insert_row_trigger
                     AFTER INSERT ON event
-                    FOR EACH ROW EXECUTE PROCEDURE delete_parent_row();""")
+                    FOR EACH ROW EXECUTE PROCEDURE delete_parent_row();"""
+    )
 
     # Удаление данных из таблицы спустя 3 года
-    op.execute("""CREATE OR REPLACE FUNCTION delete_partition()
+    op.execute(
+        """CREATE OR REPLACE FUNCTION delete_partition()
                         RETURNS TRIGGER AS
                         $BODY$
                         DECLARE
@@ -276,21 +299,30 @@ def upgrade():
                           return null;
                         END;
                         $BODY$
-                        LANGUAGE plpgsql;""")
+                        LANGUAGE plpgsql;"""
+    )
 
-    op.execute("""CREATE TRIGGER after_insert_row_for_delete_partition_trigger
+    op.execute(
+        """CREATE TRIGGER after_insert_row_for_delete_partition_trigger
                     AFTER INSERT ON event
-                    FOR EACH ROW EXECUTE PROCEDURE delete_partition();""")
+                    FOR EACH ROW EXECUTE PROCEDURE delete_partition();"""
+    )
 
 
 def downgrade():
-    op.execute("""DROP TRIGGER after_insert_row_for_delete_partition_trigger ON event""")
+    op.execute(
+        """DROP TRIGGER after_insert_row_for_delete_partition_trigger ON event"""
+    )
     op.execute("""DROP FUNCTION delete_partition()""")
     op.execute("""DROP TRIGGER after_insert_row_trigger ON event""")
     op.execute("""DROP FUNCTION delete_parent_row()""")
     op.execute("""DROP TRIGGER before_insert_row_trigger ON event""")
     op.execute("""DROP FUNCTION index_partition(partition_name text)""")
-    op.execute("""DROP FUNCTION create_new_partition(partition_date timestamp, partition_name text)""")
+    op.execute(
+        """DROP FUNCTION create_new_partition(partition_date timestamp, partition_name text)"""
+    )
     op.execute("""DROP FUNCTION archived(partition_date timestamp)""")
     op.execute("""DROP FUNCTION insert_row()""")
-    op.execute("delete from public.user where id = 'f9599771-cc95-45e5-9ae5-c8177b796aff';")
+    op.execute(
+        "delete from public.user where id = 'f9599771-cc95-45e5-9ae5-c8177b796aff';"
+    )

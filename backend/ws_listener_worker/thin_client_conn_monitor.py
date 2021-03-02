@@ -8,7 +8,6 @@ from common.models.active_tk_connection import ActiveTkConnection
 
 
 class ThinClientConnMonitor:
-
     def __init__(self):
         pass
 
@@ -23,7 +22,8 @@ class ThinClientConnMonitor:
         delete_time_delta = timedelta(days=14)
         cur_time = datetime.now(timezone.utc)
         await ActiveTkConnection.delete.where(
-            (cur_time - ActiveTkConnection.data_received) > delete_time_delta).gino.status()
+            (cur_time - ActiveTkConnection.data_received) > delete_time_delta
+        ).gino.status()
 
         while True:
             cur_time = datetime.now(timezone.utc)
@@ -40,6 +40,7 @@ class ThinClientConnMonitor:
             #    print('diff > time_delta', bool(diff > time_delta), flush=True)
 
             await ActiveTkConnection.update.values(disconnected=func.now()).where(
-                (cur_time - ActiveTkConnection.data_received) > disconnect_time_delta).gino.status()
+                (cur_time - ActiveTkConnection.data_received) > disconnect_time_delta
+            ).gino.status()
 
             await asyncio.sleep(WS_PING_TIMEOUT)

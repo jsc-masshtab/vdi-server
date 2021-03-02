@@ -7,7 +7,4 @@ from snapshottest import Snapshot
 
 snapshots = Snapshot()
 
-snapshots['test_request_thin_clients 1'] = {
-    'thin_clients': [
-    ]
-}
+snapshots["test_request_thin_clients 1"] = {"thin_clients": []}

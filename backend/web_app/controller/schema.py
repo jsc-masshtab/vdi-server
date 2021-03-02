@@ -25,13 +25,17 @@ class ControllerValidator(MutationValidation):
         """Валидатор verbose_name для контроллера."""
         # Проверяем длину значения (работает только если у валидатора value is not None)
         if not value:
-            raise SimpleError(_('name can`t be empty.'))
+            raise SimpleError(_("name can`t be empty."))
 
         # Проверяем наличие записей в БД
         # TODO: универсальный метод в родительском валидаторе для сокращения дублирования
-        verbose_name_is_busy = await Controller.select('id').where(Controller.verbose_name == value).gino.scalar()
+        verbose_name_is_busy = (
+            await Controller.select("id")
+            .where(Controller.verbose_name == value)
+            .gino.scalar()
+        )
         if verbose_name_is_busy:
-            raise ValidationError(_('name `{}` is busy.').format(value))
+            raise ValidationError(_("name `{}` is busy.").format(value))
         return value
 
     @staticmethod
@@ -39,32 +43,35 @@ class ControllerValidator(MutationValidation):
         """Валидатор адреса контроллера."""
         # Проверяем длину значения (работает только если у валидатора value is not None)
         if not value:
-            raise SimpleError(_('address can`t be empty.'))
+            raise SimpleError(_("address can`t be empty."))
 
         # Проверяем наличие записей в БД
         # TODO: универсальный метод в родительском валидаторе для сокращения дублирования
-        address_is_busy = await Controller.select('id').where(Controller.address == value).gino.scalar()
+        address_is_busy = (
+            await Controller.select("id")
+            .where(Controller.address == value)
+            .gino.scalar()
+        )
         if address_is_busy:
-            raise ValidationError(_('address `{}` is busy.').format(value))
+            raise ValidationError(_("address `{}` is busy.").format(value))
         return value
 
     @staticmethod
     async def validate_token(obj_dict, value):
         """Валидатор токена интеграции контроллера."""
         if not value:
-            raise ValidationError(_('token can`t be empty.'))
+            raise ValidationError(_("token can`t be empty."))
         return value
 
 
 class ControllerFetcher:
-
     @staticmethod
     async def fetch_by_id(id_):
         """Возваращает инстанс объекта, если он есть."""
         # TODO: универсальный метод в родительском валидаторе для сокращения дублированияа
         controller = await Controller.get(id_)
         if not controller:
-            raise SimpleError(_('No such controller.'))
+            raise SimpleError(_("No such controller."))
         return controller
 
     @staticmethod
@@ -115,6 +122,7 @@ class ControllerResourcePoolType(VeilResourceType):
 
     Вынесен в отдельный тип для явного сокращения возможных полей.
     """
+
     id = graphene.UUID()
     verbose_name = graphene.String()
     description = graphene.String()
@@ -187,25 +195,55 @@ class ControllerType(graphene.ObjectType, ControllerFetcher):
     token = graphene.String()
     # Новые поля
     pools = graphene.List(ControllerPoolType)
-    clusters = graphene.List(ControllerClusterType, ordering=graphene.String(), limit=graphene.Int(default_value=100),
-                             offset=graphene.Int(default_value=0))
-    resource_pools = graphene.List(ControllerResourcePoolType, cluster_id=graphene.UUID(), ordering=graphene.String(),
-                                   limit=graphene.Int(default_value=100),
-                                   offset=graphene.Int(default_value=0))
-    nodes = graphene.List(ControllerNodeType, cluster_id=graphene.UUID(), resource_pool_id=graphene.UUID(),
-                          ordering=graphene.String(), limit=graphene.Int(default_value=100),
-                          offset=graphene.Int(default_value=0))
-    data_pools = graphene.List(ControllerDataPoolType, cluster_id=graphene.UUID(), node_id=graphene.UUID(),
-                               resource_pool_id=graphene.UUID(), ordering=graphene.String(),
-                               limit=graphene.Int(default_value=100), offset=graphene.Int(default_value=0))
-    templates = graphene.List(ControllerVmType, cluster_id=graphene.UUID(),
-                              resource_pool_id=graphene.UUID(), node_id=graphene.UUID(),
-                              ordering=graphene.String(),
-                              limit=graphene.Int(default_value=100), offset=graphene.Int(default_value=0))
-    vms = graphene.List(ControllerVmType, cluster_id=graphene.UUID(),
-                        resource_pool_id=graphene.UUID(), node_id=graphene.UUID(),
-                        exclude_existed=graphene.Boolean(), ordering=graphene.String(),
-                        limit=graphene.Int(default_value=100), offset=graphene.Int(default_value=0))
+    clusters = graphene.List(
+        ControllerClusterType,
+        ordering=graphene.String(),
+        limit=graphene.Int(default_value=100),
+        offset=graphene.Int(default_value=0),
+    )
+    resource_pools = graphene.List(
+        ControllerResourcePoolType,
+        cluster_id=graphene.UUID(),
+        ordering=graphene.String(),
+        limit=graphene.Int(default_value=100),
+        offset=graphene.Int(default_value=0),
+    )
+    nodes = graphene.List(
+        ControllerNodeType,
+        cluster_id=graphene.UUID(),
+        resource_pool_id=graphene.UUID(),
+        ordering=graphene.String(),
+        limit=graphene.Int(default_value=100),
+        offset=graphene.Int(default_value=0),
+    )
+    data_pools = graphene.List(
+        ControllerDataPoolType,
+        cluster_id=graphene.UUID(),
+        node_id=graphene.UUID(),
+        resource_pool_id=graphene.UUID(),
+        ordering=graphene.String(),
+        limit=graphene.Int(default_value=100),
+        offset=graphene.Int(default_value=0),
+    )
+    templates = graphene.List(
+        ControllerVmType,
+        cluster_id=graphene.UUID(),
+        resource_pool_id=graphene.UUID(),
+        node_id=graphene.UUID(),
+        ordering=graphene.String(),
+        limit=graphene.Int(default_value=100),
+        offset=graphene.Int(default_value=0),
+    )
+    vms = graphene.List(
+        ControllerVmType,
+        cluster_id=graphene.UUID(),
+        resource_pool_id=graphene.UUID(),
+        node_id=graphene.UUID(),
+        exclude_existed=graphene.Boolean(),
+        ordering=graphene.String(),
+        limit=graphene.Int(default_value=100),
+        offset=graphene.Int(default_value=0),
+    )
 
     async def resolve_pools(self, info):
         """В self прилетает инстанс подели контроллера."""
@@ -220,31 +258,61 @@ class ControllerType(graphene.ObjectType, ControllerFetcher):
             return
         paginator = VeilRestPaginator(ordering=ordering, limit=limit, offset=offset)
         veil_response = await controller.veil_client.cluster().list(paginator=paginator)
-        return [ControllerClusterType(**resource_data) for resource_data in veil_response.paginator_results]
+        return [
+            ControllerClusterType(**resource_data)
+            for resource_data in veil_response.paginator_results
+        ]
 
-    async def resolve_resource_pools(self, info, limit, offset, cluster_id=None, ordering: str = None):
+    async def resolve_resource_pools(
+        self, info, limit, offset, cluster_id=None, ordering: str = None
+    ):
         """В self прилетает инстанс модели контроллера."""
         controller = await Controller.get(self.id)
         # Прерываем выполнение при отсутствии клиента
         if not controller.veil_client:
             return
         paginator = VeilRestPaginator(ordering=ordering, limit=limit, offset=offset)
-        veil_response = await controller.veil_client.resource_pool(cluster_id=cluster_id).list(paginator=paginator)
-        return [ControllerResourcePoolType(**data) for data in veil_response.paginator_results]
+        veil_response = await controller.veil_client.resource_pool(
+            cluster_id=cluster_id
+        ).list(paginator=paginator)
+        return [
+            ControllerResourcePoolType(**data)
+            for data in veil_response.paginator_results
+        ]
 
-    async def resolve_nodes(self, info, limit, offset, cluster_id=None, resource_pool_id=None, ordering: str = None):
+    async def resolve_nodes(
+        self,
+        info,
+        limit,
+        offset,
+        cluster_id=None,
+        resource_pool_id=None,
+        ordering: str = None,
+    ):
         """В self прилетает инстанс модели контроллера."""
         controller = await Controller.get(self.id)
         # Прерываем выполнение при отсутствии клиента
         if not controller.veil_client:
             return
         paginator = VeilRestPaginator(ordering=ordering, limit=limit, offset=offset)
-        veil_response = await controller.veil_client.node(cluster_id=cluster_id,
-                                                          resource_pool_id=resource_pool_id).list(paginator=paginator)
-        return [ControllerNodeType(**resource_data) for resource_data in veil_response.paginator_results]
+        veil_response = await controller.veil_client.node(
+            cluster_id=cluster_id, resource_pool_id=resource_pool_id
+        ).list(paginator=paginator)
+        return [
+            ControllerNodeType(**resource_data)
+            for resource_data in veil_response.paginator_results
+        ]
 
-    async def resolve_data_pools(self, info, limit, offset, cluster_id=None, node_id=None, resource_pool_id=None,
-                                 ordering: str = None):
+    async def resolve_data_pools(
+        self,
+        info,
+        limit,
+        offset,
+        cluster_id=None,
+        node_id=None,
+        resource_pool_id=None,
+        ordering: str = None,
+    ):
         """Сокращенная информация о контроллере."""
         # TODO: на фронте делать неактивными элементы в плохом статусе?
         controller = await Controller.get(self.id)
@@ -252,13 +320,24 @@ class ControllerType(graphene.ObjectType, ControllerFetcher):
         if not controller.veil_client:
             return
         paginator = VeilRestPaginator(ordering=ordering, limit=limit, offset=offset)
-        veil_response = await controller.veil_client.data_pool(cluster_id=cluster_id,
-                                                               resource_pool_id=resource_pool_id,
-                                                               node_id=node_id).list(paginator=paginator)
-        return [ControllerDataPoolType(**resource_data) for resource_data in veil_response.paginator_results]
+        veil_response = await controller.veil_client.data_pool(
+            cluster_id=cluster_id, resource_pool_id=resource_pool_id, node_id=node_id
+        ).list(paginator=paginator)
+        return [
+            ControllerDataPoolType(**resource_data)
+            for resource_data in veil_response.paginator_results
+        ]
 
-    async def resolve_templates(self, info, limit, offset, cluster_id=None, resource_pool_id=None,
-                                node_id=None, ordering: str = None):
+    async def resolve_templates(
+        self,
+        info,
+        limit,
+        offset,
+        cluster_id=None,
+        resource_pool_id=None,
+        node_id=None,
+        ordering: str = None,
+    ):
         """В self прилетает инстанс модели контроллера."""
         # TODO: на фронте делать неактивными элементы в плохом статусе?
         controller = await Controller.get(self.id)
@@ -266,14 +345,25 @@ class ControllerType(graphene.ObjectType, ControllerFetcher):
         if not controller.veil_client:
             return
         paginator = VeilRestPaginator(ordering=ordering, limit=limit, offset=offset)
-        veil_response = await controller.veil_client.domain(template=1,
-                                                            cluster_id=cluster_id,
-                                                            resource_pool=resource_pool_id,
-                                                            node_id=node_id).list(paginator=paginator)
+        veil_response = await controller.veil_client.domain(
+            template=1,
+            cluster_id=cluster_id,
+            resource_pool=resource_pool_id,
+            node_id=node_id,
+        ).list(paginator=paginator)
         return [ControllerVmType(**data) for data in veil_response.paginator_results]
 
-    async def resolve_vms(self, info, limit, offset, cluster_id=None, resource_pool_id=None, node_id=None,
-                          exclude_existed=True, ordering: str = None):
+    async def resolve_vms(
+        self,
+        info,
+        limit,
+        offset,
+        cluster_id=None,
+        resource_pool_id=None,
+        node_id=None,
+        exclude_existed=True,
+        ordering: str = None,
+    ):
         """В self прилетает инстанс модели контроллера."""
         # TODO: на фронте делать неактивными элементы в плохом статусе?
         controller = await Controller.get(self.id)
@@ -281,10 +371,12 @@ class ControllerType(graphene.ObjectType, ControllerFetcher):
         vms = await Vm.query.gino.all()
         # Прерываем выполнение при отсутствии клиента
         if controller.veil_client:
-            veil_response = await controller.veil_client.domain(template=0,
-                                                                cluster_id=cluster_id,
-                                                                resource_pool=resource_pool_id,
-                                                                node_id=node_id).list(paginator=paginator)
+            veil_response = await controller.veil_client.domain(
+                template=0,
+                cluster_id=cluster_id,
+                resource_pool=resource_pool_id,
+                node_id=node_id,
+            ).list(paginator=paginator)
             resolves = veil_response.paginator_results
         else:
             resolves = dict()
@@ -292,21 +384,21 @@ class ControllerType(graphene.ObjectType, ControllerFetcher):
         if exclude_existed:
             for vm in vms:
                 for index, data in enumerate(resolves):
-                    if str(data['id']) == str(vm.id):
+                    if str(data["id"]) == str(vm.id):
                         del resolves[index]
         for resource in resolves:
-            resource['template'] = resource['parent']
-            vm = await Vm.get(resource['id'])
+            resource["template"] = resource["parent"]
+            vm = await Vm.get(resource["id"])
             if vm:
                 pool = await Pool.get(vm.pool_id)
-                resource['pool_name'] = pool.verbose_name
+                resource["pool_name"] = pool.verbose_name
             else:
-                resource['pool_name'] = '--'
+                resource["pool_name"] = "--"
 
-        if ordering == 'pool_name':
-            resolves.sort(key=lambda data: data['pool_name'])
-        elif ordering == '-pool_name':
-            resolves.sort(key=lambda data: data['pool_name'], reverse=True)
+        if ordering == "pool_name":
+            resolves.sort(key=lambda data: data["pool_name"])
+        elif ordering == "-pool_name":
+            resolves.sort(key=lambda data: data["pool_name"], reverse=True)
 
         for resource in resolves:
             vms_list.append(ControllerVmType(**resource))
@@ -315,14 +407,15 @@ class ControllerType(graphene.ObjectType, ControllerFetcher):
     @staticmethod
     def obj_to_type(controller_obj: Controller) -> dict:
         if controller_obj and isinstance(controller_obj, Controller):
-            controller_dict = {'id': controller_obj.id,
-                               'verbose_name': controller_obj.verbose_name,
-                               'address': controller_obj.address,
-                               'description': controller_obj.description,
-                               'status': controller_obj.status,
-                               'version': controller_obj.version,
-                               'token': '*' * 12,
-                               }
+            controller_dict = {
+                "id": controller_obj.id,
+                "verbose_name": controller_obj.verbose_name,
+                "address": controller_obj.address,
+                "description": controller_obj.description,
+                "status": controller_obj.status,
+                "version": controller_obj.version,
+                "token": "*" * 12,
+            }
             return ControllerType(**controller_dict)
 
 
@@ -336,25 +429,27 @@ class AddControllerMutation(graphene.Mutation, ControllerValidator):
         description = graphene.String()
 
     controller = graphene.Field(lambda: ControllerType)
-    __TOKEN_PREFIX = re.compile('jwt ', re.I)
+    __TOKEN_PREFIX = re.compile("jwt ", re.I)
 
     @classmethod
     @administrator_required
     async def mutate(cls, root, info, **kwargs):
         # Валидируем аргументы
         await cls.validate(**kwargs)
-        if not cls.__TOKEN_PREFIX.match(kwargs['token']):
-            kwargs['token'] = ' '.join(['jwt', kwargs['token']])
+        if not cls.__TOKEN_PREFIX.match(kwargs["token"]):
+            kwargs["token"] = " ".join(["jwt", kwargs["token"]])
         # Формат токена дополнительно валидируется в veil api client
         try:
             controller = await Controller.soft_create(**kwargs)
         except TimeoutError:
-            raise SimpleError(_('Connection to ECP has been failed.'))
+            raise SimpleError(_("Connection to ECP has been failed."))
         else:
             return AddControllerMutation(controller=controller)
 
 
-class UpdateControllerMutation(graphene.Mutation, ControllerValidator, ControllerFetcher):
+class UpdateControllerMutation(
+    graphene.Mutation, ControllerValidator, ControllerFetcher
+):
     """Редактирование сущности контроллера."""
 
     class Arguments:
@@ -365,7 +460,7 @@ class UpdateControllerMutation(graphene.Mutation, ControllerValidator, Controlle
         token = graphene.String()
 
     controller = graphene.Field(lambda: ControllerType)
-    __TOKEN_PREFIX = re.compile('jwt ', re.I)
+    __TOKEN_PREFIX = re.compile("jwt ", re.I)
 
     @classmethod
     @administrator_required
@@ -374,13 +469,13 @@ class UpdateControllerMutation(graphene.Mutation, ControllerValidator, Controlle
         controller = await cls.fetch_by_id(id_)
         # Валидируем переданные аргументы
         await cls.validate(**kwargs)
-        if kwargs.get('token') and not cls.__TOKEN_PREFIX.match(kwargs['token']):
-            kwargs['token'] = ' '.join(['jwt', kwargs['token']])
+        if kwargs.get("token") and not cls.__TOKEN_PREFIX.match(kwargs["token"]):
+            kwargs["token"] = " ".join(["jwt", kwargs["token"]])
         # Формат токена дополнительно валидируется в veil api client
         try:
             updated_controller = await controller.soft_update(creator=creator, **kwargs)
         except TimeoutError:
-            raise SimpleError(_('Connection to ECP has been failed.'))
+            raise SimpleError(_("Connection to ECP has been failed."))
         else:
             return UpdateControllerMutation(controller=updated_controller)
 
@@ -449,9 +544,13 @@ class ActivateControllerMutation(graphene.Mutation, ControllerFetcher):
 
 
 class ControllerQuery(graphene.ObjectType, ControllerFetcher):
-    controllers = graphene.List(ControllerType, limit=graphene.Int(default_value=100),
-                                offset=graphene.Int(default_value=0), ordering=graphene.String(),
-                                status=StatusGraphene())
+    controllers = graphene.List(
+        ControllerType,
+        limit=graphene.Int(default_value=100),
+        offset=graphene.Int(default_value=0),
+        ordering=graphene.String(),
+        status=StatusGraphene(),
+    )
     controller = graphene.Field(ControllerType, id_=graphene.UUID())
 
     @staticmethod
@@ -463,10 +562,13 @@ class ControllerQuery(graphene.ObjectType, ControllerFetcher):
         return filters
 
     @administrator_required
-    async def resolve_controllers(self, info, limit, offset, status=None, ordering=None, **kwargs):
+    async def resolve_controllers(
+        self, info, limit, offset, status=None, ordering=None, **kwargs
+    ):
         filters = ControllerQuery.build_filters(status)
-        controllers = await Controller.get_objects(limit, offset, filters=filters, ordering=ordering,
-                                                   include_inactive=True)
+        controllers = await Controller.get_objects(
+            limit, offset, filters=filters, ordering=ordering, include_inactive=True
+        )
         return controllers
 
     @classmethod
@@ -485,6 +587,6 @@ class ControllerMutations(graphene.ObjectType):
     activateController = ActivateControllerMutation.Field()
 
 
-controller_schema = graphene.Schema(query=ControllerQuery,
-                                    mutation=ControllerMutations,
-                                    auto_camelcase=False)
+controller_schema = graphene.Schema(
+    query=ControllerQuery, mutation=ControllerMutations, auto_camelcase=False
+)

@@ -33,9 +33,17 @@ from common.log.journal import system_logger
 class LicenseData:
     """Структура лицензионного ключа"""
 
-    def __init__(self, uuid: str, verbose_name: str, thin_clients_limit: int = 0, expiration_date: str = None,
-                 support_expiration_date: str = None,
-                 company: str = None, email: str = None, date_format: str = '%Y-%m-%d'):
+    def __init__(
+        self,
+        uuid: str,
+        verbose_name: str,
+        thin_clients_limit: int = 0,
+        expiration_date: str = None,
+        support_expiration_date: str = None,
+        company: str = None,
+        email: str = None,
+        date_format: str = "%Y-%m-%d",
+    ):
         self._expiration_date = expiration_date
         self._support_expiration_date = support_expiration_date
         self.date_format = date_format
@@ -49,16 +57,20 @@ class LicenseData:
     @property
     def expiration_date(self) -> datetime.date:
         expiration_date = self._expiration_date
-        if not expiration_date or (isinstance(expiration_date, str) and len(expiration_date) < 8):
-            expiration_date = '2020-05-01'
+        if not expiration_date or (
+            isinstance(expiration_date, str) and len(expiration_date) < 8
+        ):
+            expiration_date = "2020-05-01"
         return self.convert_to_date(expiration_date)
 
     @property
     def support_expiration_date(self) -> datetime.date:
         support_expiration_date = self._support_expiration_date
         if not support_expiration_date or (
-                isinstance(support_expiration_date, str) and len(support_expiration_date) < 8):
-            support_expiration_date = '2020-05-01'
+            isinstance(support_expiration_date, str)
+            and len(support_expiration_date) < 8  # noqa: W503
+        ):
+            support_expiration_date = "2020-05-01"
         return self.convert_to_date(support_expiration_date)
 
     @property
@@ -79,15 +91,21 @@ class LicenseData:
 
     @property
     def all_attrs(self):
-        return dict(vars(self), expired=self.expired, support_expired=self.support_expired,
-                    expiration_date=self.expiration_date, support_expiration_date=self.support_expiration_date,
-                    remaining_days=self.remaining_days, support_remaining_days=self.support_remaining_days)
+        return dict(
+            vars(self),
+            expired=self.expired,
+            support_expired=self.support_expired,
+            expiration_date=self.expiration_date,
+            support_expiration_date=self.support_expiration_date,
+            remaining_days=self.remaining_days,
+            support_remaining_days=self.support_remaining_days,
+        )
 
     @property
     def public_attrs_dict(self):
         public_dict = dict()
         for attr in self.all_attrs:
-            if attr.startswith('_'):
+            if attr.startswith("_"):
                 continue
 
             attr_value = self.all_attrs[attr]
@@ -100,10 +118,10 @@ class LicenseData:
     @property
     def new_license_attrs_dict(self):
         public_dict = self.public_attrs_dict
-        public_dict.pop('expired')
-        public_dict.pop('support_expired')
-        public_dict.pop('remaining_days')
-        public_dict.pop('support_remaining_days')
+        public_dict.pop("expired")
+        public_dict.pop("support_expired")
+        public_dict.pop("remaining_days")
+        public_dict.pop("support_remaining_days")
         return public_dict
 
     @property
@@ -129,7 +147,6 @@ class License:
     """Singleton лицензии. Борг показался идейно неправильным."""
 
     class __Singleton:
-
         def __init__(self):
             """При инициализации считываем параметры лицензии из файла."""
             self.veil_serial_key_path = SERIAL_KEY_FPATH
@@ -142,7 +159,11 @@ class License:
 
         @property
         def veil_serial_key(self):
-            return self.veil_serial_key_path if os.path.exists(self.veil_serial_key_path) else None
+            return (
+                self.veil_serial_key_path
+                if os.path.exists(self.veil_serial_key_path)
+                else None
+            )
 
         @property
         def veil_pem(self):
@@ -182,11 +203,13 @@ class License:
 
         @property
         def license_data(self):
-            return LicenseData(**read_license_dict(dict_name='license_dict'))
+            return LicenseData(**read_license_dict(dict_name="license_dict"))
 
         @license_data.setter
         def license_data(self, license_data: LicenseData):
-            return save_license_dict(dict_name='license_dict', data=license_data.new_license_attrs_dict)
+            return save_license_dict(
+                dict_name="license_dict", data=license_data.new_license_attrs_dict
+            )
 
         def get_license_from_file(self):
             """
@@ -195,9 +218,8 @@ class License:
             try:
                 with open(self.veil_pem, "rb") as key_file:
                     private_key = serialization.load_pem_private_key(
-                        key_file.read(),
-                        backend=default_backend(),
-                        password=None)
+                        key_file.read(), backend=default_backend(), password=None
+                    )
 
                     with open(self.veil_serial_key, "rb") as f:
                         data = f.read()
@@ -206,16 +228,22 @@ class License:
                             padding.OAEP(
                                 mgf=padding.MGF1(algorithm=hashes.SHA256()),
                                 algorithm=hashes.SHA256(),
-                                label=None))
-                        decrypted_data = decrypted_data_bytes.decode('utf-8') if decrypted_data_bytes else None
+                                label=None,
+                            ),
+                        )
+                        decrypted_data = (
+                            decrypted_data_bytes.decode("utf-8")
+                            if decrypted_data_bytes
+                            else None
+                        )
                         # При отсутствии значения в decrypted_data сработает TypeError
                         license_data = json.loads(decrypted_data)
             except (TypeError, FileNotFoundError, ValueError):
-                system_logger._debug('Licence file or vdi server key not found.')
+                system_logger._debug("Licence file or vdi server key not found.")
                 license_data = {
                     "verbose_name": "Unlicensed Veil VDI",
                     "thin_clients_limit": 0,
-                    "uuid": str(uuid4())
+                    "uuid": str(uuid4()),
                 }
             try:
                 self.license_data = LicenseData(**license_data)
@@ -224,13 +252,13 @@ class License:
                 license_data = {
                     "verbose_name": "Unlicensed Veil VDI",
                     "thin_clients_limit": 0,
-                    "uuid": str(uuid4())
+                    "uuid": str(uuid4()),
                 }
                 self.license_data = LicenseData(**license_data)
             return self.license_data
 
         def save_license_key(self, file_body):
-            with open(self.veil_serial_key_path, 'wb') as key_file:
+            with open(self.veil_serial_key_path, "wb") as key_file:
                 key_file.write(file_body)
 
         def upload_license(self, file_body):

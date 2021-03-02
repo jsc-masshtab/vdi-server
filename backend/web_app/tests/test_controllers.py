@@ -4,21 +4,32 @@ import pytest
 from web_app.controller.schema import controller_schema
 from common.models.controller import Controller
 from web_app.tests.utils import execute_scheme
-from web_app.tests.fixtures import fixt_db, fixt_controller, fixt_auth_context, fixt_veil_client  # noqa
+from web_app.tests.fixtures import (
+    fixt_db,
+    fixt_controller,
+    fixt_auth_context,
+    fixt_veil_client,
+)  # noqa
 from common.settings import PAM_AUTH
 from common.veil.veil_gino import Status
 
-pytestmark = [pytest.mark.controllers, pytest.mark.skipif(PAM_AUTH, reason="not finished yet")]
+pytestmark = [
+    pytest.mark.controllers,
+    pytest.mark.skipif(PAM_AUTH, reason="not finished yet"),
+]
 
 
 @pytest.mark.asyncio
-async def test_add_update_remove_controller(fixt_db, fixt_auth_context, fixt_controller):  # noqa
+async def test_add_update_remove_controller(
+    fixt_db, fixt_auth_context, fixt_controller
+):  # noqa
     """Add, update and remove controller"""
 
-    controller_id = fixt_controller['controller_id']
+    controller_id = fixt_controller["controller_id"]
 
     # update controller
-    qu = """
+    qu = (
+        """
     mutation {
         updateController(
             id_: "%s",
@@ -33,29 +44,40 @@ async def test_add_update_remove_controller(fixt_db, fixt_auth_context, fixt_con
             }
     }
     }
-    """ % controller_id
+    """
+        % controller_id
+    )
 
     executed = await execute_scheme(controller_schema, qu, context=fixt_auth_context)
-    assert executed['updateController']['controller']
+    assert executed["updateController"]["controller"]
 
 
 @pytest.mark.asyncio
-async def test_credentials(fixt_db, snapshot, fixt_controller, fixt_auth_context):  # noqa
+async def test_credentials(
+    fixt_db, snapshot, fixt_controller, fixt_auth_context
+):  # noqa
 
-    controller_id = await Controller.select('id').gino.scalar()
-    qu = """
+    controller_id = await Controller.select("id").gino.scalar()
+    qu = (
+        """
         mutation {
             testController(id_: "%s") {
                 ok
             }
         }
-        """ % controller_id
-    executed = await execute_scheme(controller_schema, qu, context=fixt_auth_context)  # noqa
+        """
+        % controller_id
+    )
+    executed = await execute_scheme(
+        controller_schema, qu, context=fixt_auth_context
+    )  # noqa
     snapshot.assert_match(executed)
 
 
 @pytest.mark.asyncio
-async def test_resolve_controllers(fixt_db, snapshot, fixt_controller, fixt_auth_context):  # noqa
+async def test_resolve_controllers(
+    fixt_db, snapshot, fixt_controller, fixt_auth_context
+):  # noqa
     qu = """
             {
               controllers {
@@ -66,15 +88,20 @@ async def test_resolve_controllers(fixt_db, snapshot, fixt_controller, fixt_auth
               }
             }
         """
-    executed = await execute_scheme(controller_schema, qu, context=fixt_auth_context)  # noqa
+    executed = await execute_scheme(
+        controller_schema, qu, context=fixt_auth_context
+    )  # noqa
     snapshot.assert_match(executed)
 
 
 @pytest.mark.asyncio
-async def test_resolve_controller(fixt_db, snapshot, fixt_controller, fixt_auth_context):  # noqa
+async def test_resolve_controller(
+    fixt_db, snapshot, fixt_controller, fixt_auth_context
+):  # noqa
 
-    controller_id = await Controller.select('id').gino.scalar()
-    qu = """
+    controller_id = await Controller.select("id").gino.scalar()
+    qu = (
+        """
             {
               controller(id_: "%s") {
                 verbose_name
@@ -133,14 +160,20 @@ async def test_resolve_controller(fixt_db, snapshot, fixt_controller, fixt_auth_
                   verbose_name
                 }
              }
-            }""" % controller_id
-    executed = await execute_scheme(controller_schema, qu, context=fixt_auth_context)  # noqa
+            }"""
+        % controller_id
+    )
+    executed = await execute_scheme(
+        controller_schema, qu, context=fixt_auth_context
+    )  # noqa
     snapshot.assert_match(executed)
 
 
 @pytest.mark.asyncio
-async def test_service_controller_mode(fixt_db, fixt_controller, fixt_auth_context):  # noqa
-    controller = await Controller.get(fixt_controller['controller_id'])
+async def test_service_controller_mode(
+    fixt_db, fixt_controller, fixt_auth_context
+):  # noqa
+    controller = await Controller.get(fixt_controller["controller_id"])
 
     await controller.service()
     assert controller.status == Status.SERVICE

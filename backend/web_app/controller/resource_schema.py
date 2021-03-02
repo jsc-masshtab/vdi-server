@@ -8,7 +8,12 @@
 import graphene
 
 from common.veil.veil_decorators import administrator_required
-from common.veil.veil_graphene import VeilResourceType, VmState, VeilShortEntityType, VeilTagsType
+from common.veil.veil_graphene import (
+    VeilResourceType,
+    VmState,
+    VeilShortEntityType,
+    VeilTagsType,
+)
 from common.veil.veil_gino import StatusGraphene
 from common.veil.veil_errors import SilentError
 from veil_api_client import VeilRestPaginator
@@ -185,26 +190,60 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
     """
 
     # TODO: унифицировать преобразование данных ответа в класс
-    cluster = graphene.Field(ResourceClusterType, cluster_id=graphene.UUID(), controller_id=graphene.UUID())
-    clusters = graphene.List(ResourceClusterType, ordering=graphene.String(), limit=graphene.Int(default_value=100),
-                             offset=graphene.Int(default_value=0))
+    cluster = graphene.Field(
+        ResourceClusterType, cluster_id=graphene.UUID(), controller_id=graphene.UUID()
+    )
+    clusters = graphene.List(
+        ResourceClusterType,
+        ordering=graphene.String(),
+        limit=graphene.Int(default_value=100),
+        offset=graphene.Int(default_value=0),
+    )
 
-    resource_pool = graphene.Field(ResourcePoolType, resource_pool_id=graphene.UUID(), controller_id=graphene.UUID())
-    resource_pools = graphene.List(ResourcePoolType, ordering=graphene.String(), limit=graphene.Int(default_value=100),
-                                   offset=graphene.Int(default_value=0))
+    resource_pool = graphene.Field(
+        ResourcePoolType,
+        resource_pool_id=graphene.UUID(),
+        controller_id=graphene.UUID(),
+    )
+    resource_pools = graphene.List(
+        ResourcePoolType,
+        ordering=graphene.String(),
+        limit=graphene.Int(default_value=100),
+        offset=graphene.Int(default_value=0),
+    )
 
-    node = graphene.Field(ResourceNodeType, node_id=graphene.UUID(), controller_id=graphene.UUID())
-    nodes = graphene.List(ResourceNodeType, ordering=graphene.String(), limit=graphene.Int(default_value=100),
-                          offset=graphene.Int(default_value=0))
+    node = graphene.Field(
+        ResourceNodeType, node_id=graphene.UUID(), controller_id=graphene.UUID()
+    )
+    nodes = graphene.List(
+        ResourceNodeType,
+        ordering=graphene.String(),
+        limit=graphene.Int(default_value=100),
+        offset=graphene.Int(default_value=0),
+    )
 
-    datapool = graphene.Field(ResourceDataPoolType, datapool_id=graphene.UUID(), controller_id=graphene.UUID())
-    datapools = graphene.List(ResourceDataPoolType, ordering=graphene.String(), limit=graphene.Int(default_value=100),
-                              offset=graphene.Int(default_value=0))
+    datapool = graphene.Field(
+        ResourceDataPoolType, datapool_id=graphene.UUID(), controller_id=graphene.UUID()
+    )
+    datapools = graphene.List(
+        ResourceDataPoolType,
+        ordering=graphene.String(),
+        limit=graphene.Int(default_value=100),
+        offset=graphene.Int(default_value=0),
+    )
 
-    template = graphene.Field(ResourceVmType, template_id=graphene.UUID(), controller_id=graphene.UUID())
-    vm = graphene.Field(ResourceVmType, vm_id=graphene.UUID(), controller_id=graphene.UUID())
-    templates = graphene.List(ResourceVmType, ordering=graphene.String(), limit=graphene.Int(default_value=100),
-                              offset=graphene.Int(default_value=0))
+    template = graphene.Field(
+        ResourceVmType, template_id=graphene.UUID(), controller_id=graphene.UUID()
+    )
+    vm = graphene.Field(
+        ResourceVmType, vm_id=graphene.UUID(), controller_id=graphene.UUID()
+    )
+    templates = graphene.List(
+        ResourceVmType,
+        ordering=graphene.String(),
+        limit=graphene.Int(default_value=100),
+        offset=graphene.Int(default_value=0),
+    )
     vms = templates
 
     # Кластеры
@@ -217,14 +256,21 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
         # Прерываем выполнение при отсутствии клиента
         if not controller.veil_client:
             return
-        cluster_info = await controller.veil_client.cluster(cluster_id=str(cluster_id)).info()
+        cluster_info = await controller.veil_client.cluster(
+            cluster_id=str(cluster_id)
+        ).info()
         resource_data = cluster_info.value
-        resource_data['controller'] = {'id': controller.id, 'verbose_name': controller.verbose_name}
+        resource_data["controller"] = {
+            "id": controller.id,
+            "verbose_name": controller.verbose_name,
+        }
         return ResourceClusterType(**resource_data)
 
     @classmethod
     @administrator_required
-    async def resolve_clusters(cls, root, info, creator, limit, offset, ordering: str = None):
+    async def resolve_clusters(
+        cls, root, info, creator, limit, offset, ordering: str = None
+    ):
         """Все кластеры на подключенных ECP VeiL."""
         controllers = await cls.fetch_all()
         veil_clusters_list = list()
@@ -234,19 +280,26 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
             # Прерываем выполнение при отсутствии клиента
             if not controller.veil_client:
                 continue
-            veil_response = await controller.veil_client.cluster().list(paginator=paginator)
+            veil_response = await controller.veil_client.cluster().list(
+                paginator=paginator
+            )
             for cluster in veil_response.paginator_results:
                 # Добавляем параметры контроллера на VDI
-                cluster['controller'] = {'id': controller.id, 'verbose_name': controller.verbose_name}
+                cluster["controller"] = {
+                    "id": controller.id,
+                    "verbose_name": controller.verbose_name,
+                }
                 clusters_list.append(cluster)
 
         if not ordering:
-            clusters_list.sort(key=lambda data: data['verbose_name'], reverse=True)
+            clusters_list.sort(key=lambda data: data["verbose_name"], reverse=True)
 
-        if ordering == 'controller':
-            clusters_list.sort(key=lambda data: data['controller']['verbose_name'])
-        elif ordering == '-controller':
-            clusters_list.sort(key=lambda data: data['controller']['verbose_name'], reverse=True)
+        if ordering == "controller":
+            clusters_list.sort(key=lambda data: data["controller"]["verbose_name"])
+        elif ordering == "-controller":
+            clusters_list.sort(
+                key=lambda data: data["controller"]["verbose_name"], reverse=True
+            )
 
         for resource_data in clusters_list:
             veil_clusters_list.append(ResourceClusterType(**resource_data))
@@ -256,23 +309,31 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
     # Пулы ресурсов
     @classmethod
     @administrator_required
-    async def resolve_resource_pool(cls, root, info, creator, resource_pool_id, controller_id):
+    async def resolve_resource_pool(
+        cls, root, info, creator, resource_pool_id, controller_id
+    ):
         """"Получение информации о конкретном пуле ресурсов на контроллере."""
         controller = await cls.fetch_by_id(controller_id)
         # Прерываем выполнение при отсутствии клиента
         if not controller.veil_client:
             return
-        veil_response = await controller.veil_client.resource_pool(resource_pool_id=str(resource_pool_id)).info()
+        veil_response = await controller.veil_client.resource_pool(
+            resource_pool_id=str(resource_pool_id)
+        ).info()
         for data in veil_response.response:
             resource_pool = data.public_attrs
-            resource_pool['controller'] = {'id': controller.id,
-                                           'verbose_name': controller.verbose_name,
-                                           'address': controller.address}
+            resource_pool["controller"] = {
+                "id": controller.id,
+                "verbose_name": controller.verbose_name,
+                "address": controller.address,
+            }
         return ResourcePoolType(**resource_pool)
 
     @classmethod
     @administrator_required
-    async def resolve_resource_pools(cls, root, info, creator, limit, offset, ordering: str = None):
+    async def resolve_resource_pools(
+        cls, root, info, creator, limit, offset, ordering: str = None
+    ):
         """Все пулы ресурсов на подключенных ECP VeiL."""
         controllers = await cls.fetch_all()
         veil_resource_pools_list = list()
@@ -282,24 +343,32 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
             # Прерываем выполнение при отсутствии клиента
             if not controller.veil_client:
                 continue
-            veil_response = await controller.veil_client.resource_pool().list(paginator=paginator)
+            veil_response = await controller.veil_client.resource_pool().list(
+                paginator=paginator
+            )
             for data in veil_response.response:
                 resource_pool = data.public_attrs
                 # Добавляем id, так как в response он не присутствует в чистом виде
-                resource_pool['id'] = resource_pool['api_object_id']
+                resource_pool["id"] = resource_pool["api_object_id"]
                 # Добавляем параметры контроллера на VDI
-                resource_pool['controller'] = {'id': controller.id,
-                                               'verbose_name': controller.verbose_name,
-                                               'address': controller.address}
+                resource_pool["controller"] = {
+                    "id": controller.id,
+                    "verbose_name": controller.verbose_name,
+                    "address": controller.address,
+                }
                 resource_pools_list.append(resource_pool)
 
         if not ordering:
-            resource_pools_list.sort(key=lambda data: data['verbose_name'])
+            resource_pools_list.sort(key=lambda data: data["verbose_name"])
 
-        if ordering == 'controller':
-            resource_pools_list.sort(key=lambda data: data['controller']['verbose_name'])
-        elif ordering == '-controller':
-            resource_pools_list.sort(key=lambda data: data['controller']['verbose_name'], reverse=True)
+        if ordering == "controller":
+            resource_pools_list.sort(
+                key=lambda data: data["controller"]["verbose_name"]
+            )
+        elif ordering == "-controller":
+            resource_pools_list.sort(
+                key=lambda data: data["controller"]["verbose_name"], reverse=True
+            )
 
         for data in resource_pools_list:
             veil_resource_pools_list.append(ResourcePoolType(**data))
@@ -317,13 +386,18 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
             return
         node_info = await controller.veil_client.node(node_id=str(node_id)).info()
         resource_data = node_info.value
-        resource_data['controller'] = {'id': controller.id, 'verbose_name': controller.verbose_name}
-        resource_data['cpu_count'] = resource_data['cpu_topology']['cpu_count']
+        resource_data["controller"] = {
+            "id": controller.id,
+            "verbose_name": controller.verbose_name,
+        }
+        resource_data["cpu_count"] = resource_data["cpu_topology"]["cpu_count"]
         return ResourceNodeType(**resource_data)
 
     @classmethod
     @administrator_required
-    async def resolve_nodes(cls, root, info, creator, limit, offset, ordering: str = None):
+    async def resolve_nodes(
+        cls, root, info, creator, limit, offset, ordering: str = None
+    ):
         """Все ноды (серверы) на подключенных ECP VeiL."""
         controllers = await cls.fetch_all()
         veil_nodes_list = list()
@@ -333,19 +407,26 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
             # Прерываем выполнение при отсутствии клиента
             if not controller.veil_client:
                 continue
-            veil_response = await controller.veil_client.node().list(paginator=paginator)
+            veil_response = await controller.veil_client.node().list(
+                paginator=paginator
+            )
             for node in veil_response.paginator_results:
                 # Добавляем параметры контроллера на VDI
-                node['controller'] = {'id': controller.id, 'verbose_name': controller.verbose_name}
+                node["controller"] = {
+                    "id": controller.id,
+                    "verbose_name": controller.verbose_name,
+                }
                 nodes_list.append(node)
 
         if not ordering:
-            nodes_list.sort(key=lambda data: data['verbose_name'])
+            nodes_list.sort(key=lambda data: data["verbose_name"])
 
-        if ordering == 'controller':
-            nodes_list.sort(key=lambda data: data['controller']['verbose_name'])
-        elif ordering == '-controller':
-            nodes_list.sort(key=lambda data: data['controller']['verbose_name'], reverse=True)
+        if ordering == "controller":
+            nodes_list.sort(key=lambda data: data["controller"]["verbose_name"])
+        elif ordering == "-controller":
+            nodes_list.sort(
+                key=lambda data: data["controller"]["verbose_name"], reverse=True
+            )
 
         for resource_data in nodes_list:
             veil_nodes_list.append(ResourceNodeType(**resource_data))
@@ -361,14 +442,21 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
         # Прерываем выполнение при отсутствии клиента
         if not controller.veil_client:
             return
-        datapool_info = await controller.veil_client.data_pool(data_pool_id=str(datapool_id)).info()
+        datapool_info = await controller.veil_client.data_pool(
+            data_pool_id=str(datapool_id)
+        ).info()
         resource_data = datapool_info.value
-        resource_data['controller'] = {'id': controller.id, 'verbose_name': controller.verbose_name}
+        resource_data["controller"] = {
+            "id": controller.id,
+            "verbose_name": controller.verbose_name,
+        }
         return ResourceDataPoolType(**resource_data)
 
     @classmethod
     @administrator_required
-    async def resolve_datapools(cls, root, info, creator, limit, offset, ordering: str = None):
+    async def resolve_datapools(
+        cls, root, info, creator, limit, offset, ordering: str = None
+    ):
         """Все пулы данных (datapools) на подключенных ECP VeiL."""
         controllers = await cls.fetch_all()
         veil_datapools_list = list()
@@ -378,19 +466,26 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
             # Прерываем выполнение при отсутствии клиента
             if not controller.veil_client:
                 return
-            veil_response = await controller.veil_client.data_pool().list(paginator=paginator)
+            veil_response = await controller.veil_client.data_pool().list(
+                paginator=paginator
+            )
             for datapool in veil_response.paginator_results:
                 # Добавляем параметры контроллера на VDI
-                datapool['controller'] = {'id': controller.id, 'verbose_name': controller.verbose_name}
+                datapool["controller"] = {
+                    "id": controller.id,
+                    "verbose_name": controller.verbose_name,
+                }
                 datapools_list.append(datapool)
 
         if not ordering:
-            datapools_list.sort(key=lambda data: data['verbose_name'])
+            datapools_list.sort(key=lambda data: data["verbose_name"])
 
-        if ordering == 'controller':
-            datapools_list.sort(key=lambda data: data['controller']['verbose_name'])
-        elif ordering == '-controller':
-            datapools_list.sort(key=lambda data: data['controller']['verbose_name'], reverse=True)
+        if ordering == "controller":
+            datapools_list.sort(key=lambda data: data["controller"]["verbose_name"])
+        elif ordering == "-controller":
+            datapools_list.sort(
+                key=lambda data: data["controller"]["verbose_name"], reverse=True
+            )
 
         for resource_data in datapools_list:
             veil_datapools_list.append(ResourceDataPoolType(**resource_data))
@@ -413,25 +508,29 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
         if vm_info.success:
             resource_data = vm_info.value
             response = await veil_domain.tags_list()
-            resource_data['domain_tags'] = list()
+            resource_data["domain_tags"] = list()
             for tag in response.response:
-                resource_data['domain_tags'].append(
+                resource_data["domain_tags"].append(
                     {
-                        'colour': tag.colour,
-                        'verbose_name': tag.verbose_name,
-                        'slug': tag.slug
-                    })
-            resource_data['controller'] = {'id': controller.id, 'verbose_name': controller.verbose_name}
-            resource_data['cpu_count'] = veil_domain.cpu_count
-            resource_data['parent_name'] = veil_domain.parent_name
+                        "colour": tag.colour,
+                        "verbose_name": tag.verbose_name,
+                        "slug": tag.slug,
+                    }
+                )
+            resource_data["controller"] = {
+                "id": controller.id,
+                "verbose_name": controller.verbose_name,
+            }
+            resource_data["cpu_count"] = veil_domain.cpu_count
+            resource_data["parent_name"] = veil_domain.parent_name
             if veil_domain.guest_agent:
-                resource_data['guest_agent'] = veil_domain.guest_agent.qemu_state
+                resource_data["guest_agent"] = veil_domain.guest_agent.qemu_state
             if veil_domain.powered:
-                resource_data['hostname'] = veil_domain.hostname
-                resource_data['address'] = veil_domain.guest_agent.ipv4
+                resource_data["hostname"] = veil_domain.hostname
+                resource_data["address"] = veil_domain.guest_agent.ipv4
             return ResourceVmType(**resource_data)
         else:
-            raise SilentError(_('VM is unreachable on ECP VeiL.'))
+            raise SilentError(_("VM is unreachable on ECP VeiL."))
 
     @classmethod
     @administrator_required
@@ -457,31 +556,38 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
             if not controller.veil_client:
                 continue
 
-            veil_response = await controller.veil_client.domain(template=template).list(paginator=paginator)
+            veil_response = await controller.veil_client.domain(template=template).list(
+                paginator=paginator
+            )
             vms_list = veil_response.paginator_results
 
             for resource_data in vms_list:
                 # Добавляем параметры контроллера и принадлежность к пулу на VDI
-                resource_data['controller'] = {'id': controller.id, 'verbose_name': controller.verbose_name}
-                vm = await Vm.get(resource_data['id'])
+                resource_data["controller"] = {
+                    "id": controller.id,
+                    "verbose_name": controller.verbose_name,
+                }
+                vm = await Vm.get(resource_data["id"])
                 if vm:
                     pool = await Pool.get(vm.pool_id)
-                    resource_data['pool_name'] = pool.verbose_name
+                    resource_data["pool_name"] = pool.verbose_name
                 else:
-                    resource_data['pool_name'] = '--'
+                    resource_data["pool_name"] = "--"
                 domains.append(resource_data)
 
         if not ordering:
-            domains.sort(key=lambda data: data['verbose_name'])
+            domains.sort(key=lambda data: data["verbose_name"])
 
-        if ordering == 'pool_name':
-            domains.sort(key=lambda data: data['pool_name'])
-        elif ordering == '-pool_name':
-            domains.sort(key=lambda data: data['pool_name'], reverse=True)
-        if ordering == 'controller':
-            domains.sort(key=lambda data: data['controller']['verbose_name'])
-        elif ordering == '-controller':
-            domains.sort(key=lambda data: data['controller']['verbose_name'], reverse=True)
+        if ordering == "pool_name":
+            domains.sort(key=lambda data: data["pool_name"])
+        elif ordering == "-pool_name":
+            domains.sort(key=lambda data: data["pool_name"], reverse=True)
+        if ordering == "controller":
+            domains.sort(key=lambda data: data["controller"]["verbose_name"])
+        elif ordering == "-controller":
+            domains.sort(
+                key=lambda data: data["controller"]["verbose_name"], reverse=True
+            )
 
         for resource_data in domains:
             domain_list.append(ResourceVmType(**resource_data))
@@ -489,19 +595,27 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
 
     @classmethod
     @administrator_required
-    async def resolve_vms(cls, root, info, creator, limit, offset, ordering: str = None):
+    async def resolve_vms(
+        cls, root, info, creator, limit, offset, ordering: str = None
+    ):
         """Все сиртуальные машины на подключенных ECP VeiL."""
         # Для каждого контроллера получаем список всех ВМ за вычетом шаблонов.
-        vm_type_list = await cls.domain_list(template=0, limit=limit, offset=offset, ordering=ordering)
+        vm_type_list = await cls.domain_list(
+            template=0, limit=limit, offset=offset, ordering=ordering
+        )
 
         return vm_type_list
 
     @classmethod
     @administrator_required
-    async def resolve_templates(cls, root, info, creator, limit, offset, ordering: str = None):
+    async def resolve_templates(
+        cls, root, info, creator, limit, offset, ordering: str = None
+    ):
         """Все шаблоны на подключенных ECP VeiL."""
         # Для каждого контроллера получаем список всех ВМ за вычетом шаблонов.
-        template_type_list = await cls.domain_list(template=1, limit=limit, offset=offset, ordering=ordering)
+        template_type_list = await cls.domain_list(
+            template=1, limit=limit, offset=offset, ordering=ordering
+        )
 
         return template_type_list
 
