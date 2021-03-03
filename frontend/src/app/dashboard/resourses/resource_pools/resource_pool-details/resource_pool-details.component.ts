@@ -40,7 +40,7 @@ export class ResourcePoolDetailsComponent implements OnInit, OnDestroy {
       type: 'string'
     },
     {
-      title: 'Ограничение CPU',
+      title: 'Ограничение vcpu',
       property: 'cpu_limit',
       type: 'string'
     },
