@@ -16,20 +16,25 @@ class ExecError(Exception):
 
 
 async def execute_scheme(_schema, query, variables=None, context=None):
-    r = await graphql(_schema, query, variable_values=variables, executor=AsyncioExecutor(), return_promise=True,
-                      context_value=context)
+    r = await graphql(
+        _schema,
+        query,
+        variable_values=variables,
+        executor=AsyncioExecutor(),
+        return_promise=True,
+        context_value=context,
+    )
     if r.errors:
         raise ExecError(repr(r.errors))
     return r.data
 
 
 class VdiHttpTestCase(AsyncHTTPTestCase, ABC):
-
     async def do_login(self):
         user_name = "test_user_admin"
         body = {"username": user_name, "password": "veil"}
         response_dict = await self.get_response(body=json.dumps(body))
-        access_token = response_dict['data']['access_token']
+        access_token = response_dict["data"]["access_token"]
         self.assertTrue(access_token)
 
         return user_name, access_token
@@ -40,16 +45,17 @@ class VdiHttpTestCase(AsyncHTTPTestCase, ABC):
     def get_new_ioloop(self):
         return IOLoop.current()
 
-    async def fetch_request(self, body, url, headers, method='POST'):
+    async def fetch_request(self, body, url, headers, method="POST"):
         if not headers:
-            headers = {'Content-Type': 'application/json'}
-        return await self.http_client.fetch(self.get_url(url),
-                                            method=method,
-                                            body=body,
-                                            headers=headers)
+            headers = {"Content-Type": "application/json"}
+        return await self.http_client.fetch(
+            self.get_url(url), method=method, body=body, headers=headers
+        )
 
-    async def get_response(self, body: dict, url='/auth', headers=None, method='POST'):
-        response = await self.fetch_request(body=body, url=url, headers=headers, method=method)
+    async def get_response(self, body: dict, url="/auth", headers=None, method="POST"):
+        response = await self.fetch_request(
+            body=body, url=url, headers=headers, method=method
+        )
         self.assertEqual(response.code, 200)
         response_dict = json_decode(response.body)
         self.assertIsInstance(response_dict, dict)

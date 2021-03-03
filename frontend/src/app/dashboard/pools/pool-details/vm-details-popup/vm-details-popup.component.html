@@ -73,12 +73,12 @@
         </ng-container>
 
          <ng-container *ngIf="menuActive === 'backups'">
-          <vdi-table-component cursor="true" [data]="data?.vm?.backups" [collection]="collectionBackups" (clickRowData)="clickRow($event)"></vdi-table-component>
+          <vdi-table-component cursor="true" [data]="data?.vms?.backups" [collection]="collectionBackups" (clickRowData)="clickRow($event)"></vdi-table-component>
         </ng-container>
 
         <ng-container *ngIf="menuActive === 'events'">
-          <vdi-table-component class="table-paginator" [height]="'calc(100% - 30px)'" [data]="data?.vm?.events" [collection]="collectionEvents"></vdi-table-component>
-          <vdi-pagination [count]="data?.vm?.count" [offset]="offset" (action)="toPage($event)"></vdi-pagination>
+          <vdi-table-component class="table-paginator" [height]="'calc(100% - 30px)'" [data]="data?.vms?.events" [collection]="collectionEvents"></vdi-table-component>
+          <vdi-pagination [count]="data?.vms?.count" [offset]="offset" (action)="toPage($event)"></vdi-pagination>
         </ng-container>
       </div>
     </div>

@@ -11,13 +11,16 @@ from web_app.auth.group_schema import group_schema
 from common.models.auth import Group
 from common.settings import PAM_AUTH
 
-pytestmark = [pytest.mark.asyncio, pytest.mark.groups, pytest.mark.auth,
-              pytest.mark.skipif(PAM_AUTH, reason="not finished yet")]
+pytestmark = [
+    pytest.mark.asyncio,
+    pytest.mark.groups,
+    pytest.mark.auth,
+    pytest.mark.skipif(PAM_AUTH, reason="not finished yet"),
+]
 
 
-@pytest.mark.usefixtures('fixt_db', 'fixt_group')
+@pytest.mark.usefixtures("fixt_db", "fixt_group")
 class TestGroupSchema:
-
     async def test_group_list(self, snapshot, fixt_auth_context):  # noqa
         query = """{
           groups {
@@ -69,7 +72,7 @@ class TestGroupSchema:
                 }}"""
         executed = await execute_scheme(group_schema, query, context=fixt_auth_context)
         snapshot.assert_match(executed)
-        await Group.delete.where(Group.verbose_name == 'test group 2').gino.status()
+        await Group.delete.where(Group.verbose_name == "test group 2").gino.status()
         assert True
 
     async def test_group_create_bad(self, snapshot, fixt_auth_context):  # noqa
@@ -85,7 +88,7 @@ class TestGroupSchema:
         try:
             await execute_scheme(group_schema, query, context=fixt_auth_context)
         except ExecError as E:
-            assert 'duplicate key value violates unique constraint' in str(E)
+            assert "duplicate key value violates unique constraint" in str(E)
         else:
             raise AssertionError
 
@@ -124,7 +127,9 @@ class TestGroupSchema:
         executed = await execute_scheme(group_schema, query, context=fixt_auth_context)
         snapshot.assert_match(executed)
 
-    async def test_group_delete_by_wrong_guid(self, snapshot, fixt_auth_context):  # noqa
+    async def test_group_delete_by_wrong_guid(
+        self, snapshot, fixt_auth_context
+    ):  # noqa
         query = """mutation {
                       deleteGroup(ad_guid: "10913d5d-ba7a-4049-88c5-769267a6cbe7") {
                         ok
@@ -137,7 +142,9 @@ class TestGroupSchema:
         else:
             raise AssertionError()
 
-    async def test_group_delete_by_id_and_guid(self, snapshot, fixt_auth_context):  # noqa
+    async def test_group_delete_by_id_and_guid(
+        self, snapshot, fixt_auth_context
+    ):  # noqa
         query = """mutation {
                       deleteGroup(ad_guid: "10913d5d-ba7a-4049-88c5-769267a6cbe7",
                        id: "10913d5d-ba7a-4049-88c5-769267a6cbe7") {
@@ -147,7 +154,7 @@ class TestGroupSchema:
         try:
             await execute_scheme(group_schema, query, context=fixt_auth_context)
         except ExecError as E:
-            assert 'Укажите Group.id или Group.ad_guid. Не оба.' in str(E)
+            assert "Укажите Group.id или Group.ad_guid. Не оба." in str(E)
         else:
             raise AssertionError()
 
@@ -232,10 +239,12 @@ class TestGroupSchema:
                     }
                     }"""
         executed = await execute_scheme(group_schema, query, context=fixt_auth_context)
-        assigned_permissions_list = executed['addGroupPermission']['group']['assigned_permissions']
+        assigned_permissions_list = executed["addGroupPermission"]["group"][
+            "assigned_permissions"
+        ]
         assert len(assigned_permissions_list) == 2
-        assert 'FOLDERS_REDIR' in assigned_permissions_list
-        assert 'USB_REDIR' in assigned_permissions_list
+        assert "FOLDERS_REDIR" in assigned_permissions_list
+        assert "USB_REDIR" in assigned_permissions_list
         query = """mutation {
                             removeGroupPermission(id: "10913d5d-ba7a-4049-88c5-769267a6cbe4",
                             permissions: [USB_REDIR]) {
@@ -248,6 +257,8 @@ class TestGroupSchema:
                             }
                             }"""
         executed = await execute_scheme(group_schema, query, context=fixt_auth_context)
-        assigned_permissions_list = executed['removeGroupPermission']['group']['assigned_permissions']
+        assigned_permissions_list = executed["removeGroupPermission"]["group"][
+            "assigned_permissions"
+        ]
         assert len(assigned_permissions_list) == 1
-        assert 'FOLDERS_REDIR' in assigned_permissions_list
+        assert "FOLDERS_REDIR" in assigned_permissions_list

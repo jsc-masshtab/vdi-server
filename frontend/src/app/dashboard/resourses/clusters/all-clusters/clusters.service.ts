@@ -24,6 +24,7 @@ export class ClustersService  {
                 status
                 cpu_count
                 memory_count
+                description
                 controller {
                     id
                     verbose_name
@@ -43,6 +44,7 @@ export class ClustersService  {
                         cpu_count
                         memory_count
                         nodes_count
+                        description
                     }
                 }
             }`
@@ -64,6 +66,7 @@ export class ClustersService  {
                             cluster(cluster_id: $id, controller_id: $controller_address) {
                                 id
                                 verbose_name
+                                description
                                 status
                                 cpu_count
                                 memory_count

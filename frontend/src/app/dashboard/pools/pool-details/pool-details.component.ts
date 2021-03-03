@@ -11,7 +11,7 @@ import { MatDialog } from '@angular/material';
 import { RemovePoolComponent } from './remove-pool/remove-pool.component';
 import { PoolDetailsService } from './pool-details.service';
 import { FormForEditComponent } from 'src/app/dashboard/common/forms-dinamic/change-form/form-edit.component';
-import { map } from 'rxjs/operators';
+import { map, take } from 'rxjs/operators';
 import { RemoveGroupComponent } from './remove-group/remove-group.component';
 import { AddGropComponent } from './add-group/add-group.component';
 import { YesNoFormComponent } from '../../common/forms-dinamic/yes-no-form/yes-no-form.component';
@@ -469,17 +469,20 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
   }
 
   public clickVm(vmActive: IPoolVms): void  {
-    this.dialog.open(VmDetalsPopupComponent, {
- 			disableClose: true,
-      width: '1000px',
-      data: {
-        vm: vmActive,
-        typePool: this.typePool,
-        usersPool: this.pool.users,
-        idPool: this.idPool,
-        username: vmActive.user.username
-      }
-    });
+    this.poolService.getVm(this.idPool, vmActive.id, this.pool.controller.id).valueChanges.pipe(take(1)).subscribe((res) => {
+        this.dialog.open(VmDetalsPopupComponent, {
+        disableClose: true,
+        width: '1000px',
+        data: {
+          vm: res.data.pool.vm,
+          typePool: this.typePool,
+          usersPool: this.pool.users,
+          idPool: this.idPool,
+          username: vmActive.user.username,
+          vms: vmActive
+        }
+      });
+    })
   }
 
   public actionEdit(method) {
@@ -564,6 +567,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
           buttonAction: 'Изменить',
           form: [{
             tag: 'select',
+            multiple: true,
             title: 'Выбрать тип подключения',
             fieldName: 'connection_types',
             data: ['RDP', 'NATIVE_RDP', 'SPICE', 'SPICE_DIRECT'],
@@ -711,8 +715,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
           entity: 'pool-details',
           header: 'Изменение шаблона для ВМ',
           buttonAction: 'Изменить',
-          // danger: "При изменении шаблона произойдет переименование ВМ, переназначение hostname и перевод в домен!",
-          danger: "Изменение имен произойдет только для НОВЫХ виртуальных машин!",
+          danger: "Произойдет переименование ВМ и переназначение hostname на ECP VeiL!",
           form: [{
             tag: 'input',
             type: 'text',

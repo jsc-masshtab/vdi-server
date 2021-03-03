@@ -64,7 +64,7 @@ print_arguments(){
 
 build_command(){
   SUDO_PATH="/usr/bin/sudo"
-  COMMAND="/usr/sbin/adduser --disabled-login --no-create-home --shell /sbin/nologin --quiet"
+  COMMAND="/usr/sbin/adduser --disabled-login --no-create-home --shell /sbin/nologin --quiet --force-badname"
 
   if [ -n "${GROUP}" ]; then
     COMMAND="${COMMAND} --ingroup ${GROUP}"

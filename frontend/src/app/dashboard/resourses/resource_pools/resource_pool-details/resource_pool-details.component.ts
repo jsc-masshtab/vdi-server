@@ -35,7 +35,7 @@ export class ResourcePoolDetailsComponent implements OnInit, OnDestroy {
       type: 'string'
     },
     {
-      title: 'Ограничение памяти',
+      title: 'Ограничение памяти (МБ)',
       property: 'memory_limit',
       type: 'string'
     },
@@ -55,12 +55,12 @@ export class ResourcePoolDetailsComponent implements OnInit, OnDestroy {
       type: 'string'
     },
     {
-      title: 'Количество памяти серверов (Мб)',
+      title: 'Количество памяти серверов (МБ)',
       property: 'nodes_memory_count',
       type: 'string'
     },
     {
-      title: 'Количество памяти ВМ (Мб)',
+      title: 'Количество памяти ВМ (МБ)',
       property: 'domains_memory_count',
       type: 'string'
     },

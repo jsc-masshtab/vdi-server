@@ -31,6 +31,11 @@ export class DatapoolDetailsComponent implements OnInit, OnDestroy {
       icon: 'folder-open'
     },
     {
+      title: 'Описание',
+      property: 'description',
+      type: 'string'
+    },
+    {
       title: 'Тип',
       property: 'type',
       type: 'string'

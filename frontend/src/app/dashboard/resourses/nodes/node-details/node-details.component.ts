@@ -32,6 +32,11 @@ export class NodeDetailsComponent implements OnInit, OnDestroy {
       type: 'string'
     },
     {
+      title: 'Описание',
+      property: 'description',
+      type: 'string'
+    },
+    {
       title: 'Локация',
       property: 'datacenter_name',
       type: 'string'
@@ -47,7 +52,7 @@ export class NodeDetailsComponent implements OnInit, OnDestroy {
       type: 'string'
     },
     {
-      title: 'Оперативная память (Мб)',
+      title: 'Оперативная память (МБ)',
       property: 'memory_count',
       type: 'string'
     },
@@ -61,7 +66,7 @@ export class NodeDetailsComponent implements OnInit, OnDestroy {
       title: 'Тип установки',
       type: {
         typeDepend: 'boolean',
-        propertyDepend: ['Veil controller + Veil server', 'Veil server']
+        propertyDepend: ['VeiL controller + VeiL server', 'VeiL server']
       }
     },
     {

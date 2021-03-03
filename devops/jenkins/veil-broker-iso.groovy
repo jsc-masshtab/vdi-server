@@ -44,7 +44,7 @@ pipeline {
     parameters {
         string(      name: 'BRANCH',               defaultValue: 'dev',                   description: 'branch')
         string(      name: 'REPO',                 defaultValue: 'veil-broker-test',      description: 'repo for uploading')
-        string(      name: 'VERSION',              defaultValue: '2.2.2',                 description: 'base version')
+        string(      name: 'VERSION',              defaultValue: '3.0.0',                 description: 'base version')
         string(      name: 'AGENT',                defaultValue: 'bld-agent-02',          description: 'jenkins build agent')
     }
 
@@ -104,6 +104,7 @@ pipeline {
             steps {
                 sh script: '''
                     ssh uploader@192.168.10.144 mkdir -p /local_storage/veil-broker-iso
+                    ssh uploader@192.168.10.144 rm -f /local_storage/veil-broker-iso/${REPO}-${VERSION}-*.iso
                     scp /nfs/veil-broker-iso/${ISO_NAME}.iso uploader@192.168.10.144:/local_storage/veil-broker-iso
                     rm -f /nfs/veil-broker-iso/${ISO_NAME}.iso
                 '''

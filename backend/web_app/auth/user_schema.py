@@ -29,34 +29,40 @@ class UserValidator(MutationValidation):
         user = await User.get_object(id_=value, include_inactive=True)
         if user:
             return value
-        raise ValidationError(_('No such user.'))
+        raise ValidationError(_("No such user."))
 
     @staticmethod
     async def validate_username(obj_dict, value):
-        user_name_re = re.compile('^[a-zA-Z0-9.-_+]{3,128}$')
+        user_name_re = re.compile("^[a-zA-Z0-9.-_+]{3,128}$")
         template_name = re.match(user_name_re, value.strip())
         if template_name:
-            obj_dict['username'] = value
+            obj_dict["username"] = value
             return value
         raise AssertError(
-            _('username must contain >= 3 chars (letters, digits, _, -, +) and can\'t contain any spaces.'))
+            _(
+                "username must contain >= 3 chars (letters, digits, _, -, +) and can't contain any spaces."
+            )
+        )
 
     @staticmethod
     async def validate_email(obj_dict, value):
         # Проверка на уникальность
         email_is_free = await User.check_email(value)
         if not email_is_free:
-            raise ValidationError(_('Email {} is already busy.').format(value))
+            raise ValidationError(_("Email {} is already busy.").format(value))
 
         # Проверка на маску
-        email_re = re.compile('^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$')  # noqa
+        email_re = re.compile(
+            "^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"  # noqa: W605
+        )
         template_name = re.match(email_re, value)
         if len(value) == 0:
             return None
         elif template_name:
             return value
         raise AssertError(
-            _('Email must contain English characters and/or digits, @ and domain name.'))
+            _("Email must contain English characters and/or digits, @ and domain name.")
+        )
 
     @staticmethod
     async def validate_password(obj_dict, value):
@@ -71,28 +77,31 @@ class UserValidator(MutationValidation):
     @staticmethod
     async def validate_first_name(obj_dict, value):
         if len(value) > 32:
-            raise AssertError(_('First name length must be <= 32 characters.'))
+            raise AssertError(_("First name length must be <= 32 characters."))
         return value
 
     @staticmethod
     async def validate_last_name(obj_dict, value):
         if len(value) > 128:
-            raise AssertError(_('Last name length must be <= 128 characters.'))
+            raise AssertError(_("Last name length must be <= 128 characters."))
         return value
 
 
 class UserGroupType(graphene.ObjectType):
     """Намеренное дублирование GroupType с сокращением доступных полей.
     Нет понимания в целесообразности абстрактного класса для обоих типов."""
+
     id = graphene.UUID(required=True)
     verbose_name = graphene.String()
     description = graphene.String()
 
     @staticmethod
     def instance_to_type(model_instance):
-        return UserGroupType(id=model_instance.id,
-                             verbose_name=model_instance.verbose_name,
-                             description=model_instance.description)
+        return UserGroupType(
+            id=model_instance.id,
+            verbose_name=model_instance.verbose_name,
+            description=model_instance.description,
+        )
 
 
 class UserType(graphene.ObjectType):
@@ -116,27 +125,33 @@ class UserType(graphene.ObjectType):
     assigned_roles = graphene.List(RoleTypeGraphene)
     possible_roles = graphene.List(RoleTypeGraphene)
 
-    assigned_permissions = graphene.List(PermissionTypeGraphene, description='Назначенные разрешения')
-    possible_permissions = graphene.List(PermissionTypeGraphene, description='Разрешения, которые можно назначить')
+    assigned_permissions = graphene.List(
+        PermissionTypeGraphene, description="Назначенные разрешения"
+    )
+    possible_permissions = graphene.List(
+        PermissionTypeGraphene, description="Разрешения, которые можно назначить"
+    )
 
     @staticmethod
     def instance_to_type(model_instance):
-        return UserType(id=model_instance.id,
-                        username=model_instance.username,
-                        email=model_instance.email,
-                        last_name=model_instance.last_name,
-                        first_name=model_instance.first_name,
-                        date_joined=model_instance.date_joined,
-                        date_updated=model_instance.date_updated,
-                        last_login=model_instance.last_login,
-                        is_active=model_instance.is_active)
+        return UserType(
+            id=model_instance.id,
+            username=model_instance.username,
+            email=model_instance.email,
+            last_name=model_instance.last_name,
+            first_name=model_instance.first_name,
+            date_joined=model_instance.date_joined,
+            date_updated=model_instance.date_updated,
+            last_login=model_instance.last_login,
+            is_active=model_instance.is_active,
+        )
 
     async def resolve_is_superuser(self, _info):
         user = await User.get(self.id)
         return await user.superuser()
 
     async def resolve_password(self, _info):
-        return '*' * 8  # dummy value for not displayed field
+        return "*" * 8  # dummy value for not displayed field
 
     async def resolve_assigned_groups(self, _info):
         user = await User.get(self.id)
@@ -169,19 +184,29 @@ class UserType(graphene.ObjectType):
         assigned_permissions = await user.get_permissions()
         all_permissions = [permission_type for permission_type in TkPermission]
 
-        possible_permissions = [perm for perm in all_permissions if perm not in assigned_permissions]
+        possible_permissions = [
+            perm for perm in all_permissions if perm not in assigned_permissions
+        ]
         return possible_permissions
 
 
 class UserQuery(graphene.ObjectType):
-    users = graphene.List(lambda: UserType, limit=graphene.Int(default_value=100), offset=graphene.Int(default_value=0),
-                          username=graphene.String(), is_superuser=graphene.Boolean(), is_active=graphene.Boolean(),
-                          ordering=graphene.String())
+    users = graphene.List(
+        lambda: UserType,
+        limit=graphene.Int(default_value=100),
+        offset=graphene.Int(default_value=0),
+        username=graphene.String(),
+        is_superuser=graphene.Boolean(),
+        is_active=graphene.Boolean(),
+        ordering=graphene.String(),
+    )
     user = graphene.Field(UserType, id=graphene.UUID(), username=graphene.String())
 
     count = graphene.Int(is_superuser=graphene.Boolean(), is_active=graphene.Boolean())
 
-    existing_permissions = graphene.List(PermissionTypeGraphene, description='Существующие разрешения')
+    existing_permissions = graphene.List(
+        PermissionTypeGraphene, description="Существующие разрешения"
+    )
 
     async def resolve_existing_permissions(self, info, **kwargs):
         all_existing_permissions = [permission_type for permission_type in TkPermission]
@@ -189,8 +214,10 @@ class UserQuery(graphene.ObjectType):
 
     async def resolve_count(self, info, is_superuser=None, is_active=None, **kwargs):
         filters = UserQuery.build_filters(is_superuser, is_active)
-        query = User.select('id').where(and_(*filters))
-        users_count = await db.select([db.func.count()]).select_from(query.alias()).gino.scalar()
+        query = User.select("id").where(and_(*filters))
+        users_count = (
+            await db.select([db.func.count()]).select_from(query.alias()).gino.scalar()
+        )
         return users_count
 
     @staticmethod
@@ -206,24 +233,36 @@ class UserQuery(graphene.ObjectType):
     @security_administrator_required
     async def resolve_user(self, info, id=None, username=None, **kwargs):
         if not id and not username:
-            raise SimpleError(_('Specify id or username.'))
+            raise SimpleError(_("Specify id or username."))
 
         user = await User.get_object(id, username, include_inactive=True)
         if not user:
-            raise SimpleError(_('No such user.'))
+            raise SimpleError(_("No such user."))
         return UserType.instance_to_type(user)
 
     @security_administrator_required
-    async def resolve_users(self, info, limit, offset, username=None, is_superuser=None, is_active=None, ordering=None,
-                            **kwargs):
+    async def resolve_users(
+        self,
+        info,
+        limit,
+        offset,
+        username=None,
+        is_superuser=None,
+        is_active=None,
+        ordering=None,
+        **kwargs
+    ):
         filters = UserQuery.build_filters(is_superuser, is_active)
 
-        users = await User.get_objects(limit, offset, name=username, filters=filters, ordering=ordering,
-                                       include_inactive=True)
-        objects = [
-            UserType.instance_to_type(user)
-            for user in users
-        ]
+        users = await User.get_objects(
+            limit,
+            offset,
+            name=username,
+            filters=filters,
+            ordering=ordering,
+            include_inactive=True,
+        )
+        objects = [UserType.instance_to_type(user) for user in users]
         return objects
 
 
@@ -243,11 +282,9 @@ class CreateUserMutation(graphene.Mutation, UserValidator):
     @security_administrator_required
     async def mutate(cls, root, info, creator, **kwargs):
         await cls.validate(**kwargs)
-        kwargs['username'] = kwargs['username'].strip()
+        kwargs["username"] = kwargs["username"].strip()
         user = await User.soft_create(creator=creator, **kwargs)
-        return CreateUserMutation(
-            user=UserType(**user.__values__),
-            ok=True)
+        return CreateUserMutation(user=UserType(**user.__values__), ok=True)
 
 
 class UpdateUserMutation(graphene.Mutation, UserValidator):
@@ -265,11 +302,8 @@ class UpdateUserMutation(graphene.Mutation, UserValidator):
     @security_administrator_required
     async def mutate(cls, root, info, creator, **kwargs):
         await cls.validate(**kwargs)
-        user = await User.soft_update(creator=creator,
-                                      **kwargs)
-        return UpdateUserMutation(
-            user=UserType(**user.__values__),
-            ok=True)
+        user = await User.soft_update(creator=creator, **kwargs)
+        return UpdateUserMutation(user=UserType(**user.__values__), ok=True)
 
 
 class ChangeUserPasswordMutation(graphene.Mutation, UserValidator):
@@ -284,9 +318,9 @@ class ChangeUserPasswordMutation(graphene.Mutation, UserValidator):
     async def mutate(cls, root, info, creator, **kwargs):
         await cls.validate(**kwargs)
         # Назначаем новый пароль
-        user = await User.get(kwargs['id'])
+        user = await User.get(kwargs["id"])
         if user:
-            await user.set_password(kwargs['password'], creator=creator)
+            await user.set_password(kwargs["password"], creator=creator)
             return ChangeUserPasswordMutation(ok=True)
         return ChangeUserPasswordMutation(ok=False)
 
@@ -302,7 +336,7 @@ class ActivateUserMutation(graphene.Mutation, UserValidator):
     async def mutate(cls, root, info, creator, **kwargs):
         await cls.validate(**kwargs)
         # Меняем статус пользователя
-        user = await User.get(kwargs['id'])
+        user = await User.get(kwargs["id"])
         if user:
             await user.activate(creator=creator)
             return ActivateUserMutation(ok=True)
@@ -320,7 +354,7 @@ class DeactivateUserMutation(graphene.Mutation, UserValidator):
     async def mutate(cls, root, info, creator, **kwargs):
         await cls.validate(**kwargs)
         # Меняем статус пользователя
-        user = await User.get(kwargs['id'])
+        user = await User.get(kwargs["id"])
         if user:
             await user.deactivate(creator=creator)
             return DeactivateUserMutation(ok=True)
@@ -339,8 +373,8 @@ class AddUserRoleMutation(graphene.Mutation, UserValidator):
     @security_administrator_required
     async def mutate(cls, root, info, creator, **kwargs):
         await cls.validate(**kwargs)
-        user = await User.get(kwargs['id'])
-        await user.add_roles(kwargs['roles'], creator=creator)
+        user = await User.get(kwargs["id"])
+        await user.add_roles(kwargs["roles"], creator=creator)
         return AddUserRoleMutation(user=UserType(**user.__values__), ok=True)
 
 
@@ -356,8 +390,8 @@ class RemoveUserRoleMutation(graphene.Mutation, UserValidator):
     @security_administrator_required
     async def mutate(cls, root, info, creator, **kwargs):
         await cls.validate(**kwargs)
-        user = await User.get(kwargs['id'])
-        await user.remove_roles(kwargs['roles'], creator=creator)
+        user = await User.get(kwargs["id"])
+        await user.remove_roles(kwargs["roles"], creator=creator)
         return RemoveUserRoleMutation(user=UserType(**user.__values__), ok=True)
 
 
@@ -365,7 +399,9 @@ class RemoveUserRoleMutation(graphene.Mutation, UserValidator):
 class AddUserPermissionMutation(graphene.Mutation, UserValidator):
     class Arguments:
         id = graphene.UUID(required=True)
-        permissions = graphene.NonNull(graphene.List(graphene.NonNull(PermissionTypeGraphene)))
+        permissions = graphene.NonNull(
+            graphene.List(graphene.NonNull(PermissionTypeGraphene))
+        )
 
     user = graphene.Field(UserType)
     ok = graphene.Boolean(default_value=False)
@@ -374,15 +410,17 @@ class AddUserPermissionMutation(graphene.Mutation, UserValidator):
     @security_administrator_required
     async def mutate(cls, root, info, creator, **kwargs):
         await cls.validate(**kwargs)
-        user = await User.get(kwargs['id'])
-        await user.add_permissions(kwargs['permissions'], creator=creator)
+        user = await User.get(kwargs["id"])
+        await user.add_permissions(kwargs["permissions"], creator=creator)
         return AddUserPermissionMutation(user=UserType(**user.__values__), ok=True)
 
 
 class RemoveUserPermissionMutation(graphene.Mutation, UserValidator):
     class Arguments:
         id = graphene.UUID(required=True)
-        permissions = graphene.NonNull(graphene.List(graphene.NonNull(PermissionTypeGraphene)))
+        permissions = graphene.NonNull(
+            graphene.List(graphene.NonNull(PermissionTypeGraphene))
+        )
 
     user = graphene.Field(UserType)
     ok = graphene.Boolean(default_value=False)
@@ -392,26 +430,32 @@ class RemoveUserPermissionMutation(graphene.Mutation, UserValidator):
     async def mutate(cls, root, info, creator, **kwargs):
         await cls.validate(**kwargs)
 
-        user = await User.get(kwargs['id'])
-        await user.remove_permissions(kwargs['permissions'], creator=creator)
+        user = await User.get(kwargs["id"])
+        await user.remove_permissions(kwargs["permissions"], creator=creator)
 
         # Посмотреть не содержатся ли разрешения в группах, в которые включен пользователь и
         # сообщить, что убрать эти разрешения нельзя, пока пользователь в соответствующей группе.
         # Без этого админу будет неочевидно (если он не держит в голове инфу о группах),
         # почему у пользователя не убирается разрешение не смотря на положительный ответ.
         permissions_from_group = await user.get_permissions_from_groups()
-        permissions_from_group = [permission.value for permission in permissions_from_group]
+        permissions_from_group = [
+            permission.value for permission in permissions_from_group
+        ]
         # check if two lists have at least one common element
-        arg_permissions_set = set(kwargs['permissions'])
+        arg_permissions_set = set(kwargs["permissions"])
         # print('arg_permissions_set ', arg_permissions_set, flush=True)
         permissions_from_group_set = set(permissions_from_group)
         # print('permissions_from_group_set ', permissions_from_group_set, flush=True)
         common_permissions = arg_permissions_set & permissions_from_group_set
 
         if common_permissions:
-            common_permissions_str = ' '.join(common_permissions)
-            raise SimpleError(_('Cant remove permission(s) {} because they are granted to groups of user {}.').
-                              format(common_permissions_str, user.username), user=creator)
+            common_permissions_str = ", ".join(common_permissions)
+            raise SimpleError(
+                _(
+                    "Can`t remove permission(s) {} because they are granted to groups of user {}."
+                ).format(common_permissions_str, user.username),
+                user=creator,
+            )
 
         return RemoveUserPermissionMutation(user=UserType(**user.__values__), ok=True)
 
@@ -430,6 +474,6 @@ class UserMutations(graphene.ObjectType):
     removeUserPermission = RemoveUserPermissionMutation.Field()
 
 
-user_schema = graphene.Schema(mutation=UserMutations,
-                              query=UserQuery,
-                              auto_camelcase=False)
+user_schema = graphene.Schema(
+    mutation=UserMutations, query=UserQuery, auto_camelcase=False
+)

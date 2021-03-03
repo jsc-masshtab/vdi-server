@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
+
 # import asyncio
 import pytest  # noqa
 
@@ -19,8 +20,10 @@ def pg_url():
     """
     Предоставляет базовый URL-адрес PostgreSQL для создания временной базы данных для тестов.
     """
-    url = 'postgresql://{USER}:{PASS}@{HOST}:{PORT}/'.format(USER=DB_USER, PASS=DB_PASS, HOST=DB_HOST, PORT=DB_PORT)
-    pg_url = URL(os.getenv('CI_TESTS_PG_URL', url))
+    url = "postgresql://{USER}:{PASS}@{HOST}:{PORT}/".format(
+        USER=DB_USER, PASS=DB_PASS, HOST=DB_HOST, PORT=DB_PORT
+    )
+    pg_url = URL(os.getenv("CI_TESTS_PG_URL", url))
     return pg_url
 
 
@@ -29,7 +32,7 @@ def postgres(pg_url):
     """
     Создает временную БД для запуска теста.
     """
-    tmp_name = 'tests'
+    tmp_name = "tests"
     tmp_url = str(pg_url.with_path(tmp_name))
 
     if database_exists(tmp_url):
@@ -37,13 +40,18 @@ def postgres(pg_url):
     create_database(tmp_url)
 
     try:
-        cmd_options = SimpleNamespace(config='alembic.ini', name='migrations',
-                                      pg_url=tmp_url, raiseerr=False, x=None)
-        upgrade(make_alembic_config(cmd_options), 'head')
+        cmd_options = SimpleNamespace(
+            config="alembic.ini",
+            name="migrations",
+            pg_url=tmp_url,
+            raiseerr=False,
+            x=None,
+        )
+        upgrade(make_alembic_config(cmd_options), "head")
         yield tmp_url
     finally:
         drop_database(tmp_url)
-        print('FINISH')
+        print("FINISH")
 
 
 @pytest.fixture(scope="session")
@@ -51,8 +59,9 @@ def alembic_config(postgres):
     """
     Создает объект с конфигурацией для alembic, настроенный на временную БД.
     """
-    cmd_options = SimpleNamespace(config='alembic.ini', name='migrations',
-                                  pg_url=postgres, raiseerr=False, x=None)
+    cmd_options = SimpleNamespace(
+        config="alembic.ini", name="migrations", pg_url=postgres, raiseerr=False, x=None
+    )
     return make_alembic_config(cmd_options)
 
 

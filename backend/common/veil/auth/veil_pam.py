@@ -5,16 +5,18 @@ try:
 except ImportError:
     VeilAuthPam = None
 
-from common.settings import (PAM_AUTH,
-                             PAM_USER_SET_PASS_CMD,
-                             PAM_USER_REMOVE_CMD,
-                             PAM_USER_EDIT_CMD,
-                             PAM_CHECK_IN_GROUP_CMD,
-                             PAM_USER_ADD_CMD,
-                             PAM_GROUP_ADD_CMD,
-                             PAM_TASK_TIMEOUT,
-                             PAM_SUDO_CMD,
-                             PAM_KILL_PROC_CMD)
+from common.settings import (
+    PAM_AUTH,
+    PAM_USER_SET_PASS_CMD,
+    PAM_USER_REMOVE_CMD,
+    PAM_USER_EDIT_CMD,
+    PAM_CHECK_IN_GROUP_CMD,
+    PAM_USER_ADD_CMD,
+    PAM_GROUP_ADD_CMD,
+    PAM_TASK_TIMEOUT,
+    PAM_SUDO_CMD,
+    PAM_KILL_PROC_CMD,
+)
 
 if PAM_AUTH and VeilAuthPam:
     veil_auth_class = VeilAuthPam(
@@ -26,7 +28,7 @@ if PAM_AUTH and VeilAuthPam:
         user_check_in_group_cmd=PAM_CHECK_IN_GROUP_CMD,
         user_remove_group_cmd=PAM_USER_REMOVE_CMD,
         sudo_cmd=PAM_SUDO_CMD,
-        kill_cmd=PAM_KILL_PROC_CMD
+        kill_cmd=PAM_KILL_PROC_CMD,
     )
 else:
     veil_auth_class = None

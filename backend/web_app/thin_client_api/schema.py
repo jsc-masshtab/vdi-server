@@ -16,7 +16,10 @@ from sqlalchemy.sql import desc
 from sqlalchemy import and_
 
 from common.database import db
-from common.models.active_tk_connection import ActiveTkConnection, TkConnectionStatistics
+from common.models.active_tk_connection import (
+    ActiveTkConnection,
+    TkConnectionStatistics,
+)
 from common.models.auth import User
 from common.models.vm import Vm
 
@@ -33,13 +36,17 @@ class ThinClientType(graphene.ObjectType):
     tk_os = graphene.String()
     connected = graphene.DateTime()
     disconnected = graphene.DateTime()
-    data_received = graphene.DateTime()  # время когда последний раз получили что-то по ws от тк
+    data_received = (
+        graphene.DateTime()
+    )  # время когда последний раз получили что-то по ws от тк
     last_interaction = graphene.DateTime()  # время последнего взаимоействия юзера с гуи
     is_afk = graphene.Boolean()  # AFK ли пользователь
 
     async def resolve_is_afk(self, _info):
 
-        if self.last_interaction is None:  # Если от клиента не было активности вообще, то считаем afk
+        if (
+            self.last_interaction is None
+        ):  # Если от клиента не было активности вообще, то считаем afk
             return True
         else:
             afk_timeout = 300  # как в WoW
@@ -87,17 +94,23 @@ class ThinClientQuery(graphene.ObjectType):
 
     thin_clients_count = graphene.Int(default_value=0)
 
-    thin_clients = graphene.List(ThinClientType, limit=graphene.Int(default_value=100),
-                                 offset=graphene.Int(default_value=0),
-                                 ordering=graphene.String(default_value='connected'),
-                                 get_disconnected=graphene.Boolean(default_value=False),
-                                 user_id=graphene.UUID(default_value=None))
+    thin_clients = graphene.List(
+        ThinClientType,
+        limit=graphene.Int(default_value=100),
+        offset=graphene.Int(default_value=0),
+        ordering=graphene.String(default_value="connected"),
+        get_disconnected=graphene.Boolean(default_value=False),
+        user_id=graphene.UUID(default_value=None),
+    )
 
-    thin_clients_statistics = graphene.List(ThinClientConnStatType, limit=graphene.Int(default_value=100),
-                                            offset=graphene.Int(default_value=0),
-                                            ordering=graphene.String(default_value='created'),
-                                            conn_id=graphene.UUID(default_value=None),
-                                            user_id=graphene.UUID(default_value=None))
+    thin_clients_statistics = graphene.List(
+        ThinClientConnStatType,
+        limit=graphene.Int(default_value=100),
+        offset=graphene.Int(default_value=0),
+        ordering=graphene.String(default_value="created"),
+        conn_id=graphene.UUID(default_value=None),
+        user_id=graphene.UUID(default_value=None),
+    )
 
     @administrator_required
     async def resolve_thin_clients_count(self, _info, **kwargs):
@@ -105,30 +118,44 @@ class ThinClientQuery(graphene.ObjectType):
         return conn_count
 
     @administrator_required
-    async def resolve_thin_clients(self, _info, limit, offset, ordering,
-                                   get_disconnected, user_id=None, **kwargs):
-        query = db.select([
-            ActiveTkConnection.id,
-            ActiveTkConnection.veil_connect_version,
-            ActiveTkConnection.tk_ip,
-            ActiveTkConnection.tk_os,
-            ActiveTkConnection.connected,
-            ActiveTkConnection.disconnected,
-            ActiveTkConnection.data_received,
-            ActiveTkConnection.last_interaction,
-            User.username,
-            Vm.verbose_name
-        ])
+    async def resolve_thin_clients(
+        self, _info, limit, offset, ordering, get_disconnected, user_id=None, **kwargs
+    ):
+        query = db.select(
+            [
+                ActiveTkConnection.id,
+                ActiveTkConnection.veil_connect_version,
+                ActiveTkConnection.tk_ip,
+                ActiveTkConnection.tk_os,
+                ActiveTkConnection.connected,
+                ActiveTkConnection.disconnected,
+                ActiveTkConnection.data_received,
+                ActiveTkConnection.last_interaction,
+                User.username,
+                Vm.verbose_name,
+            ]
+        )
 
-        query = query.select_from(ActiveTkConnection.join(User, ActiveTkConnection.user_id == User.id).
-                                  join(Vm, ActiveTkConnection.vm_id == Vm.id, isouter=True))
+        query = query.select_from(
+            ActiveTkConnection.join(User, ActiveTkConnection.user_id == User.id).join(
+                Vm, ActiveTkConnection.vm_id == Vm.id, isouter=True
+            )
+        )
 
         # ordering
         ordering_sp, reverse = extract_ordering_data(ordering)
-        if ordering_sp == 'user_name':
-            query = query.order_by(desc(User.username)) if reverse else query.order_by(User.username)
-        elif ordering_sp == 'vm_name':
-            query = query.order_by(desc(Vm.verbose_name)) if reverse else query.order_by(Vm.verbose_name)
+        if ordering_sp == "user_name":
+            query = (
+                query.order_by(desc(User.username))
+                if reverse
+                else query.order_by(User.username)
+            )
+        elif ordering_sp == "vm_name":
+            query = (
+                query.order_by(desc(Vm.verbose_name))
+                if reverse
+                else query.order_by(Vm.verbose_name)
+            )
         else:
             query = ActiveTkConnection.build_ordering(query, ordering)
 
@@ -148,17 +175,22 @@ class ThinClientQuery(graphene.ObjectType):
         return graphene_types
 
     @administrator_required
-    async def resolve_thin_clients_statistics(self, _info, limit, offset, ordering,
-                                              conn_id=None, user_id=None, **kwargs):
+    async def resolve_thin_clients_statistics(
+        self, _info, limit, offset, ordering, conn_id=None, user_id=None, **kwargs
+    ):
 
-        query = db.select([
-            TkConnectionStatistics.id,
-            TkConnectionStatistics.conn_id,
-            TkConnectionStatistics.message,
-            TkConnectionStatistics.created
-        ])
+        query = db.select(
+            [
+                TkConnectionStatistics.id,
+                TkConnectionStatistics.conn_id,
+                TkConnectionStatistics.message,
+                TkConnectionStatistics.created,
+            ]
+        )
 
-        query = query.select_from(TkConnectionStatistics.join(ActiveTkConnection, isouter=True))
+        query = query.select_from(
+            TkConnectionStatistics.join(ActiveTkConnection, isouter=True)
+        )
 
         # ordering
         query = TkConnectionStatistics.build_ordering(query, ordering)
@@ -203,6 +235,7 @@ class ThinClientQuery(graphene.ObjectType):
 class DisconnectThinClientMutation(graphene.Mutation):
     """Команда клиенту отключиться. Просим клиента отключиться по ws и по удаленному протоколу,
     если клиент подключен к ВМ в данный момент"""
+
     class Arguments:
         conn_id = graphene.UUID(required=True)
 
@@ -220,4 +253,6 @@ class ThinClientMutations(graphene.ObjectType):
     disconnectThinClient = DisconnectThinClientMutation.Field()
 
 
-thin_client_schema = graphene.Schema(query=ThinClientQuery, mutation=ThinClientMutations, auto_camelcase=False)
+thin_client_schema = graphene.Schema(
+    query=ThinClientQuery, mutation=ThinClientMutations, auto_camelcase=False
+)

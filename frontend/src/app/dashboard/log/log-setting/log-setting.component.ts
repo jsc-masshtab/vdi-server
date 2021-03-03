@@ -33,7 +33,7 @@ export class LogSettingComponent implements OnInit {
     type: 'string',
     edit: 'changeDirPath'
   }];
-  
+
   collection_count: object[] = [{
     title: 'Архивация по количеству записей',
     property: 'by_count',
@@ -98,6 +98,7 @@ export class LogSettingComponent implements OnInit {
           buttonAction: 'Изменить',
           form: [{
             tag: 'select',
+            multiple: false,
             title: 'Выбрать период',
             fieldName: 'period',
             fieldValue: this.item.period,

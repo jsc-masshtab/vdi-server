@@ -9,8 +9,13 @@ from json.decoder import JSONDecodeError
 from tornado import websocket
 from aiohttp import client_exceptions
 import asyncio
-from common.settings import REDIS_PORT, REDIS_THIN_CLIENT_CHANNEL, REDIS_PASSWORD, REDIS_DB,\
-    REDIS_THIN_CLIENT_CMD_CHANNEL
+from common.settings import (
+    REDIS_PORT,
+    REDIS_THIN_CLIENT_CHANNEL,
+    REDIS_PASSWORD,
+    REDIS_DB,
+    REDIS_THIN_CLIENT_CMD_CHANNEL,
+)
 from common.veil.veil_redis import request_to_execute_pool_task, ThinClientCmd
 from common.veil.veil_handlers import BaseHandler
 from common.veil.auth.veil_jwt import jwtauth, decode_jwt
@@ -22,16 +27,18 @@ from common.models.active_tk_connection import ActiveTkConnection
 from common.models.auth import User
 
 from veil_api_client import DomainTcpUsb, VeilRetryConfiguration
-
-from web_app.base_handlers import BaseWsHandler
-
+from common.veil.veil_handlers import BaseWsHandler
 from common.log.journal import system_logger
 from common.languages import lang_init
 
 
 from common.settings import JWT_OPTIONS
 
-from common.veil.veil_redis import WS_MONITOR_CHANNEL_OUT, REDIS_CLIENT, a_redis_get_message
+from common.veil.veil_redis import (
+    WS_MONITOR_CHANNEL_OUT,
+    REDIS_CLIENT,
+    a_redis_get_message,
+)
 
 
 _ = lang_init()
@@ -52,7 +59,12 @@ class RedisInfoHandler(BaseHandler, ABC):
             }
         }
         """
-        redis_info = dict(port=REDIS_PORT, channel=REDIS_THIN_CLIENT_CHANNEL, password=REDIS_PASSWORD, db=REDIS_DB)
+        redis_info = dict(
+            port=REDIS_PORT,
+            channel=REDIS_THIN_CLIENT_CHANNEL,
+            password=REDIS_PASSWORD,
+            db=REDIS_DB,
+        )
         response = dict(data=redis_info)
         return self.finish(response)
 
@@ -66,8 +78,11 @@ class PoolHandler(BaseHandler, ABC):
         pools = await user.pools
         response = {"data": pools}
 
-        await system_logger.info(_('User {} requested pools data.').format(user.username),
-                                 entity=user.entity, user=user.username)
+        await system_logger.info(
+            _("User {} requested pools data.").format(user.username),
+            entity=user.entity,
+            user=user.username,
+        )
         return await self.log_finish(response)
 
 
@@ -77,26 +92,40 @@ class PoolGetVm(BaseHandler, ABC):
 
     async def post(self, pool_id):
         # Определяем удаленный протокол. Если данные не были получены, то по умолчанию spice
-        remote_protocol = self.args.get('remote_protocol', PoolModel.PoolConnectionTypes.SPICE.name)
-        remote_protocol = remote_protocol.upper()  # ТК присылвет в нижнем регистре для совместимости со
+        remote_protocol = self.args.get(
+            "remote_protocol", PoolModel.PoolConnectionTypes.SPICE.name
+        )
+        remote_protocol = (
+            remote_protocol.upper()
+        )  # ТК присылвет в нижнем регистре для совместимости со
         # старыми версиями vdi сервера
 
         # Проверяем лимит виртуальных машин
         if PoolModel.thin_client_limit_exceeded():
-            response = {'errors': [{'message': _('Thin client limit exceeded.'), 'code': '001'}]}
+            response = {
+                "errors": [{"message": _("Thin client limit exceeded."), "code": "001"}]
+            }
             return await self.log_finish(response)
 
         user = await self.get_user_model_instance()
         pool = await PoolModel.get(pool_id)
         if not pool:
-            response = {'errors': [{'message': _('Pool not found.'), 'code': '404'}]}
+            response = {"errors": [{"message": _("Pool not found."), "code": "404"}]}
             return await self.log_finish(response)
         pool_extended = False
 
         # Проверяем разрешен ли присланный remote_protocol для данного пула
         if PoolModel.PoolConnectionTypes[remote_protocol] not in pool.connection_types:
-            response = {'errors': [{'message': _('The pool doesnt support connection type {}.').format(remote_protocol),
-                                    'code': '404'}]}
+            response = {
+                "errors": [
+                    {
+                        "message": _(
+                            "The pool doesnt support connection type {}."
+                        ).format(remote_protocol),
+                        "code": "404",
+                    }
+                ]
+            }
             return await self.log_finish(response)
 
         # Запрос на расширение пула
@@ -109,18 +138,31 @@ class PoolGetVm(BaseHandler, ABC):
             vm = await pool.get_free_vm_v2()
             # Если свободная VM найдена, нужно закрепить ее за пользователем.
             if vm:
-                await vm.add_user(user.id, creator='system')
+                await vm.add_user(user.id, creator="system")
                 if await pool.pool_type == PoolModel.PoolTypes.AUTOMATED:
                     await self._send_cmd_to_expand_pool(pool)
             elif pool_extended:
                 response = {
-                    'errors': [{'message': _('The pool doesn`t have free machines. Try again after 5 minutes.'),
-                                'code': '002'}]}
+                    "errors": [
+                        {
+                            "message": _(
+                                "The pool doesn`t have free machines. Try again after 5 minutes."
+                            ),
+                            "code": "002",
+                        }
+                    ]
+                }
                 await self._send_cmd_to_expand_pool(pool)
                 return await self.log_finish(response)
             else:
-                response = {'errors': [{'message': _('The pool doesn`t have free machines.'),
-                                        'code': '003'}]}
+                response = {
+                    "errors": [
+                        {
+                            "message": _("The pool doesn`t have free machines."),
+                            "code": "003",
+                        }
+                    ]
+                }
                 return await self.log_finish(response)
 
         # TODO: обработка новых исключений
@@ -135,16 +177,25 @@ class PoolGetVm(BaseHandler, ABC):
                 await vm.start()
 
         except client_exceptions.ServerDisconnectedError:
-            response = {'errors': [{'message': _('VM is unreachable on ECP Veil.'),
-                                    'code': '004'}]}
+            response = {
+                "errors": [
+                    {"message": _("VM is unreachable on ECP VeiL."), "code": "004"}
+                ]
+            }
             return await self.log_finish(response)
         # Актуализируем данные для подключения
         info = await veil_domain.info()
 
-        await system_logger.info(_('User {} connected to pool {}.').format(user.username, pool.verbose_name),
-                                 entity=pool.entity, user=user.username)
-        await system_logger.info(_('User {} connected to VM {}.').format(user.username, vm.verbose_name),
-                                 entity=vm.entity, user=user.username)
+        await system_logger.info(
+            _("User {} connected to pool {}.").format(user.username, pool.verbose_name),
+            entity=pool.entity,
+            user=user.username,
+        )
+        await system_logger.info(
+            _("User {} connected to VM {}.").format(user.username, vm.verbose_name),
+            entity=vm.entity,
+            user=user.username,
+        )
         # TODO: использовать veil_domain.hostname вместо IP
 
         # Определяем адрес и порт в зависимости от протокола
@@ -152,11 +203,15 @@ class PoolGetVm(BaseHandler, ABC):
         # Проверяем наличие клиента у контроллера
         veil_client = vm_controller.veil_client
         if not veil_client:
-            response = {'errors': [{'message': _('The remote controller is unavailable.')}]}
+            response = {
+                "errors": [{"message": _("The remote controller is unavailable.")}]
+            }
             return await self.log_finish(response)
 
-        if remote_protocol == PoolModel.PoolConnectionTypes.RDP.name or \
-                remote_protocol == PoolModel.PoolConnectionTypes.NATIVE_RDP.name:
+        if (
+            remote_protocol == PoolModel.PoolConnectionTypes.RDP.name
+            or remote_protocol == PoolModel.PoolConnectionTypes.NATIVE_RDP.name  # noqa: W503
+        ):
             try:
                 vm_address = veil_domain.first_ipv4
                 if vm_address is None:
@@ -165,29 +220,39 @@ class PoolGetVm(BaseHandler, ABC):
 
             except (RuntimeError, IndexError, KeyError):
                 response = {
-                    'errors': [{'message': _('VM does not support RDP. The controller didn`t provide a VM address.')}]}
+                    "errors": [
+                        {
+                            "message": _(
+                                "VM does not support RDP. The controller didn`t provide a VM address."
+                            )
+                        }
+                    ]
+                }
                 return await self.log_finish(response)
 
         elif remote_protocol == PoolModel.PoolConnectionTypes.SPICE_DIRECT.name:
             # Нужен адрес сервера поэтому делаем запрос
-            node_id = str(veil_domain.node['id'])
+            node_id = str(veil_domain.node["id"])
             node_info = await vm_controller.veil_client.node(node_id=node_id).info()
             vm_address = node_info.response[0].management_ip
-            vm_port = info.data['real_remote_access_port']
+            vm_port = info.data["real_remote_access_port"]
 
         else:  # PoolModel.PoolConnectionTypes.SPICE.name by default
             vm_address = vm_controller.address
             vm_port = veil_domain.remote_access_port
 
         permissions = await user.get_permissions()
-        response = {'data': dict(host=vm_address,
-                                 port=vm_port,
-                                 password=veil_domain.graphics_password,
-                                 vm_verbose_name=veil_domain.verbose_name,
-                                 vm_controller_address=vm_controller.address,
-                                 vm_id=str(vm.id),
-                                 permissions=[permission.value for permission in permissions])
-                    }
+        response = {
+            "data": dict(
+                host=vm_address,
+                port=vm_port,
+                password=veil_domain.graphics_password,
+                vm_verbose_name=veil_domain.verbose_name,
+                vm_controller_address=vm_controller.address,
+                vm_id=str(vm.id),
+                permissions=[permission.value for permission in permissions],
+            )
+        }
         return await self.log_finish(response)
 
     async def _send_cmd_to_expand_pool(self, pool_model):
@@ -201,7 +266,9 @@ class PoolGetVm(BaseHandler, ABC):
         # 2) is not enough free vms
         is_not_enough_free_vms = await autopool.check_if_not_enough_free_vms()
         # 3) other tasks
-        tasks = await Task.get_tasks_associated_with_entity(pool_model.id, TaskStatus.IN_PROGRESS)
+        tasks = await Task.get_tasks_associated_with_entity(
+            pool_model.id, TaskStatus.IN_PROGRESS
+        )
 
         if not total_size_reached and not tasks and is_not_enough_free_vms:
             await request_to_execute_pool_task(pool_model.id, PoolTaskType.POOL_EXPAND)
@@ -217,21 +284,24 @@ class VmAction(BaseHandler, ABC):
         vm = await BaseHandler.validate_and_get_vm(user, pool_id)
 
         try:
-            force = self.args.get('force', False)
+            force = self.args.get("force", False)
             # Все возможные проверки закончились - приступаем.
             is_action_successful = await vm.action(action_name=action, force=force)
-            response = {'data': 'success'}
+            response = {"data": "success"}
         except AssertionError as vm_action_error:
-            response = {'errors': [{'message': str(vm_action_error)}]}
+            response = {"errors": [{"message": str(vm_action_error)}]}
             is_action_successful = False
 
         # log action
         if is_action_successful:
-            msg = _('User {} executed action {} on VM {}.')
+            msg = _("User {} executed action {} on VM {}.")
         else:
-            msg = _('User {} failed to execute action {} on VM {}.')
-        await system_logger.info(msg.format(user.username, action, vm.verbose_name),
-                                 entity=vm.entity, user=user.username)
+            msg = _("User {} failed to execute action {} on VM {}.")
+        await system_logger.info(
+            msg.format(user.username, action, vm.verbose_name),
+            entity=vm.entity,
+            user=user.username,
+        )
 
         return await self.log_finish(response)
 
@@ -242,8 +312,8 @@ class AttachUsb(BaseHandler, ABC):
 
     async def post(self, pool_id):
 
-        host_address = self.validate_and_get_parameter('host_address')
-        host_port = self.validate_and_get_parameter('host_port')
+        host_address = self.validate_and_get_parameter("host_address")
+        host_port = self.validate_and_get_parameter("host_port")
 
         user = await self.get_user_model_instance()
         vm = await BaseHandler.validate_and_get_vm(user, pool_id)
@@ -251,18 +321,23 @@ class AttachUsb(BaseHandler, ABC):
         # attach request
         try:
             vm_controller = await vm.controller
-            veil_client = vm_controller.veil_client.domain(domain_id=vm.id_str,
-                                                           retry_opts=VeilRetryConfiguration(num_of_attempts=0))
+            veil_client = vm_controller.veil_client.domain(
+                domain_id=vm.id_str,
+                retry_opts=VeilRetryConfiguration(num_of_attempts=0),
+            )
 
             if not veil_client:
-                raise AssertionError(_('VM has no api client.'))
+                raise AssertionError(_("VM has no api client."))
             domain_tcp_usb_params = DomainTcpUsb(host=host_address, service=host_port)
-            controller_response = await veil_client.attach_usb(action_type='tcp_usb_device',
-                                                               tcp_usb=domain_tcp_usb_params, no_task=True)
+            controller_response = await veil_client.attach_usb(
+                action_type="tcp_usb_device",
+                tcp_usb=domain_tcp_usb_params,
+                no_task=True,
+            )
             return await self.log_finish(controller_response.data)
 
         except AssertionError as error:
-            response = {'errors': [{'message': str(error)}]}
+            response = {"errors": [{"message": str(error)}]}
         return await self.log_finish(response)
 
 
@@ -272,8 +347,8 @@ class DetachUsb(BaseHandler, ABC):
 
     async def post(self, pool_id):
 
-        usb_uuid = self.args.get('usb_uuid')
-        remove_all = self.args.get('remove_all', False)
+        usb_uuid = self.args.get("usb_uuid")
+        remove_all = self.args.get("remove_all", False)
 
         user = await self.get_user_model_instance()
         vm = await BaseHandler.validate_and_get_vm(user, pool_id)
@@ -282,19 +357,24 @@ class DetachUsb(BaseHandler, ABC):
         try:
             veil_client = await vm.vm_client
             if not veil_client:
-                raise AssertionError(_('VM has no api client.'))
-            controller_response = await veil_client.detach_usb(action_type='tcp_usb_device',
-                                                               usb=usb_uuid, remove_all=remove_all)
+                raise AssertionError(_("VM has no api client."))
+            controller_response = await veil_client.detach_usb(
+                action_type="tcp_usb_device", usb=usb_uuid, remove_all=remove_all
+            )
             return await self.log_finish(controller_response.data)
 
         except AssertionError as error:
-            response = {'errors': [{'message': str(error)}]}
+            response = {"errors": [{"message": str(error)}]}
         return await self.log_finish(response)
 
 
 class ThinClientWsHandler(BaseWsHandler):
-
-    def __init__(self, application: Application, request: httputil.HTTPServerRequest, **kwargs: Any):
+    def __init__(
+        self,
+        application: Application,
+        request: httputil.HTTPServerRequest,
+        **kwargs: Any
+    ):
         websocket.WebSocketHandler.__init__(self, application, request, **kwargs)
 
         self.conn_id = None
@@ -308,32 +388,35 @@ class ThinClientWsHandler(BaseWsHandler):
 
         try:
             # Извлекаем инфу из токена
-            JWT_OPTIONS['verify_exp'] = False
+            JWT_OPTIONS["verify_exp"] = False
             payload = decode_jwt(token, JWT_OPTIONS)
-            user_name = payload['username']
+            user_name = payload["username"]
 
             # Фиксируем  данные известные на стороне сервера
             user_id = await User.get_id(user_name)
             if not user_id:
-                raise AssertionError(_('User {} not found.').format(user_name))
+                raise AssertionError(_("User {} not found.").format(user_name))
 
             # Сохраняем юзера с инфой
             tk_conn = await ActiveTkConnection.soft_create(
                 conn_id=self.conn_id,
                 user_name=user_name,
-                is_conn_init_by_user=int(self.get_query_argument(name='is_conn_init_by_user')),
+                is_conn_init_by_user=int(
+                    self.get_query_argument(name="is_conn_init_by_user")
+                ),
                 user_id=user_id,
-                veil_connect_version=self.get_query_argument('veil_connect_version'),
-                vm_id=self.get_query_argument(name='vm_id', default=None),
-                tk_ip=self.request.remote_ip,
-                tk_os=self.get_query_argument('tk_os'))
+                veil_connect_version=self.get_query_argument("veil_connect_version"),
+                vm_id=self.get_query_argument(name="vm_id", default=None),
+                tk_ip=self.remote_ip,
+                tk_os=self.get_query_argument("tk_os"),
+            )
             self.conn_id = tk_conn.id
 
-            response = {'msg_type': 'control', 'error': False, 'msg': 'Auth success'}
+            response = {"msg_type": "control", "error": False, "msg": "Auth success"}
             await self._write_msg(json.dumps(response))
 
         except Exception as ex:  # noqa
-            response = {'msg_type': 'control', 'error': True, 'msg': str(ex)}
+            response = {"msg_type": "control", "error": True, "msg": str(ex)}
             await self._write_msg(json.dumps(response))
             self.close()
 
@@ -345,21 +428,27 @@ class ThinClientWsHandler(BaseWsHandler):
     async def on_message(self, message):
         try:
             recv_data_dict = json.loads(message)
-            msg_type = recv_data_dict['msg_type']
+            msg_type = recv_data_dict["msg_type"]
         except (KeyError, JSONDecodeError) as ex:
-            response = {'msg_type': 'control', 'error': True, 'msg': 'Wrong msg format ' + str(ex)}
+            response = {
+                "msg_type": "control",
+                "error": True,
+                "msg": "Wrong msg format " + str(ex),
+            }
             await self._write_msg(json.dumps(response))
             return
 
         # Сообщения UPDATED
-        if msg_type == 'UPDATED':
+        if msg_type == "UPDATED":
             try:
-                event_type = recv_data_dict['event']
+                event_type = recv_data_dict["event"]
                 tk_conn = await ActiveTkConnection.get(self.conn_id)
                 if tk_conn:
-                    if event_type == 'vm_changed':  # юзер подключился/отключился от машины
-                        await tk_conn.update_vm_id(recv_data_dict['vm_id'])
-                    elif event_type == 'user_gui':  # юзер нажал кнопку/кликнул
+                    if (
+                        event_type == "vm_changed"
+                    ):  # юзер подключился/отключился от машины
+                        await tk_conn.update_vm_id(recv_data_dict["vm_id"])
+                    elif event_type == "user_gui":  # юзер нажал кнопку/кликнул
                         await tk_conn.update_last_interaction()
             except KeyError:
                 pass
@@ -385,7 +474,8 @@ class ThinClientWsHandler(BaseWsHandler):
 
         # Обновляем дату последнего сообщения от ТК
         await ActiveTkConnection.update.values(data_received=func.now()).where(
-            ActiveTkConnection.id == self.conn_id).gino.status()
+            ActiveTkConnection.id == self.conn_id
+        ).gino.status()
 
     async def _send_messages_co(self):
         """Пересылаем сообщения об апдейте ВМ"""
@@ -397,14 +487,14 @@ class ThinClientWsHandler(BaseWsHandler):
             try:
                 redis_message = await a_redis_get_message(redis_subscriber)
 
-                if redis_message['type'] == 'message':
-                    redis_message_data = redis_message['data'].decode()
+                if redis_message["type"] == "message":
+                    redis_message_data = redis_message["data"].decode()
                     redis_message_data_dict = json.loads(redis_message_data)
 
-                    if redis_message_data_dict['resource'] == '/domains/':
+                    if redis_message_data_dict["resource"] == "/domains/":
 
                         vm_id = await ActiveTkConnection.get_vm_id(self.conn_id)
-                        if redis_message_data_dict['id'] == str(vm_id):
+                        if redis_message_data_dict["id"] == str(vm_id):
                             await self._write_msg(redis_message_data)
 
             except asyncio.CancelledError:
@@ -421,18 +511,22 @@ class ThinClientWsHandler(BaseWsHandler):
             try:
                 redis_message = await a_redis_get_message(redis_subscriber)
 
-                if redis_message['type'] == 'message':
-                    redis_message_data = redis_message['data'].decode()
+                if redis_message["type"] == "message":
+                    redis_message_data = redis_message["data"].decode()
                     redis_message_data_dict = json.loads(redis_message_data)
 
-                    if redis_message_data_dict['command'] == ThinClientCmd.DISCONNECT.name:
-                        conn_id = redis_message_data_dict['conn_id']
+                    if redis_message_data_dict["command"] == ThinClientCmd.DISCONNECT.name:
+                        conn_id = redis_message_data_dict["conn_id"]
 
                         # От админа приходит команда с id соединения, которое надо закрыть
                         if self.conn_id and conn_id == str(self.conn_id):
                             # Отсылаем клиенту команду. По ней он отключится от машины
-                            response = {'msg_type': 'control', 'cmd': ThinClientCmd.DISCONNECT.name,
-                                        'error': False, 'msg': 'Disconnect requested'}
+                            response = {
+                                "msg_type": "control",
+                                "cmd": ThinClientCmd.DISCONNECT.name,
+                                "error": False,
+                                "msg": "Disconnect requested",
+                            }
                             await self._write_msg(json.dumps(response))
                             self.close()
 
