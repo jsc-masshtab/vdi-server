@@ -157,10 +157,6 @@ snapshots["TestAuthenticationDirectoryQuery.test_auth_dir_get_possible_ad_groups
                 "verbose_name": "Администраторы безопасности",
             },
             {
-                "ad_guid": "7403ee03-a41c-4c45-8be2-9f0604c42cd6",
-                "verbose_name": "vdi-ou-test2",
-            },
-            {
                 "ad_guid": "097bba0c-a922-407d-ab95-1d0b9c50801b",
                 "verbose_name": "vdi-autopool-test2",
             },
