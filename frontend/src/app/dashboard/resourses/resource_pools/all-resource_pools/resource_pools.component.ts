@@ -48,7 +48,7 @@ export class ResourcePoolsComponent extends DetailsMove implements OnInit, OnDes
       sort: true
     },
     {
-      title: 'Ограничение CPU',
+      title: 'Ограничение vcpu',
       property: 'cpu_limit',
       type: 'string',
       sort: true

@@ -73,9 +73,9 @@ class Task(db.Model, AbstractSortableStatusModel):
 
     def get_task_duration(self):
         duration = (
-            self.finished - self.started if (self.finished and self.started) else "0000"
+            self.finished - self.started if (self.finished and self.started) else "00000000"
         )
-        return str(duration)[:-3]
+        return str(duration)[:-7]
 
     @redis_error_handle
     def publish_data_in_internal_channel(self, event_type: str):
