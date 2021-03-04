@@ -24,7 +24,7 @@ export class LicenseService {
 
     const req = new HttpRequest('POST', url, file, {
       reportProgress: true,
-      headers: headers
+      headers
     });
 
     return this.http.request(req);

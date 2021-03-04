@@ -1,4 +1,4 @@
-import { Component, Inject } from '@angular/core';
+import { Component, Inject, OnDestroy } from '@angular/core';
 import { Subject } from 'rxjs';
 import { UsersService } from '../../users.service';
 import { WaitService } from 'src/app/dashboard/common/components/single/wait/wait.service';
@@ -9,7 +9,7 @@ import { takeUntil } from 'rxjs/operators';
   selector: 'vdi-add-user-permission',
   templateUrl: './add-permission.component.html'
 })
-export class AddPermissionComponent {
+export class AddPermissionComponent implements OnDestroy {
 
   public pending: boolean = false;
   public permissions: [] = [];
@@ -17,9 +17,9 @@ export class AddPermissionComponent {
   public valid: boolean = true;
 
   constructor(private service: UsersService,
-    private waitService: WaitService,
-    private dialogRef: MatDialogRef<AddPermissionComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: any
+              private waitService: WaitService,
+              private dialogRef: MatDialogRef<AddPermissionComponent>,
+              @Inject(MAT_DIALOG_DATA) public data: any
   ) { }
 
   public send() {

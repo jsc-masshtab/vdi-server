@@ -126,7 +126,7 @@ export class UserDetailsComponent implements OnInit, OnDestroy {
   public collection_permissions: object[] = [
     {
       title: 'Разрешения',
-      type: 'array-type',
+      type: 'array-type-rename',
       property: 'index-array',
       class: 'name-start',
       icon: 'cog'
@@ -189,8 +189,7 @@ export class UserDetailsComponent implements OnInit, OnDestroy {
       gqlType = options.form.gqlType;
     }
 
-    this.dialog.open(FormForEditComponent, {
- 			disableClose: true,
+    this.dialog.open(FormForEditComponent, {disableClose: true,
       width: '500px',
       data: {
         post: {
@@ -228,8 +227,7 @@ export class UserDetailsComponent implements OnInit, OnDestroy {
   }
 
   public deactivateUser(): void {
-    this.dialog.open(MutateUserComponent, {
- 			disableClose: true,
+    this.dialog.open(MutateUserComponent, {disableClose: true,
       width: '500px',
       data: {
         id: this.id,
@@ -252,8 +250,7 @@ export class UserDetailsComponent implements OnInit, OnDestroy {
   }
 
   public activateUser(): void {
-    this.dialog.open(MutateUserComponent, {
- 			disableClose: true,
+    this.dialog.open(MutateUserComponent, {disableClose: true,
       width: '500px',
       data: {
         id: this.id,
@@ -280,8 +277,7 @@ export class UserDetailsComponent implements OnInit, OnDestroy {
   }
 
   public addGroup() {
-    this.dialog.open(AddGropComponent, {
- 			disableClose: true,
+    this.dialog.open(AddGropComponent, {disableClose: true,
       width: '500px',
       data: {
         id: this.id,
@@ -292,8 +288,7 @@ export class UserDetailsComponent implements OnInit, OnDestroy {
   }
 
   public removeGroup() {
-    this.dialog.open(RemoveRoleComponent, {
- 			disableClose: true,
+    this.dialog.open(RemoveRoleComponent, {disableClose: true,
       width: '500px',
       data: {
         id: this.id,
@@ -304,8 +299,7 @@ export class UserDetailsComponent implements OnInit, OnDestroy {
   }
 
   public addRole() {
-    this.dialog.open(AddRoleComponent, {
- 			disableClose: true,
+    this.dialog.open(AddRoleComponent, {disableClose: true,
       width: '500px',
       data: {
         id: this.id,

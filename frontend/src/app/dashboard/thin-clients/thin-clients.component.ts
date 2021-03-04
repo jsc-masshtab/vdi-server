@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, OnDestroy } from '@angular/core';
 import { DetailsMove } from '../common/classes/details-move';
 import { Subscription } from 'rxjs';
 import { FormControl } from '@angular/forms';
@@ -14,7 +14,7 @@ import { IParams } from 'types';
   templateUrl: './thin-clients.component.html',
   styleUrls: ['./thin-clients.component.scss']
 })
-export class ThinClientsComponent extends DetailsMove implements OnInit {
+export class ThinClientsComponent extends DetailsMove implements OnInit, OnDestroy {
 
   private getThinClientSub: Subscription;
 
@@ -103,7 +103,7 @@ export class ThinClientsComponent extends DetailsMove implements OnInit {
       user_id: this.user.value
     };
 
-    if (this.user.value == '') {
+    if (this.user.value === '') {
       delete queryset['user_id'];
     }
 
