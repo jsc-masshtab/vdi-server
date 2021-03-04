@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-""" Django's standard crypto functions and utilities. """
+"""Django's standard crypto functions and utilities."""
 import hashlib
 import hmac
 import secrets
@@ -8,9 +8,7 @@ from common.settings import SECRET_KEY
 
 
 def force_bytes(s, encoding="utf-8", errors="strict"):
-    """
-    Similar to smart_bytes, except that lazy instances are resolved to
-    strings, rather than kept as lazy objects.
+    """Similar to smart_bytes, except that lazy instances are resolved to strings, rather than kept as lazy objects.
 
     If strings_only is True, don't convert (some) non-string-like objects.
     """
@@ -26,9 +24,7 @@ def force_bytes(s, encoding="utf-8", errors="strict"):
 
 
 def salted_hmac(key_salt, value, secret=None):
-    """
-    Return the HMAC-SHA1 of 'value', using a key generated from key_salt and a
-    secret (which defaults to settings.SECRET_KEY).
+    """Return the HMAC-SHA1 of 'value', using a key generated from key_salt and a secret (which defaults to settings.SECRET_KEY).
 
     A different key_salt should be passed in for every application of HMAC.
     """

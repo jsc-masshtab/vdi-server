@@ -6,18 +6,18 @@ import json
 from pymemcache.client.base import Client as MemcachedClient
 
 from veil_api_client import (
-    VeilClient,
-    VeilClientSingleton,  # noqa: F401
-    VeilRetryConfiguration,
-    VeilDomainExt,
-    VeilTag,
     VeilCacheAbstractClient,
+    VeilClient,
+    VeilClientSingleton,  # noqa: F401,
+    VeilDomainExt,
+    VeilRetryConfiguration,
+    VeilTag,
 )
 
 from common.settings import (
-    VEIL_REQUEST_TIMEOUT,
-    VEIL_MAX_URL_LEN,
     VEIL_CACHE_SERVER,
+    VEIL_MAX_URL_LEN,
+    VEIL_REQUEST_TIMEOUT,
 )  # noqa: F401
 
 

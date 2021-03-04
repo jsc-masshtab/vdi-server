@@ -3,7 +3,7 @@
 
 import graphene
 import json
-from datetime import timedelta, datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from common.settings import REDIS_THIN_CLIENT_CMD_CHANNEL
 
@@ -222,7 +222,7 @@ class ThinClientQuery(graphene.ObjectType):
 
     @staticmethod
     def build_thin_clients_stats_filters(conn_id, user_id):
-        """Получть статистику либо по определенному соединению, либо по соеднинениям определенного пользователя"""
+        """Получть статистику либо по определенному соединению, либо по соеднинениям определенного пользователя."""
         filters = []
         if conn_id:
             filters.append(ActiveTkConnection.id == conn_id)
@@ -233,8 +233,10 @@ class ThinClientQuery(graphene.ObjectType):
 
 
 class DisconnectThinClientMutation(graphene.Mutation):
-    """Команда клиенту отключиться. Просим клиента отключиться по ws и по удаленному протоколу,
-    если клиент подключен к ВМ в данный момент"""
+    """Команда клиенту отключиться.
+
+    Просим клиента отключиться по ws и по удаленному протоколу, если клиент подключен к ВМ в данный момент.
+    """
 
     class Arguments:
         conn_id = graphene.UUID(required=True)

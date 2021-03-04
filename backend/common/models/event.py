@@ -57,7 +57,8 @@ class Event(db.Model):
 
     @staticmethod
     async def event_export(start, finish, path):
-        """Экспорт журнала по заданному временному периоду
+        """Экспорт журнала по заданному временному периоду.
+
         :param start: начало периода ('2020-07-01T00:00:00.000001Z')
         :param finish: окончание периода ('2020-07-31T23:59:59.000001Z')
         :param path: путь для экспорта ('/tmp/')
@@ -97,8 +98,9 @@ class Event(db.Model):
 
     @staticmethod
     async def mark_read_by(user_id, events_id_list):
-        """Отмечаем список сообщений как прочитанные пользователем, если они ещё не
-            Если списка нет, то отмечаем ВСЁ
+        """Отмечаем список сообщений как прочитанные пользователем, если они ещё не.
+
+        Если списка нет, то отмечаем ВСЁ.
         """
         if not events_id_list:
             results = await Event.select("id").gino.all()
@@ -118,8 +120,9 @@ class Event(db.Model):
 
     @staticmethod
     async def unmark_read_by(user_id, events_id_list):
-        """Убираем отметки о прочтении списка сообщений для пользователя
-            Если списка нет, то убираем ВСЁ
+        """Убираем отметки о прочтении списка сообщений для пользователя.
+
+        Если списка нет, то убираем ВСЁ.
         """
         # TODO: возможно, быстрее будет удалять список связей, а затем создавать новый, при связывании сущностей,
         #  нежели чем создавать связи по одной с проверкой на существование
@@ -176,7 +179,7 @@ class Event(db.Model):
 
 
 class EventReadByUser(db.Model):
-    """Связывающая сущность"""
+    """Связывающая сущность."""
 
     __tablename__ = "event_read_by_user"
     event = db.Column(UUID(), db.ForeignKey("event.id"), nullable=False)

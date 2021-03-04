@@ -1,5 +1,5 @@
 import asyncio
-from datetime import timedelta, datetime, timezone
+from datetime import datetime, timedelta, timezone
 from sqlalchemy.sql import func
 
 from common.settings import WS_PING_TIMEOUT
@@ -13,10 +13,11 @@ class ThinClientConnMonitor:
 
     async def check_thin_client_connections(self):
         """Помечаем  соеднинение неактивным, если от клиента давно не приходило данных.
+
         Вообще это происходит в обработчике ws соединения при его закрытии.
         Но возможна ситуация когда веб приложение было убито, либо база данных была выключена до
-        веб приложения. Тогда остаются висеть записи, которые мы подчищаем здесь"""
-
+        веб приложения. Тогда остаются висеть записи, которые мы подчищаем здесь.
+        """
         # дельта после достижении которой удаляем данные о неактивном соединении при старле приложения
         # (В иделале на системном уровнем добавить ночную задачу по очистке или что-то типа того)
         delete_time_delta = timedelta(days=14)

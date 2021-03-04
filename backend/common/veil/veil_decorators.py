@@ -3,7 +3,7 @@ from functools import wraps
 from graphql.execution.base import ResolveInfo
 
 from common.settings import AUTH_ENABLED
-from common.veil.veil_gino import Role, EntityType
+from common.veil.veil_gino import EntityType, Role
 
 from common.veil.auth.veil_jwt import extract_user_object
 from common.veil.veil_errors import Unauthorized
@@ -29,7 +29,7 @@ def context(f):
 
 def user_passes_test(test_func, exc=Unauthorized):  # noqa
     """exc в GraphQl вернется с 200тым кодом.
-       https://github.com/graphql-python/graphene/issues/946
+    https://github.com/graphql-python/graphene/issues/946
     """
 
     def decorator(f):

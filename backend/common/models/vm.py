@@ -5,30 +5,30 @@ import asyncio
 from sqlalchemy import desc
 from enum import IntEnum
 from ldap3 import (
-    Server as ActiveDirectoryServer,
     Connection as ActiveDirectoryConnection,
     SAFE_SYNC,
+    Server as ActiveDirectoryServer,
 )
 from ldap3.core.exceptions import LDAPException
 
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy import Enum as AlchemyEnum
 from asyncpg.exceptions import UniqueViolationError
-from veil_api_client import DomainConfiguration, DomainBackupConfiguration
+from veil_api_client import DomainBackupConfiguration, DomainConfiguration
 
 from common.database import db
 from common.settings import (
+    VEIL_GUEST_AGENT_EXTRA_WAITING,
     VEIL_OPERATION_WAITING,
     VEIL_VM_PREPARE_TIMEOUT,
-    VEIL_GUEST_AGENT_EXTRA_WAITING,
 )
 from common.veil.veil_gino import (
-    get_list_of_values_from_db,
     EntityType,
-    VeilModel,
     Status,
+    VeilModel,
+    get_list_of_values_from_db,
 )
-from common.veil.veil_errors import VmCreationError, SimpleError
+from common.veil.veil_errors import SimpleError, VmCreationError
 from common.veil.veil_redis import send_cmd_to_cancel_tasks_associated_with_entity
 from common.languages import lang_init
 from common.log.journal import system_logger
@@ -54,9 +54,7 @@ class VmPowerState(IntEnum):
 
 
 class Vm(VeilModel):
-    """Vm однажды включенные в пулы.
-
-    """
+    """Vm однажды включенные в пулы."""
 
     __tablename__ = "vm"
 
@@ -284,7 +282,7 @@ class Vm(VeilModel):
 
     @staticmethod
     async def get_vms_ids_in_pool(pool_id):
-        """Get all vm_ids as list of strings"""
+        """Get all vm_ids as list of strings."""
         vm_ids_data = await Vm.select("id").where((Vm.pool_id == pool_id)).gino.all()
         vm_ids = [str(vm_id) for (vm_id,) in vm_ids_data]
         return vm_ids
@@ -410,7 +408,7 @@ class Vm(VeilModel):
 
     @staticmethod
     async def remove_vms(vm_ids, creator, remove_vms_on_controller=False):
-        """Remove given vms"""
+        """Remove given vms."""
         if not vm_ids:
             return False
         # Ради логгирования и вывода из домена удаление делается по 1 ВМ.
@@ -612,7 +610,7 @@ class Vm(VeilModel):
             )
 
     async def backup(self, creator="system"):
-        """Создает бэкап ВМ на Veil"""
+        """Создает бэкап ВМ на Veil."""
         domain_entity = await self.get_veil_entity()
         backup_configuration = DomainBackupConfiguration()
         response = await domain_entity.backup(backup_configuration)
@@ -671,7 +669,7 @@ class Vm(VeilModel):
         return True
 
     async def set_verbose_name(self, verbose_name):
-        """Обновить имя и хостнейм"""
+        """Обновить имя и хостнейм."""
         # Update on Veil
         vm_controller = await self.controller
         veil_domain = vm_controller.veil_client.domain(domain_id=self.id_str)

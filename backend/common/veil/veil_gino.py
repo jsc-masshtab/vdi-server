@@ -3,7 +3,7 @@ from enum import Enum
 import asyncio
 import json
 from graphene import Enum as GrapheneEnum
-from sqlalchemy.sql import desc, and_
+from sqlalchemy.sql import and_, desc
 from sqlalchemy.sql.schema import Column
 from asyncpg import DataError
 
@@ -18,16 +18,14 @@ _ = lang_init()
 
 
 async def get_list_of_values_from_db(db_model, column):
-    """
-    Return list of column values from table
-    """
+    """Return list of column values from table."""
     db_data = await db.select([column]).select_from(db_model).gino.all()
     values = [value for (value,) in db_data]
     return values
 
 
 class EntityType(Enum):
-    """Базовые виды сущностей"""
+    """Базовые виды сущностей."""
 
     CONTROLLER = "CONTROLLER"
     SECURITY = "SECURITY"
@@ -69,7 +67,7 @@ class AbstractSortableStatusModel:
 
     @classmethod
     def _get_table_field(cls, field_name):
-        """Соответствие переданного наименования поля полю модели, чтобы не использовать raw_sql в order"""
+        """Соответствие переданного наименования поля полю модели, чтобы не использовать raw_sql в order."""
         if hasattr(cls, field_name):
             field_instance = getattr(cls, field_name)
             return field_instance
@@ -77,7 +75,7 @@ class AbstractSortableStatusModel:
 
     @classmethod
     def get_order_field(cls, field_name):
-        """Соответствие переданного наименования поля полю модели, чтобы не использовать raw_sql в order"""
+        """Соответствие переданного наименования поля полю модели, чтобы не использовать raw_sql в order."""
         from common.veil.veil_errors import SimpleError
 
         field = cls._get_table_field(field_name)
@@ -88,7 +86,7 @@ class AbstractSortableStatusModel:
 
     @classmethod
     def get_query_field(cls, field_name):
-        """Соответствие переданного наименования поля полю модели, чтобы не использовать raw_sql в where"""
+        """Соответствие переданного наименования поля полю модели, чтобы не использовать raw_sql в where."""
         from common.veil.veil_errors import SimpleError
 
         field = cls._get_table_field(field_name)
@@ -99,8 +97,8 @@ class AbstractSortableStatusModel:
 
     @classmethod
     def build_ordering(cls, query, ordering=None):
-        """
-        ordering - название поля таблицы или доп. сортировки.
+        """Ordering - название поля таблицы или доп. сортировки.
+
         Если ordering не указан, значит сортировка не нужна.
         Порядок сортировки (ASC|DESC) определяется наличием "-" в начале строки с названием поля.
         Допускаем, что размер названия поля таблицы не может быть меньше 2.
@@ -122,8 +120,10 @@ class AbstractSortableStatusModel:
     @classmethod
     def get_query(cls, ordering=None, include_inactive=False):
         """Содержит только логику запроса без фетча.
-           Расширяет стандартный запрос сортировкой и статусами.
-           Подразумевается, что у модели есть либо поле Status, либо is_active"""
+
+        Расширяет стандартный запрос сортировкой и статусами.
+        Подразумевается, что у модели есть либо поле Status, либо is_active.
+        """
         query = cls.query
 
         if not include_inactive:
@@ -275,18 +275,19 @@ class VeilModel(db.Model):
 
     # virtual
     def get_resource_type(self):
-        """Используется для ws. По типу фронт различает собщения"""
+        """Используется для ws. По типу фронт различает собщения."""
         return "UNKNOWN"
 
     # virtual
     async def additional_model_to_json_data(self):
-        """Дополнительные данные для сериализации модели в json"""
+        """Дополнительные данные для сериализации модели в json."""
         return dict()
 
     async def publish_data_in_internal_channel(self, event_type: str):
-        """Publish current data in redis channel INTERNAL_EVENTS_CHANNEL
-        Anybody can get messages from this channel. For example vdi frontend"""
+        """Publish current data in redis channel INTERNAL_EVENTS_CHANNEL.
 
+        Anybody can get messages from this channel. For example vdi frontend.
+        """
         msg_dict = dict(
             resource=self.get_resource_type(), mgs_type="data", event=event_type
         )

@@ -4,7 +4,7 @@ import graphene
 from graphene import Enum as GrapheneEnum
 
 from common.database import db
-from common.veil.veil_gino import StatusGraphene, Status
+from common.veil.veil_gino import Status, StatusGraphene
 from common.veil.veil_validators import MutationValidation
 from common.veil.veil_errors import SilentError, ValidationError
 from common.veil.veil_decorators import security_administrator_required
@@ -25,7 +25,7 @@ MappingTypesGraphene = GrapheneEnum.from_enum(Mapping.ValueTypes)
 
 
 class AuthenticationDirectoryValidator(MutationValidation):
-    """Валидатор для сущности AuthenticationDirectory"""
+    """Валидатор для сущности AuthenticationDirectory."""
 
     @staticmethod
     async def validate_id(obj_dict, value):
@@ -93,7 +93,9 @@ class AuthenticationDirectoryValidator(MutationValidation):
 
 class MappingGroupType(graphene.ObjectType):
     """Намеренное дублирование GroupType с сокращением доступных полей.
-    Нет понимания в целесообразности абстрактного класса для обоих типов."""
+
+    Нет понимания в целесообразности абстрактного класса для обоих типов.
+    """
 
     id = graphene.UUID(required=True)
     verbose_name = graphene.String()

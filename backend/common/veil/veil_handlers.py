@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from abc import ABC
 import textwrap
-from typing import Optional, Awaitable
+from typing import Awaitable, Optional
 
 from tornado import websocket
 from tornado.web import RequestHandler
@@ -9,12 +9,12 @@ from tornado.escape import json_decode
 from graphene_tornado.tornado_graphql_handler import TornadoGraphQLHandler
 
 from common.veil.auth.veil_jwt import (
-    extract_user,
-    jwtauth,
-    extract_user_object,
     decode_jwt,
+    extract_user,
+    extract_user_object,
+    jwtauth,
 )
-from common.veil.veil_errors import ValidationError, InvalidUserError
+from common.veil.veil_errors import InvalidUserError, ValidationError
 
 from common.models.auth import User, UserJwtInfo
 from common.models.pool import Pool
@@ -108,7 +108,7 @@ class BaseHandler(RequestHandler, ABC):
         return vm
 
     def write_error(self, status_code, **kwargs):
-        """Согласно доке вызывается если возникло неотработанное исключение при обработка запроса"""
+        """Согласно доке вызывается если возникло неотработанное исключение при обработка запроса."""
         message = "Uncaught exception"
         try:
             exc_info = kwargs["exc_info"]
@@ -133,7 +133,7 @@ class BaseWsHandler(websocket.WebSocketHandler, ABC):
         return True
 
     async def _validate_token(self):
-        """Проверить токен. Вернуть token, если валидация прошла. Иначе None"""
+        """Проверить токен. Вернуть token, если валидация прошла. Иначе None."""
         try:
             token = self.get_query_argument("token")
             if not token:

@@ -10,19 +10,19 @@ from tornado import websocket
 from aiohttp import client_exceptions
 import asyncio
 from common.settings import (
+    REDIS_DB,
+    REDIS_PASSWORD,
     REDIS_PORT,
     REDIS_THIN_CLIENT_CHANNEL,
-    REDIS_PASSWORD,
-    REDIS_DB,
     REDIS_THIN_CLIENT_CMD_CHANNEL,
 )
-from common.veil.veil_redis import request_to_execute_pool_task, ThinClientCmd
+from common.veil.veil_redis import ThinClientCmd, request_to_execute_pool_task
 from common.veil.veil_handlers import BaseHandler
-from common.veil.auth.veil_jwt import jwtauth, decode_jwt
+from common.veil.auth.veil_jwt import decode_jwt, jwtauth
 
 from sqlalchemy.sql import func
-from common.models.pool import Pool as PoolModel, AutomatedPool
-from common.models.task import PoolTaskType, TaskStatus, Task
+from common.models.pool import AutomatedPool, Pool as PoolModel
+from common.models.task import PoolTaskType, Task, TaskStatus
 from common.models.active_tk_connection import ActiveTkConnection
 from common.models.auth import User
 
@@ -35,8 +35,8 @@ from common.languages import lang_init
 from common.settings import JWT_OPTIONS
 
 from common.veil.veil_redis import (
-    WS_MONITOR_CHANNEL_OUT,
     REDIS_CLIENT,
+    WS_MONITOR_CHANNEL_OUT,
     a_redis_get_message,
 )
 
@@ -49,7 +49,7 @@ class RedisInfoHandler(BaseHandler, ABC):
     """Данные для подключения тонких клиентов к Redis."""
 
     async def get(self):
-        """
+        """  # noqa
         {
             "data": {
                 "port": 6379,
@@ -256,8 +256,7 @@ class PoolGetVm(BaseHandler, ABC):
         return await self.log_finish(response)
 
     async def _send_cmd_to_expand_pool(self, pool_model):
-        """Запускаем задачу только если расширение возможно и над пулом не выполняютя другие задачи"""
-
+        """Запускаем задачу только если расширение возможно и над пулом не выполняютя другие задачи."""
         if not pool_model:
             return
         # 1) is max reached
@@ -308,7 +307,7 @@ class VmAction(BaseHandler, ABC):
 
 @jwtauth
 class AttachUsb(BaseHandler, ABC):
-    """Добавить usb tcp редирект девайс"""
+    """Добавить usb tcp редирект девайс."""
 
     async def post(self, pool_id):
 
@@ -343,7 +342,7 @@ class AttachUsb(BaseHandler, ABC):
 
 @jwtauth
 class DetachUsb(BaseHandler, ABC):
-    """Убрать usb tcp редирект девайс"""
+    """Убрать usb tcp редирект девайс."""
 
     async def post(self, pool_id):
 
@@ -478,8 +477,7 @@ class ThinClientWsHandler(BaseWsHandler):
         ).gino.status()
 
     async def _send_messages_co(self):
-        """Пересылаем сообщения об апдейте ВМ"""
-
+        """Пересылаем сообщения об апдейте ВМ."""
         redis_subscriber = REDIS_CLIENT.pubsub()
         redis_subscriber.subscribe(WS_MONITOR_CHANNEL_OUT)
 
@@ -503,7 +501,7 @@ class ThinClientWsHandler(BaseWsHandler):
                 await system_logger.debug(str(ex))
 
     async def _listen_for_cmd(self):
-        """Команды от админа"""
+        """Команды от админа."""
         redis_subscriber = REDIS_CLIENT.pubsub()
         redis_subscriber.subscribe(REDIS_THIN_CLIENT_CMD_CHANNEL)
 

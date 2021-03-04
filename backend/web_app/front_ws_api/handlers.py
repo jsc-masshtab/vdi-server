@@ -8,8 +8,8 @@ from tornado import websocket
 from tornado.web import Application
 
 from web_app.front_ws_api.subscription_sources import (
-    VDI_FRONT_ALLOWED_SUBSCRIPTIONS_LIST,
     SubscriptionCmd,
+    VDI_FRONT_ALLOWED_SUBSCRIPTIONS_LIST,
 )
 
 from common.veil.veil_handlers import BaseWsHandler
@@ -18,8 +18,8 @@ from common.log.journal import system_logger
 
 from common.veil.veil_redis import (
     INTERNAL_EVENTS_CHANNEL,
-    WS_MONITOR_CHANNEL_OUT,
     REDIS_CLIENT,
+    WS_MONITOR_CHANNEL_OUT,
     a_redis_get_message,
 )
 
@@ -111,8 +111,7 @@ class VdiFrontWsHandler(BaseWsHandler):  # noqa
             pass
 
     async def _send_messages_co(self):
-        """wait for message and send it to front client"""
-
+        """Wait for message and send it to front client."""
         # subscribe to channels  INTERNAL_EVENTS_CHANNEL and WS_MONITOR_CHANNEL_OUT
         redis_subscriber = REDIS_CLIENT.pubsub()
         redis_subscriber.subscribe(INTERNAL_EVENTS_CHANNEL, WS_MONITOR_CHANNEL_OUT)

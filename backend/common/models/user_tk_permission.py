@@ -10,7 +10,7 @@ from sqlalchemy.dialects.postgresql import UUID
 
 
 class TkPermission(Enum):
-    """Права пользователя ТК"""
+    """Права пользователя ТК."""
 
     USB_REDIR = "USB_REDIR"
     FOLDERS_REDIR = "FOLDERS_REDIR"

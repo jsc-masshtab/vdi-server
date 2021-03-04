@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 import graphene
 from graphql import GraphQLError
-from sqlalchemy import desc, and_, text
+from sqlalchemy import and_, desc, text
 
 from common.database import db
-from common.veil.veil_decorators import operator_required, administrator_required
+from common.veil.veil_decorators import administrator_required, operator_required
 from common.utils import extract_ordering_data
 from common.veil.veil_errors import SimpleError
 from common.models.event import Event, EventReadByUser, JournalSettings

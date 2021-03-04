@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
-""" Generate random string """
+"""Generate random string."""
 import argparse
-from cryptography.fernet import Fernet
+
 from common.veil.auth.django_crypto import get_random_string
+
+from cryptography.fernet import Fernet
 
 SECRET_ARGS = ["SECRET_KEY", "FERNET_KEY", "DB_PASS", "REDIS_PASSWORD"]
 

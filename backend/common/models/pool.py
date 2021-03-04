@@ -5,38 +5,38 @@ import uuid
 import random
 from enum import Enum
 from sqlalchemy import (
-    and_,
-    union_all,
-    case,
-    literal_column,
-    desc,
-    text,
     Enum as AlchemyEnum,
+    and_,
+    case,
+    desc,
+    literal_column,
+    text,
+    union_all,
 )
-from sqlalchemy.dialects.postgresql import UUID, ARRAY
+from sqlalchemy.dialects.postgresql import ARRAY, UUID
 from asyncpg.exceptions import UniqueViolationError
 
 from common.settings import POOL_MAX_CREATE_ATTEMPTS, VEIL_MAX_IDS_LEN
 from common.database import db
 from veil_api_client import TagConfiguration, VeilEntityConfiguration
 
-from common.veil.veil_gino import Status, EntityType, VeilModel
+from common.veil.veil_gino import EntityType, Status, VeilModel
 from common.veil.veil_graphene import VmState
 from common.veil.veil_errors import (
-    VmCreationError,
+    PoolCreationError,
     SimpleError,
     ValidationError,
-    PoolCreationError,
+    VmCreationError,
 )
 from common.utils import extract_ordering_data
 from web_app.auth.license.utils import License
 from common.veil.veil_redis import get_thin_clients_count
 
 from common.models.auth import (
-    User as UserModel,
     Entity as EntityModel,
     EntityOwner as EntityOwnerModel,
     Group as GroupModel,
+    User as UserModel,
     UserGroup as UserGroupModel,
 )
 from common.models.authentication_directory import AuthenticationDirectory
@@ -114,7 +114,7 @@ class Pool(VeilModel):
 
     @property
     async def has_vms(self):
-        """Проверяем наличие виртуальных машин"""
+        """Проверяем наличие виртуальных машин."""
         vm_count = (
             await db.select([db.func.count(VmModel.id)])
             .where(VmModel.pool_id == self.id)
@@ -135,13 +135,13 @@ class Pool(VeilModel):
 
     @property
     async def pool_type(self):
-        """Возвращает тип пула виртуальных машин"""
+        """Возвращает тип пула виртуальных машин."""
         is_automated = await self.is_automated_pool
         return Pool.PoolTypes.AUTOMATED if is_automated else Pool.PoolTypes.STATIC
 
     @property
     async def template_id(self):
-        """Возвращает template_id для автоматического пула, либо null"""
+        """Возвращает template_id для автоматического пула, либо null."""
         template_id = (
             await AutomatedPool.select("template_id")
             .where(AutomatedPool.id == self.id)
@@ -164,7 +164,7 @@ class Pool(VeilModel):
 
     @staticmethod
     def build_ordering(query, ordering=None):
-        """Построение порядка сортировки"""
+        """Построение порядка сортировки."""
         from common.models.controller import Controller
 
         if not ordering or not isinstance(ordering, str):
@@ -348,8 +348,8 @@ class Pool(VeilModel):
         return await query.gino.scalar()
 
     async def get_vm_amount(self, only_free=False):
-        """
-        Нужно дорабатывать - отказаться от in и дублирования кода.
+        """Нужно дорабатывать - отказаться от in и дублирования кода.
+
         :param only_free: учитываем только свободные VM
         :return: int
         Надо бы переделать это в статический метод а то везде приходится делать Pool.get(id)
@@ -456,7 +456,7 @@ class Pool(VeilModel):
 
     @property
     async def assigned_users(self):
-        """Пользователи назначенные пулу (с учетом групп)"""
+        """Пользователи назначенные пулу (с учетом групп)."""
         # TODO: возможно нужно добавить группы и пользователей обладающих Ролью
 
         query = EntityModel.query.where(
@@ -495,7 +495,7 @@ class Pool(VeilModel):
 
     @property
     async def possible_users(self):
-        """Пользователи которых можно закрепить за пулом"""
+        """Пользователи которых можно закрепить за пулом."""
         query = EntityModel.query.where(
             (EntityModel.entity_type == EntityType.POOL)
             & (EntityModel.entity_uuid == self.id)  # noqa: W503
@@ -670,8 +670,8 @@ class Pool(VeilModel):
         ).gino.status()
 
     async def free_assigned_vms(self, users_list: list):
-        """
-        Будут удалены все записи из EntityOwner соответствующие условию.
+        """Будут удалены все записи из EntityOwner соответствующие условию.
+
         Запрос такой ублюдский, потому что через Join в текущей версии Gino получалось очень много подзапросов.
         :param users_list: uuid пользователей для которых выполняется поиск
         :return: gino.status()
@@ -719,8 +719,7 @@ class Pool(VeilModel):
         return pool
 
     async def full_delete(self, creator):
-        """Удаление сущности с удалением зависимых сущностей"""
-
+        """Удаление сущности с удалением зависимых сущностей."""
         old_status = self.status  # Запомнить теущий статус
         try:
             await self.set_status(Status.DELETING)
@@ -796,8 +795,10 @@ class Pool(VeilModel):
 
     async def get_free_vm_v2(self):
         """Возвращает случайную свободную ВМ.
+
         Свободная == не занятая за кем-то конкретном.
-        Приоритетной будет та, что включена."""
+        Приоритетной будет та, что включена.
+        """
         # Формируем список ВМ
         entity_query = EntityModel.select("entity_uuid").where(
             (EntityModel.entity_type == EntityType.VM)

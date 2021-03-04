@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
+import inspect
 import logging
 import sys
-import inspect
 
-from common.settings import DEBUG
 from common.models.event import Event
+from common.settings import DEBUG
 from common.veil.veil_gino import EntityType
 
 

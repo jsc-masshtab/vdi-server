@@ -8,12 +8,12 @@ from tornado.options import define, options
 from tornado.process import task_id
 
 from common.settings import (
-    WS_PING_INTERVAL,
-    WS_PING_TIMEOUT,
     AUTH_ENABLED,
     DEBUG,
     SSL_CRT_FPATH,
     SSL_KEY_FPATH,
+    WS_PING_INTERVAL,
+    WS_PING_TIMEOUT,
 )
 from common.log.journal import system_logger
 from common.languages import lang_init

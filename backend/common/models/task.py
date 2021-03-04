@@ -17,9 +17,9 @@ from sqlalchemy import and_
 
 from common.database import db
 from common.veil.veil_redis import (
-    redis_error_handle,
-    REDIS_CLIENT,
     INTERNAL_EVENTS_CHANNEL,
+    REDIS_CLIENT,
+    redis_error_handle,
 )
 from common.veil.veil_gino import AbstractSortableStatusModel, EntityType
 from common.languages import lang_init
@@ -175,8 +175,7 @@ class Task(db.Model, AbstractSortableStatusModel):
 
     @staticmethod
     async def set_progress_to_task_associated_with_entity(entity_id, progress):
-        """Изменить статус задачи связанной с сущностью entity_id"""
-
+        """Изменить статус задачи связанной с сущностью entity_id."""
         task_model = await Task.query.where(Task.entity_id == entity_id).gino.first()
         if task_model:
             await task_model.set_progress(progress)

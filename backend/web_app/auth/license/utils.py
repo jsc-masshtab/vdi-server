@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
-""" Ограничение лицензии действует только на подключение тонких клиентов.
-    Если лицензия истекла - отсутствует возможность подключиться с тонкого клиента.
+"""Ограничение лицензии действует только на подключение тонких клиентов.
+
+Если лицензия истекла - отсутствует возможность подключиться с тонкого клиента.
 
     TODO: заменить реалилизацию синглтона на декоратор?
     def singleton(cls):
@@ -22,16 +23,16 @@ import os
 from uuid import uuid4
 
 from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives import serialization, hashes
+from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import padding
 
 from common.settings import PRIVATE_PEM_FPATH, SERIAL_KEY_FPATH
-from common.veil.veil_redis import save_license_dict, read_license_dict
+from common.veil.veil_redis import read_license_dict, save_license_dict
 from common.log.journal import system_logger
 
 
 class LicenseData:
-    """Структура лицензионного ключа"""
+    """Структура лицензионного ключа."""
 
     def __init__(
         self,
@@ -212,9 +213,7 @@ class License:
             )
 
         def get_license_from_file(self):
-            """
-            Проверяется ключ из файла.
-            """
+            """Проверяется ключ из файла."""
             try:
                 with open(self.veil_pem, "rb") as key_file:
                     private_key = serialization.load_pem_private_key(

@@ -1,10 +1,10 @@
 from __future__ import with_statement
 from alembic import context
-from sqlalchemy import pool, engine_from_config
+from sqlalchemy import engine_from_config, pool
 from logging.config import fileConfig
 
 from common.database import db as target_metadata
-from common.settings import DB_USER, DB_PASS, DB_NAME, DB_HOST, DB_PORT
+from common.settings import DB_HOST, DB_NAME, DB_PASS, DB_PORT, DB_USER
 from web_app.app import make_app
 
 

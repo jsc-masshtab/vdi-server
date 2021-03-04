@@ -1,4 +1,4 @@
-"""admin user
+"""Admin user.
 
 Revision ID: 07972ddc0722
 Revises: b58c521ba8d4
@@ -8,7 +8,7 @@ Create Date: 2021-02-19 18:36:34.395333
 from alembic import op
 
 from common.veil.auth.hashers import make_password
-from common.settings import SECRET_KEY, DB_USER
+from common.settings import DB_USER, SECRET_KEY
 from common.languages import lang_init
 
 import uuid

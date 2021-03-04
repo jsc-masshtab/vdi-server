@@ -10,7 +10,9 @@ _ = lang_init()
 
 class MutationValidation:
     """Ищет валидаторы вида validation_argument_field_name.
-       На вопрос почему так - не нашел какого-то готового решения для наших реалий."""
+
+    На вопрос почему так - не нашел какого-то готового решения для наших реалий.
+    """
 
     @classmethod
     async def validate(cls, **kwargs):

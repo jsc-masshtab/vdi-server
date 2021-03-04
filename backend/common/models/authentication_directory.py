@@ -1,34 +1,34 @@
 # -*- coding: utf-8 -*-
 import uuid
 from enum import Enum
-from typing import Tuple, Optional
+from typing import Optional, Tuple
 import ldap
 from asyncpg.exceptions import UniqueViolationError
-from sqlalchemy import Index, Enum as AlchemyEnum
-from sqlalchemy.dialects.postgresql import UUID, JSONB
-from sqlalchemy.sql import text, desc
+from sqlalchemy import Enum as AlchemyEnum, Index
+from sqlalchemy.dialects.postgresql import JSONB, UUID
+from sqlalchemy.sql import desc, text
 
 from common.settings import LDAP_TIMEOUT
 from common.database import db
 from common.veil.veil_gino import (
     AbstractSortableStatusModel,
+    EntityType,
     Status,
     VeilModel,
-    EntityType,
 )
-from common.veil.auth.fernet_crypto import encrypt, decrypt
+from common.veil.auth.fernet_crypto import decrypt, encrypt
 from common.models.auth import Group as GroupModel, User as UserModel
 from common.veil.auth.auth_dir_utils import (
-    unpack_guid,
+    extract_domain_from_username,
+    get_ad_user_groups,
+    get_ad_user_ou,
     pack_guid,
     unpack_ad_info,
-    extract_domain_from_username,
-    get_ad_user_ou,
-    get_ad_user_groups,
+    unpack_guid,
 )
 from common.languages import lang_init
 from common.log.journal import system_logger
-from common.veil.veil_errors import ValidationError, SilentError
+from common.veil.veil_errors import SilentError, ValidationError
 
 
 _ = lang_init()
@@ -154,7 +154,9 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
         id=None,
     ):
         """Создает запись Authentication Directory.
-        Если не удалось проверить соединение - статус изменится на Failed."""
+
+        Если не удалось проверить соединение - статус изменится на Failed.
+        """
         # Ограничение на количество записей
         count = await db.func.count(AuthenticationDirectory.id).gino.scalar()
         if count > 0:
@@ -243,9 +245,9 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
     async def add_mapping(self, mapping: dict, groups: list, creator):
         """
         :param mapping: Dictionary of Mapping table kwargs.
+
         :param groups: List of GroupModel.id strings.
         """
-
         async with db.transaction():
             mapping_obj = await Mapping.create(**mapping)
             for group_id in groups:
@@ -268,6 +270,7 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
     async def edit_mapping(self, mapping: dict, groups: list, creator):
         """
         :param mapping: Dictionary of Mapping table kwargs.
+
         :param groups: List of GroupModel.id strings.
         """
         async with db.transaction():
@@ -304,8 +307,8 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
                     )
 
     async def test_connection(self) -> bool:
-        """
-        Метод тестирования соединения с сервером службы каталогов.
+        """Метод тестирования соединения с сервером службы каталогов.
+
         :return: результат проверки соединения
         """
         try:
@@ -362,6 +365,7 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
     @classmethod
     async def _get_user(cls, username: str):
         """Получение объекта пользователя из БД на основе его имени.
+
         Если пользователь не существует, то будет создан с пустым паролем.
         Авторизация этого пользователя возможна только по LDAP.
 
@@ -393,8 +397,7 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
         account_name: str,
     ) -> bool:
         """
-        Метод назначения пользователю системной группы на основе атрибутов его учетной записи
-        в службе каталогов.
+        Метод назначения пользователю системной группы на основе атрибутов его учетной записи в службе каталогов.
 
         :param ldap_server: объект сервера службы каталогов
         :param user: объект пользователя
@@ -456,7 +459,9 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
     @classmethod
     async def get_domain_name(cls, username: str):
         """Возвращает доменное имя для контроллера AD.
-           Если в username есть доменное имя - вернется оно, если нет - domain_name из записи AD."""
+
+        Если в username есть доменное имя - вернется оно, если нет - domain_name из записи AD.
+        """
         _, domain_name = extract_domain_from_username(username)
         if not domain_name:
             authentication_directory = await AuthenticationDirectory.get_objects(
@@ -813,10 +818,9 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
 
 
 class Mapping(VeilModel):
-    """
-    Модель отображения атрибутов пользователя службы каталогов на группы пользователей системы.
-    Описание полей:
+    """Модель отображения атрибутов пользователя службы каталогов на группы пользователей системы.
 
+    Описание полей:
     - mapping_type: тип атрибута службы каталогов для отображения на группы системы
     - values: список значений атрибутов пользователя службы каталогов
     """
@@ -824,9 +828,7 @@ class Mapping(VeilModel):
     __tablename__ = "mapping"
 
     class ValueTypes(Enum):
-        """
-        Класс, описывающий доступные типы атрибутов службы каталогов.
-        """
+        """Класс, описывающий доступные типы атрибутов службы каталогов."""
 
         USER = "USER"
         OU = "OU"

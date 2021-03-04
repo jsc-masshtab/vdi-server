@@ -10,9 +10,9 @@ import graphene
 from common.veil.veil_decorators import administrator_required
 from common.veil.veil_graphene import (
     VeilResourceType,
-    VmState,
     VeilShortEntityType,
     VeilTagsType,
+    VmState,
 )
 from common.veil.veil_gino import StatusGraphene
 from common.veil.veil_errors import SilentError
@@ -312,7 +312,7 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
     async def resolve_resource_pool(
         cls, root, info, creator, resource_pool_id, controller_id
     ):
-        """"Получение информации о конкретном пуле ресурсов на контроллере."""
+        """Получение информации о конкретном пуле ресурсов на контроллере."""
         controller = await cls.fetch_by_id(controller_id)
         # Прерываем выполнение при отсутствии клиента
         if not controller.veil_client:
@@ -379,7 +379,7 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
     @classmethod
     @administrator_required
     async def resolve_node(cls, root, info, creator, node_id, controller_id):
-        """"Получение информации о конкретной ноде на контроллере."""
+        """Получение информации о конкретной ноде на контроллере."""
         controller = await cls.fetch_by_id(controller_id)
         # Прерываем выполнение при отсутствии клиента
         if not controller.veil_client:

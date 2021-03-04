@@ -9,10 +9,10 @@ from common.veil.auth.veil_jwt import (
 )
 from common.models.auth import User
 from common.models.authentication_directory import AuthenticationDirectory
-from common.settings import LOCAL_AUTH, EXTERNAL_AUTH, PAM_AUTH
+from common.settings import EXTERNAL_AUTH, LOCAL_AUTH, PAM_AUTH
 from common.languages import lang_init
 from common.log.journal import system_logger
-from common.veil.veil_errors import ValidationError, AssertError
+from common.veil.veil_errors import AssertError, ValidationError
 
 
 _ = lang_init()

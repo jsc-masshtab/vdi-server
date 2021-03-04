@@ -2,13 +2,13 @@
 import graphene
 
 from common.database import db
-from common.veil.veil_gino import RoleTypeGraphene, Role
+from common.veil.veil_gino import Role, RoleTypeGraphene
 from common.models.auth import Group, User
 from common.models.user_tk_permission import TkPermission
 from common.veil.veil_validators import MutationValidation
 from common.veil.veil_errors import SimpleError, ValidationError
 from common.veil.veil_decorators import security_administrator_required
-from web_app.auth.user_schema import UserType, PermissionTypeGraphene
+from web_app.auth.user_schema import PermissionTypeGraphene, UserType
 
 from common.languages import lang_init
 
@@ -17,7 +17,7 @@ _ = lang_init()
 
 
 class GroupValidator(MutationValidation):
-    """Валидатор для сущности Group"""
+    """Валидатор для сущности Group."""
 
     @staticmethod
     async def validate_id(obj_dict, value):

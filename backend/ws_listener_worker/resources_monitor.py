@@ -28,9 +28,7 @@ _ = lang_init()
 
 
 class ResourcesMonitor:
-    """
-    monitoring of controller events
-    """
+    """Monitoring of controller events."""
 
     RECONNECT_TIMEOUT = 15
     CONTROLLER_CHECK_TIMEOUT = 15
@@ -73,11 +71,10 @@ class ResourcesMonitor:
 
     # PRIVATE METHODS
     async def _controller_online_checking(self):
-        """
-        Смотрим статус контроллера. Если контроллер деактивирован, то проверяем его доступность.
+        """Смотрим статус контроллера. Если контроллер деактивирован, то проверяем его доступность.
+
         Если все хорошо, то активируем.
         """
-
         while self._running_flag:
 
             await asyncio.sleep(self.CONTROLLER_CHECK_TIMEOUT)
@@ -103,8 +100,8 @@ class ResourcesMonitor:
                 await controller.activate()
 
     async def _processing_ws_messages(self):
-        """
-        Listen for data from controller
+        """Listen for data from controller.
+
         :return:
         """
         while self._running_flag:

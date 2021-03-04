@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-from gino_tornado import Gino
+from common.settings import DB_HOST, DB_NAME, DB_PASS, DB_PORT, DB_USER
 
-from common.settings import DB_NAME, DB_PASS, DB_USER, DB_PORT, DB_HOST
+from gino_tornado import Gino
 
 db = Gino()
 bind_str = "postgresql://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}".format(

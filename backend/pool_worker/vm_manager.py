@@ -12,8 +12,8 @@ from common.models.auth import Entity as EntityModel, EntityOwner as EntityOwner
 from common.veil.veil_gino import EntityType
 
 from common.veil.veil_redis import (
-    WS_MONITOR_CHANNEL_OUT,
     REDIS_CLIENT,
+    WS_MONITOR_CHANNEL_OUT,
     a_redis_get_message,
 )
 
@@ -22,7 +22,9 @@ from common.log.journal import system_logger
 
 class VmManager:
     """Здесь действия над вм, которые выполняются автоматом в ходе выполнения приложения.
-    Возможно, логичнее было бы выделить в именной отдельный процесс"""
+
+    Возможно, логичнее было бы выделить в именной отдельный процесс.
+    """
 
     def __init__(self):
         self.query_interval = 30
@@ -37,8 +39,7 @@ class VmManager:
         loop.create_task(self._synchronize_vm_names_task())
 
     async def _keep_vms_on_task(self):
-        """Держим машины вкюченными, если машины находятся в пуле с поднятым флагом keep_vms_on и
-        имеют назначенного юзера"""
+        """Держим ВМ вкюченными, если ВМ находятся в пуле с поднятым флагом keep_vms_on и имеют назначенного юзера."""
         while True:
 
             # get vm info from controllers
@@ -78,8 +79,7 @@ class VmManager:
             await asyncio.sleep(self.query_interval)
 
     async def _synchronize_vm_names_task(self):
-        """Если на контроллере меняется имя ВМ, то обновляем его на VDI"""
-
+        """Если на контроллере меняется имя ВМ, то обновляем его на VDI."""
         redis_subscriber = REDIS_CLIENT.pubsub()
         redis_subscriber.subscribe(WS_MONITOR_CHANNEL_OUT)
 

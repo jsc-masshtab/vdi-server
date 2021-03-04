@@ -6,12 +6,12 @@ import json
 import asyncio
 
 from pool_worker.pool_tasks import (
-    InitPoolTask,
-    ExpandPoolTask,
+    BackupVmsTask,
     DecreasePoolTask,
     DeletePoolTask,
+    ExpandPoolTask,
+    InitPoolTask,
     PrepareVmTask,
-    BackupVmsTask,
 )
 from pool_worker.pool_locks import PoolLocks
 
@@ -27,7 +27,7 @@ from common.languages import lang_init
 
 from common.models.vm import Vm
 from common.models.pool import Pool
-from common.models.task import Task, TaskStatus, PoolTaskType
+from common.models.task import PoolTaskType, Task, TaskStatus
 from common.database import db
 
 from sqlalchemy import and_
@@ -39,8 +39,7 @@ _ = lang_init()
 
 
 class PoolTaskManager:
-
-    """Реализует управление задачами"""
+    """Реализует управление задачами."""
 
     def __init__(self):
         self.pool_locks = PoolLocks()
@@ -50,8 +49,7 @@ class PoolTaskManager:
         )  # Список, в котором держим объекты выполняемым в данный момент таскок
 
     async def start(self):
-        """Действия при старте менеджера"""
-
+        """Действия при старте менеджера."""
         await system_logger.debug("Pool worker: start loop now")
 
         # init locks
@@ -139,9 +137,9 @@ class PoolTaskManager:
                 )
 
     async def resume_tasks(self, controller_id=None, remove_unresumable_tasks=False):
-        """
-        Анализируем таблицу тасок в бд.
-        Продолжить таски  в двух случаях:
+        """Анализируем таблицу тасок в бд.
+
+        Продолжить таски в двух случаях:
         - У таски должен быть поднят флаг resumable и быть статус CANCELLED
         - статус IN_PROGRESS
         remove_unresumable_tasks - удалять ли из бд задачи, которые не могут быть возобновлены.
@@ -255,8 +253,7 @@ class PoolTaskManager:
             task.execute_in_async_task()
 
     async def cancel_tasks(self, task_ids, cancel_all=False):
-        """cancel_tasks in list or all tasks"""
-
+        """Cancel_tasks in list or all tasks."""
         task_list = list(
             self.task_list
         )  # делаем shallow copy так как список self.task_list будет уменьшатся в
@@ -269,7 +266,7 @@ class PoolTaskManager:
     async def cancel_tasks_associated_with_controller(
         self, controller_id, resumable=False
     ):
-        """cancel_tasks_associated_with_controller"""
+        """cancel_tasks_associated_with_controller."""
         await system_logger.debug("cancel_tasks_associated_with_controller")
 
         # find tasks
@@ -284,8 +281,7 @@ class PoolTaskManager:
                 await task.cancel(resumable=resumable, wait_for_result=False)
 
     async def cancel_tasks_associated_with_entity(self, entity_id, resumable=False):
-        """cancel tasks associated with entity"""
-
+        """Cancel tasks associated with entity."""
         task_list = list(self.task_list)  # shallow copy
         for task in task_list:
             if str(task.task_model.entity_id) == entity_id:

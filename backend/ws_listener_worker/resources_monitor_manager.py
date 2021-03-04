@@ -20,7 +20,7 @@ class ResourcesMonitorManager:
 
     # PUBLIC METHODS
     async def listen_for_messages(self):
-        """Listen for commands to add/remove controller"""
+        """Listen for commands to add/remove controller."""
         await self.start()
 
         await system_logger.debug("Ws listener worker: start loop now")
@@ -50,8 +50,8 @@ class ResourcesMonitorManager:
                 await system_logger.error("exception:" + str(ex), entity=entity)
 
     async def start(self):
-        """
-        Start monitors
+        """Start monitors.
+
         :return:
         """
         # system_logger.debug('{}: Startup...'.format(__class__.__name__))
@@ -74,8 +74,8 @@ class ResourcesMonitorManager:
             )
 
     async def stop(self):
-        """
-        Stop monitors
+        """Stop monitors.
+
         :return:
         """
         for resources_monitor in self._resources_monitors_list:
