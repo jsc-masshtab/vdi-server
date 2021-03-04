@@ -1,6 +1,6 @@
 import { TasksService } from './tasks.service';
 import { WaitService } from '../../../common/components/single/wait/wait.service';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { map } from 'rxjs/operators';
 import { MatDialog } from '@angular/material';
 import { InfoTaskComponent } from '../info-tasks/info-tasks.component';
@@ -15,7 +15,7 @@ import { Subscription } from 'rxjs';
   styleUrls: ['./tasks.component.scss']
 })
 
-export class TasksComponent implements OnInit {
+export class TasksComponent implements OnInit, OnDestroy {
 
   private socketSub: Subscription;
 
@@ -64,7 +64,7 @@ export class TasksComponent implements OnInit {
 
   public tasks: object[] = [];
 
-  public queryset: any
+  public queryset: any;
 
   constructor(
     private service: TasksService,
@@ -72,7 +72,7 @@ export class TasksComponent implements OnInit {
     public dialog: MatDialog,
     private ws: WebsocketService
   ) { }
-  
+
   ngOnInit() {
     this.refresh();
     this.listenSockets();
@@ -122,7 +122,7 @@ export class TasksComponent implements OnInit {
       delete queryset['status'];
     }
 
-    this.queryset = queryset
+    this.queryset = queryset;
 
     this.waitService.setWait(true);
     this.service.getAllTasks(queryset).valueChanges.pipe(map(data => data.data))
@@ -135,17 +135,17 @@ export class TasksComponent implements OnInit {
 
   private listenSockets() {
     if (this.socketSub) {
-      this.socketSub.unsubscribe()
+      this.socketSub.unsubscribe();
     }
 
     this.socketSub = this.ws.stream('/vdi_tasks/').subscribe(() => {
       this.service.getAllTasks(this.queryset).refetch();
-    })
+    });
   }
 
   public openTaskDetails(task: any): void {
     this.dialog.open(InfoTaskComponent, {
- 			disableClose: true,
+      disableClose: true,
       width: '700px',
       data: {
         task: { ...task }

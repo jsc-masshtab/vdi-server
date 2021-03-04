@@ -1,6 +1,6 @@
 import { WaitService } from '../../../../common/components/single/wait/wait.service';
 import { MatDialogRef } from '@angular/material';
-import { Component, Inject, OnDestroy } from '@angular/core';
+import { Component, Inject, OnDestroy, OnInit } from '@angular/core';
 import { MAT_DIALOG_DATA } from '@angular/material';
 import { Subject } from 'rxjs';
 import { takeUntil, map } from 'rxjs/operators';
@@ -12,7 +12,7 @@ import { AuthenticationDirectoryService } from '../../auth-directory.service';
   templateUrl: './add-group.component.html'
 })
 
-export class AddGropComponent implements OnDestroy {
+export class AddGropComponent implements OnInit, OnDestroy {
 
   public pending: boolean = false;
   public group: any = {};
@@ -64,14 +64,10 @@ export class AddGropComponent implements OnDestroy {
   }
 
   public select(type, select) {
-
-    if (type == 'groups') {
-
+    if (type === 'groups') {
       this.group = select.value;
       this.valid = true;
-
     }
-
   }
 
   ngOnDestroy() {

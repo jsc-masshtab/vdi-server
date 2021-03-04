@@ -46,14 +46,14 @@ export class SyncGroupComponent implements OnDestroy {
             }, 1500)
           }
         });
-    this.synced = true;
+      this.synced = true;
     } else {
       this.valid = false;
     }
   }
 
   public select(type, select) {
-    if (type == 'groups') {
+    if (type === 'groups') {
       this.group = select.value['id'];
       this.valid = true;
     }

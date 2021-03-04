@@ -32,7 +32,7 @@ export class AddUserComponent {
     private fb: FormBuilder,
     private waitService: WaitService,
     @Inject(MAT_DIALOG_DATA) public data: any
-  ){
+  ) {
     this.initForm();
   }
 
