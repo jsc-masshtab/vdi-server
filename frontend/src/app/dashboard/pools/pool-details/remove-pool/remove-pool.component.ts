@@ -24,7 +24,7 @@ export class RemovePoolComponent  {
     private dialogRef: MatDialogRef<RemovePoolComponent>,
     private router: Router,
     @Inject(MAT_DIALOG_DATA) public data: IData
-  ){}
+  ) {}
 
   public send() {
     this.waitService.setWait(true);

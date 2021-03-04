@@ -8,7 +8,7 @@ import { ActivatedRoute, Router, ParamMap } from '@angular/router';
 
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { IEditFormObj } from 'types';
-import {FormControl} from "@angular/forms";
+import {FormControl} from '@angular/forms';
 
 
 @Component({
@@ -52,6 +52,7 @@ export class ControllerDetailsComponent implements OnInit, OnDestroy {
         tag: 'input',
         type: 'text',
         fieldName: 'description',
+        unrequired: true,
         fieldValue: this.controller['description']
       }],
       edit: 'openEditForm',
@@ -117,7 +118,7 @@ export class ControllerDetailsComponent implements OnInit, OnDestroy {
     });
 
     this.is_service.valueChanges.subscribe(() => {
-      if (this.is_service.value == false) {
+      if (this.is_service.value === false) {
         this.activateController();
         } else {
           this.serviceController();
@@ -195,7 +196,7 @@ export class ControllerDetailsComponent implements OnInit, OnDestroy {
   private openEditForm(activeObj: IEditFormObj): void  {
     activeObj['formEdit'][0]['fieldValue'] = this.controller[activeObj['property']];
     this.dialog.open(FormForEditComponent, {
- 			disableClose: true,
+      disableClose: true,
       width: '500px',
       data: {
         post: {
@@ -222,7 +223,7 @@ export class ControllerDetailsComponent implements OnInit, OnDestroy {
 
   public removeController() {
     this.dialog.open(RemoveControllerComponent, {
- 			disableClose: true,
+      disableClose: true,
       width: '500px',
       data: {
         id: this.idController,

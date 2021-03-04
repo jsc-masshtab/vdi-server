@@ -74,7 +74,7 @@ export class AppModule {
       faFolderOpen, faStar, faTv, faSyncAlt, faBuilding, faTrashAlt, faUsers, faMeh, faChartBar, faUser,
       faStopCircle, faPlayCircle, faPauseCircle, faEdit, faQuestionCircle, faCheckSquare, faExclamationTriangle, faHeartbeat,
       faChevronCircleUp, faComment, faClipboardList, faNewspaper, faUserCircle, faSignOutAlt, faChevronCircleLeft, faChevronCircleRight,
-      faAddressCard, faCheck, faUsersCog, faCrown, faColumns, faUpload, faIdCard, faSuitcase, faRss, faExpand, faGavel, faStopCircle, faUndo,
-      faPowerOff, faFire, faSearch, faFolder, faLaptop, faCircle, faExchangeAlt, faClone, faFileArchive, faWindowRestore);
+      faAddressCard, faCheck, faUsersCog, faCrown, faColumns, faUpload, faIdCard, faSuitcase, faRss, faExpand, faGavel, faStopCircle,
+      faUndo, faPowerOff, faFire, faSearch, faFolder, faLaptop, faCircle, faExchangeAlt, faClone, faFileArchive, faWindowRestore);
     }
 }

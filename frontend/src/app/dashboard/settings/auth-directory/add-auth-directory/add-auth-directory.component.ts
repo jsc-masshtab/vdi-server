@@ -1,6 +1,6 @@
 import { WaitService } from '../../../common/components/single/wait/wait.service';
 import { MatDialogRef } from '@angular/material';
-import { Component } from '@angular/core';
+import { Component, OnDestroy } from '@angular/core';
 import { AuthenticationDirectoryService } from '../auth-directory.service';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Subscription } from 'rxjs';
@@ -11,7 +11,7 @@ import { Subscription } from 'rxjs';
   templateUrl: './add-auth-directory.component.html'
 })
 
-export class AddAuthenticationDirectoryComponent {
+export class AddAuthenticationDirectoryComponent implements OnDestroy {
 
   private sub: Subscription;
 

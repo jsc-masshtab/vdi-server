@@ -1,4 +1,4 @@
-import { Component, Inject } from '@angular/core';
+import { Component, Inject, OnDestroy } from '@angular/core';
 import { Subject } from 'rxjs';
 import { WaitService } from 'src/app/dashboard/common/components/single/wait/wait.service';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
@@ -9,7 +9,7 @@ import { GroupsService } from '../groups.service';
   selector: 'vdi-remove-group-permission',
   templateUrl: './remove-permission.component.html'
 })
-export class RemovePermissionComponent {
+export class RemovePermissionComponent implements OnDestroy {
 
   public pending: boolean = false;
   public permissions: [] = [];
@@ -17,9 +17,9 @@ export class RemovePermissionComponent {
   public valid: boolean = true;
 
   constructor(private service: GroupsService,
-    private waitService: WaitService,
-    private dialogRef: MatDialogRef<RemovePermissionComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: any
+              private waitService: WaitService,
+              private dialogRef: MatDialogRef<RemovePermissionComponent>,
+              @Inject(MAT_DIALOG_DATA) public data: any
   ) {}
 
   public send() {

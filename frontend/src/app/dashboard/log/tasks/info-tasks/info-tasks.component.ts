@@ -61,9 +61,9 @@ export class InfoTaskComponent {
       width: '500px',
       data: {
         form: {
-          header: "Подтверждение действия",
-          question: "Отменить задачу?",
-          button: "Выполнить"
+          header: 'Подтверждение действия',
+          question: 'Отменить задачу?',
+          button: 'Выполнить'
         },
         request: {
           service: this.service,
@@ -73,6 +73,6 @@ export class InfoTaskComponent {
           }
         }
       }
-    })
+    });
   }
 }

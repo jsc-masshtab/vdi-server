@@ -67,7 +67,9 @@ export class LicenseComponent implements OnInit {
   }
 
   public upload(files): void {
-    if (files.length === 0) return;
+    if (files.length === 0) {
+      return;
+    }
 
     const formData = new FormData();
 
@@ -76,11 +78,11 @@ export class LicenseComponent implements OnInit {
       formData.append(file.name, file);
       formData.append('keyFile', file.name);
 
-      this.service.upload('/api/license/', formData).subscribe((event:any) => {
+      this.service.upload('/api/license/', formData).subscribe((event: any) => {
         if (event instanceof HttpResponse) {
           this.refresh();
 
-          if(event.body.errors) {
+          if (event.body.errors) {
             this.errorService.setError(event.body.errors);
           }
 

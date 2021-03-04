@@ -17,6 +17,7 @@ import { MatCheckboxModule, MatSelectModule } from '@angular/material';
 import { PaginationComponent } from './components/shared/pagination/pagination.component';
 import { FooterService } from './components/single/footer/footer.service';
 import { YesNoFormComponent } from './forms-dinamic/yes-no-form/yes-no-form.component';
+import { TranslatePipe } from './pipes/translate.pipe';
 
 
 const COMPONENTS = [
@@ -33,7 +34,8 @@ const DIRECTIVES = [
 const PIPES = [
   StatusPipe,
   StatusIconPipe,
-  AssignmentTypePipe
+  AssignmentTypePipe,
+  TranslatePipe
 ];
 
 const FORMS_DINAMIC = [

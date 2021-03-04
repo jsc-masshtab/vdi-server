@@ -32,7 +32,7 @@ export class PrepareVmPoolComponent implements OnInit, OnDestroy {
     private waitService: WaitService,
     private dialogRef: MatDialogRef<PrepareVmPoolComponent>,
     @Inject(MAT_DIALOG_DATA) public data: IData
-  ){}
+  ) {}
 
   ngOnInit() {
     this.getVms();
@@ -42,7 +42,7 @@ export class PrepareVmPoolComponent implements OnInit, OnDestroy {
     this.waitService.setWait(true);
     this.poolService.prepareVm(this.vmId).pipe(takeUntil(this.destroy)).subscribe((res) => {
       if (res) {
-        this.poolService.getPool(this.data.idPool, this.data.typePool).refetch()
+        this.poolService.getPool(this.data.idPool, this.data.typePool).refetch();
         this.waitService.setWait(false);
         this.dialogRef.close();
       }
@@ -54,7 +54,7 @@ export class PrepareVmPoolComponent implements OnInit, OnDestroy {
   }
 
   public selectVm(value: any) {
-    this.vmId = value['value'].id
+    this.vmId = value['value'].id;
   }
 
   ngOnDestroy() {

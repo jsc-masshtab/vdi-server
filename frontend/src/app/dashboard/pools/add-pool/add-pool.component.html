@@ -89,7 +89,7 @@
     </div>
 
     <div class="form-fields" [formGroup]="staticPool">
-      <label class="field" *ngIf="type == 'static'">
+      <label class="field" *ngIf="type == 'static'" title="Отображаются только ВМ, имеющие виртуальный диск">
         <mat-form-field>
           <mat-label *ngIf="data.vms?.length">Выберите свободные ВМ</mat-label>
           <mat-label *ngIf="!data.vms?.length">- нет виртуальных машин -</mat-label>

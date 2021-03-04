@@ -354,7 +354,7 @@ export class VmDetalsPopupComponent {
 
   public addUser() {
     this.dialog.open(AddUserVmComponent, {
- 			disableClose: true,
+      disableClose: true,
       width: '500px',
       data: this.data
     });
@@ -362,7 +362,7 @@ export class VmDetalsPopupComponent {
 
   public removeUser() {
     this.dialog.open(RemoveUserVmComponent, {
- 			disableClose: true,
+      disableClose: true,
       width: '500px',
       data: this.data
     });
@@ -410,15 +410,15 @@ export class VmDetalsPopupComponent {
   }
 
   public action(type) {
-    if (type == 'start') {
+    if (type === 'start') {
       this.dialog.open(YesNoFormComponent, {
         disableClose: true,
         width: '500px',
         data: {
           form: {
-            header: "Подтверждение действия",
-            question: "Включить ВМ?",
-            button: "Выполнить"
+            header: 'Подтверждение действия',
+            question: 'Включить ВМ?',
+            button: 'Выполнить'
           },
           request: {
             service: this.service,
@@ -431,15 +431,15 @@ export class VmDetalsPopupComponent {
       })
     }
 
-    if (type == 'suspend') {
+    if (type === 'suspend') {
       this.dialog.open(YesNoFormComponent, {
         disableClose: true,
         width: '500px',
         data: {
           form: {
-            header: "Подтверждение действия",
-            question: "Приостановить ВМ?",
-            button: "Выполнить"
+            header: 'Подтверждение действия',
+            question: 'Приостановить ВМ?',
+            button: 'Выполнить'
           },
           request: {
             service: this.service,
@@ -452,15 +452,15 @@ export class VmDetalsPopupComponent {
       })
     }
 
-    if (type == 'shutdown') {
+    if (type === 'shutdown') {
       this.dialog.open(YesNoFormComponent, {
         disableClose: true,
         width: '500px',
         data: {
           form: {
-            header: "Подтверждение действия",
-            question: "Выключить ВМ?",
-            button: "Выполнить"
+            header: 'Подтверждение действия',
+            question: 'Выключить ВМ?',
+            button: 'Выполнить'
           },
           request: {
             service: this.service,
@@ -474,15 +474,15 @@ export class VmDetalsPopupComponent {
       })
     }
 
-    if (type == 'reboot') {
+    if (type === 'reboot') {
       this.dialog.open(YesNoFormComponent, {
         disableClose: true,
         width: '500px',
         data: {
           form: {
-            header: "Подтверждение действия",
-            question: "Перезагрузить ВМ?",
-            button: "Выполнить"
+            header: 'Подтверждение действия',
+            question: 'Перезагрузить ВМ?',
+            button: 'Выполнить'
           },
           request: {
             service: this.service,
@@ -496,15 +496,15 @@ export class VmDetalsPopupComponent {
       })
     }
 
-    if (type == 'shutdown-force') {
+    if (type === 'shutdown-force') {
       this.dialog.open(YesNoFormComponent, {
         disableClose: true,
         width: '500px',
         data: {
           form: {
-            header: "Подтверждение действия",
-            question: "Отключить питание ВМ?",
-            button: "Выполнить"
+            header: 'Подтверждение действия',
+            question: 'Отключить питание ВМ?',
+            button: 'Выполнить'
           },
           request: {
             service: this.service,
@@ -518,15 +518,15 @@ export class VmDetalsPopupComponent {
       })
     }
 
-    if (type == 'reboot-force') {
+    if (type === 'reboot-force') {
       this.dialog.open(YesNoFormComponent, {
         disableClose: true,
         width: '500px',
         data: {
           form: {
-            header: "Подтверждение действия",
-            question: "Перезагрузить ВМ принудительно?",
-            button: "Выполнить"
+            header: 'Подтверждение действия',
+            question: 'Перезагрузить ВМ принудительно?',
+            button: 'Выполнить'
           },
           request: {
             service: this.service,
@@ -540,15 +540,15 @@ export class VmDetalsPopupComponent {
       })
     }
 
-    if (type == 'backup') {
+    if (type === 'backup') {
       this.dialog.open(YesNoFormComponent, {
         disableClose: true,
         width: '500px',
         data: {
           form: {
-            header: "Подтверждение действия",
-            question: "Создать резервную копию ВМ?",
-            button: "Выполнить"
+            header: 'Подтверждение действия',
+            question: 'Создать резервную копию ВМ?',
+            button: 'Выполнить'
           },
           request: {
             service: this.service,
@@ -564,15 +564,15 @@ export class VmDetalsPopupComponent {
   }
 
   public prepareVM() {
-    if (this.data.typePool == 'automated') {
+    if (this.data.typePool === 'automated') {
       this.dialog.open(YesNoFormComponent, {
         disableClose: true,
         width: '500px',
         data: {
           form: {
-            header: "Подтверждение действия",
+            header: 'Подтверждение действия',
             question: `Подготовить ВМ ${this.data.vm.verbose_name}?`,
-            button: "Выполнить"
+            button: 'Выполнить'
           },
           request: {
             service: this.service,

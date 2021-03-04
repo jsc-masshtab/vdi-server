@@ -6,7 +6,7 @@ import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ClusterDetailsComponent } from './cluster-details/cluster-details.component';
-import { ResourcePoolsModule} from "../resource_pools/resource_pools.module";
+import { ResourcePoolsModule} from '../resource_pools/resource_pools.module';
 import { NodesModule } from '../nodes/nodes.module';
 import { DatapoolsModule } from '../datapools/datapools.module';
 import { VmsModule } from '../vms/vms.module';
