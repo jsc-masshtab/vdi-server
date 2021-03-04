@@ -2,7 +2,7 @@ import { GroupsService } from './../../groups.service';
 
 import { WaitService } from '../../../../common/components/single/wait/wait.service';
 import { MatDialogRef } from '@angular/material';
-import { Component, Inject, OnDestroy } from '@angular/core';
+import { Component, Inject, OnDestroy, OnInit } from '@angular/core';
 import { MAT_DIALOG_DATA } from '@angular/material';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
@@ -18,7 +18,7 @@ interface IData {
   templateUrl: './add-user.component.html'
 })
 
-export class AddUserGroupComponent implements OnDestroy {
+export class AddUserGroupComponent implements OnInit, OnDestroy {
 
   public pending: boolean = false;
   public users: [] = [];

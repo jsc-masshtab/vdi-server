@@ -52,7 +52,7 @@ export class GroupsComponent extends DetailsMove implements OnInit, OnDestroy {
     public dialog: MatDialog,
     private waitService: WaitService,
     private router: Router
-  ){
+  ) {
     super();
   }
 
@@ -69,7 +69,7 @@ export class GroupsComponent extends DetailsMove implements OnInit, OnDestroy {
 
   public addGroup() {
     this.dialog.open(AddGroupComponent, {
- 			disableClose: true,
+      disableClose: true,
       width: '500px'
     });
   }
@@ -83,7 +83,7 @@ export class GroupsComponent extends DetailsMove implements OnInit, OnDestroy {
       verbose_name: this.verbose_name.value
     };
 
-    if (this.verbose_name.value == '') {
+    if (this.verbose_name.value === '') {
       delete queryset['verbose_name'];
     }
 

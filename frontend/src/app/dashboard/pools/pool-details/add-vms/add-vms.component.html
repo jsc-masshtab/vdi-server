@@ -6,7 +6,7 @@
   </div>
 
   <div class="form-fields">
-    <label class="field">
+    <label class="field" title="Отображаются только ВМ, имеющие виртуальный диск">
       <mat-form-field>
         <mat-label *ngIf="pendingVms">Загрузка ...</mat-label>
         <mat-label *ngIf="vms?.length && !pendingVms">Выберите свободные ВМ</mat-label>

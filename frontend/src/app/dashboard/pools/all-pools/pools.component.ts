@@ -73,7 +73,7 @@ export class PoolsComponent extends DetailsMove implements OnInit, OnDestroy {
     private router: Router,
     private waitService: WaitService,
     private ws: WebsocketService
-  ){
+  ) {
     super();
   }
 
@@ -86,7 +86,7 @@ export class PoolsComponent extends DetailsMove implements OnInit, OnDestroy {
 
   public openCreatePool(): void {
     this.dialog.open(PoolAddComponent, {
- 			disableClose: true,
+      disableClose: true,
       width: '500px'
     });
   }
@@ -102,17 +102,19 @@ export class PoolsComponent extends DetailsMove implements OnInit, OnDestroy {
       .subscribe((data) => {
         this.pools = data;
         this.waitService.setWait(false);
-    });
+      });
   }
 
   private listenSockets() {
     if (this.socketSub) {
-      this.socketSub.unsubscribe()
+      this.socketSub.unsubscribe();
     }
 
     this.socketSub = this.ws.stream('/pools/').subscribe((message: any) => {
-      if (message['mgs_type'] == 'data') this.service.getAllPools().refetch();
-    })
+      if (message['mgs_type'] === 'data') {
+        this.service.getAllPools().refetch();
+      }
+    });
   }
 
   public refresh(): void {

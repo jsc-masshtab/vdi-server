@@ -1,4 +1,4 @@
-import { Component, Inject } from '@angular/core';
+import { Component, Inject, OnDestroy } from '@angular/core';
 import { Subject, of } from 'rxjs';
 import { WaitService } from 'src/app/dashboard/common/components/single/wait/wait.service';
 import { ThinClientsService } from '../../thin-clients.service';
@@ -11,15 +11,15 @@ import { takeUntil, concatMap, delay } from 'rxjs/operators';
   templateUrl: './disconnect-thin-client.component.html',
   styleUrls: ['./disconnect-thin-client.component.scss']
 })
-export class DisconnectThinClientComponent {
+export class DisconnectThinClientComponent implements OnDestroy {
 
   private destroy: Subject<any> = new Subject<any>();
 
   constructor(private service: ThinClientsService,
-    private waitService: WaitService,
-    private dialogRef: MatDialogRef<ThinClientsService>,
-    @Inject(MAT_DIALOG_DATA) public data: any,
-    private router: Router) { }
+              private waitService: WaitService,
+              private dialogRef: MatDialogRef<ThinClientsService>,
+              @Inject(MAT_DIALOG_DATA) public data: any,
+              private router: Router) { }
 
 
   public send() {
