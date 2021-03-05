@@ -1,7 +1,7 @@
 import { WaitService } from '../../../common/components/single/wait/wait.service';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
 import { Component, Inject } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, FormControl } from '@angular/forms';
 import { EventsService } from '../all-events/events.service';
 import { LogSettingService } from '../../log-setting/log-setting.service';
 
@@ -13,6 +13,7 @@ import { LogSettingService } from '../../log-setting/log-setting.service';
 
 export class AddExportComponent {
 
+  public init = false;
   public form: FormGroup;
   public checkValid: boolean = false;
   public dir_path: string;
@@ -20,11 +21,13 @@ export class AddExportComponent {
   private initForm(): void {
     this.settings.getSettings().valueChanges.pipe().subscribe((res) => {
       this.dir_path = res.data.journal_settings.dir_path;
-    });
-    this.form = this.fb.group({
-      start: ['', Validators.required],
-      finish: ['', Validators.required],
-      path: ['', Validators.required]
+      this.form = this.fb.group({
+        start: new FormControl(new Date(), Validators.required),
+        finish: new FormControl(new Date(), Validators.required),
+        journal_path: [this.dir_path, Validators.required]
+      });
+
+      this.init = true;
     });
   }
 
@@ -34,7 +37,9 @@ export class AddExportComponent {
     private dialogRef: MatDialogRef<AddExportComponent>,
     private fb: FormBuilder,
     @Inject(MAT_DIALOG_DATA) public data: any,
-    private waitService: WaitService) {
+    private waitService: WaitService) { }
+
+  ngOnInit() {
     this.initForm();
   }
 
@@ -45,7 +50,17 @@ export class AddExportComponent {
 
       this.waitService.setWait(true);
 
-      this.service.createExport({ ...this.form.value }).subscribe(() => {
+      const form = this.form.value;
+      const start_date = new Date(form.start).setHours(0, 0, 0);
+      const finish_date = new Date(form.finish).setHours(23, 59, 59);
+
+      const data = {
+        ...form,
+        start: new Date(start_date).toISOString(),
+        finish: new Date(finish_date).toISOString()
+      };
+
+      this.service.createExport(data).subscribe(() => {
         this.service.getAllEvents(this.data.queryset).refetch();
         this.dialogRef.close();
         this.waitService.setWait(false);
