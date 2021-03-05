@@ -37,6 +37,7 @@ def get_revisions():
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("revision", get_revisions())
+@pytest.mark.smoke_test
 async def test_migrations(alembic_config: Config, revision: Script):
     if revision.down_revision:
         downgrade(alembic_config, revision.down_revision)
