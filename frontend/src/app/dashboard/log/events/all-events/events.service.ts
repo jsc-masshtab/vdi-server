@@ -83,12 +83,12 @@ export class EventsService {
                 mutation events(
                     $start: DateTime,
                     $finish: DateTime,
-                    $path: String
+                    $journal_path: String
                 ){
                     eventExport(
                         start: $start,
                         finish: $finish,
-                        path: $path
+                        journal_path: $journal_path
                     ){
                         ok
                     }

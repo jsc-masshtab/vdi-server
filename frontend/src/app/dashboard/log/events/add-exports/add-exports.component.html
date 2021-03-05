@@ -9,7 +9,7 @@
     <div class="error">Поле обязательно для заполения</div>
   </ng-template>
 
-  <div class="form-fields" [formGroup]="form">
+  <div class="form-fields" [formGroup]="form" *ngIf="init">
     <label class="field">
       <p class="field-name">Начальная дата</p>
 
@@ -17,7 +17,7 @@
       <mat-datepicker-toggle [for]="start_picker"></mat-datepicker-toggle>
       <mat-datepicker #start_picker></mat-datepicker>
 
-      <ng-container *ngIf="form.hasError('required', 'username') && checkValid"><ng-container *ngTemplateOutlet="errorTemp"></ng-container></ng-container>
+      <ng-container *ngIf="form.hasError('required', 'start') && checkValid"><ng-container *ngTemplateOutlet="errorTemp"></ng-container></ng-container>
     </label>
 
     <label class="field">
@@ -27,14 +27,14 @@
       <mat-datepicker-toggle [for]="end_picker"></mat-datepicker-toggle>
       <mat-datepicker #end_picker></mat-datepicker>
 
-      <ng-container *ngIf="form.hasError('required', 'password') && checkValid"><ng-container *ngTemplateOutlet="errorTemp"></ng-container></ng-container>
+      <ng-container *ngIf="form.hasError('required', 'finish') && checkValid"><ng-container *ngTemplateOutlet="errorTemp"></ng-container></ng-container>
     </label>
 
     <label class="field">
       <p class="field-name">Путь</p>
-      <input type="text" placeholder="{{ dir_path }}" formControlName="path">
+      <input type="text" placeholder="Введите путь. Пример: {{ dir_path }}" formControlName="journal_path">
 
-      <ng-container *ngIf="form.hasError('required', 'path') && checkValid">
+      <ng-container *ngIf="form.hasError('required', 'journal_path') && checkValid">
         <ng-container *ngTemplateOutlet="errorTemp"></ng-container>
       </ng-container>
     </label>

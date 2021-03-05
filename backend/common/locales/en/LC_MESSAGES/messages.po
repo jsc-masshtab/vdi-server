@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-03-02 18:40+0300\n"
+"POT-Creation-Date: 2021-03-03 18:51+0300\n"
 "PO-Revision-Date: 2020-07-30 11:25+0300\n"
 "Last-Translator: Emil <emil@emil-pc>\n"
 "Language-Team: English\n"
@@ -344,23 +344,35 @@ msgstr "Controller {} has been activated."
 msgid "Controller {} status has been switched to {}."
 msgstr "Controller {} status has been switched to {}."
 
-#: ../common/models/event.py:89
+#: ../common/models/event.py:74
+msgid "Journal in this period is empty."
+msgstr "Journal in this period is empty."
+
+#: ../common/models/event.py:90
 msgid "Path {} is incorrect."
 msgstr "Path {} is incorrect."
 
-#: ../common/models/event.py:92
+#: ../common/models/event.py:93
 msgid "Check date. Interval {} - {} is incorrect."
 msgstr "Check date. Interval {} - {} is incorrect."
 
-#: ../common/models/event.py:236
+#: ../common/models/event.py:98
+msgid "Not enough free space."
+msgstr "Not enough free space."
+
+#: ../common/models/event.py:100
+msgid "Journal export error."
+msgstr "Journal export error."
+
+#: ../common/models/event.py:242
 msgid "Choose right period."
 msgstr "Choose right period."
 
-#: ../common/models/event.py:242
+#: ../common/models/event.py:248
 msgid "Count must be more than 1."
 msgstr "Count must be more than 1."
 
-#: ../common/models/event.py:246
+#: ../common/models/event.py:252
 msgid "Journal settings changed."
 msgstr "Journal settings changed."
 
@@ -1297,53 +1309,53 @@ msgstr "{cls}: Controller {name} is already monitored."
 msgid "{cls}: resource monitor for controller {name} connected."
 msgstr "{cls}: resource monitor for controller {name} connected."
 
-#~ msgid "User {} created with role {}."
-#~ msgstr "User {} created with role {}."
-
-#~ msgid "Attempts to create VM {} have been exhausted."
-#~ msgstr "Attempts to create VM {} have been exhausted."
-
-#~ msgid "Unknown node {}."
-#~ msgstr "Unknown node {}."
-
-#~ msgid "Controller can`t create VM. Unknown node."
-#~ msgstr "Controller can`t create VM. Unknown node."
-
-#~ msgid "Assigning veil groups to {}."
-#~ msgstr "Assigning veil groups to {}."
-
-#~ msgid "VM {} domain container including task failed."
-#~ msgstr "VM {} domain container including task failed."
-
-#~ msgid "VM {} AD group inclusion skipped."
-#~ msgstr "VM {} AD group inclusion skipped."
-
-#~ msgid "Number of created VM must be in {}-{} interval."
-#~ msgstr "Number of created VM must be in {}-{} interval."
-
-#~ msgid ". IP: {ip}."
-#~ msgstr ". IP: {ip}."
-
-#~ msgid " for user {username}."
-#~ msgstr " for user {username}."
-
-#~ msgid "Removing {} from domain."
-#~ msgstr "Removing {} from domain."
-
-#~ msgid "Active directory sync successful."
-#~ msgstr "Active directory sync successful."
-
-#~ msgid "Can`t enable remote access. Check VeiL ECP."
-#~ msgstr "Can`t enable remote access. Check VeiL ECP."
-
-#~ msgid "Roles: {} was deleted to pool {}."
-#~ msgstr "Roles: {} was deleted to pool {}."
-
-#~ msgid "  Duration: {}."
-#~ msgstr "  Duration: {}."
+#~ msgid "Pool already has role."
+#~ msgstr "Pool already has role."
 
 #~ msgid "Role {} has been set to pool {}."
 #~ msgstr "Role {} has been set to pool {}."
 
-#~ msgid "Pool already has role."
-#~ msgstr "Pool already has role."
+#~ msgid "  Duration: {}."
+#~ msgstr "  Duration: {}."
+
+#~ msgid "Roles: {} was deleted to pool {}."
+#~ msgstr "Roles: {} was deleted to pool {}."
+
+#~ msgid "Can`t enable remote access. Check VeiL ECP."
+#~ msgstr "Can`t enable remote access. Check VeiL ECP."
+
+#~ msgid "Active directory sync successful."
+#~ msgstr "Active directory sync successful."
+
+#~ msgid "Removing {} from domain."
+#~ msgstr "Removing {} from domain."
+
+#~ msgid " for user {username}."
+#~ msgstr " for user {username}."
+
+#~ msgid ". IP: {ip}."
+#~ msgstr ". IP: {ip}."
+
+#~ msgid "Number of created VM must be in {}-{} interval."
+#~ msgstr "Number of created VM must be in {}-{} interval."
+
+#~ msgid "VM {} AD group inclusion skipped."
+#~ msgstr "VM {} AD group inclusion skipped."
+
+#~ msgid "VM {} domain container including task failed."
+#~ msgstr "VM {} domain container including task failed."
+
+#~ msgid "Assigning veil groups to {}."
+#~ msgstr "Assigning veil groups to {}."
+
+#~ msgid "Controller can`t create VM. Unknown node."
+#~ msgstr "Controller can`t create VM. Unknown node."
+
+#~ msgid "Unknown node {}."
+#~ msgstr "Unknown node {}."
+
+#~ msgid "Attempts to create VM {} have been exhausted."
+#~ msgstr "Attempts to create VM {} have been exhausted."
+
+#~ msgid "User {} created with role {}."
+#~ msgstr "User {} created with role {}."
