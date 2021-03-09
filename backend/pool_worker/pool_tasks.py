@@ -27,22 +27,17 @@ _ = lang_init()
 class AbstractTask(ABC):
     """Выполняет задачу do_task"""
 
+    task_list = list()  # Список, в котором держим объекты выполняемым в данный момент таскок
+
     def __init__(self):
 
         self.task_model = None
         self._coroutine = None
-        self._ref_to_task_list = (
-            None
-        )  # Сссылка на список обьектов задач. Сам список живет в классе PoolTaskManager
-        # Введено из-за нежелания создавать глобальную переменную task_list.
         self._task_priority = 1
 
-    async def init(self, task_id, task_list):
-        self._ref_to_task_list = task_list
-        self.task_model = await Task.get(task_id)
-
-        if self.task_model:
-            await self.task_model.update(priority=self._task_priority).apply()
+    @staticmethod
+    def get_task_list_shallow_copy():
+        return list(AbstractTask.task_list)
 
     async def cancel(self, resumable=False, wait_for_result=True):
         """Отменить таску"""
@@ -69,8 +64,10 @@ class AbstractTask(ABC):
         """Действия при фэйле корутины do_task"""
         pass
 
-    async def execute(self):
+    async def execute(self, task_id):
         """Выполнить корутину do_task"""
+
+        self.task_model = await Task.get(task_id)
 
         if not self.task_model:
             await system_logger.error(
@@ -78,32 +75,34 @@ class AbstractTask(ABC):
             )
             return
 
+        await self.task_model.update(priority=self._task_priority).apply()
+
         # set task status
         await self.task_model.set_status(TaskStatus.IN_PROGRESS)
         friendly_task_name = await self.task_model.form_user_friendly_text()
-        await system_logger.info(_("Task <{}> started.").format(friendly_task_name))
+        await system_logger.info(_("Task '{}' started.").format(friendly_task_name))
 
         # Добавить себя в список выполняющихся задач
-        self._ref_to_task_list.append(self)
+        AbstractTask.task_list.append(self)
 
         try:
             await self.do_task()
             await self.task_model.set_status(TaskStatus.FINISHED)
             await system_logger.info(
-                _("Task <{}> finished successfully.").format(friendly_task_name)
+                _("Task '{}' finished successfully.").format(friendly_task_name)
             )
 
         except asyncio.CancelledError:
             await self.task_model.set_status(TaskStatus.CANCELLED)
             await system_logger.warning(
-                _("Task <{}> cancelled.").format(friendly_task_name)
+                _("Task '{}' cancelled.").format(friendly_task_name)
             )
 
             await self.do_on_cancel()
 
         except Exception as ex:  # noqa
-            message = _("Task: <{}> failed. {}.").format(friendly_task_name, str(ex))
-            await self.task_model.set_status(TaskStatus.FAILED, message)
+            message = _("Task '{}' failed.").format(friendly_task_name)
+            await self.task_model.set_status(TaskStatus.FAILED, message + " " + str(ex))
 
             await system_logger.warning(message, description=str(ex))
             print("BT {bt}".format(bt=traceback.format_exc()))
@@ -112,16 +111,17 @@ class AbstractTask(ABC):
 
         finally:
             # Удалить себя из списка выполняющихся задач
-            self._ref_to_task_list.remove(self)
+            AbstractTask.task_list.remove(self)
 
-    def execute_in_async_task(self):
+    def execute_in_async_task(self, task_id):
         """Запустить корутину асинхронно"""
-        self._coroutine = asyncio.get_event_loop().create_task(self.execute())
+        self._coroutine = asyncio.get_event_loop().create_task(self.execute(task_id))
 
     def _get_related_progressing_tasks(self):
         """Получить выполняющиеся таски связанные с сущностью исключая текущую таску"""
         tasks_related_to_cur_pool = list()
-        for task in self._ref_to_task_list:
+
+        for task in AbstractTask.task_list:
             task_entity_cond = task.task_model.entity_id == self.task_model.entity_id
             task_obj_cond = task.task_model.id != self.task_model.id
             if task_entity_cond and task_obj_cond:
@@ -333,12 +333,10 @@ class DeletePoolTask(AbstractTask):
         pool_lock = self._pool_locks.get_pool_lock(str(automated_pool.id))
 
         # Нужно остановить таски связанные с пулом
-        # print('Before cancelling in pool deletion ', len(self._ref_to_task_list))  # temp
         tasks_related_to_cur_pool = self._get_related_progressing_tasks()
         # Отменяем их
         for task in tasks_related_to_cur_pool:
             await task.cancel()
-        # print('After cancelling in pool deletion', len(self._ref_to_task_list))  # temp
 
         # Лочим
         async with pool_lock:
@@ -414,7 +412,7 @@ class PrepareVmTask(AbstractTask):
         if not veil_domain.remote_access:
             # Удаленный доступ выключен, нужно включить и ждать
             action_response = await veil_domain.enable_remote_access()
-            # print('!!!action_response.success ', action_response.success, flush=True)
+
             if not action_response.success:
                 # Вернуть исключение?
                 raise ValueError(_("ECP VeiL domain request error."))
@@ -432,7 +430,6 @@ class PrepareVmTask(AbstractTask):
 
                 # Если задача выполнена с ошибкой - прерываем выполнение
                 task_success = await action_task.success
-                # print('!!!task_success', task_success, flush=True)
                 if not task_success:
                     raise ValueError(
                         _("VM remote access task {} finished with error.").format(

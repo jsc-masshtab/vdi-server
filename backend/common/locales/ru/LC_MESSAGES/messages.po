@@ -808,7 +808,7 @@ msgid "Can`t launch task."
 msgstr "Нет такого задания."
 
 #: ../pool_worker/pool_tasks.py:84
-msgid "Task <{}> started."
+msgid "Task '{}' started."
 msgstr "Задача <{}> начала выполнение."
 
 #: ../pool_worker/pool_tasks.py:93
@@ -816,12 +816,12 @@ msgid "Task <{}> finished successfully."
 msgstr "Задача <{}> завершилась успешно."
 
 #: ../pool_worker/pool_tasks.py:99
-msgid "Task <{}> cancelled."
+msgid "Task '{}' cancelled."
 msgstr "Задача <{}> отменена."
 
 #: ../pool_worker/pool_tasks.py:105
-msgid "Task: <{}> failed. {}."
-msgstr "Задача <{}> завершилась с ошибками. {}."
+msgid "Task '{}' failed."
+msgstr "Задача '{}' завершилась с ошибками."
 
 #: ../pool_worker/pool_tasks.py:168
 msgid "Pool Creation cancelled."
