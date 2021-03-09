@@ -808,20 +808,20 @@ msgid "Can`t launch task."
 msgstr "Can`t launch task."
 
 #: ../pool_worker/pool_tasks.py:84
-msgid "Task <{}> started."
-msgstr "Task <{}> started."
+msgid "Task '{}' started."
+msgstr "Task '{}' started."
 
 #: ../pool_worker/pool_tasks.py:93
 msgid "Task <{}> finished successfully."
 msgstr "Task <{}> finished successfully."
 
 #: ../pool_worker/pool_tasks.py:99
-msgid "Task <{}> cancelled."
-msgstr "Task <{}> cancelled."
+msgid "Task '{}' cancelled."
+msgstr "Task '{}' cancelled."
 
 #: ../pool_worker/pool_tasks.py:105
-msgid "Task: <{}> failed. {}."
-msgstr "Task: <{}> failed. {}."
+msgid "Task '{}' failed."
+msgstr "Task '{}' failed."
 
 #: ../pool_worker/pool_tasks.py:168
 msgid "Pool Creation cancelled."
