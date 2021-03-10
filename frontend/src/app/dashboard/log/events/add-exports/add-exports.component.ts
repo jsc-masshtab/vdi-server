@@ -1,6 +1,6 @@
 import { WaitService } from '../../../common/components/single/wait/wait.service';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
-import { Component, Inject } from '@angular/core';
+import { Component, Inject, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, FormControl } from '@angular/forms';
 import { EventsService } from '../all-events/events.service';
 import { LogSettingService } from '../../log-setting/log-setting.service';
@@ -11,7 +11,7 @@ import { LogSettingService } from '../../log-setting/log-setting.service';
   templateUrl: './add-exports.component.html'
 })
 
-export class AddExportComponent {
+export class AddExportComponent implements OnInit {
 
   public init = false;
   public form: FormGroup;
