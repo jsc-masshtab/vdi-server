@@ -815,7 +815,9 @@ class Vm(VeilModel):
         await self.set_hostname()
         await self.reboot()
         await self.include_in_ad(active_directory_obj)
-        await self.include_in_ad_group(active_directory_obj, ad_cn_pattern)
+        # Ввод в группу AD только, если она прописана
+        if ad_cn_pattern and isinstance(ad_cn_pattern, str):
+            await self.include_in_ad_group(active_directory_obj, ad_cn_pattern)
         # Протоколируем успех
         msg = _("VM {} has been prepared.").format(self.verbose_name)
         await system_logger.info(message=msg, entity=self.entity)
