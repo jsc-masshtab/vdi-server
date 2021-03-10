@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-03-03 18:51+0300\n"
+"POT-Creation-Date: 2021-03-10 13:20+0300\n"
 "PO-Revision-Date: 2020-07-30 11:25+0300\n"
 "Last-Translator: Emil <emil@emil-pc>\n"
 "Language-Team: English\n"
@@ -648,7 +648,7 @@ msgstr "VM {} is suspended."
 msgid "Forbid create backup from a thin clone: {}."
 msgstr "Forbid create backup from a thin clone: {}."
 
-#: ../common/models/vm.py:632 ../pool_worker/pool_tasks.py:467
+#: ../common/models/vm.py:632 ../pool_worker/pool_tasks.py:464
 msgid "Creating backup finished with error."
 msgstr "Creating backup finished with error."
 
@@ -734,7 +734,7 @@ msgid "Missing authorization header."
 msgstr "Missing authorization header."
 
 #: ../common/veil/veil_decorators.py:46 ../common/veil/veil_decorators.py:52
-#: ../web_app/auth/license/handlers.py:37 ../web_app/tests/test_auth_v2.py:114
+#: ../web_app/auth/license/handlers.py:37 ../web_app/tests/test_auth_v2.py:115
 msgid "Invalid permissions."
 msgstr "Invalid permissions."
 
@@ -803,23 +803,23 @@ msgstr "Redis task waiting exception."
 msgid "Field \"{}\" - {}."
 msgstr "Field \"{}\" - {}."
 
-#: ../pool_worker/pool_task_manager.py:88
+#: ../pool_worker/pool_task_manager.py:85
 msgid "Can`t launch task."
 msgstr "Can`t launch task."
 
-#: ../pool_worker/pool_tasks.py:84
+#: ../pool_worker/pool_tasks.py:83
 msgid "Task '{}' started."
 msgstr "Task '{}' started."
 
-#: ../pool_worker/pool_tasks.py:93
-msgid "Task <{}> finished successfully."
-msgstr "Task <{}> finished successfully."
+#: ../pool_worker/pool_tasks.py:92
+msgid "Task '{}' finished successfully."
+msgstr "Task '{}' finished successfully."
 
-#: ../pool_worker/pool_tasks.py:99
+#: ../pool_worker/pool_tasks.py:98
 msgid "Task '{}' cancelled."
 msgstr "Task '{}' cancelled."
 
-#: ../pool_worker/pool_tasks.py:105
+#: ../pool_worker/pool_tasks.py:104
 msgid "Task '{}' failed."
 msgstr "Task '{}' failed."
 
@@ -843,23 +843,23 @@ msgstr "VM creating error."
 msgid "VM preparation error."
 msgstr "VM preparation error."
 
-#: ../pool_worker/pool_tasks.py:379
+#: ../pool_worker/pool_tasks.py:377
 msgid "Another task works on this VM."
 msgstr "Another task works on this VM."
 
-#: ../pool_worker/pool_tasks.py:420
+#: ../pool_worker/pool_tasks.py:418
 msgid "ECP VeiL domain request error."
 msgstr "ECP VeiL domain request error."
 
-#: ../pool_worker/pool_tasks.py:423
+#: ../pool_worker/pool_tasks.py:421
 msgid "Task has`t been created."
 msgstr "Task has`t been created."
 
-#: ../pool_worker/pool_tasks.py:438
+#: ../pool_worker/pool_tasks.py:435
 msgid "VM remote access task {} finished with error."
 msgstr "VM remote access task {} finished with error."
 
-#: ../pool_worker/pool_tasks.py:464
+#: ../pool_worker/pool_tasks.py:461
 msgid "Wrong entity type."
 msgstr "Wrong entity type."
 
@@ -1309,53 +1309,53 @@ msgstr "{cls}: Controller {name} is already monitored."
 msgid "{cls}: resource monitor for controller {name} connected."
 msgstr "{cls}: resource monitor for controller {name} connected."
 
-#~ msgid "Pool already has role."
-#~ msgstr "Pool already has role."
-
-#~ msgid "Role {} has been set to pool {}."
-#~ msgstr "Role {} has been set to pool {}."
-
-#~ msgid "  Duration: {}."
-#~ msgstr "  Duration: {}."
-
-#~ msgid "Roles: {} was deleted to pool {}."
-#~ msgstr "Roles: {} was deleted to pool {}."
-
-#~ msgid "Can`t enable remote access. Check VeiL ECP."
-#~ msgstr "Can`t enable remote access. Check VeiL ECP."
-
-#~ msgid "Active directory sync successful."
-#~ msgstr "Active directory sync successful."
-
-#~ msgid "Removing {} from domain."
-#~ msgstr "Removing {} from domain."
-
-#~ msgid " for user {username}."
-#~ msgstr " for user {username}."
-
-#~ msgid ". IP: {ip}."
-#~ msgstr ". IP: {ip}."
-
-#~ msgid "Number of created VM must be in {}-{} interval."
-#~ msgstr "Number of created VM must be in {}-{} interval."
-
-#~ msgid "VM {} AD group inclusion skipped."
-#~ msgstr "VM {} AD group inclusion skipped."
-
-#~ msgid "VM {} domain container including task failed."
-#~ msgstr "VM {} domain container including task failed."
-
-#~ msgid "Assigning veil groups to {}."
-#~ msgstr "Assigning veil groups to {}."
-
-#~ msgid "Controller can`t create VM. Unknown node."
-#~ msgstr "Controller can`t create VM. Unknown node."
-
-#~ msgid "Unknown node {}."
-#~ msgstr "Unknown node {}."
+#~ msgid "User {} created with role {}."
+#~ msgstr "User {} created with role {}."
 
 #~ msgid "Attempts to create VM {} have been exhausted."
 #~ msgstr "Attempts to create VM {} have been exhausted."
 
-#~ msgid "User {} created with role {}."
-#~ msgstr "User {} created with role {}."
+#~ msgid "Unknown node {}."
+#~ msgstr "Unknown node {}."
+
+#~ msgid "Controller can`t create VM. Unknown node."
+#~ msgstr "Controller can`t create VM. Unknown node."
+
+#~ msgid "Assigning veil groups to {}."
+#~ msgstr "Assigning veil groups to {}."
+
+#~ msgid "VM {} domain container including task failed."
+#~ msgstr "VM {} domain container including task failed."
+
+#~ msgid "VM {} AD group inclusion skipped."
+#~ msgstr "VM {} AD group inclusion skipped."
+
+#~ msgid "Number of created VM must be in {}-{} interval."
+#~ msgstr "Number of created VM must be in {}-{} interval."
+
+#~ msgid ". IP: {ip}."
+#~ msgstr ". IP: {ip}."
+
+#~ msgid " for user {username}."
+#~ msgstr " for user {username}."
+
+#~ msgid "Removing {} from domain."
+#~ msgstr "Removing {} from domain."
+
+#~ msgid "Active directory sync successful."
+#~ msgstr "Active directory sync successful."
+
+#~ msgid "Can`t enable remote access. Check VeiL ECP."
+#~ msgstr "Can`t enable remote access. Check VeiL ECP."
+
+#~ msgid "Roles: {} was deleted to pool {}."
+#~ msgstr "Roles: {} was deleted to pool {}."
+
+#~ msgid "  Duration: {}."
+#~ msgstr "  Duration: {}."
+
+#~ msgid "Role {} has been set to pool {}."
+#~ msgstr "Role {} has been set to pool {}."
+
+#~ msgid "Pool already has role."
+#~ msgstr "Pool already has role."

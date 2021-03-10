@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-03-03 18:51+0300\n"
+"POT-Creation-Date: 2021-03-10 13:20+0300\n"
 "PO-Revision-Date: 2020-07-30 11:25+0300\n"
 "Last-Translator: Emil <emil@emil-pc>\n"
 "Language-Team: Russian\n"
@@ -648,7 +648,7 @@ msgstr "ВМ {} приостановлена."
 msgid "Forbid create backup from a thin clone: {}."
 msgstr "Запрещено создание резервной копии от тонкого клона: {}."
 
-#: ../common/models/vm.py:632 ../pool_worker/pool_tasks.py:467
+#: ../common/models/vm.py:632 ../pool_worker/pool_tasks.py:464
 msgid "Creating backup finished with error."
 msgstr "Создание резервной копии завершилось с ошибкой."
 
@@ -734,7 +734,7 @@ msgid "Missing authorization header."
 msgstr "Пропущен заголовок авторизации."
 
 #: ../common/veil/veil_decorators.py:46 ../common/veil/veil_decorators.py:52
-#: ../web_app/auth/license/handlers.py:37 ../web_app/tests/test_auth_v2.py:114
+#: ../web_app/auth/license/handlers.py:37 ../web_app/tests/test_auth_v2.py:115
 msgid "Invalid permissions."
 msgstr "Недостаточно прав."
 
@@ -803,23 +803,23 @@ msgstr "Ошибка redis-задачи."
 msgid "Field \"{}\" - {}."
 msgstr "Поле \"{}\" - {}."
 
-#: ../pool_worker/pool_task_manager.py:88
+#: ../pool_worker/pool_task_manager.py:85
 msgid "Can`t launch task."
 msgstr "Нет такого задания."
 
-#: ../pool_worker/pool_tasks.py:84
+#: ../pool_worker/pool_tasks.py:83
 msgid "Task '{}' started."
 msgstr "Задача <{}> начала выполнение."
 
-#: ../pool_worker/pool_tasks.py:93
-msgid "Task <{}> finished successfully."
-msgstr "Задача <{}> завершилась успешно."
+#: ../pool_worker/pool_tasks.py:92
+msgid "Task '{}' finished successfully."
+msgstr "Задача '{}' завершилась успешно."
 
-#: ../pool_worker/pool_tasks.py:99
+#: ../pool_worker/pool_tasks.py:98
 msgid "Task '{}' cancelled."
 msgstr "Задача <{}> отменена."
 
-#: ../pool_worker/pool_tasks.py:105
+#: ../pool_worker/pool_tasks.py:104
 msgid "Task '{}' failed."
 msgstr "Задача '{}' завершилась с ошибками."
 
@@ -843,23 +843,23 @@ msgstr "Ошибка создания ВМ."
 msgid "VM preparation error."
 msgstr "Ошибка подготовки ВМ."
 
-#: ../pool_worker/pool_tasks.py:379
+#: ../pool_worker/pool_tasks.py:377
 msgid "Another task works on this VM."
 msgstr "ВМ заблокирована выполнением другой задачи."
 
-#: ../pool_worker/pool_tasks.py:420
+#: ../pool_worker/pool_tasks.py:418
 msgid "ECP VeiL domain request error."
 msgstr "Ошибка запроса ECP VeiL ВМ."
 
-#: ../pool_worker/pool_tasks.py:423
+#: ../pool_worker/pool_tasks.py:421
 msgid "Task has`t been created."
 msgstr "Задача не была создана."
 
-#: ../pool_worker/pool_tasks.py:438
+#: ../pool_worker/pool_tasks.py:435
 msgid "VM remote access task {} finished with error."
 msgstr "Задача {} включения удаленного доступа ВМ завершилась с ошибкой."
 
-#: ../pool_worker/pool_tasks.py:464
+#: ../pool_worker/pool_tasks.py:461
 msgid "Wrong entity type."
 msgstr "Неверный тип сущности."
 
@@ -1309,26 +1309,26 @@ msgstr "{cls}: Контроллер {name} уже отслеживается."
 msgid "{cls}: resource monitor for controller {name} connected."
 msgstr "{cls}: монитор ресурсов для контроллера {name} подключен."
 
-#~ msgid "User {} created with role {}."
-#~ msgstr "Пользователь {} создан с ролью {}."
-
-#~ msgid "  Duration: {}."
-#~ msgstr "  Продолжительность: {}."
-
-#~ msgid "Attempts to create VM {} have been exhausted."
-#~ msgstr "Превышен лимит попыток создания ВМ {}."
-
-#~ msgid "Unknown node {}."
-#~ msgstr "Неизвестный узел {}."
-
-#~ msgid "Controller can`t create VM. Unknown node."
-#~ msgstr "Контроллер не может создать ВМ. Неизвестный узел."
-
-#~ msgid "Roles: {} was deleted to pool {}."
-#~ msgstr "Роли: {} удалены в пуле {}."
+#~ msgid "Role {} has been set to pool {}."
+#~ msgstr "Роль {} добавлена в пул {}."
 
 #~ msgid "Pool already has role."
 #~ msgstr "Пул уже имеет роль."
 
-#~ msgid "Role {} has been set to pool {}."
-#~ msgstr "Роль {} добавлена в пул {}."
+#~ msgid "Roles: {} was deleted to pool {}."
+#~ msgstr "Роли: {} удалены в пуле {}."
+
+#~ msgid "Controller can`t create VM. Unknown node."
+#~ msgstr "Контроллер не может создать ВМ. Неизвестный узел."
+
+#~ msgid "Unknown node {}."
+#~ msgstr "Неизвестный узел {}."
+
+#~ msgid "Attempts to create VM {} have been exhausted."
+#~ msgstr "Превышен лимит попыток создания ВМ {}."
+
+#~ msgid "  Duration: {}."
+#~ msgstr "  Продолжительность: {}."
+
+#~ msgid "User {} created with role {}."
+#~ msgstr "Пользователь {} создан с ролью {}."
