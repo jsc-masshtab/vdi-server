@@ -47,12 +47,10 @@ class VdiFrontWsHandler(BaseWsHandler):  # noqa
             return
 
         # on success
-        await system_logger.debug(_("WebSocket opened."))
         loop = asyncio.get_event_loop()
         self._send_messages_task = loop.create_task(self._send_messages_co())
 
     async def on_message(self, message):
-        await system_logger.debug(_("Message: {}.").format(message))
         response = {"msg_type": "control", "error": False}
         # determine if message contains subscription command ('delete /domains/' for example)
         try:

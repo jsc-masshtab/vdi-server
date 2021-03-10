@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-03-10 13:20+0300\n"
+"POT-Creation-Date: 2021-03-10 16:59+0300\n"
 "PO-Revision-Date: 2020-07-30 11:25+0300\n"
 "Last-Translator: Emil <emil@emil-pc>\n"
 "Language-Team: English\n"
@@ -1077,27 +1077,19 @@ msgstr "No such controller."
 msgid "Connection to ECP has been failed."
 msgstr "Connection to ECP has been failed."
 
-#: ../web_app/front_ws_api/handlers.py:50
-msgid "WebSocket opened."
-msgstr "WebSocket opened."
-
-#: ../web_app/front_ws_api/handlers.py:55
-msgid "Message: {}."
-msgstr "Message: {}."
-
-#: ../web_app/front_ws_api/handlers.py:68
+#: ../web_app/front_ws_api/handlers.py:66
 msgid "WS listener error."
 msgstr "WS listener error."
 
-#: ../web_app/front_ws_api/handlers.py:69
+#: ../web_app/front_ws_api/handlers.py:67
 msgid "Unknown subscription source."
 msgstr "Unknown subscription source."
 
-#: ../web_app/front_ws_api/handlers.py:86
+#: ../web_app/front_ws_api/handlers.py:84
 msgid "Already subscribed."
 msgstr "Already subscribed."
 
-#: ../web_app/front_ws_api/handlers.py:93
+#: ../web_app/front_ws_api/handlers.py:91
 msgid "Not subscribed."
 msgstr "Not subscribed."
 
@@ -1309,53 +1301,59 @@ msgstr "{cls}: Controller {name} is already monitored."
 msgid "{cls}: resource monitor for controller {name} connected."
 msgstr "{cls}: resource monitor for controller {name} connected."
 
-#~ msgid "User {} created with role {}."
-#~ msgstr "User {} created with role {}."
-
-#~ msgid "Attempts to create VM {} have been exhausted."
-#~ msgstr "Attempts to create VM {} have been exhausted."
-
-#~ msgid "Unknown node {}."
-#~ msgstr "Unknown node {}."
-
-#~ msgid "Controller can`t create VM. Unknown node."
-#~ msgstr "Controller can`t create VM. Unknown node."
-
-#~ msgid "Assigning veil groups to {}."
-#~ msgstr "Assigning veil groups to {}."
-
-#~ msgid "VM {} domain container including task failed."
-#~ msgstr "VM {} domain container including task failed."
-
-#~ msgid "VM {} AD group inclusion skipped."
-#~ msgstr "VM {} AD group inclusion skipped."
-
-#~ msgid "Number of created VM must be in {}-{} interval."
-#~ msgstr "Number of created VM must be in {}-{} interval."
-
-#~ msgid ". IP: {ip}."
-#~ msgstr ". IP: {ip}."
-
-#~ msgid " for user {username}."
-#~ msgstr " for user {username}."
-
-#~ msgid "Removing {} from domain."
-#~ msgstr "Removing {} from domain."
-
-#~ msgid "Active directory sync successful."
-#~ msgstr "Active directory sync successful."
-
-#~ msgid "Can`t enable remote access. Check VeiL ECP."
-#~ msgstr "Can`t enable remote access. Check VeiL ECP."
-
-#~ msgid "Roles: {} was deleted to pool {}."
-#~ msgstr "Roles: {} was deleted to pool {}."
-
-#~ msgid "  Duration: {}."
-#~ msgstr "  Duration: {}."
+#~ msgid "Pool already has role."
+#~ msgstr "Pool already has role."
 
 #~ msgid "Role {} has been set to pool {}."
 #~ msgstr "Role {} has been set to pool {}."
 
-#~ msgid "Pool already has role."
-#~ msgstr "Pool already has role."
+#~ msgid "  Duration: {}."
+#~ msgstr "  Duration: {}."
+
+#~ msgid "Roles: {} was deleted to pool {}."
+#~ msgstr "Roles: {} was deleted to pool {}."
+
+#~ msgid "Can`t enable remote access. Check VeiL ECP."
+#~ msgstr "Can`t enable remote access. Check VeiL ECP."
+
+#~ msgid "Active directory sync successful."
+#~ msgstr "Active directory sync successful."
+
+#~ msgid "Removing {} from domain."
+#~ msgstr "Removing {} from domain."
+
+#~ msgid " for user {username}."
+#~ msgstr " for user {username}."
+
+#~ msgid ". IP: {ip}."
+#~ msgstr ". IP: {ip}."
+
+#~ msgid "Number of created VM must be in {}-{} interval."
+#~ msgstr "Number of created VM must be in {}-{} interval."
+
+#~ msgid "VM {} AD group inclusion skipped."
+#~ msgstr "VM {} AD group inclusion skipped."
+
+#~ msgid "VM {} domain container including task failed."
+#~ msgstr "VM {} domain container including task failed."
+
+#~ msgid "Assigning veil groups to {}."
+#~ msgstr "Assigning veil groups to {}."
+
+#~ msgid "Controller can`t create VM. Unknown node."
+#~ msgstr "Controller can`t create VM. Unknown node."
+
+#~ msgid "Unknown node {}."
+#~ msgstr "Unknown node {}."
+
+#~ msgid "Attempts to create VM {} have been exhausted."
+#~ msgstr "Attempts to create VM {} have been exhausted."
+
+#~ msgid "User {} created with role {}."
+#~ msgstr "User {} created with role {}."
+
+#~ msgid "Message: {}."
+#~ msgstr "Message: {}."
+
+#~ msgid "WebSocket opened."
+#~ msgstr "WebSocket opened."

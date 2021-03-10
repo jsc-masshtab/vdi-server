@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-03-10 13:20+0300\n"
+"POT-Creation-Date: 2021-03-10 16:59+0300\n"
 "PO-Revision-Date: 2020-07-30 11:25+0300\n"
 "Last-Translator: Emil <emil@emil-pc>\n"
 "Language-Team: Russian\n"
@@ -1077,27 +1077,19 @@ msgstr "Нет такого контроллера."
 msgid "Connection to ECP has been failed."
 msgstr "Соединение с ECP не удалось."
 
-#: ../web_app/front_ws_api/handlers.py:50
-msgid "WebSocket opened."
-msgstr "WebSocket открыт."
-
-#: ../web_app/front_ws_api/handlers.py:55
-msgid "Message: {}."
-msgstr "Сообщение: {}."
-
-#: ../web_app/front_ws_api/handlers.py:68
+#: ../web_app/front_ws_api/handlers.py:66
 msgid "WS listener error."
 msgstr "Ошибка сервиса прослушивания WS."
 
-#: ../web_app/front_ws_api/handlers.py:69
+#: ../web_app/front_ws_api/handlers.py:67
 msgid "Unknown subscription source."
 msgstr "Неизвестный источник подписки."
 
-#: ../web_app/front_ws_api/handlers.py:86
+#: ../web_app/front_ws_api/handlers.py:84
 msgid "Already subscribed."
 msgstr "Уже подписан."
 
-#: ../web_app/front_ws_api/handlers.py:93
+#: ../web_app/front_ws_api/handlers.py:91
 msgid "Not subscribed."
 msgstr "Не подписан."
 
@@ -1309,26 +1301,32 @@ msgstr "{cls}: Контроллер {name} уже отслеживается."
 msgid "{cls}: resource monitor for controller {name} connected."
 msgstr "{cls}: монитор ресурсов для контроллера {name} подключен."
 
-#~ msgid "Role {} has been set to pool {}."
-#~ msgstr "Роль {} добавлена в пул {}."
-
-#~ msgid "Pool already has role."
-#~ msgstr "Пул уже имеет роль."
-
-#~ msgid "Roles: {} was deleted to pool {}."
-#~ msgstr "Роли: {} удалены в пуле {}."
-
-#~ msgid "Controller can`t create VM. Unknown node."
-#~ msgstr "Контроллер не может создать ВМ. Неизвестный узел."
-
-#~ msgid "Unknown node {}."
-#~ msgstr "Неизвестный узел {}."
-
-#~ msgid "Attempts to create VM {} have been exhausted."
-#~ msgstr "Превышен лимит попыток создания ВМ {}."
+#~ msgid "User {} created with role {}."
+#~ msgstr "Пользователь {} создан с ролью {}."
 
 #~ msgid "  Duration: {}."
 #~ msgstr "  Продолжительность: {}."
 
-#~ msgid "User {} created with role {}."
-#~ msgstr "Пользователь {} создан с ролью {}."
+#~ msgid "Attempts to create VM {} have been exhausted."
+#~ msgstr "Превышен лимит попыток создания ВМ {}."
+
+#~ msgid "Unknown node {}."
+#~ msgstr "Неизвестный узел {}."
+
+#~ msgid "Controller can`t create VM. Unknown node."
+#~ msgstr "Контроллер не может создать ВМ. Неизвестный узел."
+
+#~ msgid "Roles: {} was deleted to pool {}."
+#~ msgstr "Роли: {} удалены в пуле {}."
+
+#~ msgid "Pool already has role."
+#~ msgstr "Пул уже имеет роль."
+
+#~ msgid "Role {} has been set to pool {}."
+#~ msgstr "Роль {} добавлена в пул {}."
+
+#~ msgid "Message: {}."
+#~ msgstr "Сообщение: {}."
+
+#~ msgid "WebSocket opened."
+#~ msgstr "WebSocket открыт."
