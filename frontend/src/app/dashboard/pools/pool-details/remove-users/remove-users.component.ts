@@ -30,7 +30,7 @@ export class RemoveUsersPoolComponent  implements OnInit, OnDestroy {
     private poolService: PoolDetailsService,
     private dialogRef: MatDialogRef<RemoveUsersPoolComponent>,
     @Inject(MAT_DIALOG_DATA) public data: IData
-  ){}
+  ) {}
 
   ngOnInit() {
     this.getUsersToPool();

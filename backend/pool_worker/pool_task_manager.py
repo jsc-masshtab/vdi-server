@@ -6,6 +6,7 @@ import json
 import asyncio
 
 from pool_worker.pool_tasks import (
+    AbstractTask,
     InitPoolTask,
     ExpandPoolTask,
     DecreasePoolTask,
@@ -44,10 +45,6 @@ class PoolTaskManager:
 
     def __init__(self):
         self.pool_locks = PoolLocks()
-
-        self.task_list = (
-            []
-        )  # Список, в котором держим объекты выполняемым в данный момент таскок
 
     async def start(self):
         """Действия при старте менеджера"""
@@ -204,8 +201,7 @@ class PoolTaskManager:
         # task execution
         if pool_task == PoolTaskType.POOL_CREATE.name:
             task = InitPoolTask(self.pool_locks)
-            await task.init(task_id, self.task_list)
-            task.execute_in_async_task()
+            task.execute_in_async_task(task_id)
 
         elif pool_task == PoolTaskType.POOL_EXPAND.name:
             try:
@@ -215,8 +211,7 @@ class PoolTaskManager:
             task = ExpandPoolTask(
                 self.pool_locks, ignore_reserve_size=ignore_reserve_size
             )
-            await task.init(task_id, self.task_list)
-            task.execute_in_async_task()
+            task.execute_in_async_task(task_id)
 
         elif pool_task == PoolTaskType.POOL_DECREASE.name:
             try:
@@ -224,8 +219,7 @@ class PoolTaskManager:
             except KeyError:
                 return
             task = DecreasePoolTask(self.pool_locks, new_total_size)
-            await task.init(task_id, self.task_list)
-            task.execute_in_async_task()
+            task.execute_in_async_task(task_id)
 
         elif pool_task == PoolTaskType.POOL_DELETE.name:
             try:
@@ -233,8 +227,7 @@ class PoolTaskManager:
             except KeyError:
                 full = True
             task = DeletePoolTask(self.pool_locks, full)
-            await task.init(task_id, self.task_list)
-            task.execute_in_async_task()
+            task.execute_in_async_task(task_id)
 
         elif pool_task == PoolTaskType.VM_PREPARE.name:
             try:
@@ -242,8 +235,7 @@ class PoolTaskManager:
             except KeyError:
                 full = True
             task = PrepareVmTask(full)
-            await task.init(task_id, self.task_list)
-            task.execute_in_async_task()
+            task.execute_in_async_task(task_id)
 
         elif pool_task == PoolTaskType.VMS_BACKUP.name:
 
@@ -251,24 +243,18 @@ class PoolTaskManager:
                 entity_type=task_data_dict["entity_type"],
                 creator=task_data_dict["creator"],
             )
-            await task.init(task_id, self.task_list)
-            task.execute_in_async_task()
+            task.execute_in_async_task(task_id)
 
     async def cancel_tasks(self, task_ids, cancel_all=False):
         """cancel_tasks in list or all tasks"""
 
-        task_list = list(
-            self.task_list
-        )  # делаем shallow copy так как список self.task_list будет уменьшатся в
+        # делаем shallow copy так как список AbstractTask.task_list будет уменьшатся в
         #  других корутинах пока мы итерируем
-
-        for task in task_list:
+        for task in AbstractTask.get_task_list_shallow_copy():
             if cancel_all or (str(task.task_model.id) in task_ids):
                 await task.cancel(wait_for_result=False)
 
-    async def cancel_tasks_associated_with_controller(
-        self, controller_id, resumable=False
-    ):
+    async def cancel_tasks_associated_with_controller(self, controller_id, resumable=False):
         """cancel_tasks_associated_with_controller"""
         await system_logger.debug("cancel_tasks_associated_with_controller")
 
@@ -276,17 +262,15 @@ class PoolTaskManager:
         tasks_to_cancel = await Task.get_ids_of_tasks_associated_with_controller(
             controller_id, TaskStatus.IN_PROGRESS
         )
-        # print('!!!tasks_to_cancel', tasks_to_cancel, flush=True)
+
         # cancel
-        task_list = list(self.task_list)  # shallow copy
-        for task in task_list:
+        for task in AbstractTask.get_task_list_shallow_copy():
             if task.task_model.id in tasks_to_cancel:
                 await task.cancel(resumable=resumable, wait_for_result=False)
 
     async def cancel_tasks_associated_with_entity(self, entity_id, resumable=False):
         """cancel tasks associated with entity"""
 
-        task_list = list(self.task_list)  # shallow copy
-        for task in task_list:
+        for task in AbstractTask.get_task_list_shallow_copy():
             if str(task.task_model.entity_id) == entity_id:
                 await task.cancel(resumable=resumable, wait_for_result=False)

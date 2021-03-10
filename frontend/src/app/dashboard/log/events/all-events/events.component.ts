@@ -1,6 +1,6 @@
 import { EventsService } from './events.service';
 import { WaitService } from '../../../common/components/single/wait/wait.service';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { map } from 'rxjs/operators';
 import { MatDialog } from '@angular/material';
 import { InfoEventComponent } from '../info-event/info-event.component';
@@ -25,7 +25,7 @@ interface Event {
   styleUrls: ['./events.component.scss']
 })
 
-export class EventsComponent implements OnInit {
+export class EventsComponent implements OnInit, OnDestroy {
 
   private socketSub: Subscription;
 
@@ -70,18 +70,18 @@ export class EventsComponent implements OnInit {
 
   public events: object[] = [];
 
-  public queryset: any
+  public queryset: any;
 
   constructor(
     private service: EventsService,
     private waitService: WaitService,
     public dialog: MatDialog,
     private ws: WebsocketService
-  ) {}
+  ) { }
 
   ngOnInit() {
     this.refresh();
-    this.listenSockets()
+    this.listenSockets();
 
     this.start_date.valueChanges.subscribe(() => {
       this.getEvents();
@@ -175,7 +175,7 @@ export class EventsComponent implements OnInit {
       delete queryset['entity_type'];
     }
 
-    this.queryset = queryset
+    this.queryset = queryset;
 
     this.waitService.setWait(true);
     this.service.getAllEvents(queryset).valueChanges.pipe(map(data => data.data))
@@ -189,17 +189,17 @@ export class EventsComponent implements OnInit {
 
   private listenSockets() {
     if (this.socketSub) {
-      this.socketSub.unsubscribe()
+      this.socketSub.unsubscribe();
     }
 
     this.socketSub = this.ws.stream('/events/').subscribe(() => {
       this.service.getAllEvents(this.queryset).refetch();
-    })
+    });
   }
 
   public openEventDetails(event: Event): void {
     this.dialog.open(InfoEventComponent, {
- 			disableClose: true,
+      disableClose: true,
       width: '700px',
       data: {
         event

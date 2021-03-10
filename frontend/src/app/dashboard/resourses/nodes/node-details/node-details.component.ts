@@ -6,10 +6,9 @@ import { Router } from '@angular/router';
 import { NodesService } from '../all-nodes/nodes.service';
 import { Subscription } from 'rxjs';
 
-interface type_node {
+interface TypeNode {
   [key: string]: any
 }
-
 
 @Component({
   selector: 'vdi-node-details',
@@ -23,7 +22,7 @@ export class NodeDetailsComponent implements OnInit, OnDestroy {
 
   public host: boolean = false;
 
-  public node: type_node = {};
+  public node: TypeNode = {};
 
   public collection = [
     {

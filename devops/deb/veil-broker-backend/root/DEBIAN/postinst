@@ -9,7 +9,7 @@ configure_users()
 
 	groupadd vdi-web
 	groupadd vdi-web-admin
-	useradd -G vdi-web,vdi-web-admin,shadow $VDIADMIN
+	useradd -G vdi-web,vdi-web-admin,shadow -s /sbin/nologin $VDIADMIN
 	echo "$VDIADMIN:$VDIADMIN_PASS" | chpasswd
 }
 

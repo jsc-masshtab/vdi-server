@@ -3,7 +3,7 @@ import { WaitService } from '../../common/components/single/wait/wait.service';
 import { AddPoolService } from './add-pool.service';
 
 import { MatDialogRef } from '@angular/material';
-import { Component } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Validators } from '@angular/forms';
 import { map } from 'rxjs/operators';
 import { trigger, style, animate, transition } from '@angular/animations';
@@ -15,22 +15,22 @@ import { Subscription } from 'rxjs';
   templateUrl: './add-pool.component.html',
   animations: [
     trigger(
-    'animForm', [
+      'animForm', [
       transition(':enter', [
-      style({ opacity: 0 }),
-      animate('150ms', style({ opacity: 1 }))
+        style({ opacity: 0 }),
+        animate('150ms', style({ opacity: 1 }))
       ]),
       transition(':leave', [
-      style({ opacity: 1 }),
-      animate('150ms', style({ opacity: 0 }))
+        style({ opacity: 1 }),
+        animate('150ms', style({ opacity: 0 }))
       ])
     ])
   ]
 })
 
-export class PoolAddComponent {
+export class PoolAddComponent implements OnInit, OnDestroy {
 
-  sub: Subscription
+  sub: Subscription;
 
   public checkValid: boolean = false;
   public error: boolean = false;
@@ -49,10 +49,10 @@ export class PoolAddComponent {
     private addPoolService: AddPoolService,
     private dialogRef: MatDialogRef<PoolAddComponent>,
     private fb: FormBuilder,
-    private waitService: WaitService) {}
+    private waitService: WaitService) { }
 
   ngOnInit() {
-    this.initForms()
+    this.initForms();
   }
 
   private totalSizeValidator() {
@@ -103,12 +103,12 @@ export class PoolAddComponent {
 
     /* комбинирует запросы с разными фильтрами от одной точки входа controllers */
 
-    this.addPoolService.getData(type, data).valueChanges.pipe(map(data => data.data.controller[type])).subscribe((res) => {
-      this.data[type] = res
-      if(this.data.templates.length!=0) {
-        this.dynamicPool.get('template_id').setValue(this.data['templates'][0]['id'])
+    this.addPoolService.getData(type, data).valueChanges.pipe(map(pools => pools.data.controller[type])).subscribe((res) => {
+      this.data[type] = res;
+      if (this.data.templates.length !== 0) {
+        this.dynamicPool.get('template_id').setValue(this.data['templates'][0]['id']);
       }
-    })
+    });
   }
 
   resetData() {
@@ -118,12 +118,12 @@ export class PoolAddComponent {
       resource_pools: [],
       vms: [],
       templates: []
-    }
+    };
   }
 
   public toStep(step: string) {
-    this.last = this.step
-    this.step = step
+    this.last = this.step;
+    this.step = step;
 
     /* Обработка каждого шага */
 
@@ -138,129 +138,140 @@ export class PoolAddComponent {
         this.staticPool.reset();
         this.dynamicPool.reset();
 
-      } break;
+      }
+                   break;
 
       case 'static': {
         /* Выбор первого типа */
 
-        if (!this.sharedData.get('connection_types').value) this.sharedData.get('connection_types').setValue([this.data['connection_types'][0]])
+        if (!this.sharedData.get('connection_types').value) {
+          this.sharedData.get('connection_types').setValue([this.data['connection_types'][0]]);
+        }
 
         /* Запрос на контроллеры */
 
         this.addPoolService.getData('controllers').valueChanges.pipe(map(data => data.data['controllers'])).subscribe((res) => {
-          this.data['controllers'] = res
+          this.data['controllers'] = res;
 
-          if (!this.sharedData.get('controller_id').value) this.sharedData.get('controller_id').setValue(this.data['controllers'][0]['id'])
-        })
+          if (!this.sharedData.get('controller_id').value) {
+            this.sharedData.get('controller_id').setValue(this.data['controllers'][0]['id']);
+          }
+        });
 
         /* Подписка на изменение полей формы для отправки запросов на сервер */
 
         this.sharedData.controls['controller_id'].valueChanges.subscribe((value) => {
-          this.sharedData.controls['resource_pool_id'].reset() // Очистка поля под текущим
+          this.sharedData.controls['resource_pool_id'].reset(); // Очистка поля под текущим
 
-          if (value) this.getData('resource_pools', { "id_": value }) // запрос данных для выборки в очищенном поле
-        })
+          if (value) {
+            this.getData('resource_pools', { id_: value });
+          } // запрос данных для выборки в очищенном поле
+        });
 
         this.sharedData.controls['resource_pool_id'].valueChanges.subscribe((value) => {
-          this.staticPool.controls['vms'].reset()
+          this.staticPool.controls['vms'].reset();
 
-          if (value) this.getData('vms', {
-            "id_": this.sharedData.get('controller_id').value,
-            "resource_pool_id": this.sharedData.get('resource_pool_id').value
-          })
+          if (value) {
+            this.getData('vms', {
+              id_: this.sharedData.get('controller_id').value,
+              resource_pool_id: this.sharedData.get('resource_pool_id').value
+            });
+          }
 
-          this.dynamicPool.controls['template_id'].reset()
+          this.dynamicPool.controls['template_id'].reset();
 
-          if (value) this.getData('templates', {
-            "id_": this.sharedData.get('controller_id').value,
-            "resource_pool_id": this.sharedData.get('resource_pool_id').value
-          })
-        })
-      } break;
+          if (value) {
+            this.getData('templates', {
+              id_: this.sharedData.get('controller_id').value,
+              resource_pool_id: this.sharedData.get('resource_pool_id').value
+            });
+          }
+        });
+      }              break;
 
       case 'check_static': {
         if (!this.sharedData.valid) {
-          this.checkValid = true
-          this.toStep('static')
+          this.checkValid = true;
+          this.toStep('static');
         } else {
-          if (this.type == 'static') {
+          if (this.type === 'static') {
             if (!this.staticPool.valid) {
-              this.checkValid = true
-              this.toStep('static')
+              this.checkValid = true;
+              this.toStep('static');
             } else {
-              this.toStep('done')
+              this.toStep('done');
             }
           } else {
-            this.checkValid = false
-            this.toStep('dynamic')
+            this.checkValid = false;
+            this.toStep('dynamic');
           }
         }
-      } break;
+      }                    break;
 
       case 'dynamic': {
-        this.dynamicPool.get('increase_step').setValue(1)
-        this.dynamicPool.get('initial_size').setValue(1)
-        this.dynamicPool.get('total_size').setValue(1)
-        this.dynamicPool.get('reserve_size').setValue(1)
-        this.dynamicPool.get('create_thin_clones').setValue(true)
-        this.dynamicPool.get('prepare_vms').setValue(true)
-      } break;
+        this.dynamicPool.get('increase_step').setValue(1);
+        this.dynamicPool.get('initial_size').setValue(1);
+        this.dynamicPool.get('total_size').setValue(1);
+        this.dynamicPool.get('reserve_size').setValue(1);
+        this.dynamicPool.get('create_thin_clones').setValue(true);
+        this.dynamicPool.get('prepare_vms').setValue(true);
+      }               break;
 
       case 'check_dynamic': {
         if (!this.dynamicPool.valid) {
-          this.checkValid = true
-          this.toStep('dynamic')
+          this.checkValid = true;
+          this.toStep('dynamic');
         } else {
-          this.toStep('done')
+          this.toStep('done');
         }
-      } break;
+      }                     break;
 
       case 'done': {
 
         /* сборка данных для отправки */
 
-        let data: any = { ...this.sharedData.value }
-        let method = ''
+        let data: any = { ...this.sharedData.value };
+        let method = '';
 
-        if (this.type == 'static') {
+        if (this.type === 'static') {
 
-          data = { ...data, ...this.staticPool.value }
-          method = 'addStaticPool'
+          data = { ...data, ...this.staticPool.value };
+          method = 'addStaticPool';
 
         }
 
-        if (this.type == 'dynamic') {
+        if (this.type === 'dynamic') {
 
-          data = { ...data, ...this.dynamicPool.value }
-          method = 'addDynamicPool'
+          data = { ...data, ...this.dynamicPool.value };
+          method = 'addDynamicPool';
 
         }
 
         this.waitService.setWait(true);
 
         if (this.sub) {
-          this.sub.unsubscribe()
+          this.sub.unsubscribe();
         }
 
         this.sub = this.addPoolService[method](data).subscribe(() => {
           this.dialogRef.close();
           this.waitService.setWait(false);
         }, () => {
-            let step = this.last.split('_')
-            if (step.length > 1) {
-              this.toStep(step[1])
-            } else {
-              this.toStep('static')
-            }
-        })
+          let use_step = this.last.split('_');
+          if (use_step.length > 1) {
+              this.toStep(use_step[1]);
+          } else {
+            this.toStep('static');
+          }
+        });
 
-      } break;
+      }            break;
     }
   }
 
   ngOnDestroy() {
     if (this.sub) {
-      this.sub.unsubscribe()
+      this.sub.unsubscribe();
     }
   }
 }

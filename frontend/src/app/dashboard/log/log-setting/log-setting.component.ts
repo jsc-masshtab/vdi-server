@@ -21,7 +21,8 @@ export class LogSettingComponent implements OnInit {
       propertyDepend: ['Включена', 'Выключена']
     },
     edit: 'changeByCount'
-  },{
+  },
+  {
     title: 'Период архивации',
     property: 'period',
     type: 'string',
@@ -59,7 +60,7 @@ export class LogSettingComponent implements OnInit {
   constructor(
     private service: LogSettingService,
     public dialog: MatDialog
-  ) {}
+  ) { }
 
   ngOnInit() {
     this.refresh();

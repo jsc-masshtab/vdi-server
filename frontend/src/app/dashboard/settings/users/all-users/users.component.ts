@@ -103,8 +103,7 @@ export class UsersComponent extends DetailsMove implements OnInit, OnDestroy {
   }
 
   public addUser() {
-    this.dialog.open(AddUserComponent, {
- 			disableClose: true,
+    this.dialog.open(AddUserComponent, {disableClose: true,
       width: '500px',
       data: {
         queryset: this.queryset
@@ -121,11 +120,10 @@ export class UsersComponent extends DetailsMove implements OnInit, OnDestroy {
       offset: this.offset,
       limit: this.limit,
       username: this.username.value,
-      //is_active: this.is_active.value,
       is_superuser: this.is_superuser.value
     };
 
-    if (this.username.value == '') {
+    if (this.username.value === '') {
       delete queryset['username'];
     }
 
@@ -133,7 +131,7 @@ export class UsersComponent extends DetailsMove implements OnInit, OnDestroy {
       delete queryset['is_active'];
     } */
 
-    if (this.is_superuser.value == false) {
+    if (this.is_superuser.value === false) {
       delete queryset['is_superuser'];
     }
 

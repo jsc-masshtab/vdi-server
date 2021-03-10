@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ThinClientsService } from '../thin-clients.service';
 import { MatDialog } from '@angular/material';
 import { WaitService } from '../../common/components/single/wait/wait.service';
@@ -11,7 +11,7 @@ import { Subscription } from 'rxjs';
   templateUrl: './thin-client-statistic.component.html',
   styleUrls: ['./thin-client-statistic.component.scss']
 })
-export class ThinClientStatisticComponent implements OnInit {
+export class ThinClientStatisticComponent implements OnInit, OnDestroy {
 
   private sub: Subscription;
 

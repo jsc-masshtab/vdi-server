@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-03-02 18:40+0300\n"
+"POT-Creation-Date: 2021-03-03 18:51+0300\n"
 "PO-Revision-Date: 2020-07-30 11:25+0300\n"
 "Last-Translator: Emil <emil@emil-pc>\n"
 "Language-Team: Russian\n"
@@ -344,23 +344,35 @@ msgstr "Контроллер {} активирован."
 msgid "Controller {} status has been switched to {}."
 msgstr "Статус контроллера {} изменен на {}."
 
-#: ../common/models/event.py:89
+#: ../common/models/event.py:74
+msgid "Journal in this period is empty."
+msgstr "Журнал для этого периода пуст."
+
+#: ../common/models/event.py:90
 msgid "Path {} is incorrect."
 msgstr "Неверный путь: {}."
 
-#: ../common/models/event.py:92
+#: ../common/models/event.py:93
 msgid "Check date. Interval {} - {} is incorrect."
 msgstr "Проверьте дату. Некорректный промежуток {} - {}."
 
-#: ../common/models/event.py:236
+#: ../common/models/event.py:98
+msgid "Not enough free space."
+msgstr "Недостаточно свободного места."
+
+#: ../common/models/event.py:100
+msgid "Journal export error."
+msgstr "Ошибка экспорта журнала."
+
+#: ../common/models/event.py:242
 msgid "Choose right period."
 msgstr "Выберите правильный период."
 
-#: ../common/models/event.py:242
+#: ../common/models/event.py:248
 msgid "Count must be more than 1."
 msgstr "Количество должно быть больше 1."
 
-#: ../common/models/event.py:246
+#: ../common/models/event.py:252
 msgid "Journal settings changed."
 msgstr "Настройки журнала изменены."
 
@@ -796,7 +808,7 @@ msgid "Can`t launch task."
 msgstr "Нет такого задания."
 
 #: ../pool_worker/pool_tasks.py:84
-msgid "Task <{}> started."
+msgid "Task '{}' started."
 msgstr "Задача <{}> начала выполнение."
 
 #: ../pool_worker/pool_tasks.py:93
@@ -804,12 +816,12 @@ msgid "Task <{}> finished successfully."
 msgstr "Задача <{}> завершилась успешно."
 
 #: ../pool_worker/pool_tasks.py:99
-msgid "Task <{}> cancelled."
+msgid "Task '{}' cancelled."
 msgstr "Задача <{}> отменена."
 
 #: ../pool_worker/pool_tasks.py:105
-msgid "Task: <{}> failed. {}."
-msgstr "Задача <{}> завершилась с ошибками. {}."
+msgid "Task '{}' failed."
+msgstr "Задача '{}' завершилась с ошибками."
 
 #: ../pool_worker/pool_tasks.py:168
 msgid "Pool Creation cancelled."
@@ -1297,26 +1309,26 @@ msgstr "{cls}: Контроллер {name} уже отслеживается."
 msgid "{cls}: resource monitor for controller {name} connected."
 msgstr "{cls}: монитор ресурсов для контроллера {name} подключен."
 
-#~ msgid "Role {} has been set to pool {}."
-#~ msgstr "Роль {} добавлена в пул {}."
-
-#~ msgid "Pool already has role."
-#~ msgstr "Пул уже имеет роль."
-
-#~ msgid "Roles: {} was deleted to pool {}."
-#~ msgstr "Роли: {} удалены в пуле {}."
-
-#~ msgid "Controller can`t create VM. Unknown node."
-#~ msgstr "Контроллер не может создать ВМ. Неизвестный узел."
-
-#~ msgid "Unknown node {}."
-#~ msgstr "Неизвестный узел {}."
-
-#~ msgid "Attempts to create VM {} have been exhausted."
-#~ msgstr "Превышен лимит попыток создания ВМ {}."
+#~ msgid "User {} created with role {}."
+#~ msgstr "Пользователь {} создан с ролью {}."
 
 #~ msgid "  Duration: {}."
 #~ msgstr "  Продолжительность: {}."
 
-#~ msgid "User {} created with role {}."
-#~ msgstr "Пользователь {} создан с ролью {}."
+#~ msgid "Attempts to create VM {} have been exhausted."
+#~ msgstr "Превышен лимит попыток создания ВМ {}."
+
+#~ msgid "Unknown node {}."
+#~ msgstr "Неизвестный узел {}."
+
+#~ msgid "Controller can`t create VM. Unknown node."
+#~ msgstr "Контроллер не может создать ВМ. Неизвестный узел."
+
+#~ msgid "Roles: {} was deleted to pool {}."
+#~ msgstr "Роли: {} удалены в пуле {}."
+
+#~ msgid "Pool already has role."
+#~ msgstr "Пул уже имеет роль."
+
+#~ msgid "Role {} has been set to pool {}."
+#~ msgstr "Роль {} добавлена в пул {}."

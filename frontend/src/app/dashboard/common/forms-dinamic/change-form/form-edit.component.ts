@@ -73,7 +73,7 @@ export class FormForEditComponent implements OnInit, OnDestroy {
     }
     if (form.length) {
       for (let i = 0; i < form.length; i++) {
-        this.formGroup.addControl(`${form[i].fieldName}`, this.fb.control(form[i].fieldValue, Validators.required));
+        this.formGroup.addControl(`${form[i].fieldName}`, this.fb.control(form[i].fieldValue, form[i].unrequired ? null : Validators.required));
       }
       this.init = true;
     } else {

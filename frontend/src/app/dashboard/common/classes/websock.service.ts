@@ -10,20 +10,20 @@ import { filter } from 'rxjs/operators';
   providedIn: 'root',
 })
 
-export class WebsocketService  {
+export class WebsocketService {
 
   timeout: any;
   private connections: any = {};
 
   private ws: WebSocket;
 
-  private event = new Subject()
+  private event = new Subject();
   event$ = this.event.asObservable();
 
   constructor(
     private authStorageService: AuthStorageService,
     private router: Router
-  ) {}
+  ) { }
 
   public init(): void {
     const host = window.location.host;
@@ -34,13 +34,13 @@ export class WebsocketService  {
     if (token) {
       let url = `ws://${host}/${api_ws}ws/subscriptions/?token=jwt ${token}`;
 
-      if (prot == 'https:') {
+      if (prot === 'https:') {
         url = `wss://${host}/${api_ws}ws/subscriptions/?token=jwt ${token}`;
       }
 
       this.ws = new WebSocket(url);
     } else {
-      this.ws.close()
+      this.ws.close();
       this.router.navigate(['login']);
     }
 
@@ -61,19 +61,19 @@ export class WebsocketService  {
       let sub: Subscription;
 
       sub = this.event$
-        .pipe(filter((ws: any) => ws.resource == listener))
+        .pipe(filter((ws: any) => ws.resource === listener))
         .subscribe((message: any) => {
           return observer.next(message);
         });
 
       return () => {
-        this.disconnect(listener)
+        this.disconnect(listener);
 
         if (sub) {
           observer.unsubscribe();
         }
       };
-    })
+    });
   }
 
   private isJsonString(str) {
@@ -93,8 +93,8 @@ export class WebsocketService  {
     console.info('%c[WS] Message', 'color: #9a6f0f', event.data);
 
     if (this.isJsonString(event.data)) {
-      const message = JSON.parse(event.data)
-      this.event.next(message)
+      const message = JSON.parse(event.data);
+      this.event.next(message);
     }
   }
 
@@ -110,8 +110,8 @@ export class WebsocketService  {
     }
 
     this.timeout = setTimeout(() => {
-      this.init()
-    }, 5000)
+      this.init();
+    }, 5000);
   }
 
   send(type: string, message: any) {
@@ -120,8 +120,8 @@ export class WebsocketService  {
         this.ws.send(`${type} ${message}`);
       } else {
         setTimeout(() => {
-          this.send(type, message)
-        }, 500)
+          this.send(type, message);
+        }, 500);
       }
     }
   }
