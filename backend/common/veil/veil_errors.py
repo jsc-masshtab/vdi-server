@@ -152,20 +152,6 @@ class BadRequest(HttpError):
         return {"type": "HttpError", "code": self.code, **self.errors}
 
 
-# class ControllerNotAccessible(HttpError):
-#     code = 408
-#     message = _('Controller is not available.')
-#     system_logger._debug(message)
-#
-#     def __init__(self, *, ip):
-#         self.ip = ip
-#
-#     def format_error(self):
-#         return {
-#             'ip': self.ip, **super().format_error()
-#         }
-
-
 class AuthError(HttpError, ABC):
     pass
 
@@ -173,23 +159,11 @@ class AuthError(HttpError, ABC):
 class Forbidden(AuthError):
     code = 403
     message = _("Unable to logon to system using these credentials.")
-    # TODO: раскомментируй меня (26.07.2020)
-    # system_logger._debug(message)
 
 
 class Unauthorized(AuthError):
     code = 401
     message = _("401: Unauthorized.")
-    # TODO: раскомментируй меня (26.07.2020)
-    # system_logger._debug(message)
-
-
-class ServerError(HttpError):
-    code = 500
-    message = _("Critical controller error.")
-    # TODO: раскомментируй меня (26.07.2020)
-    # raise DeprecationWarning('will be deprecated in 2.1.0')
-    # system_logger._debug(message)
 
 
 class VmCreationError(Exception):
@@ -205,12 +179,4 @@ class VmCreationError(Exception):
 
 
 class PoolCreationError(Exception):
-    def __init__(self, message):
-        message = str(message)
-        native_loop = asyncio.get_event_loop()
-        self.create_event = native_loop.create_task(self.create_error_event(message))
-        self.message = message
-
-    @staticmethod
-    async def create_error_event(message):
-        await system_logger.error(message)
+    pass

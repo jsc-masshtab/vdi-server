@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import asyncio
-import traceback
 from abc import ABC, abstractmethod
+from aiohttp import client_exceptions
 
 from common.veil.veil_errors import PoolCreationError
 
@@ -17,8 +17,6 @@ from common.models.pool import AutomatedPool, Pool
 from common.models.task import TaskStatus, Task
 from common.models.authentication_directory import AuthenticationDirectory
 from common.models.vm import Vm
-
-# from common.settings import VEIL_OPERATION_WAITING
 
 
 _ = lang_init()
@@ -103,10 +101,7 @@ class AbstractTask(ABC):
         except Exception as ex:  # noqa
             message = _("Task '{}' failed.").format(friendly_task_name)
             await self.task_model.set_status(TaskStatus.FAILED, message + " " + str(ex))
-
             await system_logger.warning(message, description=str(ex))
-            print("BT {bt}".format(bt=traceback.format_exc()))
-
             await self.do_on_fail()
 
         finally:
@@ -152,7 +147,6 @@ class InitPoolTask(AbstractTask):
             str(automated_pool.template_id)
         )
 
-        # лочим
         async with pool_lock:
             async with template_lock:
                 # Добавляем машины
@@ -163,9 +157,10 @@ class InitPoolTask(AbstractTask):
                     await automated_pool.add_initial_vms()
                 except PoolCreationError:
                     await automated_pool.deactivate()
-                    raise  # Чтобы проблема была передана внешнему обработчику в AbstractTask
+                    # Чтобы проблема была передана внешнему обработчику в AbstractTask
+                    raise
                 except asyncio.CancelledError:
-                    await system_logger.debug(_("Pool Creation cancelled."))
+                    await system_logger.warning(_("Pool Creation cancelled."))
                     await automated_pool.deactivate()
                     raise
                 except Exception as E:
@@ -179,7 +174,7 @@ class InitPoolTask(AbstractTask):
             try:
                 if automated_pool.prepare_vms:
                     results_future = await automated_pool.prepare_initial_vms()
-                    # Если есть отменненые корутины, то считаем, что инициализаия пула отменена
+                    # Если есть отмененные корутины, то считаем, что инициализация пула отменена
                     for response in results_future:
                         if isinstance(response, asyncio.CancelledError):
                             raise asyncio.CancelledError
@@ -209,7 +204,7 @@ class ExpandPoolTask(AbstractTask):
         )  # расширение не смотря на достаточный резерв
         self.wait_for_lock = (
             wait_for_lock
-        )  # Если true ждем освобождеия локов. Если false, то бросаем исключение, если
+        )  # Если true ждем освобождения локов. Если false, то бросаем исключение, если
         # локи заняты
 
     async def do_task(self):
@@ -224,7 +219,7 @@ class ExpandPoolTask(AbstractTask):
         )
 
         # Проверяем залочены ли локи. Если залочены, то бросаем исключение.
-        # Экспериментально сделано опциальным (self.wait_for_lock)
+        # Экспериментально сделано опциональным (self.wait_for_lock)
         if not self.wait_for_lock and (pool_lock.locked() or template_lock.locked()):
             raise RuntimeError(
                 "ExpandPoolTask: Another task works on this pool or vm template is busy"
@@ -260,8 +255,7 @@ class ExpandPoolTask(AbstractTask):
                     try:
                         vm_list = await automated_pool.add_vm(real_amount_to_add)
                     except VmCreationError as vm_error:
-                        await system_logger.error(_("VM creating error."))
-                        await system_logger.debug(vm_error)
+                        await system_logger.error(_("VM creating error."), description=vm_error)
 
             # Подготовка ВМ для подключения к ТК  (под async with pool_lock)
             try:
@@ -367,7 +361,7 @@ class PrepareVmTask(AbstractTask):
         self._full_preparation = (
             full_preparation
         )  # полная подготовка. Используется для машин динамического пула
-        # В случае неполной подготовки только включвем удаленный доступ (для машин статик пула)
+        # В случае неполной подготовки только включаем удаленный доступ (для машин статик пула)
 
     async def do_task(self):
         # print('!!!PrepareVmTask started', flush=True)
@@ -406,6 +400,8 @@ class PrepareVmTask(AbstractTask):
         # TODO: убрать дублирование кода при подготовке
         # print('_do_light_preparation ', 'vm.id ', vm.id, flush=True)
         veil_domain = await vm.vm_client
+        if not veil_domain:
+            raise client_exceptions.ServerDisconnectedError()
 
         await veil_domain.info()
 
