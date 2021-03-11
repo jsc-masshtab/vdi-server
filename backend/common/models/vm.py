@@ -144,12 +144,9 @@ class Vm(VeilModel):
         template_id,
         verbose_name,
         id=None,
-        pool_tag=None,
         created_by_vdi=False,
         status=Status.ACTIVE,
     ):
-        from common.models.pool import Pool as PoolModel
-
         await system_logger.debug(_("Create VM {} on VDI DB.").format(verbose_name))
         try:
             vm = await super().create(
@@ -163,30 +160,11 @@ class Vm(VeilModel):
         except Exception as E:
             raise VmCreationError(str(E))
 
-        pool = await PoolModel.get(pool_id)
-        msg = _("VM {} created.").format(verbose_name)
-        description = _("VM {} created and added to the pool {}.").format(
-            verbose_name, pool.verbose_name
-        )
-        await system_logger.info(message=msg, description=description, entity=vm.entity)
-
-        if pool_tag:
-            await pool.tag_add_entity(
-                tag=pool_tag, entity_id=id, verbose_name=verbose_name
-            )
-
         await EntityModel.create(entity_uuid=id, entity_type=EntityType.VM)
 
         return vm
 
     async def soft_delete(self, creator, remove_on_controller=True):
-        from common.models.pool import Pool as PoolModel
-
-        vm_pool = await PoolModel.get(self.pool_id)
-        pool_tag = vm_pool.tag
-        if pool_tag:
-            await vm_pool.tag_remove_entity(tag=pool_tag, entity_id=self.id)
-
         if remove_on_controller and self.created_by_vdi:
             try:
                 domain_entity = await self.vm_client
@@ -385,10 +363,6 @@ class Vm(VeilModel):
         vm = await Vm.get(vm_id)
         await vm.soft_delete(
             creator=creator, remove_on_controller=remove_vms_on_controller
-        )
-        await system_logger.info(
-            _("VM {} has been removed from the pool.").format(vm.verbose_name),
-            entity=vm.entity,
         )
 
     @staticmethod
