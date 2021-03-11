@@ -758,9 +758,10 @@ class AddVmsToStaticPoolMutation(graphene.Mutation):
                 entity=entity,
             )
 
-            await pool.tag_add_entity(
-                tag=pool.tag, entity_id=vm.id, verbose_name=vm.verbose_name
-            )
+            if pool.tag:
+                await pool.tag_add_entity(
+                    tag=pool.tag, entity_id=vm.id, verbose_name=vm.verbose_name
+                )
 
             # Запустить задачи подготовки машин
             await request_to_execute_pool_task(

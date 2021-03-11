@@ -942,8 +942,8 @@ class Pool(VeilModel):
                     entity=entity,
                 )
             vm = await VmModel.get(vm_id)
-            pool_tag = await self.get_tag(self.tag)
-            if pool_tag:
+            if self.tag:
+                pool_tag = await self.get_tag(self.tag)
                 await self.tag_remove_entity(tag=self.tag, entity_id=vm_id)
                 await system_logger.info(
                     _("Tag {} removed from VM {}.").format(
@@ -1170,9 +1170,10 @@ class StaticPool(db.Model):
                 )
                 await system_logger.info(message=msg, description=description, entity=vm.entity)
 
-                await pl.tag_add_entity(
-                    tag=tag, entity_id=vm.id, verbose_name=vm.verbose_name
-                )
+                if tag:
+                    await pl.tag_add_entity(
+                        tag=tag, entity_id=vm.id, verbose_name=vm.verbose_name
+                    )
 
             await system_logger.info(
                 _("Static pool {} created.").format(verbose_name),
@@ -1548,9 +1549,10 @@ class AutomatedPool(db.Model):
                     )
                     await system_logger.info(message=msg, description=description, entity=vm_object.entity)
 
-                    await pool.tag_add_entity(
-                        tag=pool.tag, entity_id=vm_object.id, verbose_name=vm_object.verbose_name
-                    )
+                    if pool.tag:
+                        await pool.tag_add_entity(
+                            tag=pool.tag, entity_id=vm_object.id, verbose_name=vm_object.verbose_name
+                        )
 
         # Логирование результата созданных ВМ (совпадение количества) происходит выше
         return vm_obj_list
