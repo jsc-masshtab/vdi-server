@@ -4,6 +4,7 @@ import uuid
 from subprocess import Popen, TimeoutExpired
 import sys
 import asyncio
+import os
 
 from async_generator import async_generator, yield_
 from graphene import Context
@@ -55,12 +56,13 @@ def get_test_pool_name():
 @async_generator
 async def fixt_launch_workers():
 
-    REDIS_CLIENT.flushall()  # без этого если остались данные с предыдущих тестов
-    # могут происходить труднообъяснимые вещи
+    REDIS_CLIENT.flushall()
 
-    # ws_listener_worker = Popen([sys.executable, "../../ws_listener_worker/app.py"])
+    file_path = os.path.dirname(__file__)
+    pool_worker_path = os.path.join(file_path, '../../pool_worker/app.py')
+
     pool_worker = Popen(
-        [sys.executable, "../../pool_worker/app.py", "-do-not-resume-tasks"]
+        [sys.executable, pool_worker_path, "-do-not-resume-tasks"]
     )
 
     await yield_()
@@ -118,7 +120,7 @@ async def fixt_auth_context():
 @async_generator  # prepare_vms: false,
 async def fixt_create_automated_pool(fixt_controller):
     """Create an automated pool, yield, remove this pool"""
-    # start resources_monitor to receive info  from controller. autopool creation doesnt work without it
+    # start resources_monitor to receive info  from controller. autopool creation doesn`t work without it
 
     resources = await get_resources_for_pool_test()
     if not resources:

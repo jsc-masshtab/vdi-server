@@ -16,9 +16,10 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import UUID, ARRAY
 from asyncpg.exceptions import UniqueViolationError
 
-from common.settings import POOL_MAX_CREATE_ATTEMPTS, VEIL_MAX_IDS_LEN
+from common.settings import POOL_MAX_CREATE_ATTEMPTS, VEIL_MAX_IDS_LEN, VEIL_OPERATION_WAITING
 from common.database import db
-from veil_api_client import TagConfiguration, VeilEntityConfiguration
+from veil_api_client import (TagConfiguration, VeilEntityConfiguration, VeilApiObjectStatus,
+                             VeilRestPaginator, VeilRetryConfiguration)
 
 from common.veil.veil_gino import Status, EntityType, VeilModel
 from common.veil.veil_graphene import VmState
@@ -777,16 +778,17 @@ class Pool(VeilModel):
         return True
 
     @classmethod
-    async def deactivate(cls, pool_id):
+    async def deactivate(cls, pool_id, status=Status.FAILED):
         pool = await Pool.get(pool_id)
-        await pool.set_status(Status.FAILED)
+        if status != pool.status.name:
+            await pool.set_status(status)
         entity = {"entity_type": EntityType.POOL, "entity_uuid": pool_id}
-        # Деактивация ВМ. Добавлено 02.11.2020 - не факт, что нужно.
-        vms = await VmModel.query.where(VmModel.pool_id == pool_id).gino.all()
-        for vm in vms:
-            await vm.update(status=Status.FAILED).apply()
+        if status == Status.FAILED:
+            vms = await VmModel.query.where(VmModel.pool_id == pool_id).gino.all()
+            for vm in vms:
+                await vm.update(status=Status.FAILED).apply()
         await system_logger.warning(
-            _("Pool {} has been deactivated.").format(pool.verbose_name), entity=entity
+            _("Pool {} status changed to {}.").format(pool.verbose_name, status.value), entity=entity
         )
         return True
 
@@ -1009,34 +1011,31 @@ class Pool(VeilModel):
 
     @staticmethod
     async def tag_create(controller, verbose_name, creator):
-        try:
-            pool_tag = TagConfiguration(
-                verbose_name=verbose_name,
-                slug=verbose_name,
-                colour=Pool.pool_tag_colour(),
+        pool_tag = TagConfiguration(
+            verbose_name=verbose_name,
+            slug=verbose_name,
+            colour=Pool.pool_tag_colour(),
+        )
+        controller_client = controller.veil_client
+        # Попытки повтора заблокированы намеренно
+        tag_response = await controller_client.tag(retry_opts=VeilRetryConfiguration()).create(pool_tag)
+        errors = tag_response.errors
+        if tag_response.success:
+            task = tag_response.task
+            tag = task.first_entity if tag_response.task else None
+            entity = {"entity_type": EntityType.POOL, "entity_uuid": None}
+            await system_logger.info(
+                _("Tag {name} created for pool {name}.").format(name=verbose_name),
+                user=creator,
+                entity=entity,
             )
-            controller_client = controller.veil_client
-            tag_response = await controller_client.tag().create(pool_tag)
-            errors = tag_response.errors
-            if tag_response.success:
-                task = tag_response.task
-                tag = task.first_entity
-                entity = {"entity_type": EntityType.POOL, "entity_uuid": None}
-                await system_logger.info(
-                    _("Tag {name} created for pool {name}.").format(name=verbose_name),
-                    user=creator,
-                    entity=entity,
-                )
+            return tag
+        elif isinstance(errors, list) and errors[0].get("verbose_name"):
+            response = await controller_client.tag(retry_opts=VeilRetryConfiguration()).list(name=verbose_name)
+            existing_name = response.response[0].verbose_name
+            if existing_name == verbose_name:
+                tag = response.response[0].api_object_id
                 return tag
-            elif isinstance(errors, list) and errors[0].get("verbose_name"):
-                response = await controller_client.tag().list(name=verbose_name)
-                existing_name = response.response[0].verbose_name
-                if existing_name == verbose_name:
-                    tag = response.response[0].api_object_id
-                    return tag
-        except Exception:
-            pass
-        return None
 
     async def tag_remove(self, tag):
         pool_tag = await self.get_tag(tag)
@@ -1292,8 +1291,8 @@ class AutomatedPool(db.Model):
     async def activate(self):
         return await Pool.activate(self.id)
 
-    async def deactivate(self):
-        return await Pool.deactivate(self.id)
+    async def deactivate(self, status=Status.FAILED):
+        return await Pool.deactivate(self.id, status=status)
 
     @classmethod
     async def soft_create(
@@ -1427,17 +1426,42 @@ class AutomatedPool(db.Model):
 
         return True
 
+    async def process_failed_multitask(self, multitask_id: str):
+        """Check multi-task`s subtasks status and return only good ids."""
+        # prepare connection
+        pool_controller = await self.controller_obj
+        task_client = pool_controller.veil_client.task()
+        # get all success subtasks
+        sub_tasks = await task_client.list(parent=multitask_id,
+                                           status=VeilApiObjectStatus.success,
+                                           paginator=VeilRestPaginator(ordering='created', limit=10000),
+                                           extra_params={'fields': "id,name,entities"})
+        # prepare conditions
+        success_ids = list()
+        creating_task_pattern = 'Creating a virtual'
+        thin_clones_pattern = 'snapshot.'
+        # parse VeiL ECP response
+        for task in sub_tasks.response:
+            if creating_task_pattern in task.name and task.name[-9:] != thin_clones_pattern:
+                for entity_id, entity_type in task.entities.items():
+                    if entity_type == 'domain':
+                        success_ids.append(entity_id)
+        # skip last domain in list
+        if success_ids:
+            success_ids.pop()
+        return success_ids
+
     async def add_vm(self, count: int = 1):
         """Try to add VM to pool."""
-        verbose_name = self.vm_name_template or await self.verbose_name  # temp???
+        pool_verbose_name = await self.verbose_name
+        verbose_name = self.vm_name_template or pool_verbose_name
         pool_controller = await self.controller_obj
         # Прерываем выполнение при отсутствии клиента
         if not pool_controller.veil_client:
             raise AssertionError(
-                _("There is no client for pool {}.").format(self.verbose_name)
+                _("There is no client for pool {}.").format(pool_verbose_name)
             )
-
-        # Перебор имени идет на контроле, т.к. мы передаем count - индекс подставит сам вейл
+        # Подбор имени выполняет VeiL ECP
         params = {
             "verbose_name": verbose_name,
             "domain_id": str(self.template_id),
@@ -1446,35 +1470,39 @@ class AutomatedPool(db.Model):
             "create_thin_clones": self.create_thin_clones,
             "count": count,
         }
-
         try:
+            # Постановка задачи на создание (копирование) ВМ
             vm_info = await VmModel.copy(**params)
+
+            # Ожидаем завершения таски создания ВМ
             vm_multi_task_id = vm_info["task_id"]
-            await system_logger.debug(
-                "VM creation task id: {}".format(vm_multi_task_id)
-            )
-            # Ожидаем завершения создания ВМ
+            pending_vm_ids = vm_info["ids"]
+
             task_completed = False
             task_client = pool_controller.veil_client.task(task_id=vm_multi_task_id)
             while not task_completed:
-                await asyncio.sleep(5)
+                await asyncio.sleep(VEIL_OPERATION_WAITING)
                 task_completed = await task_client.is_finished()
-            # Если задача выполнена с ошибкой - прерываем выполнение
+
+            # Если задача выполнена с ошибкой - получаем успешные ВМ для дальнейшего создания
             task_success = await task_client.is_success()
             if not task_success:
-                raise VmCreationError(
-                    _("VM creation task {} finished with error.").format(
-                        task_client.api_object_id
-                    )
-                )
+                success_vm_ids = await self.process_failed_multitask(vm_multi_task_id)
+                await system_logger.warning(message=_("VM creation task {} finished with error.").format(
+                    task_client.api_object_id
+                ))
+                await self.deactivate(status=Status.PARTIAL)
+            else:
+                success_vm_ids = pending_vm_ids
         except VmCreationError:
+            # Исключение для прерывания повторных попыток создания заведомо провальных задач.
             await self.deactivate()
             raise
         except asyncio.CancelledError:
             await self.deactivate()
             # Если получили CancelledError в ходе ожидания создания вм,
-            # то отменяем на контроллере таску создания вм. (CancelledError бросится например при мягком завершении
-            # процесса воркера)
+            # то отменяем на контроллере таску создания вм.
+            # (Например, при мягком завершении процесса pool_worker)
             try:
                 task_client = pool_controller.veil_client.task(task_id=vm_multi_task_id)
                 await task_client.cancel()
@@ -1486,32 +1514,31 @@ class AutomatedPool(db.Model):
                 )
             raise
 
-        # Попытки исчерпаны. Создаем ВМ, которые удалось.
         vm_obj_list = list()
         # Получаем актуальное имя виртуальной машины присвоенное контроллером
         domain_connect = pool_controller.veil_client.domain()
 
-        # --
-        ids_str = ",".join(vm_info["ids"])
+        # Формируем исходный список ВМ
+        ids_str = ",".join(pending_vm_ids)
         ids_str_list = wrap(ids_str, width=VEIL_MAX_IDS_LEN)
 
         # Получаем данные для каждого блока id
-
         for ids_str_section in ids_str_list:
-            # Запрашиваем на ECP VeiL данные
             response = await domain_connect.list(
                 fields=["verbose_name", "id"], params={"ids": ids_str_section}
             )
             if response.success:
                 pool = await Pool.get(self.id)
-
                 for domain in response.response:
+                    # Создаем ВМ
+                    vm_status = Status.ACTIVE if domain.api_object_id in success_vm_ids else Status.FAILED
                     vm_object = await VmModel.create(
                         id=domain.api_object_id,
                         pool_id=str(self.id),
                         template_id=str(self.template_id),
                         created_by_vdi=True,
                         verbose_name=domain.verbose_name,
+                        status=vm_status
                     )
                     vm_obj_list.append(vm_object)
 
@@ -1530,7 +1557,7 @@ class AutomatedPool(db.Model):
 
     @property
     async def template_os_type(self):
-        """Получает инфорацию об ОС шаблона от VeiL ECP."""
+        """Получает информацию об ОС шаблона от VeiL ECP."""
         pool_controller = await self.controller_obj
         if not pool_controller.veil_client:
             return
@@ -1577,10 +1604,11 @@ class AutomatedPool(db.Model):
             await system_logger.error(
                 message=msg, entity=self.entity, description=description
             )
-            #  исключение не лишнее, без него таска завершится с FINISHED а не FAILED Перехватится в InitPoolTask
+            # исключение не лишнее, без него таска завершится с FINISHED а не FAILED Перехватится в InitPoolTask
+            # но сообщение лишнее
             raise PoolCreationError(
                 msg
-            )  # Пробросить исключение, если споткнулись на создании машин
+            )
 
     async def prepare_initial_vms(self):
         """Подготавливает ВМ для дальнейшего использования тонким клиентом."""
