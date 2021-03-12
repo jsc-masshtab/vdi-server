@@ -225,7 +225,7 @@ class VdiVeilClientSingleton(VeilClientSingleton):
 
 
 retry_configuration = VeilRetryConfiguration(
-    status_codes={401, 403, 400},
+    status_codes={401, 403},
     timeout=5,
     max_timeout=VEIL_REQUEST_TIMEOUT,
     timeout_increase_step=10,
