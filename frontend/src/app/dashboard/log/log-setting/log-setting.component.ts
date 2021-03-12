@@ -14,11 +14,11 @@ export class LogSettingComponent implements OnInit {
   item: any;
 
   collection_period: object[] = [{
-    title: 'Архивация по количеству записей',
+    title: 'Тип архивации',
     property: 'by_count',
     type: {
       typeDepend: 'boolean',
-      propertyDepend: ['Включена', 'Выключена']
+      propertyDepend: ['По количеству записей', 'По периоду']
     },
     edit: 'changeByCount'
   },
@@ -36,11 +36,11 @@ export class LogSettingComponent implements OnInit {
   }];
 
   collection_count: object[] = [{
-    title: 'Архивация по количеству записей',
+    title: 'Тип архивации',
     property: 'by_count',
     type: {
       typeDepend: 'boolean',
-      propertyDepend: ['Включена', 'Выключена']
+      propertyDepend: ['По количеству записей', 'По периоду']
     },
     edit: 'changeByCount'
   },
