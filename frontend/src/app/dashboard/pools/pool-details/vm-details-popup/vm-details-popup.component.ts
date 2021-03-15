@@ -374,7 +374,7 @@ export class VmDetalsPopupComponent {
 
   public openBackupDetails(backup: Backup): void {
     this.dialog.open(InfoBackupComponent, {
- 			disableClose: true,
+      disableClose: true,
       width: '700px',
       data: {
         backup
