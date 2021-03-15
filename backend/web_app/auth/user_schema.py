@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-import graphene
-
 import re
+
+import graphene
 
 from sqlalchemy import and_
 

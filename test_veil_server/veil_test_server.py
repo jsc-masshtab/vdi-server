@@ -1,8 +1,8 @@
-from aiohttp import web
-
 import json
 import ssl
 import uuid
+
+from aiohttp import web
 
 
 class VeilTestServer:

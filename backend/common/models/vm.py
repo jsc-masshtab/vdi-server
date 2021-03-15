@@ -2,9 +2,9 @@
 import uuid
 import asyncio
 
-from sqlalchemy import desc
-
 from enum import IntEnum
+
+from sqlalchemy import desc
 
 from ldap3 import (
     Connection as ActiveDirectoryConnection,

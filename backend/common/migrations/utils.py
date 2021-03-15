@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 import os
 
-from alembic.config import Config
-
 from types import SimpleNamespace
+
+from alembic.config import Config
 
 path = os.path.dirname(__file__)
 

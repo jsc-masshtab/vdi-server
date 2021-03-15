@@ -2,17 +2,17 @@
 from abc import ABC
 from typing import Any
 
-from tornado.web import Application
-from tornado import httputil
+import asyncio
 
 import json
 from json.decoder import JSONDecodeError
 
+from tornado.web import Application
+from tornado import httputil
+
 from tornado import websocket
 
 from aiohttp import client_exceptions
-
-import asyncio
 
 from common.settings import (
     REDIS_DB,

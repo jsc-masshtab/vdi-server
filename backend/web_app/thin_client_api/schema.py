@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 # GraphQL schema
-
-import graphene
-
 import json
 from datetime import datetime, timedelta, timezone
+
+import graphene
 
 from common.settings import REDIS_THIN_CLIENT_CMD_CHANNEL
 from common.veil.veil_decorators import administrator_required

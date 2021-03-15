@@ -6,15 +6,15 @@ import uuid
 import json
 import csv
 
-import redis
-
 from datetime import datetime, timedelta
+
+from pathlib import Path
+
+import redis
 
 from sqlalchemy import and_, between
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
-
-from pathlib import Path
 
 from web_app.front_ws_api.subscription_sources import EVENTS_SUBSCRIPTION
 

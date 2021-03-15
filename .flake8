@@ -1,4 +1,5 @@
 [flake8]
+import-order-style = pep8
 ignore =
     # E501 line too long
     E501,
@@ -30,7 +31,6 @@ ignore =
     D107,
 
     # Для импортов
-    # I100 Import statements are in the wrong order.
-    I100,
+    I202,
 exclude = .git,__pycache__,backend/common/migrations/versions,local_settings.py,tests,devops,frontend
 inline-quotes = double

@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
+import ssl
+
 import uvloop
 
 from tornado.web import Application
 from tornado.httpserver import HTTPServer
-
-import ssl
 
 from tornado.ioloop import IOLoop
 from tornado.options import define, options
