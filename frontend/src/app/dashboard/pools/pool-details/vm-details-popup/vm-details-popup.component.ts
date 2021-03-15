@@ -4,7 +4,7 @@ import { MAT_DIALOG_DATA, MatDialog } from '@angular/material';
 import { RemoveUserVmComponent } from './remove-user/remove-user.component';
 import { YesNoFormComponent } from 'src/app/dashboard/common/forms-dinamic/yes-no-form/yes-no-form.component';
 import { PoolDetailsService } from '../pool-details.service';
-import {InfoBackupComponent} from "./info-backup/info-backup.component";
+import {InfoBackupComponent} from './info-backup/info-backup.component';
 
 interface Backup {
   backup: {

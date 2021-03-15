@@ -2,7 +2,7 @@ import { Component, Inject } from '@angular/core';
 import { MAT_DIALOG_DATA } from '@angular/material';
 import { MatDialog } from '@angular/material';
 import { PoolDetailsService } from '../../pool-details.service';
-import {YesNoFormComponent} from "../../../../common/forms-dinamic/yes-no-form/yes-no-form.component";
+import {YesNoFormComponent} from '../../../../common/forms-dinamic/yes-no-form/yes-no-form.component';
 
 // interface IData {
 //   file_id: string;
@@ -60,9 +60,9 @@ export class InfoBackupComponent {
       width: '700px',
       data: {
         form: {
-          header: "Подтверждение действия",
-          question: "Восстановить ВМ из резервной копии?",
-          button: "Выполнить"
+          header: 'Подтверждение действия',
+          question: 'Восстановить ВМ из резервной копии?',
+          button: 'Выполнить'
         },
         request: {
           service: this.service,
