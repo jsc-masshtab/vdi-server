@@ -311,15 +311,11 @@ class VeilTestServer:
         return web.Response(text=json.dumps(res_dict), content_type='application/json')
 
     async def start_vm(self, request):
-        print('start_vm')
-
         domain_id = request.match_info['domain_id']
         try:
             is_async = request.rel_url.query['async']
         except KeyError:
             is_async = 0
-        print('is_async ', is_async, flush=True)
-
         if is_async:
             res_dict = {
                 "_task": {
@@ -385,7 +381,6 @@ class VeilTestServer:
                     }
                 }
             }
-            print('web.Response', flush=True)
             return web.Response(text=json.dumps(res_dict), content_type='application/json', status=202)
 
         else:
@@ -830,8 +825,6 @@ class VeilTestServer:
     async def get_task_data(self, request):
 
         task_id = request.match_info['task_id']
-        print('get_task_data task_id ', task_id)
-
         res_dict = {
             "id": task_id,
             "verbose_name": "verbose_name",
@@ -921,7 +914,6 @@ class VeilTestServer:
         return web.Response(text=json.dumps(res_dict), content_type='application/json')
 
     async def check_controllers(self, request):
-        print('check_controllers')
         return web.Response(body=json.dumps(dict()), content_type='application/json')
 
     async def get_base_controller_version(self, request):
@@ -956,8 +948,6 @@ class VeilTestServer:
         return web.Response(body=json.dumps(res_dict), content_type='application/json')
 
     async def get_cluster(self, request):
-
-        print('get_cluster')
         res_dict = {
             "cpu_count": 12,
             "created": "2020-02-14T13:54:23.670400Z",
@@ -1048,8 +1038,6 @@ class VeilTestServer:
         return web.Response(body=json.dumps(res_dict), content_type='application/json')
 
     async def get_resource_pool(self, request):
-
-        print('get_resource_pool')
         res_dict = {
             "id": "5a55eee9-4687-48b4-9002-b218eefe29e3",
             "verbose_name": "Veil default cluster resource pool",

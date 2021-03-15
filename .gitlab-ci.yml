@@ -1,6 +1,6 @@
 stages:
   - linter
-  - compilemessages
+  - security
   - tests
 
 linter_job:
@@ -32,9 +32,23 @@ frontend_linter_job:
   only:
     - merge_requests
 
+security_check:
+  image: python:3.5.9-alpine
+  stage: security
+  before_script:
+    - apk add build-base
+    - python -m pip install --upgrade pip
+    - python -m pip install pipenv safety
+    - pipenv install
+    - pipenv lock --requirements > requirements.txt
+  script:
+    - safety check -r requirements.txt
+  only:
+    - merge_requests
+
 compilemessages_job:
   image: python:3.5.9-alpine
-  stage: compilemessages
+  stage: linter
   tags:
     - docker
   before_script:
