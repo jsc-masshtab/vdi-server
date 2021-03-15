@@ -348,13 +348,13 @@ class User(AbstractSortableStatusModel, VeilModel):
         query = User.update.values(is_active=True).where(User.id == self.id)
         operation_status = await query.gino.status()
 
+        if PAM_AUTH:
+            return await self.pam_unlock(creator=creator)
+
         info_message = _("User {username} has been activated.").format(
             username=self.username
         )
         await system_logger.info(info_message, entity=self.entity, user=creator)
-
-        if PAM_AUTH:
-            return await self.pam_unlock(creator=creator)
         return operation_status
 
     async def pam_unlock(self, creator):
@@ -387,13 +387,13 @@ class User(AbstractSortableStatusModel, VeilModel):
         query = User.update.values(is_active=False).where(User.id == self.id)
         operation_status = await query.gino.status()
 
+        if PAM_AUTH:
+            return await self.pam_lock(creator=creator)
+
         info_message = _("User {username} has been deactivated.").format(
             username=self.username
         )
         await system_logger.info(info_message, entity=self.entity, user=creator)
-
-        if PAM_AUTH:
-            return await self.pam_lock(creator=creator)
         return operation_status
 
     async def pam_lock(self, creator):

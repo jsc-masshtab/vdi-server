@@ -16,6 +16,22 @@ linter_job:
   only:
     - merge_requests
 
+frontend_linter_job:
+  image: teracy/angular-cli
+  stage: linter
+  tags:
+    - docker
+  before_script:
+    - cd frontend
+    - npm install
+    - pwd
+    - ls
+  script:
+    - ng --version
+    - npm run lint
+  only:
+    - merge_requests
+
 compilemessages_job:
   image: python:3.5.9-alpine
   stage: compilemessages

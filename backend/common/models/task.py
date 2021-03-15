@@ -88,21 +88,23 @@ class Task(db.Model, AbstractSortableStatusModel):
     async def form_user_friendly_text(self):
 
         entity_name = await self.get_associated_entity_name()
-
         if self.task_type == PoolTaskType.POOL_CREATE:
-            return _("Creation of pool {}.").format(entity_name)
+            task_message = _("Creation of pool {}.").format(entity_name)
         elif self.task_type == PoolTaskType.POOL_EXPAND:
-            return _("Expanding of pool {}.").format(entity_name)
+            task_message = _("Expanding of pool {}.").format(entity_name)
         elif self.task_type == PoolTaskType.POOL_DELETE:
-            return _("Deleting of pool {}.").format(entity_name)
+            task_message = _("Deleting of pool {}.").format(entity_name)
         elif self.task_type == PoolTaskType.POOL_DECREASE:
-            return _("Decreasing of pool {}.").format(entity_name)
+            task_message = _("Decreasing of pool {}.").format(entity_name)
         elif self.task_type == PoolTaskType.VM_PREPARE:
-            return _("Preparation of vm {}.").format(entity_name)
+            task_message = _("Preparation of vm {}.").format(entity_name)
         elif self.task_type == PoolTaskType.VMS_BACKUP:
-            return _("Backup of {}.").format(entity_name)
+            task_message = _("Backup of {}.").format(entity_name)
         else:
-            return ""
+            task_message = ""
+        if task_message and isinstance(task_message, str):
+            return task_message[:-1]
+        return ""
 
     async def set_status(self, status: TaskStatus, message: str = None):
 
@@ -150,7 +152,7 @@ class Task(db.Model, AbstractSortableStatusModel):
         self.publish_data_in_internal_channel("UPDATED")
 
     async def get_associated_entity_name(self):
-        # Запоминаем имя так как его не будет после удаения пула, например.
+        # Запоминаем имя так как его не будет после удаления пула, например.
         if not hasattr(self, "_associated_entity_name"):
             # В зависимости от типа сущности узнаем verbose_name
             # get entity_type
