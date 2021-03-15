@@ -25,6 +25,11 @@
             <span class="name">Удалить пул</span>
         </button>
 
+        <button (click)="clearPool()" *ngIf="menuActive === 'info' && pool && pool?.status != 'ACTIVE'" class="btn-control" title="Сбросить ошибки">
+            <fa-icon [icon]="['fas','leaf']"></fa-icon>
+            <span class="name">Сбросить ошибки</span>
+        </button>
+
         <ng-container *ngIf="menuActive === 'vms' && pool">
             <button *ngIf="typePool === 'static'" (click)="addVM()" title="Добавить ВМ в пул" class="btn-control">
                 <fa-icon [icon]="['fas','plus-circle']" size="xs"></fa-icon>
