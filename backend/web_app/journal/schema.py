@@ -322,13 +322,13 @@ class EventExportMutation(graphene.Mutation):
         finish = graphene.DateTime(
             description="Дата окончания периода для экспорта журнала"
         )
-        path = graphene.String(description="Адрес директории для экспорта журнала")
+        journal_path = graphene.String(description="Адрес директории для экспорта журнала")
 
     ok = graphene.Boolean()
 
     @operator_required
-    async def mutate(self, _info, start, finish, path="/tmp/", **kwargs):
-        name = await Event.event_export(start, finish, path)
+    async def mutate(self, _info, start, finish, journal_path="/tmp/", **kwargs):
+        name = await Event.event_export(start, finish, journal_path)
         entity = {"entity_type": "SECURITY", "entity_uuid": None}
         await system_logger.info(
             _("Journal is exported."), description=name, entity=entity

@@ -16,6 +16,11 @@ class VeilTestServer:
         self.app.add_routes([web.get(self.base_url + 'domains/', self.get_domains)])
 
         self.app.add_routes([web.post(self.base_url + 'domains/{domain_id}/start/', self.start_vm)])
+        # урлы, чтобы не отключился контроллер
+        self.app.add_routes([web.post(self.base_url + 'domains/{domain_id}/reboot/', self.start_vm)])
+        self.app.add_routes([web.post(self.base_url + 'domains/{domain_id}/remove/', self.start_vm)])
+        self.app.add_routes([web.post(self.base_url + 'domains/{domain_id}/set-hostname/', self.start_vm)])
+
         self.app.add_routes([web.post(self.base_url + 'domains/multi-create-domain/', self.multi_create_domain)])
         self.app.add_routes([web.post(self.base_url + 'domains/{domain_id}/remote-access/', self.remote_access)])
 
@@ -43,6 +48,8 @@ class VeilTestServer:
 
         # tags
         self.app.add_routes([web.get(self.base_url + 'tags/', self.get_tags)])
+        self.app.add_routes([web.post(self.base_url + 'tags/', self.get_tags)])
+        self.app.add_routes([web.put(self.base_url + 'tags/', self.get_tags)])
 
     def start(self):
 

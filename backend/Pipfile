@@ -33,7 +33,7 @@ ldap3 = "==2.8.*"  # ad group computers including
 redis = "==3.4.1"  # thin client message broker
 pymemcache = "==3.2.*"
 uvloop = "==0.14.*"
-veil-api-client = {path = "./veil_api_client-2.2.0-py3-none-any.whl"}
+veil-api-client = {path = "./veil_api_client-2.2.1-py3-none-any.whl"}
 veil-aio-au = {path = "./veil_aio_au-0.1.3-py3-none-any.whl"}
 
 [requires]

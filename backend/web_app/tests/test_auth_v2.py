@@ -38,6 +38,7 @@ class AuthLocalTestCase(VdiHttpTestCase):
 
     @pytest.mark.usefixtures("fixt_db", "fixt_user_admin")
     @gen_test
+    @pytest.mark.smoke_test
     def test_local_auth_ok(self):
         body = '{"username": "test_user_admin","password": "veil"}'
         response_dict = yield self.get_response(body=body)

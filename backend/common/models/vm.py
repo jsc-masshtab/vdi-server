@@ -21,6 +21,7 @@ from common.settings import (
     VEIL_OPERATION_WAITING,
     VEIL_VM_PREPARE_TIMEOUT,
     VEIL_GUEST_AGENT_EXTRA_WAITING,
+    VEIL_MAX_VM_CREATE_ATTEMPTS
 )
 from common.veil.veil_gino import (
     get_list_of_values_from_db,
@@ -30,6 +31,7 @@ from common.veil.veil_gino import (
 )
 from common.veil.veil_errors import VmCreationError, SimpleError
 from common.veil.veil_redis import send_cmd_to_cancel_tasks_associated_with_entity
+from common.veil.veil_api import compare_error_detail
 from common.languages import lang_init
 from common.log.journal import system_logger
 
@@ -315,73 +317,47 @@ class Vm(VeilModel):
                     vm_controller.verbose_name
                 )
             )
+        # Получаем сущность Domain для запросов к VeiL ECP
         vm_client = vm_controller.veil_client.domain()
-        inner_retry_count = 0
-        while True:
-            inner_retry_count += 1
-            await system_logger.debug(
-                "Trying to create VM on ECP with verbose_name={}".format(verbose_name)
-            )
-
-            # Send request to create vm
-            vm_configuration = DomainConfiguration(
-                verbose_name=verbose_name,
-                resource_pool=resource_pool_id,
-                parent=domain_id,
-                thin=create_thin_clones,
-                count=count,
-            )
-
-            create_response = await vm_client.create(
-                domain_configuration=vm_configuration
-            )
-
-            if create_response.success:
-                await system_logger.debug(
-                    "Request to create VM sent without surprise. Leaving while."
-                )
-                break
-
-            ecp_errors_list = create_response.data.get("errors")
-            if isinstance(ecp_errors_list, list) and len(ecp_errors_list):
-                first_error_dict = ecp_errors_list[0]
-            else:
-                first_error_dict = dict()
-
-            ecp_detail = first_error_dict.get("detail")
-            msg = _("ECP VeiL controller {} error.").format(vm_controller.verbose_name)
-            entity = {"entity_type": EntityType.CONTROLLER, "entity_uuid": None}
-            await system_logger.debug(
-                message=msg, description=ecp_detail, entity=entity
-            )
-
-            # TODO: задействовать новые коды ошибок VeiL
-            if ecp_detail and "not enough free space on data pool" in ecp_detail:
-                await system_logger.debug(
-                    _("Controller has not free space for creating new VM.")
-                )
-                raise VmCreationError(_("Not enough free space on data pool."))
-            elif ecp_detail and inner_retry_count < 10:
-                # Тут мы предполагаем, что контроллер заблокирован выполнением задачи. Это может быть и не так,
-                # но сейчас нам это не понятно.
-                await system_logger.debug(
-                    _("Possibly blocked by active task on ECP. Wait before next try.")
-                )
-                await asyncio.sleep(10)
-            else:
-                await system_logger.debug(_("Something went wrong. Interrupt while."))
-                raise VmCreationError("Can`t create VM")
-
-            await system_logger.debug("One more try")
-            await asyncio.sleep(1)
-
-        response_data = create_response.data
-        copy_result = dict(
-            ids=vm_configuration.domains_ids,
-            task_id=response_data.get("_task", dict()).get("id"),
+        # Параметры создания ВМ
+        vm_configuration = DomainConfiguration(
             verbose_name=verbose_name,
+            resource_pool=resource_pool_id,
+            parent=domain_id,
+            thin=create_thin_clones,
+            count=count,
         )
-        return copy_result
+
+        inner_retry_count = 0
+        while inner_retry_count < VEIL_MAX_VM_CREATE_ATTEMPTS:
+            # Send request to create vm
+            create_response = await vm_client.create(domain_configuration=vm_configuration)
+            # Если задача поставлена - досрочно прерываем попытки
+            if create_response.success:
+                copy_result = dict(
+                    ids=vm_configuration.domains_ids,
+                    task_id=create_response.task.api_object_id,
+                    verbose_name=verbose_name,
+                )
+                return copy_result
+
+            # if response status not in (200, 201, 202, 204)
+            # TODO: задействовать новые коды ошибок VeiL, когда их доделают
+
+            no_space = compare_error_detail(create_response, 'free space')
+            if no_space:
+                raise VmCreationError(_("Not enough free space on data pool."))
+
+            # Предполагаем, что контроллер заблокирован выполнением задачи.
+            # Это может быть и не так, но сейчас нам это не понятно.
+            await system_logger.warning(
+                _("Possibly blocked by active task on ECP. Wait before next try.")
+            )
+            await asyncio.sleep(VEIL_OPERATION_WAITING)
+            inner_retry_count += 1
+
+        # Попытки создать ВМ не увенчались успехом
+        raise VmCreationError("Can`t create VM")
 
     @staticmethod
     async def remove_vm(vm_id, creator, remove_vms_on_controller):
@@ -917,7 +893,9 @@ class Vm(VeilModel):
         await self.set_hostname()
         await self.reboot()
         await self.include_in_ad(active_directory_obj)
-        await self.include_in_ad_group(active_directory_obj, ad_cn_pattern)
+        # Ввод в группу AD только, если она прописана
+        if ad_cn_pattern and isinstance(ad_cn_pattern, str):
+            await self.include_in_ad_group(active_directory_obj, ad_cn_pattern)
         # Протоколируем успех
         msg = _("VM {} has been prepared.").format(self.verbose_name)
         await system_logger.info(message=msg, entity=self.entity)

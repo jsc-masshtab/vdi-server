@@ -2,7 +2,7 @@ import pytest
 
 from datetime import datetime, timedelta
 
-from web_app.tests.fixtures import fixt_db, fixt_auth_context  # noqa
+from web_app.tests.fixtures import fixt_db, fixt_auth_context, fixt_user  # noqa
 from web_app.tests.utils import execute_scheme
 from web_app.journal.schema import event_schema
 from common.models.auth import Group
@@ -48,3 +48,19 @@ async def test_event_creator(snapshot, fixt_db, fixt_auth_context):  # noqa
             extra_field_value="test",
         )
         await group.delete()
+
+
+@pytest.mark.asyncio
+async def test_export_journal(fixt_db, fixt_user, fixt_auth_context):  # noqa
+    start = datetime.now() - timedelta(days=1)
+    finish = datetime.now() + timedelta(minutes=1)
+    qu = """mutation {
+              eventExport(start: "%sZ", finish: "%sZ", journal_path: "/tmp/") {
+                ok
+              }
+         }""" % (
+      start.replace(microsecond=0).isoformat(),
+      finish.replace(microsecond=0).isoformat()
+    )
+    executed = await execute_scheme(event_schema, qu, context=fixt_auth_context)
+    assert executed["eventExport"]["ok"]

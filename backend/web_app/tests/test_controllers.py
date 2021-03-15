@@ -75,6 +75,7 @@ async def test_credentials(
 
 
 @pytest.mark.asyncio
+@pytest.mark.smoke_test
 async def test_resolve_controllers(
     fixt_db, snapshot, fixt_controller, fixt_auth_context
 ):  # noqa

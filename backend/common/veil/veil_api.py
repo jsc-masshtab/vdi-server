@@ -14,10 +14,14 @@ from veil_api_client import (
     VeilCacheAbstractClient,
 )
 
+from veil_api_client.base import VeilApiResponse
+from veil_api_client.api_objects import VeilController
+
 from common.settings import (
     VEIL_REQUEST_TIMEOUT,
     VEIL_MAX_URL_LEN,
     VEIL_CACHE_SERVER,
+    DEBUG
 )  # noqa: F401
 
 
@@ -113,51 +117,65 @@ class VdiVeilClient(VeilClient):
     """Отвечает за сетевое взаимодействие с ECP VeiL."""
 
     async def api_request(self, *args, **kwargs):
+        from common.log import system_logger
+        from common.languages import lang_init
+        from common.models.controller import Controller as ControllerModel, Status
 
-        response = await super().api_request(*args, **kwargs)
-        if not hasattr(response, "status_code"):
-            raise ValueError("Response is broken. Check veil_api_client version.")
-
+        _ = lang_init()
         url = kwargs.get("url")
         params = kwargs.get("params")
         api_object = kwargs.get("api_object")
 
+        # TODO: remove on 3.0.1
+        if DEBUG:
+            request_description = "url: {}\nparams: {}".format(url, params)
+            await system_logger.info(
+                message="veil requests debug", description=request_description
+            )
+
+        # Send request to VeiL ECP
+        response = await super().api_request(*args, **kwargs)
+        if not hasattr(response, "status_code"):
+            raise ValueError("Response is broken. Check veil_api_client version.")
+
         if hasattr(api_object, "api_object_id") and api_object.api_object_id:
             if response.status_code == 404 and isinstance(api_object, VeilDomainExt):
-                # TODO: нужно создать событие, что Domain удален на Veil
                 from common.models.vm import Vm
 
                 vm_object = await Vm.get(api_object.api_object_id)
                 if vm_object and vm_object.active:
                     await vm_object.make_failed()
+                await system_logger.warning(_('Can`t find VM {} on VeiL ECP.').format(api_object.api_object_id))
             elif response.status_code == 404 and isinstance(api_object, VeilTag):
-                # TODO: нужно создать событие, что тэг удален на Veil
                 from common.models.pool import Pool
 
                 query = Pool.update.values(tag=None).where(
                     Pool.tag == api_object.api_object_id
                 )
                 await query.gino.status()
+                await system_logger.warning(_('Can`t find Tag {} on VeiL ECP.').format(api_object.api_object_id))
 
-        if response.status_code in {401, 403}:
+        if not response.success:
             # Переключить и деактивировать контроллер
-            from common.models.controller import Controller as ControllerModel, Status
-
             controller_object = await ControllerModel.query.where(
                 ControllerModel.address == self.server_address
             ).gino.first()
-            if controller_object and isinstance(controller_object, ControllerModel):
-                await controller_object.deactivate(status=Status.BAD_AUTH)
+
             # Остановка клиента происходит при деактивации контроллера
+            if controller_object and isinstance(controller_object, ControllerModel):
+                if response.status_code in {401, 403}:
+                    await controller_object.deactivate(status=Status.BAD_AUTH)
+                elif isinstance(api_object, VeilController):
+                    # Деактивируем контроллер только для критичных ситуаций
+                    await controller_object.deactivate()
 
-        if not response.success:
-            from common.log import system_logger
-
-            error_description = "url: {}\nparams: {}\nresponse:{}".format(
-                url, params, response.data
+            controller_name = controller_object.verbose_name if controller_object else self.server_address
+            error_message = _("VeiL ECP {} request error.").format(controller_name)
+            error_description = "status code: {}\nurl: {}\nparams: {}\nresponse:{}".format(
+                response.status_code, url, params, response.data
             )
             await system_logger.warning(
-                message="Veil ECP request error.", description=error_description
+                message=error_message, description=error_description
             )
 
         return response
@@ -207,10 +225,10 @@ class VdiVeilClientSingleton(VeilClientSingleton):
 
 
 retry_configuration = VeilRetryConfiguration(
-    status_codes={401, 403, 400},
+    status_codes={401, 403},
     timeout=5,
     max_timeout=VEIL_REQUEST_TIMEOUT,
-    timeout_increase_step=1,
+    timeout_increase_step=10,
     num_of_attempts=3,
 )
 veil_client = VdiVeilClientSingleton(retry_opts=retry_configuration)
@@ -224,3 +242,16 @@ async def stop_veil_client():
     instances = veil_client.instances
     for instance in instances:
         await instances[instance].close()
+
+
+def compare_error_detail(response: VeilApiResponse, message: str) -> bool:
+    """Extract VeiL ECP error detail from response and check message`s occurrence."""
+    bad_input_types = not isinstance(response, VeilApiResponse) or not isinstance(message, str)
+    nothing_to_parse = bad_input_types or not response.error_code or not response.errors
+    if nothing_to_parse:
+        return False
+    for error in response.errors:
+        error_detail = error.get('detail', '')
+        if message in error_detail:
+            return True
+    return False
