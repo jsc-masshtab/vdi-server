@@ -72,7 +72,7 @@ class Event(db.Model):
             between(Event.created, start + timedelta(hours=3), finish + timedelta(hours=3))
         ).gino.all()
         if not query:
-            raise SilentError(_('Journal in this period is empty.'))
+            raise SilentError(_("Journal in this period is empty."))
 
         export = []
         for event in query:
@@ -96,9 +96,9 @@ class Event(db.Model):
                 )
             )
         except MemoryError:
-            raise SilentError(_('Not enough free space.'))
+            raise SilentError(_("Not enough free space."))
         except Exception as e:
-            raise SimpleError(_('Journal export error.'), description=e)
+            raise SimpleError(_("Journal export error."), description=e)
 
         return name
 

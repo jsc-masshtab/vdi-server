@@ -38,9 +38,5 @@ ignore =
     I202,
     # I201 Missing newline between import groups.
     I201,
-
-    # Для одинарных кавычек
-    # Q000 Remove bad quotes
-    Q000,
 exclude = .git,__pycache__,backend/common/migrations/versions,local_settings.py,tests,devops,frontend
 inline-quotes = double

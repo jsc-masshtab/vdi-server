@@ -7,56 +7,56 @@ import uuid
 class VeilTestServer:
 
     def __init__(self):
-        self.base_url = '/api/'
+        self.base_url = "/api/"
 
         self.app = web.Application()
 
         # handlers
-        self.app.add_routes([web.get(self.base_url + 'domains/{domain_id}/', self.get_domain_info)])
-        self.app.add_routes([web.get(self.base_url + 'domains/', self.get_domains)])
+        self.app.add_routes([web.get(self.base_url + "domains/{domain_id}/", self.get_domain_info)])
+        self.app.add_routes([web.get(self.base_url + "domains/", self.get_domains)])
 
-        self.app.add_routes([web.post(self.base_url + 'domains/{domain_id}/start/', self.start_vm)])
+        self.app.add_routes([web.post(self.base_url + "domains/{domain_id}/start/", self.start_vm)])
         # урлы, чтобы не отключился контроллер
-        self.app.add_routes([web.post(self.base_url + 'domains/{domain_id}/reboot/', self.start_vm)])
-        self.app.add_routes([web.post(self.base_url + 'domains/{domain_id}/remove/', self.start_vm)])
-        self.app.add_routes([web.post(self.base_url + 'domains/{domain_id}/set-hostname/', self.start_vm)])
+        self.app.add_routes([web.post(self.base_url + "domains/{domain_id}/reboot/", self.start_vm)])
+        self.app.add_routes([web.post(self.base_url + "domains/{domain_id}/remove/", self.start_vm)])
+        self.app.add_routes([web.post(self.base_url + "domains/{domain_id}/set-hostname/", self.start_vm)])
 
-        self.app.add_routes([web.post(self.base_url + 'domains/multi-create-domain/', self.multi_create_domain)])
-        self.app.add_routes([web.post(self.base_url + 'domains/{domain_id}/remote-access/', self.remote_access)])
+        self.app.add_routes([web.post(self.base_url + "domains/multi-create-domain/", self.multi_create_domain)])
+        self.app.add_routes([web.post(self.base_url + "domains/{domain_id}/remote-access/", self.remote_access)])
 
-        self.app.add_routes([web.get(self.base_url + 'tasks/{task_id}/', self.get_task_data)])
+        self.app.add_routes([web.get(self.base_url + "tasks/{task_id}/", self.get_task_data)])
 
-        self.app.add_routes([web.get(self.base_url + 'controllers/check/', self.check_controllers)])
-        self.app.add_routes([web.get(self.base_url + 'controllers/base-version/', self.get_base_controller_version)])
+        self.app.add_routes([web.get(self.base_url + "controllers/check/", self.check_controllers)])
+        self.app.add_routes([web.get(self.base_url + "controllers/base-version/", self.get_base_controller_version)])
 
         # resources
-        self.app.add_routes([web.get(self.base_url + 'clusters/', self.get_clusters)])
-        self.app.add_routes([web.get(self.base_url + 'clusters/{cluster_id}/', self.get_cluster)])
+        self.app.add_routes([web.get(self.base_url + "clusters/", self.get_clusters)])
+        self.app.add_routes([web.get(self.base_url + "clusters/{cluster_id}/", self.get_cluster)])
 
-        self.app.add_routes([web.get(self.base_url + 'resource_pools/', self.get_resource_pools)])
-        self.app.add_routes([web.get(self.base_url + 'resource_pools/{resource_pool_id}/', self.get_resource_pool)])
+        self.app.add_routes([web.get(self.base_url + "resource_pools/", self.get_resource_pools)])
+        self.app.add_routes([web.get(self.base_url + "resource_pools/{resource_pool_id}/", self.get_resource_pool)])
 
-        self.app.add_routes([web.get(self.base_url + 'nodes/', self.get_nodes)])
-        self.app.add_routes([web.get(self.base_url + 'nodes/{node_id}/', self.get_node)])
+        self.app.add_routes([web.get(self.base_url + "nodes/", self.get_nodes)])
+        self.app.add_routes([web.get(self.base_url + "nodes/{node_id}/", self.get_node)])
 
-        self.app.add_routes([web.get(self.base_url + 'data-pools/', self.get_datapools)])
-        self.app.add_routes([web.get(self.base_url + 'data-pools/{datapool_id}/', self.get_datapool)])
+        self.app.add_routes([web.get(self.base_url + "data-pools/", self.get_datapools)])
+        self.app.add_routes([web.get(self.base_url + "data-pools/{datapool_id}/", self.get_datapool)])
 
         # ssl
         self.ssl_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
-        self.ssl_context.load_cert_chain('87658490_0.0.0.0.cert', '87658490_0.0.0.0.key')
+        self.ssl_context.load_cert_chain("87658490_0.0.0.0.cert", "87658490_0.0.0.0.key")
 
         # tags
-        self.app.add_routes([web.get(self.base_url + 'tags/', self.get_tags)])
-        self.app.add_routes([web.post(self.base_url + 'tags/', self.get_tags)])
-        self.app.add_routes([web.put(self.base_url + 'tags/', self.get_tags)])
+        self.app.add_routes([web.get(self.base_url + "tags/", self.get_tags)])
+        self.app.add_routes([web.post(self.base_url + "tags/", self.get_tags)])
+        self.app.add_routes([web.put(self.base_url + "tags/", self.get_tags)])
 
     def start(self):
 
         web.run_app(self.app, port=443, ssl_context=self.ssl_context)
 
     async def get_domain_info(self, request):
-        domain_id = request.match_info['domain_id']
+        domain_id = request.match_info["domain_id"]
 
         res_dict = {
             "id": domain_id,
@@ -308,12 +308,12 @@ class VeilTestServer:
             "consoles": []
         }
 
-        return web.Response(text=json.dumps(res_dict), content_type='application/json')
+        return web.Response(text=json.dumps(res_dict), content_type="application/json")
 
     async def start_vm(self, request):
-        domain_id = request.match_info['domain_id']
+        domain_id = request.match_info["domain_id"]
         try:
-            is_async = request.rel_url.query['async']
+            is_async = request.rel_url.query["async"]
         except KeyError:
             is_async = 0
         if is_async:
@@ -381,7 +381,7 @@ class VeilTestServer:
                     }
                 }
             }
-            return web.Response(text=json.dumps(res_dict), content_type='application/json', status=202)
+            return web.Response(text=json.dumps(res_dict), content_type="application/json", status=202)
 
         else:
             res_dict = {
@@ -672,7 +672,7 @@ class VeilTestServer:
 
                 ]
             }
-            return web.Response(text=json.dumps(res_dict), content_type='application/json', status=200)
+            return web.Response(text=json.dumps(res_dict), content_type="application/json", status=200)
 
     async def multi_create_domain(self, request):
 
@@ -743,7 +743,7 @@ class VeilTestServer:
             }
         }
 
-        return web.Response(text=json.dumps(res_dict), content_type='application/json', status=202)
+        return web.Response(text=json.dumps(res_dict), content_type="application/json", status=202)
 
     async def remote_access(self, request):
         domain_id = str(uuid.uuid4())
@@ -764,16 +764,16 @@ class VeilTestServer:
                 }
             }
         }
-        return web.Response(text=json.dumps(res_dict), content_type='application/json', status=202)
+        return web.Response(text=json.dumps(res_dict), content_type="application/json", status=202)
 
     @staticmethod
     async def get_domains(request):
 
         try:
-            vm_ids_string = request.rel_url.query['ids']
+            vm_ids_string = request.rel_url.query["ids"]
             vm_ids = vm_ids_string.split(",")
         except KeyError:
-            vm_ids = ['e00219af-f99a-4615-bd3c-85646be3e1d5']
+            vm_ids = ["e00219af-f99a-4615-bd3c-85646be3e1d5"]
 
         results_list = list()
 
@@ -819,12 +819,12 @@ class VeilTestServer:
             "previous": None,
             "results": results_list
         }
-        return web.Response(text=json.dumps(res_dict), content_type='application/json')
+        return web.Response(text=json.dumps(res_dict), content_type="application/json")
 
     # /api/tasks/{id}/
     async def get_task_data(self, request):
 
-        task_id = request.match_info['task_id']
+        task_id = request.match_info["task_id"]
         res_dict = {
             "id": task_id,
             "verbose_name": "verbose_name",
@@ -911,14 +911,14 @@ class VeilTestServer:
                 "e1e1324d-993d-408e-a0aa-7259d18df3ff": "domain"
             }
         }
-        return web.Response(text=json.dumps(res_dict), content_type='application/json')
+        return web.Response(text=json.dumps(res_dict), content_type="application/json")
 
     async def check_controllers(self, request):
-        return web.Response(body=json.dumps(dict()), content_type='application/json')
+        return web.Response(body=json.dumps(dict()), content_type="application/json")
 
     async def get_base_controller_version(self, request):
         res_dict = {"version": "4.5.0"}
-        return web.Response(body=json.dumps(res_dict), content_type='application/json')
+        return web.Response(body=json.dumps(res_dict), content_type="application/json")
 
     async def get_clusters(self, request):
         res_dict = {
@@ -945,7 +945,7 @@ class VeilTestServer:
                 }
             ]
         }
-        return web.Response(body=json.dumps(res_dict), content_type='application/json')
+        return web.Response(body=json.dumps(res_dict), content_type="application/json")
 
     async def get_cluster(self, request):
         res_dict = {
@@ -1012,7 +1012,7 @@ class VeilTestServer:
             "anti_affinity_enabled": False,
             "vdi": False
         }
-        return web.Response(body=json.dumps(res_dict), content_type='application/json')
+        return web.Response(body=json.dumps(res_dict), content_type="application/json")
 
     # "id": "5a55eee9-4687-48b4-9002-b218eefe29e3",
     # "verbose_name": "Veil default cluster resource pool"
@@ -1035,7 +1035,7 @@ class VeilTestServer:
                 }
             ]
         }
-        return web.Response(body=json.dumps(res_dict), content_type='application/json')
+        return web.Response(body=json.dumps(res_dict), content_type="application/json")
 
     async def get_resource_pool(self, request):
         res_dict = {
@@ -1091,7 +1091,7 @@ class VeilTestServer:
                 "update_actual_size": True
             }
         }
-        return web.Response(body=json.dumps(res_dict), content_type='application/json')
+        return web.Response(body=json.dumps(res_dict), content_type="application/json")
 
     async def get_nodes(self, request):
         res_dict = {
@@ -1131,7 +1131,7 @@ class VeilTestServer:
                 }
             ]
         }
-        return web.Response(body=json.dumps(res_dict), content_type='application/json')
+        return web.Response(body=json.dumps(res_dict), content_type="application/json")
 
     async def get_node(self, request):
         res_dict = {
@@ -1372,7 +1372,7 @@ class VeilTestServer:
             "ballooning": True,
             "entity_type": "node"
         }
-        return web.Response(body=json.dumps(res_dict), content_type='application/json')
+        return web.Response(body=json.dumps(res_dict), content_type="application/json")
 
     async def get_datapools(self, request):
         res_dict = {
@@ -1420,7 +1420,7 @@ class VeilTestServer:
                 }
             ]
         }
-        return web.Response(body=json.dumps(res_dict), content_type='application/json')
+        return web.Response(body=json.dumps(res_dict), content_type="application/json")
 
     async def get_datapool(self, request):
         res_dict = {
@@ -1465,7 +1465,7 @@ class VeilTestServer:
             "tags": [
             ]
         }
-        return web.Response(body=json.dumps(res_dict), content_type='application/json')
+        return web.Response(body=json.dumps(res_dict), content_type="application/json")
 
     async def get_tags(self, request):
         res_dict = {
@@ -1489,9 +1489,9 @@ class VeilTestServer:
                 }
             ]
         }
-        return web.Response(body=json.dumps(res_dict), content_type='application/json')
+        return web.Response(body=json.dumps(res_dict), content_type="application/json")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     server = VeilTestServer()
     server.start()

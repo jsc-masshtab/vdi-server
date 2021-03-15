@@ -336,7 +336,7 @@ class Vm(VeilModel):
             # if response status not in (200, 201, 202, 204)
             # TODO: задействовать новые коды ошибок VeiL, когда их доделают
 
-            no_space = compare_error_detail(create_response, 'free space')
+            no_space = compare_error_detail(create_response, "free space")
             if no_space:
                 raise VmCreationError(_("Not enough free space on data pool."))
 

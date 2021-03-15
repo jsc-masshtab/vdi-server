@@ -145,7 +145,7 @@ class VdiVeilClient(VeilClient):
                 vm_object = await Vm.get(api_object.api_object_id)
                 if vm_object and vm_object.active:
                     await vm_object.make_failed()
-                await system_logger.warning(_('Can`t find VM {} on VeiL ECP.').format(api_object.api_object_id))
+                await system_logger.warning(_("Can`t find VM {} on VeiL ECP.").format(api_object.api_object_id))
             elif response.status_code == 404 and isinstance(api_object, VeilTag):
                 from common.models.pool import Pool
 
@@ -153,7 +153,7 @@ class VdiVeilClient(VeilClient):
                     Pool.tag == api_object.api_object_id
                 )
                 await query.gino.status()
-                await system_logger.warning(_('Can`t find Tag {} on VeiL ECP.').format(api_object.api_object_id))
+                await system_logger.warning(_("Can`t find Tag {} on VeiL ECP.").format(api_object.api_object_id))
 
         if not response.success:
             # Переключить и деактивировать контроллер
@@ -251,7 +251,7 @@ def compare_error_detail(response: VeilApiResponse, message: str) -> bool:
     if nothing_to_parse:
         return False
     for error in response.errors:
-        error_detail = error.get('detail', '')
+        error_detail = error.get("detail", "")
         if message in error_detail:
             return True
     return False

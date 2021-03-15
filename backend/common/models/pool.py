@@ -1392,17 +1392,17 @@ class AutomatedPool(db.Model):
         # get all success subtasks
         sub_tasks = await task_client.list(parent=multitask_id,
                                            status=VeilApiObjectStatus.success,
-                                           paginator=VeilRestPaginator(ordering='created', limit=10000),
-                                           extra_params={'fields': "id,name,entities"})
+                                           paginator=VeilRestPaginator(ordering="created", limit=10000),
+                                           extra_params={"fields": "id,name,entities"})
         # prepare conditions
         success_ids = list()
-        creating_task_pattern = 'Creating a virtual'
-        thin_clones_pattern = 'snapshot.'
+        creating_task_pattern = "Creating a virtual"
+        thin_clones_pattern = "snapshot."
         # parse VeiL ECP response
         for task in sub_tasks.response:
             if creating_task_pattern in task.name and task.name[-9:] != thin_clones_pattern:
                 for entity_id, entity_type in task.entities.items():
-                    if entity_type == 'domain':
+                    if entity_type == "domain":
                         success_ids.append(entity_id)
         # skip last domain in list
         if success_ids:
