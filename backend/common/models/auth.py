@@ -23,8 +23,6 @@ from common.veil.auth import hashers
 from common.languages import lang_init
 from common.log.journal import system_logger
 from common.veil.auth.veil_pam import veil_auth_class
-
-
 from common.models.user_tk_permission import (
     GroupTkPermission,
     TkPermission,

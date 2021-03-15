@@ -32,7 +32,5 @@ ignore =
     # Для импортов
     # I100 Import statements are in the wrong order.
     I100,
-    # I202 Additional newline in a group of imports.
-    I202,
 exclude = .git,__pycache__,backend/common/migrations/versions,local_settings.py,tests,devops,frontend
 inline-quotes = double

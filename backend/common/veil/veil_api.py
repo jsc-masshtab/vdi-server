@@ -13,7 +13,6 @@ from veil_api_client import (
     VeilRetryConfiguration,
     VeilTag,
 )
-
 from veil_api_client.base import VeilApiResponse
 from veil_api_client.api_objects import VeilController
 

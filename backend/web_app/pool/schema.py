@@ -23,13 +23,11 @@ from common.veil.veil_graphene import (
     VeilTagsType,
     VmState,
 )
-
 from common.models.auth import Entity, User
 from common.models.vm import Vm
 from common.models.controller import Controller
 from common.models.pool import AutomatedPool, Pool, StaticPool
 from common.models.task import PoolTaskType, Task, TaskStatus
-
 from common.languages import lang_init
 from common.log.journal import system_logger
 from common.veil.veil_redis import (

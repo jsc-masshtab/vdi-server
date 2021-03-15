@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 import sys
-
 import json
-
 import asyncio
 
 from pool_worker.pool_tasks import (
@@ -23,9 +21,7 @@ from common.veil.veil_redis import (
     a_redis_lpop,
 )
 from common.veil.veil_gino import EntityType
-
 from common.languages import lang_init
-
 from common.models.vm import Vm
 from common.models.pool import Pool
 from common.models.task import PoolTaskType, Task, TaskStatus

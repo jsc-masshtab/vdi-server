@@ -37,10 +37,7 @@ from veil_api_client import DomainTcpUsb, VeilRetryConfiguration
 from common.veil.veil_handlers import BaseWsHandler
 from common.log.journal import system_logger
 from common.languages import lang_init
-
-
 from common.settings import JWT_OPTIONS
-
 from common.veil.veil_redis import (
     REDIS_CLIENT,
     WS_MONITOR_CHANNEL_OUT,

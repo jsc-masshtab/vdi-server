@@ -37,7 +37,6 @@ from common.utils import extract_ordering_data
 from web_app.auth.license.utils import License
 
 from common.veil.veil_redis import get_thin_clients_count
-
 from common.models.auth import (
     Entity as EntityModel,
     EntityOwner as EntityOwnerModel,
@@ -48,7 +47,6 @@ from common.models.auth import (
 from common.models.authentication_directory import AuthenticationDirectory
 from common.models.vm import Vm as VmModel
 from common.models.task import Task
-
 from common.languages import lang_init
 from common.log.journal import system_logger
 

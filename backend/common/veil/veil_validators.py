@@ -2,7 +2,6 @@
 from graphene.types.structures import NonNull
 
 from common.veil.veil_errors import ValidationError
-
 from common.languages import lang_init
 
 

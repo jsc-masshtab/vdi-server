@@ -13,7 +13,6 @@ from asyncpg import DataError
 from common.database import db
 from common.languages import lang_init
 from common.settings import VEIL_OPERATION_WAITING
-
 from common.veil.veil_redis import INTERNAL_EVENTS_CHANNEL, REDIS_CLIENT
 from common.utils import gino_model_to_json_serializable_dict
 

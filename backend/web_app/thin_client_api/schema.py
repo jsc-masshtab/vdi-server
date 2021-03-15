@@ -7,10 +7,8 @@ import json
 from datetime import datetime, timedelta, timezone
 
 from common.settings import REDIS_THIN_CLIENT_CMD_CHANNEL
-
 from common.veil.veil_decorators import administrator_required
 from common.veil.veil_redis import REDIS_CLIENT, ThinClientCmd
-
 from common.languages import lang_init
 from common.utils import extract_ordering_data
 

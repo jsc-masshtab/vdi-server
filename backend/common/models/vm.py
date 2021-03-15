@@ -38,7 +38,6 @@ from common.veil.veil_errors import SimpleError, VmCreationError
 from common.veil.veil_redis import send_cmd_to_cancel_tasks_associated_with_entity
 from common.languages import lang_init
 from common.log.journal import system_logger
-
 from common.models.auth import (
     Entity as EntityModel,
     EntityOwner as EntityOwnerModel,

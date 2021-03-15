@@ -2,7 +2,6 @@
 import uuid
 import json
 import textwrap
-
 from enum import Enum
 
 from sqlalchemy import Enum as AlchemyEnum

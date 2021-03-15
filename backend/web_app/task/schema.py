@@ -15,9 +15,7 @@ from common.veil.veil_redis import (
 )
 from common.veil.veil_gino import EntityType
 from common.utils import convert_gino_model_to_graphene_type
-
 from common.models.task import PoolTaskType, Task, TaskStatus
-
 from common.languages import lang_init
 
 

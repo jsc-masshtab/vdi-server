@@ -5,11 +5,9 @@ from graphql.execution.base import ResolveInfo
 
 from common.settings import AUTH_ENABLED
 from common.veil.veil_gino import EntityType, Role
-
 from common.veil.auth.veil_jwt import extract_user_object
 from common.veil.veil_errors import Unauthorized
 from common.models.auth import User
-
 from common.languages import lang_init
 from common.log.journal import system_logger
 

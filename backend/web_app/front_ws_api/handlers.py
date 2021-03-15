@@ -15,7 +15,6 @@ from web_app.front_ws_api.subscription_sources import (
 from common.veil.veil_handlers import BaseWsHandler
 from common.languages import lang_init
 from common.log.journal import system_logger
-
 from common.veil.veil_redis import (
     INTERNAL_EVENTS_CHANNEL,
     REDIS_CLIENT,

@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """Old errors moved from Vdi v0.2."""
 import asyncio
-
 from abc import ABC
 
 from common.languages import lang_init

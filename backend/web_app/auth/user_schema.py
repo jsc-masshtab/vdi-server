@@ -15,7 +15,6 @@ from common.veil.veil_decorators import security_administrator_required
 from graphene import Enum as GrapheneEnum
 
 from common.models.user_tk_permission import TkPermission
-
 from common.languages import lang_init
 
 _ = lang_init()

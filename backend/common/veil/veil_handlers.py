@@ -16,10 +16,8 @@ from common.veil.auth.veil_jwt import (
     jwtauth,
 )
 from common.veil.veil_errors import InvalidUserError, ValidationError
-
 from common.models.auth import User, UserJwtInfo
 from common.models.pool import Pool
-
 from common.log.journal import system_logger
 from common.languages import lang_init
 

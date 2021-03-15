@@ -20,7 +20,6 @@ from common.settings import (
 )
 from common.log.journal import system_logger
 from common.languages import lang_init
-
 from common.database import start_gino, stop_gino
 from common.veil.veil_api import get_veil_client, stop_veil_client
 from common.veil.veil_redis import REDIS_POOL
@@ -36,7 +35,6 @@ from web_app.auth.authentication_directory.auth_dir_schema import auth_dir_schem
 from web_app.pool.schema import pool_schema
 from web_app.controller.schema import controller_schema
 from web_app.controller.resource_schema import resources_schema
-
 from web_app.auth.urls import auth_api_urls
 from web_app.auth.license.urls import license_api_urls
 from web_app.thin_client_api.urls import thin_client_api_urls
