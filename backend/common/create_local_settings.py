@@ -54,7 +54,7 @@ def write_local_settings(txt_data: list, file_name: str = "local_settings.py"):
 
 
 def parse_args():
-    """Module arguments parser.
+    """Arguments parser module.
 
     file_name: full path to new file
 

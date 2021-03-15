@@ -189,7 +189,7 @@ class AuthenticationDirectoryType(graphene.ObjectType):
     possible_ad_groups = graphene.List(AuthenticationDirectoryGroupType)
 
     async def resolve_service_password(self, _info):
-        """Dummy value for not displayed field."""
+        """Will showed dummy value for not displayed field."""
         return "*" * 7
 
     async def resolve_mappings(self, _info, limit, offset):

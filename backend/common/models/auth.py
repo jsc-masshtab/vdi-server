@@ -103,7 +103,7 @@ class User(AbstractSortableStatusModel, VeilModel):
         return EntityType.USER
 
     async def superuser(self) -> bool:
-        """Should be used instead of is_superuser attr."""
+        """Следует использовать вместо is_superuser attr."""
         if PAM_AUTH:
             return await self.pam_user_in_group(PAM_SUPERUSER_GROUP)
         else:

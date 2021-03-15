@@ -131,7 +131,7 @@ def extract_user_and_token_with_no_expire_check(headers: dict) -> str:
 
 
 async def extract_user_object(headers: dict) -> User:
-    """Returns User object."""
+    """User object return."""
     username = extract_user(headers)
     return await User.get_object(
         extra_field_name="username", extra_field_value=username
