@@ -50,6 +50,7 @@ services:
       - vdi-test-postgres
       - vdi-test-redis
       - vdi-test-veil-server
+# manual run only
 #  vdi-black:
 #    image: mercutiodesign/docker-black
 #    container_name: vdi-black
