@@ -2,6 +2,7 @@
 import os
 
 from alembic.config import Config
+
 from types import SimpleNamespace
 
 path = os.path.dirname(__file__)

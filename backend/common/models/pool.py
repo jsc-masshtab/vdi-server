@@ -4,6 +4,7 @@ from textwrap import wrap
 import uuid
 import random
 from enum import Enum
+
 from sqlalchemy import (
     Enum as AlchemyEnum,
     and_,
@@ -14,10 +15,12 @@ from sqlalchemy import (
     union_all,
 )
 from sqlalchemy.dialects.postgresql import ARRAY, UUID
+
 from asyncpg.exceptions import UniqueViolationError
 
 from common.settings import POOL_MAX_CREATE_ATTEMPTS, VEIL_MAX_IDS_LEN, VEIL_OPERATION_WAITING
 from common.database import db
+
 from veil_api_client import (TagConfiguration, VeilApiObjectStatus, VeilEntityConfiguration,
                              VeilRestPaginator, VeilRetryConfiguration)
 
@@ -30,7 +33,9 @@ from common.veil.veil_errors import (
     VmCreationError,
 )
 from common.utils import extract_ordering_data
+
 from web_app.auth.license.utils import License
+
 from common.veil.veil_redis import get_thin_clients_count
 
 from common.models.auth import (

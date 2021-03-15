@@ -2,6 +2,7 @@
 """Extra cryptography for controller password store."""
 
 from cryptography.fernet import Fernet
+
 from common.settings import FERNET_KEY
 
 

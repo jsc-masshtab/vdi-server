@@ -3,6 +3,7 @@ import asyncio
 import re
 
 import graphene
+
 from asyncpg.exceptions import UniqueViolationError
 
 from common.database import db

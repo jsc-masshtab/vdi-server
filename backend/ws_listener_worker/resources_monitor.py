@@ -7,6 +7,7 @@ from tornado.websocket import WebSocketClosedError
 
 # from tornado.websocket import WebSocketError
 from tornado.websocket import websocket_connect
+
 from common.settings import WS_PING_INTERVAL, WS_PING_TIMEOUT
 
 from common.models.controller import Controller

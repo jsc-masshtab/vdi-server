@@ -2,6 +2,7 @@
 # GraphQL schema
 
 import graphene
+
 import json
 from datetime import datetime, timedelta, timezone
 
@@ -12,6 +13,7 @@ from common.veil.veil_redis import REDIS_CLIENT, ThinClientCmd
 
 from common.languages import lang_init
 from common.utils import extract_ordering_data
+
 from sqlalchemy.sql import desc
 from sqlalchemy import and_
 

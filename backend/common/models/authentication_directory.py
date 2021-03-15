@@ -2,8 +2,11 @@
 import uuid
 from enum import Enum
 from typing import Optional, Tuple
+
 import ldap
+
 from asyncpg.exceptions import UniqueViolationError
+
 from sqlalchemy import Enum as AlchemyEnum, Index
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.sql import desc, text

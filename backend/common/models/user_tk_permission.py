@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 from enum import Enum
+
 from sqlalchemy import Enum as AlchemyEnum, UniqueConstraint
 
 from common.veil.veil_gino import AbstractSortableStatusModel
 from common.database import db
 
 import uuid
+
 from sqlalchemy.dialects.postgresql import UUID
 
 

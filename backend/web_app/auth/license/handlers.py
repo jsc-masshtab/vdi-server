@@ -6,7 +6,9 @@ from common.veil.veil_errors import Unauthorized, ValidationError
 from common.veil.veil_decorators import is_administrator
 from common.veil.auth.veil_jwt import jwtauth
 from common.veil.veil_redis import get_thin_clients_count
+
 from web_app.auth.license.utils import License
+
 from common.languages import lang_init
 from common.log.journal import system_logger
 

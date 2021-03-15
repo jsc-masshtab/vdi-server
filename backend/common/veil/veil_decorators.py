@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from functools import wraps
+
 from graphql.execution.base import ResolveInfo
 
 from common.settings import AUTH_ENABLED

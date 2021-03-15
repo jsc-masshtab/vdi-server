@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 import graphene
+
 import re
+
 from sqlalchemy import and_
 
 from common.database import db
@@ -11,6 +13,7 @@ from common.veil.veil_errors import AssertError, SimpleError, ValidationError
 from common.veil.veil_decorators import security_administrator_required
 
 from graphene import Enum as GrapheneEnum
+
 from common.models.user_tk_permission import TkPermission
 
 from common.languages import lang_init

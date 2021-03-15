@@ -6,6 +6,7 @@ from typing import Awaitable, Optional
 from tornado import websocket
 from tornado.web import RequestHandler
 from tornado.escape import json_decode
+
 from graphene_tornado.tornado_graphql_handler import TornadoGraphQLHandler
 
 from common.veil.auth.veil_jwt import (

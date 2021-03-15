@@ -5,7 +5,9 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func, text
 from sqlalchemy import Index
 from sqlalchemy import Enum as AlchemyEnum
+
 from asyncpg.exceptions import UniqueViolationError
+
 from veil_aio_au import VeilResult as VeilAuthResult
 
 from common.settings import PAM_AUTH, PAM_SUPERUSER_GROUP, PAM_USER_GROUP, SECRET_KEY

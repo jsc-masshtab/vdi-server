@@ -3,7 +3,9 @@ import uuid
 import asyncio
 
 from sqlalchemy import desc
+
 from enum import IntEnum
+
 from ldap3 import (
     Connection as ActiveDirectoryConnection,
     SAFE_SYNC,
@@ -13,7 +15,9 @@ from ldap3.core.exceptions import LDAPException
 
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy import Enum as AlchemyEnum
+
 from asyncpg.exceptions import UniqueViolationError
+
 from veil_api_client import DomainBackupConfiguration, DomainConfiguration
 
 from common.database import db

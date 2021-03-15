@@ -8,6 +8,7 @@ from common.models.user_tk_permission import TkPermission
 from common.veil.veil_validators import MutationValidation
 from common.veil.veil_errors import SimpleError, ValidationError
 from common.veil.veil_decorators import security_administrator_required
+
 from web_app.auth.user_schema import PermissionTypeGraphene, UserType
 
 from common.languages import lang_init

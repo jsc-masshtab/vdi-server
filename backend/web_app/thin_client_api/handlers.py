@@ -1,14 +1,19 @@
 # -*- coding: utf-8 -*-
 from abc import ABC
 from typing import Any
+
 from tornado.web import Application
 from tornado import httputil
+
 import json
 from json.decoder import JSONDecodeError
 
 from tornado import websocket
+
 from aiohttp import client_exceptions
+
 import asyncio
+
 from common.settings import (
     REDIS_DB,
     REDIS_PASSWORD,
@@ -21,12 +26,14 @@ from common.veil.veil_handlers import BaseHandler
 from common.veil.auth.veil_jwt import decode_jwt, jwtauth
 
 from sqlalchemy.sql import func
+
 from common.models.pool import AutomatedPool, Pool as PoolModel
 from common.models.task import PoolTaskType, Task, TaskStatus
 from common.models.active_tk_connection import ActiveTkConnection
 from common.models.auth import User
 
 from veil_api_client import DomainTcpUsb, VeilRetryConfiguration
+
 from common.veil.veil_handlers import BaseWsHandler
 from common.log.journal import system_logger
 from common.languages import lang_init

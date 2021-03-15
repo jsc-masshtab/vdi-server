@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import re
+
 import graphene
 from graphene import Enum as GrapheneEnum
 
