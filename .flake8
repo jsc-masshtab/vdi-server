@@ -1,4 +1,5 @@
 [flake8]
+application-import-names = backend
 import-order-style = pep8
 ignore =
     # E501 line too long
@@ -29,8 +30,5 @@ ignore =
     D106,
     # D107 Missing docstring in __init__
     D107,
-
-    # Для импортов
-    I202,
 exclude = .git,__pycache__,backend/common/migrations/versions,local_settings.py,tests,devops,frontend
 inline-quotes = double
