@@ -5,23 +5,21 @@ from datetime import datetime, timedelta, timezone
 
 import graphene
 
-from common.settings import REDIS_THIN_CLIENT_CMD_CHANNEL
-from common.veil.veil_decorators import administrator_required
-from common.veil.veil_redis import REDIS_CLIENT, ThinClientCmd
-from common.languages import lang_init
-from common.utils import extract_ordering_data
-
-from sqlalchemy.sql import desc
 from sqlalchemy import and_
+from sqlalchemy.sql import desc
 
 from common.database import db
+from common.languages import lang_init
 from common.models.active_tk_connection import (
     ActiveTkConnection,
     TkConnectionStatistics,
 )
 from common.models.auth import User
 from common.models.vm import Vm
-
+from common.settings import REDIS_THIN_CLIENT_CMD_CHANNEL
+from common.utils import extract_ordering_data
+from common.veil.veil_decorators import administrator_required
+from common.veil.veil_redis import REDIS_CLIENT, ThinClientCmd
 
 _ = lang_init()
 

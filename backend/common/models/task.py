@@ -1,29 +1,26 @@
 # -*- coding: utf-8 -*-
-import uuid
 import json
 import textwrap
+import uuid
 from enum import Enum
 
-from sqlalchemy import Enum as AlchemyEnum
+from sqlalchemy import Enum as AlchemyEnum, and_
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
 
-from web_app.front_ws_api.subscription_sources import VDI_TASKS_SUBSCRIPTION
-
-from common.models.auth import Entity
-
-from sqlalchemy import and_
 
 from common.database import db
+from common.languages import lang_init
+from common.models.auth import Entity
+from common.utils import gino_model_to_json_serializable_dict
+from common.veil.veil_gino import AbstractSortableStatusModel, EntityType
 from common.veil.veil_redis import (
     INTERNAL_EVENTS_CHANNEL,
     REDIS_CLIENT,
     redis_error_handle,
 )
-from common.veil.veil_gino import AbstractSortableStatusModel, EntityType
-from common.languages import lang_init
-from common.utils import gino_model_to_json_serializable_dict
 
+from web_app.front_ws_api.subscription_sources import VDI_TASKS_SUBSCRIPTION
 
 _ = lang_init()
 

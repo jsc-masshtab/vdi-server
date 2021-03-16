@@ -2,9 +2,9 @@
 
 # import aioredis   # TODO: переехать на aio-redis
 import asyncio
-from enum import Enum
 import json
 import time
+from enum import Enum
 from functools import wraps
 
 import redis
@@ -12,7 +12,6 @@ import redis
 import common.settings as settings
 from common.languages import lang_init
 
-# import common.models as models
 from web_app.front_ws_api.subscription_sources import VDI_TASKS_SUBSCRIPTION
 
 

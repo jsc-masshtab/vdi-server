@@ -3,8 +3,8 @@ from datetime import datetime, timedelta, timezone
 
 from sqlalchemy.sql import func
 
-from common.settings import WS_PING_TIMEOUT
 from common.models.active_tk_connection import ActiveTkConnection
+from common.settings import WS_PING_TIMEOUT
 
 
 class ThinClientConnMonitor:

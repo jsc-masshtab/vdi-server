@@ -3,24 +3,19 @@ import uuid
 from enum import Enum
 from typing import Optional, Tuple
 
-import ldap
-
 from asyncpg.exceptions import UniqueViolationError
+
+import ldap
 
 from sqlalchemy import Enum as AlchemyEnum, Index
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.sql import desc, text
 
-from common.settings import LDAP_TIMEOUT
 from common.database import db
-from common.veil.veil_gino import (
-    AbstractSortableStatusModel,
-    EntityType,
-    Status,
-    VeilModel,
-)
-from common.veil.auth.fernet_crypto import decrypt, encrypt
+from common.languages import lang_init
+from common.log.journal import system_logger
 from common.models.auth import Group as GroupModel, User as UserModel
+from common.settings import LDAP_TIMEOUT
 from common.veil.auth.auth_dir_utils import (
     extract_domain_from_username,
     get_ad_user_groups,
@@ -29,9 +24,14 @@ from common.veil.auth.auth_dir_utils import (
     unpack_ad_info,
     unpack_guid,
 )
-from common.languages import lang_init
-from common.log.journal import system_logger
+from common.veil.auth.fernet_crypto import decrypt, encrypt
 from common.veil.veil_errors import SilentError, ValidationError
+from common.veil.veil_gino import (
+    AbstractSortableStatusModel,
+    EntityType,
+    Status,
+    VeilModel,
+)
 
 
 _ = lang_init()

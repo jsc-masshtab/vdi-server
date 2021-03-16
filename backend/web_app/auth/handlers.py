@@ -1,19 +1,18 @@
 # -*- coding: utf-8 -*-
 from abc import ABC
 
-from common.veil.veil_handlers import BaseHandler
-from common.veil.veil_gino import EntityType
+from common.languages import lang_init
+from common.log.journal import system_logger
+from common.models.auth import User
+from common.models.authentication_directory import AuthenticationDirectory
+from common.settings import EXTERNAL_AUTH, LOCAL_AUTH, PAM_AUTH
 from common.veil.auth.veil_jwt import (
     encode_jwt,
     extract_user_and_token_with_no_expire_check,
 )
-from common.models.auth import User
-from common.models.authentication_directory import AuthenticationDirectory
-from common.settings import EXTERNAL_AUTH, LOCAL_AUTH, PAM_AUTH
-from common.languages import lang_init
-from common.log.journal import system_logger
 from common.veil.veil_errors import AssertError, ValidationError
-
+from common.veil.veil_gino import EntityType
+from common.veil.veil_handlers import BaseHandler
 
 _ = lang_init()
 

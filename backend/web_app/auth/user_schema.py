@@ -2,20 +2,18 @@
 import re
 
 import graphene
+from graphene import Enum as GrapheneEnum
 
 from sqlalchemy import and_
 
 from common.database import db
+from common.languages import lang_init
 from common.models.auth import User
+from common.models.user_tk_permission import TkPermission
+from common.veil.veil_decorators import security_administrator_required
+from common.veil.veil_errors import AssertError, SimpleError, ValidationError
 from common.veil.veil_gino import Role, RoleTypeGraphene
 from common.veil.veil_validators import MutationValidation
-from common.veil.veil_errors import AssertError, SimpleError, ValidationError
-from common.veil.veil_decorators import security_administrator_required
-
-from graphene import Enum as GrapheneEnum
-
-from common.models.user_tk_permission import TkPermission
-from common.languages import lang_init
 
 _ = lang_init()
 

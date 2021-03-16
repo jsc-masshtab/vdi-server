@@ -5,14 +5,13 @@ import graphene
 from graphene import Enum as GrapheneEnum
 
 from common.database import db
+from common.languages import lang_init
+from common.models.auth import Group
+from common.models.authentication_directory import AuthenticationDirectory, Mapping
+from common.veil.veil_decorators import security_administrator_required
+from common.veil.veil_errors import SilentError, ValidationError
 from common.veil.veil_gino import Status, StatusGraphene
 from common.veil.veil_validators import MutationValidation
-from common.veil.veil_errors import SilentError, ValidationError
-from common.veil.veil_decorators import security_administrator_required
-from common.models.authentication_directory import AuthenticationDirectory, Mapping
-from common.models.auth import Group
-from common.languages import lang_init
-
 
 _ = lang_init()
 

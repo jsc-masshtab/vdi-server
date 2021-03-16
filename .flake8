@@ -1,6 +1,5 @@
 [flake8]
-application-import-names = backend
-import-order-style = pep8
+application-import-names = common, web_app, pool_worker, ws_listener_worker
 ignore =
     # E501 line too long
     E501,

@@ -1,13 +1,10 @@
 # -*- coding: utf-8 -*-
 # TODO: удалять зависимые записи журнала событий, возможно через ON_DELETE
 #  при удалении родительской сущности (нет явной связи, сами не удалятся).
-
-import uuid
-import json
 import csv
-
+import json
+import uuid
 from datetime import datetime, timedelta
-
 from pathlib import Path
 
 import redis
@@ -16,13 +13,12 @@ from sqlalchemy import and_, between
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
 
-from web_app.front_ws_api.subscription_sources import EVENTS_SUBSCRIPTION
-
 from common.database import db
-from common.veil.veil_redis import INTERNAL_EVENTS_CHANNEL, REDIS_CLIENT
-from common.utils import gino_model_to_json_serializable_dict
 from common.languages import lang_init
+from common.utils import gino_model_to_json_serializable_dict
+from common.veil.veil_redis import INTERNAL_EVENTS_CHANNEL, REDIS_CLIENT
 
+from web_app.front_ws_api.subscription_sources import EVENTS_SUBSCRIPTION
 
 _ = lang_init()
 

@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import os
-
 from types import SimpleNamespace
 
 from alembic.config import Config

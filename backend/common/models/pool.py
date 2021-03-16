@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 import asyncio
-from textwrap import wrap
-import uuid
 import random
+import uuid
 from enum import Enum
+from textwrap import wrap
+
+from asyncpg.exceptions import UniqueViolationError
 
 from sqlalchemy import (
     Enum as AlchemyEnum,
@@ -16,27 +18,12 @@ from sqlalchemy import (
 )
 from sqlalchemy.dialects.postgresql import ARRAY, UUID
 
-from asyncpg.exceptions import UniqueViolationError
-
-from common.settings import POOL_MAX_CREATE_ATTEMPTS, VEIL_MAX_IDS_LEN, VEIL_OPERATION_WAITING
-from common.database import db
-
 from veil_api_client import (TagConfiguration, VeilApiObjectStatus, VeilEntityConfiguration,
                              VeilRestPaginator, VeilRetryConfiguration)
 
-from common.veil.veil_gino import EntityType, Status, VeilModel
-from common.veil.veil_graphene import VmState
-from common.veil.veil_errors import (
-    PoolCreationError,
-    SimpleError,
-    ValidationError,
-    VmCreationError,
-)
-from common.utils import extract_ordering_data
-
-from web_app.auth.license.utils import License
-
-from common.veil.veil_redis import get_thin_clients_count
+from common.database import db
+from common.languages import lang_init
+from common.log.journal import system_logger
 from common.models.auth import (
     Entity as EntityModel,
     EntityOwner as EntityOwnerModel,
@@ -45,11 +32,21 @@ from common.models.auth import (
     UserGroup as UserGroupModel,
 )
 from common.models.authentication_directory import AuthenticationDirectory
-from common.models.vm import Vm as VmModel
 from common.models.task import Task
-from common.languages import lang_init
-from common.log.journal import system_logger
+from common.models.vm import Vm as VmModel
+from common.settings import POOL_MAX_CREATE_ATTEMPTS, VEIL_MAX_IDS_LEN, VEIL_OPERATION_WAITING
+from common.utils import extract_ordering_data
+from common.veil.veil_errors import (
+    PoolCreationError,
+    SimpleError,
+    ValidationError,
+    VmCreationError,
+)
+from common.veil.veil_gino import EntityType, Status, VeilModel
+from common.veil.veil_graphene import VmState
+from common.veil.veil_redis import get_thin_clients_count
 
+from web_app.auth.license.utils import License
 from web_app.front_ws_api.subscription_sources import POOLS_SUBSCRIPTION
 
 

@@ -1,20 +1,20 @@
 # -*- coding: utf-8 -*-
-from enum import Enum
 import asyncio
 import json
+from enum import Enum
+
+from asyncpg import DataError
 
 from graphene import Enum as GrapheneEnum
 
 from sqlalchemy.sql import and_, desc
 from sqlalchemy.sql.schema import Column
 
-from asyncpg import DataError
-
 from common.database import db
 from common.languages import lang_init
 from common.settings import VEIL_OPERATION_WAITING
-from common.veil.veil_redis import INTERNAL_EVENTS_CHANNEL, REDIS_CLIENT
 from common.utils import gino_model_to_json_serializable_dict
+from common.veil.veil_redis import INTERNAL_EVENTS_CHANNEL, REDIS_CLIENT
 
 _ = lang_init()
 

@@ -1,8 +1,25 @@
 # -*- coding: utf-8 -*-
-import sys
-import json
 import asyncio
+import json
+import sys
 
+from sqlalchemy import and_
+
+from common.database import db
+from common.languages import lang_init
+from common.log.journal import system_logger
+from common.models.pool import Pool
+from common.models.task import PoolTaskType, Task, TaskStatus
+from common.models.vm import Vm
+from common.veil.veil_gino import EntityType
+from common.veil.veil_redis import (
+    POOL_TASK_QUEUE,
+    POOL_WORKER_CMD_QUEUE,
+    PoolWorkerCmd,
+    a_redis_lpop,
+)
+
+from pool_worker.pool_locks import PoolLocks
 from pool_worker.pool_tasks import (
     AbstractTask,
     BackupVmsTask,
@@ -12,24 +29,6 @@ from pool_worker.pool_tasks import (
     InitPoolTask,
     PrepareVmTask,
 )
-from pool_worker.pool_locks import PoolLocks
-
-from common.veil.veil_redis import (
-    POOL_TASK_QUEUE,
-    POOL_WORKER_CMD_QUEUE,
-    PoolWorkerCmd,
-    a_redis_lpop,
-)
-from common.veil.veil_gino import EntityType
-from common.languages import lang_init
-from common.models.vm import Vm
-from common.models.pool import Pool
-from common.models.task import PoolTaskType, Task, TaskStatus
-from common.database import db
-
-from sqlalchemy import and_
-
-from common.log.journal import system_logger
 
 
 _ = lang_init()

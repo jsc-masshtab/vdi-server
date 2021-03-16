@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
-import uuid
 import asyncio
-
+import uuid
 from enum import IntEnum
 
-from sqlalchemy import desc
+from asyncpg.exceptions import UniqueViolationError
 
 from ldap3 import (
     Connection as ActiveDirectoryConnection,
@@ -13,29 +12,12 @@ from ldap3 import (
 )
 from ldap3.core.exceptions import LDAPException
 
+from sqlalchemy import Enum as AlchemyEnum, desc
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy import Enum as AlchemyEnum
-
-from asyncpg.exceptions import UniqueViolationError
 
 from veil_api_client import DomainBackupConfiguration, DomainConfiguration
 
 from common.database import db
-from common.settings import (
-    VEIL_GUEST_AGENT_EXTRA_WAITING,
-    VEIL_MAX_VM_CREATE_ATTEMPTS,
-    VEIL_OPERATION_WAITING,
-    VEIL_VM_PREPARE_TIMEOUT,
-)
-from common.veil.veil_gino import (
-    EntityType,
-    Status,
-    VeilModel,
-    get_list_of_values_from_db,
-)
-from common.veil.veil_api import compare_error_detail
-from common.veil.veil_errors import SimpleError, VmCreationError
-from common.veil.veil_redis import send_cmd_to_cancel_tasks_associated_with_entity
 from common.languages import lang_init
 from common.log.journal import system_logger
 from common.models.auth import (
@@ -45,6 +27,21 @@ from common.models.auth import (
 )
 from common.models.authentication_directory import AuthenticationDirectory
 from common.models.event import Event, EventReadByUser
+from common.settings import (
+    VEIL_GUEST_AGENT_EXTRA_WAITING,
+    VEIL_MAX_VM_CREATE_ATTEMPTS,
+    VEIL_OPERATION_WAITING,
+    VEIL_VM_PREPARE_TIMEOUT,
+)
+from common.veil.veil_api import compare_error_detail
+from common.veil.veil_errors import SimpleError, VmCreationError
+from common.veil.veil_gino import (
+    EntityType,
+    Status,
+    VeilModel,
+    get_list_of_values_from_db,
+)
+from common.veil.veil_redis import send_cmd_to_cancel_tasks_associated_with_entity
 
 _ = lang_init()
 

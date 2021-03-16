@@ -26,9 +26,9 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import padding
 
+from common.log.journal import system_logger
 from common.settings import PRIVATE_PEM_FPATH, SERIAL_KEY_FPATH
 from common.veil.veil_redis import read_license_dict, save_license_dict
-from common.log.journal import system_logger
 
 
 class LicenseData:

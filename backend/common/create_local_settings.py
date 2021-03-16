@@ -2,9 +2,9 @@
 """Generate random string."""
 import argparse
 
-from common.veil.auth.django_crypto import get_random_string
-
 from cryptography.fernet import Fernet
+
+from common.veil.auth.django_crypto import get_random_string
 
 SECRET_ARGS = ["SECRET_KEY", "FERNET_KEY", "DB_PASS", "REDIS_PASSWORD"]
 

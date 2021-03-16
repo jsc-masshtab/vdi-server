@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
 import uuid
 
-from common.veil.veil_gino import AbstractSortableStatusModel
-from common.database import db
-
-from sqlalchemy.sql import func
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.sql import func
 
+from common.database import db
 from common.models.auth import User
+from common.veil.veil_gino import AbstractSortableStatusModel
 
 
 class ActiveTkConnection(db.Model, AbstractSortableStatusModel):

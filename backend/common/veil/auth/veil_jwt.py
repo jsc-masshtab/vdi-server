@@ -2,6 +2,8 @@
 """JWT additions for Tornado."""
 import datetime
 
+import jwt
+
 from common.languages import lang_init
 from common.log.journal import system_logger
 from common.models.auth import User, UserJwtInfo
@@ -13,8 +15,6 @@ from common.settings import (
     JWT_OPTIONS,
     SECRET_KEY,
 )
-
-import jwt
 
 
 _ = lang_init()

@@ -1,14 +1,12 @@
 # -*- coding: utf-8 -*-
+import uuid
 from enum import Enum
 
-import uuid
-
 from sqlalchemy import Enum as AlchemyEnum, UniqueConstraint
-
-from common.veil.veil_gino import AbstractSortableStatusModel
-from common.database import db
-
 from sqlalchemy.dialects.postgresql import UUID
+
+from common.database import db
+from common.veil.veil_gino import AbstractSortableStatusModel
 
 
 class TkPermission(Enum):

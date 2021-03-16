@@ -1,14 +1,18 @@
 # -*- coding: utf-8 -*-
-from abc import ABC
 import textwrap
+from abc import ABC
 from typing import Awaitable, Optional
-
-from tornado import websocket
-from tornado.web import RequestHandler
-from tornado.escape import json_decode
 
 from graphene_tornado.tornado_graphql_handler import TornadoGraphQLHandler
 
+from tornado import websocket
+from tornado.escape import json_decode
+from tornado.web import RequestHandler
+
+from common.languages import lang_init
+from common.log.journal import system_logger
+from common.models.auth import User, UserJwtInfo
+from common.models.pool import Pool
 from common.veil.auth.veil_jwt import (
     decode_jwt,
     extract_user,
@@ -16,10 +20,6 @@ from common.veil.auth.veil_jwt import (
     jwtauth,
 )
 from common.veil.veil_errors import InvalidUserError, ValidationError
-from common.models.auth import User, UserJwtInfo
-from common.models.pool import Pool
-from common.log.journal import system_logger
-from common.languages import lang_init
 
 _ = lang_init()
 

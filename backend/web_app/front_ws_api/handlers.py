@@ -7,14 +7,9 @@ from tornado import httputil
 from tornado import websocket
 from tornado.web import Application
 
-from web_app.front_ws_api.subscription_sources import (
-    SubscriptionCmd,
-    VDI_FRONT_ALLOWED_SUBSCRIPTIONS_LIST,
-)
-
-from common.veil.veil_handlers import BaseWsHandler
 from common.languages import lang_init
 from common.log.journal import system_logger
+from common.veil.veil_handlers import BaseWsHandler
 from common.veil.veil_redis import (
     INTERNAL_EVENTS_CHANNEL,
     REDIS_CLIENT,
@@ -22,6 +17,10 @@ from common.veil.veil_redis import (
     a_redis_get_message,
 )
 
+from web_app.front_ws_api.subscription_sources import (
+    SubscriptionCmd,
+    VDI_FRONT_ALLOWED_SUBSCRIPTIONS_LIST,
+)
 
 _ = lang_init()
 

@@ -6,18 +6,16 @@ from graphql import GraphQLError
 from sqlalchemy import and_, desc, text
 
 from common.database import db
-from common.veil.veil_decorators import administrator_required, operator_required
-from common.utils import extract_ordering_data
-from common.veil.veil_errors import SimpleError
-from common.models.event import Event, EventReadByUser, JournalSettings
-from common.models.auth import Entity
-
-from web_app.auth.user_schema import User, UserType
-
-from common.settings import DEFAULT_NAME
 from common.languages import lang_init
 from common.log.journal import system_logger
+from common.models.auth import Entity
+from common.models.event import Event, EventReadByUser, JournalSettings
+from common.settings import DEFAULT_NAME
+from common.utils import extract_ordering_data
+from common.veil.veil_decorators import administrator_required, operator_required
+from common.veil.veil_errors import SimpleError
 
+from web_app.auth.user_schema import User, UserType
 
 _ = lang_init()
 

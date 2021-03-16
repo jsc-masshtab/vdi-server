@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Обобщенный функционал напрямую связанный с VeiL ECP."""
-from typing import Optional
 import json
+from typing import Optional
 
 from pymemcache.client.base import Client as MemcachedClient
 
@@ -13,8 +13,8 @@ from veil_api_client import (
     VeilRetryConfiguration,
     VeilTag,
 )
-from veil_api_client.base import VeilApiResponse
 from veil_api_client.api_objects import VeilController
+from veil_api_client.base import VeilApiResponse
 
 from common.settings import (
     DEBUG,

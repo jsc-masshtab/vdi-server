@@ -1,32 +1,31 @@
 # -*- coding: utf-8 -*-
 import uuid
 
+from asyncpg.exceptions import UniqueViolationError
+
+from sqlalchemy import Enum as AlchemyEnum, Index
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func, text
-from sqlalchemy import Index
-from sqlalchemy import Enum as AlchemyEnum
-
-from asyncpg.exceptions import UniqueViolationError
 
 from veil_aio_au import VeilResult as VeilAuthResult
 
-from common.settings import PAM_AUTH, PAM_SUPERUSER_GROUP, PAM_USER_GROUP, SECRET_KEY
 from common.database import db
+from common.languages import lang_init
+from common.log.journal import system_logger
+from common.models.user_tk_permission import (
+    GroupTkPermission,
+    TkPermission,
+    UserTkPermission,
+)
+from common.settings import PAM_AUTH, PAM_SUPERUSER_GROUP, PAM_USER_GROUP, SECRET_KEY
+from common.veil.auth import hashers
+from common.veil.auth.veil_pam import veil_auth_class
+from common.veil.veil_errors import PamError, SimpleError
 from common.veil.veil_gino import (
     AbstractSortableStatusModel,
     EntityType,
     Role,
     VeilModel,
-)
-from common.veil.veil_errors import PamError, SimpleError
-from common.veil.auth import hashers
-from common.languages import lang_init
-from common.log.journal import system_logger
-from common.veil.auth.veil_pam import veil_auth_class
-from common.models.user_tk_permission import (
-    GroupTkPermission,
-    TkPermission,
-    UserTkPermission,
 )
 
 _ = lang_init()
