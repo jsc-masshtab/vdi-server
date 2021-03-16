@@ -763,6 +763,7 @@ class Pool(VeilModel):
         await pool.set_status(Status.ACTIVE)
         entity = {"entity_type": EntityType.POOL, "entity_uuid": pool_id}
         # Активация ВМ. Добавлено 02.11.2020 - не факт, что нужно.
+        # 16.03.2021 Нужно для подорожника
         vms = await VmModel.query.where(VmModel.pool_id == pool_id).gino.all()
         for vm in vms:
             if vm.status != Status.RESERVED:
