@@ -4,12 +4,12 @@ import json
 
 from common.database import db
 
-from common.models.vm import Vm
+from common.models.vm import Vm, VmPowerState
 from common.models.pool import Pool
 from common.models.controller import Controller
 from common.models.auth import Entity as EntityModel, EntityOwner as EntityOwnerModel
 
-from common.veil.veil_gino import EntityType
+from common.veil.veil_gino import EntityType, Status
 
 from common.veil.veil_redis import (
     WS_MONITOR_CHANNEL_OUT,
@@ -18,6 +18,10 @@ from common.veil.veil_redis import (
 )
 
 from common.log.journal import system_logger
+from common.languages import lang_init
+
+
+_ = lang_init()
 
 
 class VmManager:
@@ -25,7 +29,7 @@ class VmManager:
     Возможно, логичнее было бы выделить в именной отдельный процесс"""
 
     def __init__(self):
-        self.query_interval = 30
+        self.query_interval = 60
 
     async def start(self):
 
@@ -34,50 +38,70 @@ class VmManager:
         # keeps VMs powered on
         loop.create_task(self._keep_vms_on_task())
         # VM verbose names synchronization
-        loop.create_task(self._synchronize_vm_names_task())
+        loop.create_task(self._synchronize_vm_data_task())
 
     async def _keep_vms_on_task(self):
-        """Держим машины вкюченными, если машины находятся в пуле с поднятым флагом keep_vms_on и
-        имеют назначенного юзера"""
+        """Держим машины вкюченными, если машины находятся в пуле с поднятым флагом keep_vms_on,
+        имеют назначенного юзера и находятся в статусе ACTIVE"""
         while True:
+            try:
+                controllers = await Controller.get_objects()
 
-            # get vm info from controllers
-            controllers = await Controller.get_objects()
+                for controller in controllers:
 
-            for controller in controllers:
+                    # Получить из бд машины имеющие пользователя и которые нужно держать включенными
+                    ero_query = EntityOwnerModel.select("entity_id").where(
+                        EntityOwnerModel.user_id != None  # noqa: E711
+                    )  # noqa
 
-                # get vms which have users and should be kept on
-                ero_query = EntityOwnerModel.select("entity_id").where(
-                    EntityOwnerModel.user_id != None  # noqa: E711
-                )  # noqa
-
-                entity_query = EntityModel.select("entity_uuid").where(
-                    (EntityModel.entity_type == EntityType.VM)
-                    & (EntityModel.id.in_(ero_query))  # noqa: W503
-                )
-
-                local_vm_data_list = (
-                    await db.select([Vm.id])
-                    .select_from(Vm.join(Pool))
-                    .where(
-                        Pool.keep_vms_on
-                        & (Pool.controller == controller.id)  # noqa: W503
-                        & (Vm.id.in_(entity_query))  # noqa: W503
+                    entity_query = EntityModel.select("entity_uuid").where(
+                        (EntityModel.entity_type == EntityType.VM)
+                        & (EntityModel.id.in_(ero_query))  # noqa: W503
                     )
-                    .gino.all()
-                )
-                vm_ids_list = [str(vm_id) for (vm_id,) in local_vm_data_list]
-                # print('!!!vm_ids_list ', vm_ids_list, flush=True)
 
-                # turn them on
-                if len(vm_ids_list) > 0:
-                    await controller.veil_client.domain(template=0).multi_start(
-                        entity_ids=vm_ids_list
+                    local_vm_data = (
+                        await db.select([Vm.id])
+                        .select_from(Vm.join(Pool))
+                        .where(
+                            Pool.keep_vms_on
+                            & (Pool.controller == controller.id)  # noqa: W503
+                            & (Vm.id.in_(entity_query))  # noqa: W503
+                        )
+                        .gino.all()
                     )
+                    vm_ids_from_db = [str(vm_id) for (vm_id,) in local_vm_data]
+                    # print('!!!vm_ids_from_db ', vm_ids_from_db, flush=True)
+                    if not vm_ids_from_db:
+                        continue
+
+                    # Get VMs states from controller
+                    ids_str = ",".join(vm_ids_from_db)
+                    fields = ["id", "user_power_state", "status"]
+                    domains_list_response = await controller.veil_client.domain().list(
+                        fields=fields, params={"ids": ids_str})
+
+                    controller_vms = domains_list_response.paginator_results
+                    # print('!!!controller_vms ', controller_vms, flush=True)
+
+                    # Сформировать список вм которые НЕ включены и имеют активный статус
+                    vm_ids_to_power_on = [vm_info["id"] for vm_info in controller_vms
+                                          if vm_info["user_power_state"] != VmPowerState.ON.value and  # noqa: W504
+                                          vm_info["status"] == Status.ACTIVE.value]
+                    # print('!!!vm_ids_to_power_on ', vm_ids_to_power_on, flush=True)
+                    if not vm_ids_to_power_on:
+                        continue
+
+                    # turn them on
+                    await controller.veil_client.domain(template=0).multi_start(entity_ids=vm_ids_to_power_on)
+
+            except asyncio.CancelledError:
+                break
+            except Exception as ex:
+                await system_logger.debug(_('Keep vms on task error {}.') .format(str(ex)))
 
             await asyncio.sleep(self.query_interval)
 
-    async def _synchronize_vm_names_task(self):
+    async def _synchronize_vm_data_task(self):
         """Если на контроллере меняется имя ВМ, то обновляем его на VDI"""
 
         redis_subscriber = REDIS_CLIENT.pubsub()
@@ -110,4 +134,4 @@ class VmManager:
             except asyncio.CancelledError:
                 break
             except Exception as ex:
-                await system_logger.debug(str(ex))
+                await system_logger.debug(_('Synchronize vm data task error {}.').format(str(ex)))
