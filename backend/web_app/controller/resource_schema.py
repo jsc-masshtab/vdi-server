@@ -428,7 +428,7 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
                     "slug": tag.slug,
                 }
             )
-        resource_data["cpu_count"] = veil_domain.cpu_count
+        resource_data["cpu_count"] = veil_domain.cpu_count_prop
         resource_data["parent_name"] = veil_domain.parent_name
         if veil_domain.guest_agent:
             resource_data["guest_agent"] = veil_domain.guest_agent.qemu_state

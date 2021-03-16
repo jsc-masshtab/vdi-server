@@ -471,7 +471,7 @@ class PoolType(graphene.ObjectType):
                 "id": controller.id,
                 "verbose_name": controller.verbose_name,
             }
-            data["cpu_count"] = veil_domain.cpu_count
+            data["cpu_count"] = veil_domain.cpu_count_prop
             data["parent_name"] = veil_domain.parent_name
             data["status"] = vm.status
             if veil_domain.guest_agent:
