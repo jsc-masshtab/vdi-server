@@ -782,7 +782,8 @@ class Pool(VeilModel):
         if status == Status.FAILED:
             vms = await VmModel.query.where(VmModel.pool_id == pool_id).gino.all()
             for vm in vms:
-                await vm.update(status=Status.FAILED).apply()
+                if vm.status != Status.RESERVED:
+                    await vm.update(status=Status.FAILED).apply()
         await system_logger.warning(
             _("Pool {} status changed to {}.").format(pool.verbose_name, status.value), entity=entity
         )
