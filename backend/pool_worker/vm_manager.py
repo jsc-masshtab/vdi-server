@@ -20,6 +20,7 @@ from common.veil.veil_redis import (
 from common.log.journal import system_logger
 from common.languages import lang_init
 
+from common.settings import VM_MANGER_DATA_QUERY_INTERVAL
 
 _ = lang_init()
 
@@ -27,9 +28,6 @@ _ = lang_init()
 class VmManager:
     """Здесь действия над вм, которые выполняются автоматом в ходе выполнения приложения.
     Возможно, логичнее было бы выделить в именной отдельный процесс"""
-
-    def __init__(self):
-        self.query_interval = 60
 
     async def start(self):
 
@@ -97,9 +95,10 @@ class VmManager:
             except asyncio.CancelledError:
                 break
             except Exception as ex:
-                await system_logger.debug(_('Keep vms on task error {}.') .format(str(ex)))
+                await system_logger.debug(message=_('Keep vms on task error.'),
+                                          description=str(ex))
 
-            await asyncio.sleep(self.query_interval)
+            await asyncio.sleep(VM_MANGER_DATA_QUERY_INTERVAL)
 
     async def _synchronize_vm_data_task(self):
         """Если на контроллере меняется имя ВМ, то обновляем его на VDI"""
@@ -134,4 +133,5 @@ class VmManager:
             except asyncio.CancelledError:
                 break
             except Exception as ex:
-                await system_logger.debug(_('Synchronize vm data task error {}.').format(str(ex)))
+                await system_logger.debug(message=_('Synchronize vm data task error.'),
+                                          description=str(ex))
