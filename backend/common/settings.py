@@ -121,6 +121,10 @@ REDIS_THIN_CLIENT_CMD_CHANNEL = (
 # Команда по ws будет послана ТК
 REDIS_ASYNC_TIMEOUT = 0.01
 
+# VM manager settings
+# -----------------------------
+VM_MANGER_DATA_QUERY_INTERVAL = 60
+
 try:
     from .local_settings import *  # noqa
 except ImportError:

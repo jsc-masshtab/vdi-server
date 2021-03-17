@@ -677,7 +677,6 @@ class Pool(VeilModel):
         :param users_list: uuid пользователей для которых выполняется поиск
         :return: gino.status()
         """
-        # from common.models import VmModel
         entity_query = EntityModel.select("id").where(
             (EntityModel.entity_type == EntityType.VM)
             & (  # noqa: W503
@@ -732,6 +731,12 @@ class Pool(VeilModel):
                     _("Delete VMs for AutomatedPool {}.").format(self.verbose_name)
                 )
                 vm_ids = await VmModel.get_vms_ids_in_pool(self.id)
+                for vm_id in vm_ids:
+                    vm = await VmModel.get(vm_id)
+                    await system_logger.info(
+                        _("VM {} has been removed from ECP VeiL.").format(vm.verbose_name),
+                        entity=vm.entity,
+                    )
                 await VmModel.remove_vms(vm_ids, creator, True)
 
             if self.tag:
@@ -918,9 +923,47 @@ class Pool(VeilModel):
             )
         return vms_info
 
+    async def remove_vms(self, vm_ids, creator):
+        """Перенесенный метод из схемы и аодели ВМ."""
+        if not vm_ids:
+            entity = {"entity_type": EntityType.POOL, "entity_uuid": None}
+            raise SimpleError(_("List of VM should not be empty."), entity=entity)
+
+        # vms check
+        # get list of vms ids which are in pool_id
+        vms_ids_in_pool = await VmModel.get_vms_ids_in_pool(self.id)
+
+        for vm_id in vm_ids:
+            if str(vm_id) not in vms_ids_in_pool:
+                # check if given vm_ids not in vms_ids_in_pool
+                entity = {"entity_type": EntityType.POOL, "entity_uuid": None}
+                raise SimpleError(
+                    _("VM doesn't belong to specified pool."),
+                    description=str(vm_id),
+                    entity=entity,
+                )
+            vm = await VmModel.get(vm_id)
+            if self.tag:
+                pool_tag = await self.get_tag(self.tag)
+                await self.tag_remove_entity(tag=self.tag, entity_id=vm_id)
+                await system_logger.info(
+                    _("Tag {} removed from VM {}.").format(
+                        pool_tag.verbose_name, vm.verbose_name
+                    ),
+                    user="system",
+                    entity=vm.entity,
+                )
+            automated_pool = await AutomatedPool.get(self.id)
+            if automated_pool:
+                msg = _("VM {} has been removed from the pool {} and ECP VeiL.").format(vm.verbose_name,
+                                                                                        self.verbose_name)
+            else:
+                msg = _("VM {} has been removed from the pool {}.").format(vm.verbose_name,
+                                                                           self.verbose_name)
+            await system_logger.info(msg, entity=vm.entity, user=creator)
+
     async def free_user_vms(self, user_id):
         """Т.к. на тонком клиенте нет выбора VM - будут сложности если у пользователя несколько VM в рамках 1 пула."""
-        # from common.models import VmModel
         vms_query = VmModel.select("id").where(VmModel.pool_id == self.id)
         entity_query = EntityModel.select("id").where(
             (EntityModel.entity_type == EntityType.VM)
@@ -1025,15 +1068,6 @@ class Pool(VeilModel):
             entity_uuid=str(entity_id), entity_class="domain"
         )
         entity_response = await pool_tag.remove_entity(entity_configuration=entity)
-        if entity_response.success:
-            entity = {"entity_type": EntityType.VM, "entity_uuid": None}
-            await system_logger.info(
-                _("Tag {} removed from VM {}.").format(
-                    pool_tag.verbose_name, self.verbose_name
-                ),
-                user="system",
-                entity=entity,
-            )
         return entity_response.success
 
     async def tag_add_entity(self, tag, entity_id, verbose_name):
@@ -1120,17 +1154,27 @@ class StaticPool(db.Model):
             await system_logger.debug(_("StaticPool: Create VMs."))
             # TODO: эксперементальное обновление
             for vm_type in veil_vm_data:
-                await VmModel.create(
+                vm = await VmModel.create(
                     id=vm_type.id,
                     verbose_name=vm_type.verbose_name,
                     pool_id=pool.id,
                     template_id=None,
                     created_by_vdi=False,
-                    pool_tag=tag,
                 )
                 await system_logger.debug(
                     _("VM {} created.").format(vm_type.verbose_name)
                 )
+
+                msg = _("VM {} created.").format(vm.verbose_name)
+                description = _("VM {} created and added to the pool {}.").format(
+                    vm.verbose_name, verbose_name
+                )
+                await system_logger.info(message=msg, description=description, entity=vm.entity)
+
+                if tag:
+                    await pl.tag_add_entity(
+                        tag=tag, entity_id=vm.id, verbose_name=vm.verbose_name
+                    )
 
             await system_logger.info(
                 _("Static pool {} created.").format(verbose_name),
@@ -1496,10 +1540,20 @@ class AutomatedPool(db.Model):
                         template_id=str(self.template_id),
                         created_by_vdi=True,
                         verbose_name=domain.verbose_name,
-                        pool_tag=pool.tag,
                         status=vm_status
                     )
                     vm_obj_list.append(vm_object)
+
+                    msg = _("VM {} created.").format(vm_object.verbose_name)
+                    description = _("VM {} created and added to the pool {}.").format(
+                        vm_object.verbose_name, verbose_name
+                    )
+                    await system_logger.info(message=msg, description=description, entity=vm_object.entity)
+
+                    if pool.tag:
+                        await pool.tag_add_entity(
+                            tag=pool.tag, entity_id=vm_object.id, verbose_name=vm_object.verbose_name
+                        )
 
         # Логирование результата созданных ВМ (совпадение количества) происходит выше
         return vm_obj_list
