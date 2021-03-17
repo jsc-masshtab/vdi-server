@@ -246,24 +246,89 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
     )
     vms = templates
 
-    # Кластеры
     @classmethod
-    @administrator_required
-    async def resolve_cluster(cls, root, info, creator, cluster_id, controller_id):
-        """Получение информации о конкретном кластере на контроллере."""
+    async def get_resources_list(cls, resource_type, limit, offset, ordering: str = None, template: bool = None):
+        """Все ресурсы на подключенных ECP VeiL."""
+        controllers = await cls.fetch_all()
+        resources_list = list()
+        for controller in controllers:
+            paginator = VeilRestPaginator(ordering=ordering, limit=limit, offset=offset)
+            # Прерываем выполнение при отсутствии клиента
+            if not controller.veil_client:
+                continue
+            # Получаем список для отдельного типа ресурсов
+            if resource_type == "cluster":
+                veil_response = await controller.veil_client.cluster().list(paginator=paginator)
+            elif resource_type == "node":
+                veil_response = await controller.veil_client.node().list(paginator=paginator)
+            elif resource_type == "datapool":
+                veil_response = await controller.veil_client.data_pool().list(paginator=paginator)
+            elif resource_type == "resource_pool":
+                veil_response = await controller.veil_client.resource_pool().list(paginator=paginator)
+            elif resource_type == "domain":
+                veil_response = await controller.veil_client.domain(template=template).list(paginator=paginator)
+
+            for data in veil_response.response:
+                resource = data.public_attrs
+                # Добавляем id, так как в response он не присутствует в чистом виде
+                resource["id"] = resource["api_object_id"]
+                # Добавляем параметры контроллера на VDI
+                resource["controller"] = {
+                    "id": controller.id,
+                    "verbose_name": controller.verbose_name,
+                    "address": controller.address,
+                }
+                resources_list.append(resource)
+
+        if not ordering:
+            resources_list.sort(key=lambda data: data["verbose_name"], reverse=True)
+
+        if ordering == "controller":
+            resources_list.sort(key=lambda data: data["controller"]["verbose_name"])
+        elif ordering == "-controller":
+            resources_list.sort(
+                key=lambda data: data["controller"]["verbose_name"], reverse=True
+            )
+
+        return resources_list
+
+    @classmethod
+    async def get_resource_data(cls, resource_type, resource_id, controller_id):
+        """Получение информации о конкретном ресурсе на контроллере."""
         controller = await cls.fetch_by_id(controller_id)
 
         # Прерываем выполнение при отсутствии клиента
         if not controller.veil_client:
             return
-        cluster_info = await controller.veil_client.cluster(
-            cluster_id=str(cluster_id)
-        ).info()
-        resource_data = cluster_info.value
-        resource_data["controller"] = {
-            "id": controller.id,
-            "verbose_name": controller.verbose_name,
-        }
+        # Получаем инфо для отдельного типа ресурсов
+        if resource_type == "cluster":
+            resource_info = await controller.veil_client.cluster(cluster_id=str(resource_id)).info()
+        elif resource_type == "node":
+            resource_info = await controller.veil_client.node(node_id=str(resource_id)).info()
+        elif resource_type == "datapool":
+            resource_info = await controller.veil_client.data_pool(data_pool_id=str(resource_id)).info()
+        elif resource_type == "resource_pool":
+            resource_info = await controller.veil_client.resource_pool(resource_pool_id=str(resource_id)).info()
+        elif resource_type == "domain":
+            resource_info = await controller.veil_client.domain(domain_id=str(resource_id)).info()
+
+        if resource_info.success:
+            # В случае успеха добавляем параметры контроллера на VDI
+            resource_data = resource_info.value
+            resource_data["controller"] = {
+                "id": controller.id,
+                "verbose_name": controller.verbose_name,
+            }
+            return resource_data
+        else:
+            raise SilentError(_("{} is unreachable on ECP VeiL.").format(resource_type))
+
+    # Кластеры
+    @classmethod
+    @administrator_required
+    async def resolve_cluster(cls, root, info, creator, cluster_id, controller_id):
+        resource_data = await cls.get_resource_data(resource_type="cluster", resource_id=cluster_id,
+                                                    controller_id=controller_id)
         return ResourceClusterType(**resource_data)
 
     @classmethod
@@ -271,39 +336,11 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
     async def resolve_clusters(
         cls, root, info, creator, limit, offset, ordering: str = None
     ):
-        """Все кластеры на подключенных ECP VeiL."""
-        controllers = await cls.fetch_all()
+        clusters_list = await cls.get_resources_list(limit=limit, offset=offset, ordering=ordering,
+                                                     resource_type="cluster")
         veil_clusters_list = list()
-        clusters_list = list()
-        for controller in controllers:
-            paginator = VeilRestPaginator(ordering=ordering, limit=limit, offset=offset)
-            # Прерываем выполнение при отсутствии клиента
-            if not controller.veil_client:
-                continue
-            veil_response = await controller.veil_client.cluster().list(
-                paginator=paginator
-            )
-            for cluster in veil_response.paginator_results:
-                # Добавляем параметры контроллера на VDI
-                cluster["controller"] = {
-                    "id": controller.id,
-                    "verbose_name": controller.verbose_name,
-                }
-                clusters_list.append(cluster)
-
-        if not ordering:
-            clusters_list.sort(key=lambda data: data["verbose_name"], reverse=True)
-
-        if ordering == "controller":
-            clusters_list.sort(key=lambda data: data["controller"]["verbose_name"])
-        elif ordering == "-controller":
-            clusters_list.sort(
-                key=lambda data: data["controller"]["verbose_name"], reverse=True
-            )
-
         for resource_data in clusters_list:
             veil_clusters_list.append(ResourceClusterType(**resource_data))
-
         return veil_clusters_list
 
     # Пулы ресурсов
@@ -312,84 +349,28 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
     async def resolve_resource_pool(
         cls, root, info, creator, resource_pool_id, controller_id
     ):
-        """"Получение информации о конкретном пуле ресурсов на контроллере."""
-        controller = await cls.fetch_by_id(controller_id)
-        # Прерываем выполнение при отсутствии клиента
-        if not controller.veil_client:
-            return
-        veil_response = await controller.veil_client.resource_pool(
-            resource_pool_id=str(resource_pool_id)
-        ).info()
-        for data in veil_response.response:
-            resource_pool = data.public_attrs
-            resource_pool["controller"] = {
-                "id": controller.id,
-                "verbose_name": controller.verbose_name,
-                "address": controller.address,
-            }
-        return ResourcePoolType(**resource_pool)
+        resource_data = await cls.get_resource_data(resource_type="resource_pool", resource_id=resource_pool_id,
+                                                    controller_id=controller_id)
+        return ResourcePoolType(**resource_data)
 
     @classmethod
     @administrator_required
     async def resolve_resource_pools(
         cls, root, info, creator, limit, offset, ordering: str = None
     ):
-        """Все пулы ресурсов на подключенных ECP VeiL."""
-        controllers = await cls.fetch_all()
+        resource_pools_list = await cls.get_resources_list(limit=limit, offset=offset, ordering=ordering,
+                                                           resource_type="resource_pool")
         veil_resource_pools_list = list()
-        resource_pools_list = list()
-        for controller in controllers:
-            paginator = VeilRestPaginator(ordering=ordering, limit=limit, offset=offset)
-            # Прерываем выполнение при отсутствии клиента
-            if not controller.veil_client:
-                continue
-            veil_response = await controller.veil_client.resource_pool().list(
-                paginator=paginator
-            )
-            for data in veil_response.response:
-                resource_pool = data.public_attrs
-                # Добавляем id, так как в response он не присутствует в чистом виде
-                resource_pool["id"] = resource_pool["api_object_id"]
-                # Добавляем параметры контроллера на VDI
-                resource_pool["controller"] = {
-                    "id": controller.id,
-                    "verbose_name": controller.verbose_name,
-                    "address": controller.address,
-                }
-                resource_pools_list.append(resource_pool)
-
-        if not ordering:
-            resource_pools_list.sort(key=lambda data: data["verbose_name"])
-
-        if ordering == "controller":
-            resource_pools_list.sort(
-                key=lambda data: data["controller"]["verbose_name"]
-            )
-        elif ordering == "-controller":
-            resource_pools_list.sort(
-                key=lambda data: data["controller"]["verbose_name"], reverse=True
-            )
-
         for data in resource_pools_list:
             veil_resource_pools_list.append(ResourcePoolType(**data))
-
         return veil_resource_pools_list
 
     # Ноды
     @classmethod
     @administrator_required
     async def resolve_node(cls, root, info, creator, node_id, controller_id):
-        """"Получение информации о конкретной ноде на контроллере."""
-        controller = await cls.fetch_by_id(controller_id)
-        # Прерываем выполнение при отсутствии клиента
-        if not controller.veil_client:
-            return
-        node_info = await controller.veil_client.node(node_id=str(node_id)).info()
-        resource_data = node_info.value
-        resource_data["controller"] = {
-            "id": controller.id,
-            "verbose_name": controller.verbose_name,
-        }
+        resource_data = await cls.get_resource_data(resource_type="node", resource_id=node_id,
+                                                    controller_id=controller_id)
         resource_data["cpu_count"] = resource_data["cpu_topology"]["cpu_count"]
         return ResourceNodeType(**resource_data)
 
@@ -398,58 +379,19 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
     async def resolve_nodes(
         cls, root, info, creator, limit, offset, ordering: str = None
     ):
-        """Все ноды (серверы) на подключенных ECP VeiL."""
-        controllers = await cls.fetch_all()
+        nodes_list = await cls.get_resources_list(limit=limit, offset=offset, ordering=ordering,
+                                                  resource_type="node")
         veil_nodes_list = list()
-        nodes_list = list()
-        for controller in controllers:
-            paginator = VeilRestPaginator(ordering=ordering, limit=limit, offset=offset)
-            # Прерываем выполнение при отсутствии клиента
-            if not controller.veil_client:
-                continue
-            veil_response = await controller.veil_client.node().list(
-                paginator=paginator
-            )
-            for node in veil_response.paginator_results:
-                # Добавляем параметры контроллера на VDI
-                node["controller"] = {
-                    "id": controller.id,
-                    "verbose_name": controller.verbose_name,
-                }
-                nodes_list.append(node)
-
-        if not ordering:
-            nodes_list.sort(key=lambda data: data["verbose_name"])
-
-        if ordering == "controller":
-            nodes_list.sort(key=lambda data: data["controller"]["verbose_name"])
-        elif ordering == "-controller":
-            nodes_list.sort(
-                key=lambda data: data["controller"]["verbose_name"], reverse=True
-            )
-
         for resource_data in nodes_list:
             veil_nodes_list.append(ResourceNodeType(**resource_data))
-
         return veil_nodes_list
 
     # Пулы данных
     @classmethod
     @administrator_required
     async def resolve_datapool(cls, root, info, creator, datapool_id, controller_id):
-        """Получение информации о конкретном пуле данных на контроллере."""
-        controller = await cls.fetch_by_id(controller_id)
-        # Прерываем выполнение при отсутствии клиента
-        if not controller.veil_client:
-            return
-        datapool_info = await controller.veil_client.data_pool(
-            data_pool_id=str(datapool_id)
-        ).info()
-        resource_data = datapool_info.value
-        resource_data["controller"] = {
-            "id": controller.id,
-            "verbose_name": controller.verbose_name,
-        }
+        resource_data = await cls.get_resource_data(resource_type="datapool", resource_id=datapool_id,
+                                                    controller_id=controller_id)
         return ResourceDataPoolType(**resource_data)
 
     @classmethod
@@ -457,39 +399,11 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
     async def resolve_datapools(
         cls, root, info, creator, limit, offset, ordering: str = None
     ):
-        """Все пулы данных (datapools) на подключенных ECP VeiL."""
-        controllers = await cls.fetch_all()
+        datapools_list = await cls.get_resources_list(limit=limit, offset=offset, ordering=ordering,
+                                                      resource_type="datapool")
         veil_datapools_list = list()
-        datapools_list = list()
-        for controller in controllers:
-            paginator = VeilRestPaginator(ordering=ordering, limit=limit, offset=offset)
-            # Прерываем выполнение при отсутствии клиента
-            if not controller.veil_client:
-                return
-            veil_response = await controller.veil_client.data_pool().list(
-                paginator=paginator
-            )
-            for datapool in veil_response.paginator_results:
-                # Добавляем параметры контроллера на VDI
-                datapool["controller"] = {
-                    "id": controller.id,
-                    "verbose_name": controller.verbose_name,
-                }
-                datapools_list.append(datapool)
-
-        if not ordering:
-            datapools_list.sort(key=lambda data: data["verbose_name"])
-
-        if ordering == "controller":
-            datapools_list.sort(key=lambda data: data["controller"]["verbose_name"])
-        elif ordering == "-controller":
-            datapools_list.sort(
-                key=lambda data: data["controller"]["verbose_name"], reverse=True
-            )
-
         for resource_data in datapools_list:
             veil_datapools_list.append(ResourceDataPoolType(**resource_data))
-
         return veil_datapools_list
 
     # Виртуальные машины и шаблоны
@@ -500,37 +414,28 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
         Даже если отправить template=True, а с таким ID только ВМ - VeiL вернет данные.
         """
         controller = await cls.fetch_by_id(controller_id)
-        # Прерываем выполнение при отсутствии клиента
-        if not controller.veil_client:
-            return
         veil_domain = controller.veil_client.domain(domain_id=str(domain_id))
-        vm_info = await veil_domain.info()
-        if vm_info.success:
-            resource_data = vm_info.value
-            response = await veil_domain.tags_list()
-            resource_data["domain_tags"] = list()
-            for tag in response.response:
-                resource_data["domain_tags"].append(
-                    {
-                        "colour": tag.colour,
-                        "verbose_name": tag.verbose_name,
-                        "slug": tag.slug,
-                    }
-                )
-            resource_data["controller"] = {
-                "id": controller.id,
-                "verbose_name": controller.verbose_name,
-            }
-            resource_data["cpu_count"] = veil_domain.cpu_count
-            resource_data["parent_name"] = veil_domain.parent_name
-            if veil_domain.guest_agent:
-                resource_data["guest_agent"] = veil_domain.guest_agent.qemu_state
-            if veil_domain.powered:
-                resource_data["hostname"] = veil_domain.hostname
-                resource_data["address"] = veil_domain.guest_agent.ipv4
-            return ResourceVmType(**resource_data)
-        else:
-            raise SilentError(_("VM is unreachable on ECP VeiL."))
+        await veil_domain.info()
+        resource_data = await cls.get_resource_data(resource_type="domain", resource_id=domain_id,
+                                                    controller_id=controller_id)
+        tag_list = await veil_domain.tags_list()
+        resource_data["domain_tags"] = list()
+        for tag in tag_list.response:
+            resource_data["domain_tags"].append(
+                {
+                    "colour": tag.colour,
+                    "verbose_name": tag.verbose_name,
+                    "slug": tag.slug,
+                }
+            )
+        resource_data["cpu_count"] = veil_domain.cpu_count_prop
+        resource_data["parent_name"] = veil_domain.parent_name
+        if veil_domain.guest_agent:
+            resource_data["guest_agent"] = veil_domain.guest_agent.qemu_state
+        if veil_domain.powered:
+            resource_data["hostname"] = veil_domain.hostname
+            resource_data["address"] = veil_domain.guest_agent.ipv4
+        return ResourceVmType(**resource_data)
 
     @classmethod
     @administrator_required
@@ -546,48 +451,22 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
 
     @classmethod
     async def domain_list(cls, limit, offset, ordering, template: bool):
-        """Все ВМ + шаблоны на подключенных ECP VeiL."""
-        controllers = await cls.fetch_all()
+        domains = await cls.get_resources_list(limit=limit, offset=offset, ordering=ordering, template=template,
+                                               resource_type="domain")
         domain_list = list()
-        domains = list()
-        for controller in controllers:
-            paginator = VeilRestPaginator(ordering=ordering, limit=limit, offset=offset)
-            # Прерываем выполнение при отсутствии клиента
-            if not controller.veil_client:
-                continue
 
-            veil_response = await controller.veil_client.domain(template=template).list(
-                paginator=paginator
-            )
-            vms_list = veil_response.paginator_results
-
-            for resource_data in vms_list:
-                # Добавляем параметры контроллера и принадлежность к пулу на VDI
-                resource_data["controller"] = {
-                    "id": controller.id,
-                    "verbose_name": controller.verbose_name,
-                }
-                vm = await Vm.get(resource_data["id"])
-                if vm:
-                    pool = await Pool.get(vm.pool_id)
-                    resource_data["pool_name"] = pool.verbose_name
-                else:
-                    resource_data["pool_name"] = "--"
-                domains.append(resource_data)
-
-        if not ordering:
-            domains.sort(key=lambda data: data["verbose_name"])
+        for data in domains:
+            vm = await Vm.get(data["id"])
+            if vm:
+                pool = await Pool.get(vm.pool_id)
+                data["pool_name"] = pool.verbose_name
+            else:
+                data["pool_name"] = "--"
 
         if ordering == "pool_name":
             domains.sort(key=lambda data: data["pool_name"])
         elif ordering == "-pool_name":
             domains.sort(key=lambda data: data["pool_name"], reverse=True)
-        if ordering == "controller":
-            domains.sort(key=lambda data: data["controller"]["verbose_name"])
-        elif ordering == "-controller":
-            domains.sort(
-                key=lambda data: data["controller"]["verbose_name"], reverse=True
-            )
 
         for resource_data in domains:
             domain_list.append(ResourceVmType(**resource_data))
@@ -598,7 +477,7 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
     async def resolve_vms(
         cls, root, info, creator, limit, offset, ordering: str = None
     ):
-        """Все сиртуальные машины на подключенных ECP VeiL."""
+        """Все виртуальные машины на подключенных ECP VeiL."""
         # Для каждого контроллера получаем список всех ВМ за вычетом шаблонов.
         vm_type_list = await cls.domain_list(
             template=0, limit=limit, offset=offset, ordering=ordering
@@ -612,7 +491,7 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
         cls, root, info, creator, limit, offset, ordering: str = None
     ):
         """Все шаблоны на подключенных ECP VeiL."""
-        # Для каждого контроллера получаем список всех ВМ за вычетом шаблонов.
+        # Для каждого контроллера получаем список всех шаблонов за вычетом ВМ.
         template_type_list = await cls.domain_list(
             template=1, limit=limit, offset=offset, ordering=ordering
         )
