@@ -472,7 +472,7 @@ class PoolType(graphene.ObjectType):
                 "id": controller.id,
                 "verbose_name": controller.verbose_name,
             }
-            data["cpu_count"] = veil_domain.cpu_count
+            data["cpu_count"] = veil_domain.cpu_count_prop
             data["parent_name"] = veil_domain.parent_name
             data["status"] = vm.status
             if veil_domain.guest_agent:
@@ -768,7 +768,6 @@ class AddVmsToStaticPoolMutation(graphene.Mutation):
                 pool_id=pool_id,
                 created_by_vdi=False,
                 verbose_name=vm.verbose_name,
-                pool_tag=pool.tag,
             )
             entity = {"entity_type": EntityType.POOL, "entity_uuid": None}
             await system_logger.info(
@@ -778,6 +777,11 @@ class AddVmsToStaticPoolMutation(graphene.Mutation):
                 user=creator,
                 entity=entity,
             )
+
+            if pool.tag:
+                await pool.tag_add_entity(
+                    tag=pool.tag, entity_id=vm.id, verbose_name=vm.verbose_name
+                )
 
             # Запустить задачи подготовки машин
             await request_to_execute_pool_task(
@@ -796,22 +800,8 @@ class RemoveVmsFromStaticPoolMutation(graphene.Mutation):
 
     @administrator_required
     async def mutate(self, _info, pool_id, vm_ids, creator):
-        if not vm_ids:
-            entity = {"entity_type": EntityType.POOL, "entity_uuid": None}
-            raise SimpleError(_("List of VM should not be empty."), entity=entity)
-
-        # vms check
-        # get list of vms ids which are in pool_id
-        vms_ids_in_pool = await Vm.get_vms_ids_in_pool(pool_id)
-
-        # check if given vm_ids in vms_ids_in_pool
-        for vm_id in vm_ids:
-            if str(vm_id) not in vms_ids_in_pool:
-                entity = {"entity_type": EntityType.POOL, "entity_uuid": None}
-                raise SimpleError(
-                    _("VM doesn't belong to specified pool.").format(vm_id),
-                    entity=entity,
-                )
+        pool = await Pool.get(pool_id)
+        await pool.remove_vms(vm_ids, creator)
 
         # remove vms from db
         await Vm.remove_vms(vm_ids, creator)
@@ -1094,22 +1084,8 @@ class RemoveVmsFromAutomatedPoolMutation(graphene.Mutation):
 
     @administrator_required
     async def mutate(self, _info, pool_id, vm_ids, creator):
-        if not vm_ids:
-            entity = {"entity_type": EntityType.POOL, "entity_uuid": None}
-            raise SimpleError(_("List of VM should not be empty."), entity=entity)
-
-        # vms check
-        # get list of vms ids which are in pool_id
-        vms_ids_in_pool = await Vm.get_vms_ids_in_pool(pool_id)
-
-        # check if given vm_ids in vms_ids_in_pool
-        for vm_id in vm_ids:
-            if str(vm_id) not in vms_ids_in_pool:
-                entity = {"entity_type": EntityType.POOL, "entity_uuid": None}
-                raise SimpleError(
-                    _("VM doesn't belong to specified pool.").format(vm_id),
-                    entity=entity,
-                )
+        pool = await Pool.get(pool_id)
+        await pool.remove_vms(vm_ids, creator)
 
         # remove vms from db
         await Vm.remove_vms(vm_ids, creator, True)
