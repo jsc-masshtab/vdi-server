@@ -1,4 +1,5 @@
 [flake8]
+application-import-names = common, web_app, pool_worker, ws_listener_worker
 ignore =
     # E501 line too long
     E501,
@@ -10,4 +11,23 @@ ignore =
     A002,
     # A003 "id" is a python builtin, consider renaming the class attribute
     A003,
-exclude = .git,__pycache__,backend/migrations/versions,local_settings.py,tests,devops
+
+    # Для докстрингов
+    # D100 Missing docstring in public module
+    D100,
+    # D101 Missing docstring in public class
+    D101,
+    # D102 Missing docstring in public method
+    D102,
+    # D103 Missing docstring in public function
+    D103,
+    # D104 Missing docstring in public package
+    D104,
+    # D105 Missing docstring in magic method
+    D105,
+    # D106 Missing docstring in public nested class
+    D106,
+    # D107 Missing docstring in __init__
+    D107,
+exclude = .git,__pycache__,backend/common/migrations/versions,local_settings.py,tests,devops,frontend
+inline-quotes = double

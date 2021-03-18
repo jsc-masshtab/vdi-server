@@ -1,22 +1,17 @@
-import re
 import asyncio
-import signal
 import functools
-
+import re
+import signal
 from enum import Enum
 
 
 def clamp_value(my_value, min_value, max_value):
-    """
-    limit value by min_value and max_value
-    """
+    """Limit value by min_value and max_value."""
     return max(min(my_value, max_value), min_value)
 
 
 def validate_name(name_string):
-    """
-    validate if name correct
-    """
+    """Validate if name correct."""
     return re.match("^[а-яА-ЯёЁa-zA-Z0-9]+[а-яА-ЯёЁa-zA-Z0-9.-_+ ]*$", name_string)
 
 
@@ -38,7 +33,7 @@ def extract_ordering_data(ordering):
 
 
 def init_signals(sig_handler):
-    """Set exit handler"""
+    """Set exit handler."""
     signal.signal(signal.SIGTERM, sig_handler)
     signal.signal(signal.SIGINT, sig_handler)
 
@@ -77,8 +72,10 @@ def init_exit_handler():
 
 
 def gino_model_to_json_serializable_dict(model):
-    """Gino модель в словарь для json
-       Возможно по питоновским понятиям лучше создать  mixin и добавить его в модели"""
+    """Gino модель в словарь для json.
+
+    Возможно по питоновским понятиям лучше создать  mixin и добавить его в модели.
+    """
     mode_dict = model.to_dict()
     json_serializable_dict = dict()
 
@@ -95,7 +92,7 @@ def gino_model_to_json_serializable_dict(model):
 
 
 def convert_gino_model_to_graphene_type(model, graphene_custom_type):
-    """Тот редкий случай, когда модель и граф ql тип совпадают"""
+    """Тот редкий случай, когда модель и граф ql тип совпадают."""
     data_dict = dict()
     for model_atr_key in model.__dict__["__values__"]:
         if model_atr_key in graphene_custom_type.__dict__.keys():

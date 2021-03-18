@@ -1,32 +1,31 @@
 # -*- coding: utf-8 -*-
 import uuid
 
+from asyncpg.exceptions import UniqueViolationError
+
+from sqlalchemy import Enum as AlchemyEnum, Index
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func, text
-from sqlalchemy import Index
-from sqlalchemy import Enum as AlchemyEnum
-from asyncpg.exceptions import UniqueViolationError
+
 from veil_aio_au import VeilResult as VeilAuthResult
 
-from common.settings import PAM_AUTH, PAM_USER_GROUP, PAM_SUPERUSER_GROUP, SECRET_KEY
 from common.database import db
-from common.veil.veil_gino import (
-    AbstractSortableStatusModel,
-    Role,
-    EntityType,
-    VeilModel,
-)
-from common.veil.veil_errors import SimpleError, PamError
-from common.veil.auth import hashers
 from common.languages import lang_init
 from common.log.journal import system_logger
-from common.veil.auth.veil_pam import veil_auth_class
-
-
 from common.models.user_tk_permission import (
+    GroupTkPermission,
     TkPermission,
     UserTkPermission,
-    GroupTkPermission,
+)
+from common.settings import PAM_AUTH, PAM_SUPERUSER_GROUP, PAM_USER_GROUP, SECRET_KEY
+from common.veil.auth import hashers
+from common.veil.auth.veil_pam import veil_auth_class
+from common.veil.veil_errors import PamError, SimpleError
+from common.veil.veil_gino import (
+    AbstractSortableStatusModel,
+    EntityType,
+    Role,
+    VeilModel,
 )
 
 _ = lang_init()
@@ -34,8 +33,9 @@ _ = lang_init()
 
 class Entity(db.Model):
     """
-    entity_type: тип сущности из Enum
-    entity_uuid: UUID сущности, если в качестве EntityType указано название таблицы
+    entity_type: тип сущности из Enum.
+
+    entity_uuid: UUID сущности, если в качестве EntityType указано название таблицы.
     """
 
     __tablename__ = "entity"
@@ -60,8 +60,10 @@ class Entity(db.Model):
 
 class EntityOwner(db.Model):
     """Ограничение прав доступа к сущности для конкретного типа роли.
-       Если user_id и group_id null, то ограничение доступа к сущности только по Роли
-       Если role пустой, то только по пользователю"""
+
+    Если user_id и group_id null, то ограничение доступа к сущности только по Роли
+    Если role пустой, то только по пользователю.
+    """
 
     __tablename__ = "entity_owner"
 
@@ -100,7 +102,7 @@ class User(AbstractSortableStatusModel, VeilModel):
         return EntityType.USER
 
     async def superuser(self) -> bool:
-        """Should be used instead of is_superuser attr."""
+        """Следует использовать вместо is_superuser attr."""
         if PAM_AUTH:
             return await self.pam_user_in_group(PAM_SUPERUSER_GROUP)
         else:
@@ -242,7 +244,7 @@ class User(AbstractSortableStatusModel, VeilModel):
 
     # permissions
     async def get_permissions_from_groups(self):
-        """Возвращает список разрешений полученных от групп, в которых пользователь состоит"""
+        """Возвращает список разрешений полученных от групп, в которых пользователь состоит."""
         user_groups = await self.assigned_groups
 
         permissions_from_group = list()
@@ -723,8 +725,8 @@ class User(AbstractSortableStatusModel, VeilModel):
 
 
 class UserJwtInfo(db.Model):
-    """
-    При авторизации пользователя выполняется запись.
+    """При авторизации пользователя выполняется запись.
+
     В поле last_changed хранится дата последнего изменения токена. При изменении пароля/логауте/перегенерации токена
     значение поля меняется, вследствие чего токены, сгенерированные с помощью старых значений
     становятся невалидными.
@@ -935,7 +937,7 @@ class Group(AbstractSortableStatusModel, VeilModel):
         return self
 
     async def add_user(self, user_id, creator):
-        """Add user to group"""
+        """Add user to group."""
         try:
             user_in_group = await db.scalar(
                 db.exists(

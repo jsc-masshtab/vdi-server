@@ -2,9 +2,9 @@
 
 # import aioredis   # TODO: переехать на aio-redis
 import asyncio
-from enum import Enum
 import json
 import time
+from enum import Enum
 from functools import wraps
 
 import redis
@@ -12,7 +12,6 @@ import redis
 import common.settings as settings
 from common.languages import lang_init
 
-# import common.models as models
 from web_app.front_ws_api.subscription_sources import VDI_TASKS_SUBSCRIPTION
 
 
@@ -71,14 +70,11 @@ REDIS_CLIENT.info()
 
 
 def redis_error_handle(func):
-    """
-    Декоратор обеспечивает перехват исключений,
-    вызванных при взаимодействии с Redis.
-    """
+    """Декоратор обеспечивает перехват исключений, вызванных при взаимодействии с Redis."""
 
     @wraps(func)
     def wrapped_function(*args, **kwargs):
-        """Декорируемая функция"""
+        """Декорируемая функция."""
         response = None
         try:
             response = func(*args, **kwargs)
@@ -130,7 +126,7 @@ def read_license_dict(dict_name):
 
 
 async def a_redis_lpop(list_name):
-    """asynchronous redis lpop. Wait until non-nill data received"""
+    """Asynchronous redis lpop. Wait until non-nill data received."""
     while True:
         data = REDIS_CLIENT.lpop(list_name)
         if data:
@@ -139,8 +135,7 @@ async def a_redis_lpop(list_name):
 
 
 async def a_redis_wait_for_message(redis_channel, predicate, timeout):
-    """
-    Asynchronously wait for message until timeout reached.
+    """Asynchronously wait for message until timeout reached.
 
     :param predicate:  condition to find required message. Signature: def fun(redis_message) -> bool
     :param timeout: time to wait. seconds
@@ -184,7 +179,7 @@ async def a_redis_wait_for_message(redis_channel, predicate, timeout):
 
 
 async def a_redis_get_message(redis_subscriber):
-    """Asynchronously wait for message from channel"""
+    """Asynchronously wait for message from channel."""
     while True:
         redis_message = redis_subscriber.get_message()
         if redis_message:
@@ -194,10 +189,11 @@ async def a_redis_get_message(redis_subscriber):
 
 
 async def a_redis_wait_for_task_completion(task_id):
-    """Ждем завершения таски и возвращаем статус с которым она завершилась
-    Считаем что задача завершилась если ее статус сменился на CANCELLED/FAILED/FINISHED
-    Ожидание потенциально бесконечно. Использовть только с asyncio.wait_for"""
+    """Ждем завершения таски и возвращаем статус с которым она завершилась.
 
+    Считаем что задача завершилась если ее статус сменился на CANCELLED/FAILED/FINISHED
+    Ожидание потенциально бесконечно. Использовть только с asyncio.wait_for.
+    """
     from common.models.task import TaskStatus
 
     redis_subscriber = REDIS_CLIENT.pubsub()
@@ -242,7 +238,7 @@ async def a_redis_wait_for_task_completion(task_id):
 
 
 async def wait_for_task_result(task_id, wait_timeout):
-    """Ждем результат задачи и возвращаем ее статус либо None если не дождались"""
+    """Ждем результат задачи и возвращаем ее статус либо None если не дождались."""
     try:
         task_status = await asyncio.wait_for(
             a_redis_wait_for_task_completion(task_id), wait_timeout
@@ -253,7 +249,7 @@ async def wait_for_task_result(task_id, wait_timeout):
 
 
 async def request_to_execute_pool_task(entity_id, task_type, **additional_data):
-    """Send request to task worker to execute a task. Return task id"""
+    """Send request to task worker to execute a task. Return task id."""
     from common.models.task import Task
 
     task = await Task.create(entity_id=entity_id, task_type=task_type)
@@ -266,9 +262,11 @@ async def request_to_execute_pool_task(entity_id, task_type, **additional_data):
 async def execute_delete_pool_task(
     pool_id: str, full, wait_for_result=True, wait_timeout=20
 ):
-    """Удаление автоматического пула. Если wait_for_result == True, то ждем результат
-    Возврщаем bool успешно или нет прошло удаление"""
+    """Удаление автоматического пула.
 
+    Если wait_for_result == True, то ждем результат.
+    Возврщаем bool успешно или нет прошло удаление.
+    """
     from common.models.task import PoolTaskType, TaskStatus  # для избежания цикл ссылки
 
     # send command to pool worker
@@ -284,7 +282,7 @@ async def execute_delete_pool_task(
 
 @redis_error_handle
 def send_cmd_to_cancel_tasks(task_ids: list, cancel_all=False):
-    """Send command CANCEL_TASK to pool worker. Чтобы отменить все таски послать пустой список и cancel_all=True"""
+    """Send command CANCEL_TASK to pool worker. Чтобы отменить все таски послать пустой список и cancel_all=True."""
     cmd_dict = {
         "command": PoolWorkerCmd.CANCEL_TASK.name,
         "task_ids": task_ids,
@@ -296,9 +294,10 @@ def send_cmd_to_cancel_tasks(task_ids: list, cancel_all=False):
 async def send_cmd_to_cancel_tasks_associated_with_controller(
     controller_id, wait_for_result=False, wait_timeout=2
 ):
-    """Send command CANCEL_TASK to pool worker. It will cancel all tasks associated with controller
-    and will wait for cancellation if wait_for_result==True"""
+    """Send command CANCEL_TASK to pool worker.
 
+    It will cancel all tasks associated with controller and will wait for cancellation if wait_for_result==True.
+    """
     #  Send cmd
     cmd_dict = {
         "command": PoolWorkerCmd.CANCEL_TASK.name,
@@ -320,8 +319,7 @@ async def send_cmd_to_cancel_tasks_associated_with_controller(
 
 
 async def send_cmd_to_cancel_tasks_associated_with_entity(entity_id):
-    """Cancel all tasks associated with entity"""
-
+    """Cancel all tasks associated with entity."""
     #  Send cmd
     cmd_dict = {
         "command": PoolWorkerCmd.CANCEL_TASK.name,
@@ -333,7 +331,7 @@ async def send_cmd_to_cancel_tasks_associated_with_entity(entity_id):
 
 @redis_error_handle
 def send_cmd_to_resume_tasks_associated_with_controller(controller_id):
-    """Command to pool worker to resume tasks"""
+    """Command to pool worker to resume tasks."""
     cmd_dict = {
         "command": PoolWorkerCmd.RESUME_TASK.name,
         "controller_id": str(controller_id),
@@ -343,6 +341,6 @@ def send_cmd_to_resume_tasks_associated_with_controller(controller_id):
 
 @redis_error_handle
 def send_cmd_to_ws_monitor(controller_id, ws_monitor_cmd: WsMonitorCmd):
-    """Send command to ws monitor"""
+    """Send command to ws monitor."""
     cmd_dict = {"controller_id": str(controller_id), "command": ws_monitor_cmd.name}
     REDIS_CLIENT.rpush(WS_MONITOR_CMD_QUEUE, json.dumps(cmd_dict))

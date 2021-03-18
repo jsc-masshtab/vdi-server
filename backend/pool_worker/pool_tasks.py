@@ -1,29 +1,24 @@
 # -*- coding: utf-8 -*-
 import asyncio
 from abc import ABC, abstractmethod
+
 from aiohttp import client_exceptions
 
-from common.veil.veil_errors import PoolCreationError
-
-from common.log.journal import system_logger
-from common.veil.veil_errors import VmCreationError
-from common.veil.veil_gino import Status, EntityType
-
-from common.utils import cancel_async_task
-
 from common.languages import lang_init
-
-from common.models.pool import AutomatedPool, Pool
-from common.models.task import TaskStatus, Task
+from common.log.journal import system_logger
 from common.models.authentication_directory import AuthenticationDirectory
+from common.models.pool import AutomatedPool, Pool
+from common.models.task import Task, TaskStatus
 from common.models.vm import Vm
-
+from common.utils import cancel_async_task
+from common.veil.veil_errors import PoolCreationError, VmCreationError
+from common.veil.veil_gino import EntityType, Status
 
 _ = lang_init()
 
 
 class AbstractTask(ABC):
-    """Выполняет задачу do_task"""
+    """Выполняет задачу do_task."""
 
     task_list = list()  # Список, в котором держим объекты выполняемым в данный момент таскок
 
@@ -38,7 +33,7 @@ class AbstractTask(ABC):
         return list(AbstractTask.task_list)
 
     async def cancel(self, resumable=False, wait_for_result=True):
-        """Отменить таску"""
+        """Отменить таску."""
         if self.task_model:
             await self.task_model.update(resumable=resumable).apply()
 
@@ -51,20 +46,19 @@ class AbstractTask(ABC):
 
     @abstractmethod
     async def do_task(self):
-        """Корутина, в которой будет выполняться таска"""
+        """Корутина, в которой будет выполняться таска."""
         raise NotImplementedError
 
     async def do_on_cancel(self):
-        """Действия при отмене корутины do_task"""
+        """Действия при отмене корутины do_task."""
         pass
 
     async def do_on_fail(self):
-        """Действия при фэйле корутины do_task"""
+        """Действия при фэйле корутины do_task."""
         pass
 
     async def execute(self, task_id):
-        """Выполнить корутину do_task"""
-
+        """Выполнить корутину do_task."""
         self.task_model = await Task.get(task_id)
 
         if not self.task_model:
@@ -109,11 +103,11 @@ class AbstractTask(ABC):
             AbstractTask.task_list.remove(self)
 
     def execute_in_async_task(self, task_id):
-        """Запустить корутину асинхронно"""
+        """Запустить корутину асинхронно."""
         self._coroutine = asyncio.get_event_loop().create_task(self.execute(task_id))
 
     def _get_related_progressing_tasks(self):
-        """Получить выполняющиеся таски связанные с сущностью исключая текущую таску"""
+        """Получить выполняющиеся таски связанные с сущностью исключая текущую таску."""
         tasks_related_to_cur_pool = list()
 
         for task in AbstractTask.task_list:
@@ -349,8 +343,10 @@ class DeletePoolTask(AbstractTask):
 
 
 class PrepareVmTask(AbstractTask):
-    """Задача подготовки ВМ. При удалении ВМ желательно учесть что эта задача может быть в
-    процессе выполнения и сначала отменить ее"""
+    """Задача подготовки ВМ.
+
+    При удалении ВМ желательно учесть что эта задача может быть в процессе выполнения и сначала отменить ее.
+    """
 
     # TODO: refactoring
     # TODO: подключить линтеры
@@ -379,7 +375,7 @@ class PrepareVmTask(AbstractTask):
                 await self._do_light_preparation(vm)
 
     async def _do_full_preparation(self, vm):
-        """Full preparation"""
+        """Full preparation."""
         active_directory_object = None
         ad_cn_pattern = None
 
@@ -396,7 +392,7 @@ class PrepareVmTask(AbstractTask):
         await vm.prepare_with_timeout(active_directory_object, ad_cn_pattern)
 
     async def _do_light_preparation(self, vm):
-        """Only remote access"""
+        """Only remote access."""
         # TODO: убрать дублирование кода при подготовке
         # print('_do_light_preparation ', 'vm.id ', vm.id, flush=True)
         veil_domain = await vm.vm_client

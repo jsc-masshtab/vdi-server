@@ -3,31 +3,28 @@ import asyncio
 import json
 
 from common.database import db
-
-from common.models.vm import Vm, VmPowerState
-from common.models.pool import Pool
-from common.models.controller import Controller
+from common.languages import lang_init
+from common.log.journal import system_logger
 from common.models.auth import Entity as EntityModel, EntityOwner as EntityOwnerModel
-
+from common.models.controller import Controller
+from common.models.pool import Pool
+from common.models.vm import Vm, VmPowerState
+from common.settings import VM_MANGER_DATA_QUERY_INTERVAL
 from common.veil.veil_gino import EntityType, Status
-
 from common.veil.veil_redis import (
-    WS_MONITOR_CHANNEL_OUT,
     REDIS_CLIENT,
+    WS_MONITOR_CHANNEL_OUT,
     a_redis_get_message,
 )
-
-from common.log.journal import system_logger
-from common.languages import lang_init
-
-from common.settings import VM_MANGER_DATA_QUERY_INTERVAL
 
 _ = lang_init()
 
 
 class VmManager:
     """Здесь действия над вм, которые выполняются автоматом в ходе выполнения приложения.
-    Возможно, логичнее было бы выделить в именной отдельный процесс"""
+
+    Возможно, логичнее было бы выделить в именной отдельный процесс.
+    """
 
     async def start(self):
 
@@ -39,8 +36,7 @@ class VmManager:
         loop.create_task(self._synchronize_vm_data_task())
 
     async def _keep_vms_on_task(self):
-        """Держим машины вкюченными, если машины находятся в пуле с поднятым флагом keep_vms_on,
-        имеют назначенного юзера и находятся в статусе ACTIVE"""
+        """Держим ВМ вкл, если ВМ находятся в пуле с флагом keep_vms_on, имеют назначенного юзера и в статусе ACTIVE."""
         while True:
             try:
                 controllers = await Controller.get_objects()
@@ -95,14 +91,13 @@ class VmManager:
             except asyncio.CancelledError:
                 break
             except Exception as ex:
-                await system_logger.debug(message=_('Keep vms on task error.'),
+                await system_logger.debug(message=_("Keep vms on task error."),
                                           description=str(ex))
 
             await asyncio.sleep(VM_MANGER_DATA_QUERY_INTERVAL)
 
     async def _synchronize_vm_data_task(self):
-        """Если на контроллере меняется имя ВМ, то обновляем его на VDI"""
-
+        """Если на контроллере меняется имя ВМ, то обновляем его на VDI."""
         redis_subscriber = REDIS_CLIENT.pubsub()
         redis_subscriber.subscribe(WS_MONITOR_CHANNEL_OUT)
 
@@ -133,5 +128,5 @@ class VmManager:
             except asyncio.CancelledError:
                 break
             except Exception as ex:
-                await system_logger.debug(message=_('Synchronize vm data task error.'),
+                await system_logger.debug(message=_("Synchronize vm data task error."),
                                           description=str(ex))

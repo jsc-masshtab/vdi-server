@@ -1,54 +1,47 @@
 # -*- coding: utf-8 -*-
+import asyncio
+import json
 import sys
 
-import json
+from sqlalchemy import and_
 
-import asyncio
-
-from pool_worker.pool_tasks import (
-    AbstractTask,
-    InitPoolTask,
-    ExpandPoolTask,
-    DecreasePoolTask,
-    DeletePoolTask,
-    PrepareVmTask,
-    BackupVmsTask,
-)
-from pool_worker.pool_locks import PoolLocks
-
+from common.database import db
+from common.languages import lang_init
+from common.log.journal import system_logger
+from common.models.pool import Pool
+from common.models.task import PoolTaskType, Task, TaskStatus
+from common.models.vm import Vm
+from common.veil.veil_gino import EntityType
 from common.veil.veil_redis import (
     POOL_TASK_QUEUE,
     POOL_WORKER_CMD_QUEUE,
     PoolWorkerCmd,
     a_redis_lpop,
 )
-from common.veil.veil_gino import EntityType
 
-from common.languages import lang_init
-
-from common.models.vm import Vm
-from common.models.pool import Pool
-from common.models.task import Task, TaskStatus, PoolTaskType
-from common.database import db
-
-from sqlalchemy import and_
-
-from common.log.journal import system_logger
+from pool_worker.pool_locks import PoolLocks
+from pool_worker.pool_tasks import (
+    AbstractTask,
+    BackupVmsTask,
+    DecreasePoolTask,
+    DeletePoolTask,
+    ExpandPoolTask,
+    InitPoolTask,
+    PrepareVmTask,
+)
 
 
 _ = lang_init()
 
 
 class PoolTaskManager:
-
-    """Реализует управление задачами"""
+    """Реализует управление задачами."""
 
     def __init__(self):
         self.pool_locks = PoolLocks()
 
     async def start(self):
-        """Действия при старте менеджера"""
-
+        """Действия при старте менеджера."""
         await system_logger.debug("Pool worker: start loop now")
 
         # init locks
@@ -136,9 +129,9 @@ class PoolTaskManager:
                 )
 
     async def resume_tasks(self, controller_id=None, remove_unresumable_tasks=False):
-        """
-        Анализируем таблицу тасок в бд.
-        Продолжить таски  в двух случаях:
+        """Анализируем таблицу тасок в бд.
+
+        Продолжить таски в двух случаях:
         - У таски должен быть поднят флаг resumable и быть статус CANCELLED
         - статус IN_PROGRESS
         remove_unresumable_tasks - удалять ли из бд задачи, которые не могут быть возобновлены.
@@ -246,8 +239,7 @@ class PoolTaskManager:
             task.execute_in_async_task(task_id)
 
     async def cancel_tasks(self, task_ids, cancel_all=False):
-        """cancel_tasks in list or all tasks"""
-
+        """Cancel_tasks in list or all tasks."""
         # делаем shallow copy так как список AbstractTask.task_list будет уменьшатся в
         #  других корутинах пока мы итерируем
         for task in AbstractTask.get_task_list_shallow_copy():
@@ -255,7 +247,7 @@ class PoolTaskManager:
                 await task.cancel(wait_for_result=False)
 
     async def cancel_tasks_associated_with_controller(self, controller_id, resumable=False):
-        """cancel_tasks_associated_with_controller"""
+        """Сancel_tasks_associated_with_controller."""
         await system_logger.debug("cancel_tasks_associated_with_controller")
 
         # find tasks
@@ -269,8 +261,7 @@ class PoolTaskManager:
                 await task.cancel(resumable=resumable, wait_for_result=False)
 
     async def cancel_tasks_associated_with_entity(self, entity_id, resumable=False):
-        """cancel tasks associated with entity"""
-
+        """Cancel tasks associated with entity."""
         for task in AbstractTask.get_task_list_shallow_copy():
             if str(task.task_model.entity_id) == entity_id:
                 await task.cancel(resumable=resumable, wait_for_result=False)

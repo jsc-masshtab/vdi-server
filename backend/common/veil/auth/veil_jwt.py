@@ -1,26 +1,27 @@
 # -*- coding: utf-8 -*-
-"""JWT additions for Tornado"""
-import jwt
+"""JWT additions for Tornado."""
 import datetime
 
-from common.settings import (
-    JWT_OPTIONS,
-    SECRET_KEY,
-    JWT_EXPIRATION_DELTA,
-    JWT_AUTH_HEADER_PREFIX,
-    JWT_ALGORITHM,
-    AUTH_ENABLED,
-)
-from common.models.auth import User, UserJwtInfo
+import jwt
+
 from common.languages import lang_init
 from common.log.journal import system_logger
+from common.models.auth import User, UserJwtInfo
+from common.settings import (
+    AUTH_ENABLED,
+    JWT_ALGORITHM,
+    JWT_AUTH_HEADER_PREFIX,
+    JWT_EXPIRATION_DELTA,
+    JWT_OPTIONS,
+    SECRET_KEY,
+)
 
 
 _ = lang_init()
 
 
 def jwtauth(handler_class):
-    """ Handle Tornado JWT Auth """
+    """Handle Tornado JWT Auth."""
 
     def wrap_execute(handler_execute):
         async def require_auth(handler, kwargs):
@@ -60,7 +61,7 @@ def jwtauth(handler_class):
 
 
 def encode_jwt(username, domain: str = None):
-    """Get JWT encoded token"""
+    """Get JWT encoded token."""
     current_time = datetime.datetime.utcnow()
     expires_on = current_time + datetime.timedelta(seconds=JWT_EXPIRATION_DELTA)
     # Идея хранить в payload user_id признана несостоятельной.
@@ -82,7 +83,7 @@ def encode_jwt(username, domain: str = None):
 
 
 def decode_jwt(token, decode_options: dict = JWT_OPTIONS, algorithms: list = None):
-    """Decode JWT token"""
+    """Decode JWT token."""
     if not algorithms:
         algorithms = [JWT_ALGORITHM]
     try:
@@ -130,7 +131,7 @@ def extract_user_and_token_with_no_expire_check(headers: dict) -> str:
 
 
 async def extract_user_object(headers: dict) -> User:
-    """Returns User object"""
+    """User object return."""
     username = extract_user(headers)
     return await User.get_object(
         extra_field_name="username", extra_field_value=username

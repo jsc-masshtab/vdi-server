@@ -17,7 +17,7 @@ def split_into_chunks(string, chunk_length=2):
 
 
 def to_oracle_raw16(string, strip_dashes=True, dashify_result=False):
-    """Convert to raw16"""
+    """Convert to raw16."""
     oracle_format_indices = [3, 2, 1, 0, 5, 4, 7, 6, 8, 9, 10, 11, 12, 13, 14, 15]
     if strip_dashes:
         string = string.replace("-", "")
@@ -76,9 +76,9 @@ def unpack_ad_info(ad_info: dict, param_name: str) -> bytes:
 
 
 def extract_domain_from_username(username: str) -> List[str]:
-    """
-    Метод для разделения имени пользователя по символу @ на имя пользовательской учетной записи
-    и доменное имя контроллера доменов.
+    """Метод для разделения имени пользователя.
+
+    Разделение по символу @ на имя пользовательской учетной записи и доменное имя контроллера доменов.
 
     :param username: имя пользователя
     :return: список, содержащий имя пользователской учетной записи (sAMAccountName)
