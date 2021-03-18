@@ -126,7 +126,7 @@ class VmType(VeilResourceType):
     user = graphene.Field(UserType)
     # controller = graphene.Field(ControllerType)
     # qemu_state = graphene.Boolean(description='Состояние гостевого агента')
-    qemu_state = VmState(description='Состояние гостевого агента')
+    qemu_state = VmState(description="Состояние гостевого агента")
     node = graphene.Field(VeilShortEntityType)
     backups = graphene.List(VmBackupType)
 
@@ -181,9 +181,9 @@ class VmType(VeilResourceType):
         backups_list = list()
         for data in response.response:
             backup = data.public_attrs
-            backup['file_id'] = backup['api_object_id']
-            backup['node'] = self.node
-            backup['vm_id'] = self.id
+            backup["file_id"] = backup["api_object_id"]
+            backup["node"] = self.node
+            backup["vm_id"] = self.id
             backups_list.append(backup)
 
         for data in backups_list:

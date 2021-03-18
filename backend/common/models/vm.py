@@ -165,7 +165,7 @@ class Vm(VeilModel):
         return vm
 
     async def soft_delete(self, creator, remove_on_controller=True):
-        entity = EntityModel.select('id').where(
+        entity = EntityModel.select("id").where(
             (EntityModel.entity_type == self.entity_type) & (EntityModel.entity_uuid == self.id))
         entity_id = await entity.gino.all()
         if entity_id:
@@ -592,8 +592,8 @@ class Vm(VeilModel):
                 )
             return task_success
 
-    async def restore_backup(self, file_id, node_id, datapool_id: None, creator='system'):
-        """Восстанавливает бэкап ВМ на Veil и помещает в пул"""
+    async def restore_backup(self, file_id, node_id, datapool_id: None, creator="system"):
+        """Восстанавливает бэкап ВМ на Veil и помещает в пул."""
         from common.models.pool import AutomatedPool, Pool
         domain_entity = await self.get_veil_entity()
         if datapool_id:
@@ -608,7 +608,7 @@ class Vm(VeilModel):
             await self.task_waiting(response.task)
             task_success = await response.task.success
             response_data = response.data
-            restored_vm_id = response_data.get('entity')
+            restored_vm_id = response_data.get("entity")
             vm_controller = await self.controller
             veil_domain = vm_controller.veil_client.domain(domain_id=restored_vm_id)
             await veil_domain.info()
@@ -632,7 +632,7 @@ class Vm(VeilModel):
                                                      connection_types=pool.connection_types,
                                                      creator=creator)
                     await system_logger.warning(
-                        _('Total size of pool {} increased.').format(pool.verbose_name), description=vm_count)
+                        _("Total size of pool {} increased.").format(pool.verbose_name), description=vm_count)
             restored_vm = await self.create(id=restored_vm_id,
                                             pool_id=str(self.pool_id),
                                             template_id=str(self.template_id),
@@ -640,25 +640,25 @@ class Vm(VeilModel):
                                             verbose_name=veil_domain.verbose_name,
                                             pool_tag=pool.tag)
             await system_logger.info(
-                _('VM {} has been added to the pool {}.').format(veil_domain.verbose_name, pool.verbose_name),
+                _("VM {} has been added to the pool {}.").format(veil_domain.verbose_name, pool.verbose_name),
                 user=creator, entity=pool.entity)
 
             # Переназначение пользователя
-            entity = EntityModel.select('id').where(
+            entity = EntityModel.select("id").where(
                 (EntityModel.entity_type == self.entity_type) & (EntityModel.entity_uuid == self.id))
-            user = await EntityOwnerModel.select('user_id').where(EntityOwnerModel.entity_id == entity).gino.first()
+            user = await EntityOwnerModel.select("user_id").where(EntityOwnerModel.entity_id == entity).gino.first()
             if user:
                 await EntityOwnerModel.delete.where(EntityOwnerModel.entity_id == entity).gino.status()
-                await system_logger.info(_('VM {} is clear from users.').format(self.verbose_name), user=creator,
+                await system_logger.info(_("VM {} is clear from users.").format(self.verbose_name), user=creator,
                                          entity=self.entity)
                 await self.soft_update(id=self.id, status=Status.SERVICE, creator=creator)
                 await restored_vm.add_user(user[0], creator=creator)
 
             if not task_success:
-                await system_logger.error(_('Backup restore finished with error.'))
+                await system_logger.error(_("Backup restore finished with error."))
             else:
                 await system_logger.info(
-                    _('Backup from VM {} restored to pool {} as {}.').format(self.verbose_name, pool.verbose_name,
+                    _("Backup from VM {} restored to pool {} as {}.").format(self.verbose_name, pool.verbose_name,
                                                                              restored_vm.verbose_name),
                     user=creator,
                     entity=self.entity)
