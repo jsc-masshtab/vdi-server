@@ -24,4 +24,13 @@ export class TableIntoComponent  {
     this.edit.emit(info);
   }
 
+  parseNothing(obj, item) {
+    if (obj.property_lv2) {
+      return typeof item[obj.property][obj.property_lv2] === 'number' ? 0 : '--'
+    } else if (obj.property) {
+      return typeof item[obj.property] === 'number' ? 0 : '--'
+    } else {
+      return '--'
+    }
+  }
 }

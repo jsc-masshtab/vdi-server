@@ -1,17 +1,15 @@
 # -*- coding: utf-8 -*-
 from functools import wraps
+
 from graphql.execution.base import ResolveInfo
-
-from common.settings import AUTH_ENABLED
-from common.veil.veil_gino import Role, EntityType
-
-from common.veil.auth.veil_jwt import extract_user_object
-from common.veil.veil_errors import Unauthorized
-from common.models.auth import User
 
 from common.languages import lang_init
 from common.log.journal import system_logger
-
+from common.models.auth import User
+from common.settings import AUTH_ENABLED
+from common.veil.auth.veil_jwt import extract_user_object
+from common.veil.veil_errors import Unauthorized
+from common.veil.veil_gino import EntityType, Role
 
 _ = lang_init()
 
@@ -29,7 +27,7 @@ def context(f):
 
 def user_passes_test(test_func, exc=Unauthorized):  # noqa
     """exc в GraphQl вернется с 200тым кодом.
-       https://github.com/graphql-python/graphene/issues/946
+    https://github.com/graphql-python/graphene/issues/946
     """
 
     def decorator(f):

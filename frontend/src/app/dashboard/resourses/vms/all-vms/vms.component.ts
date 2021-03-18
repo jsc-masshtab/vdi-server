@@ -6,7 +6,7 @@ import { Router } from '@angular/router';
 import { DetailsMove } from 'src/app/dashboard/common/classes/details-move';
 import { Subscription } from 'rxjs';
 import { IParams } from 'types';
-import {FormControl} from "@angular/forms";
+import {FormControl} from '@angular/forms';
 
 @Component({
   selector: 'vdi-vms',
@@ -75,7 +75,7 @@ export class VmsComponent extends DetailsMove implements OnInit, OnDestroy {
       user_power_state: this.user_power_state.value
     };
 
-    if (this.user_power_state.value == false) {
+    if (this.user_power_state.value === false) {
       delete queryset['user_power_state'];
     }
 

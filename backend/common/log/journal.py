@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
+import inspect
 import logging
 import sys
-import inspect
 
-from common.settings import DEBUG
 from common.models.event import Event
+from common.settings import DEBUG
 from common.veil.veil_gino import EntityType
 
 
@@ -34,12 +34,12 @@ def cut_message(func):
 class Log:
     """Системный журнал.
 
-    Одноврмеменно может существовать только 1 инстанс (для этого декоратор синглтон).
+    Одновременно может существовать только 1 инстанс (для этого декоратор синглтон).
     Все методы асинхронные для универсализации запуска.
 
     Аргументы:
-        log_level: уровень логгирования для логгера (можно задать аргументом запуска app)
-        debug: передастся в propagate для логгеров
+        log_level: уровень логирования (можно задать аргументом запуска app)
+        debug: передастся в propagate
     """
 
     __TYPE_INFO = 0

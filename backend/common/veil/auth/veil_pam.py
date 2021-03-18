@@ -7,15 +7,15 @@ except ImportError:
 
 from common.settings import (
     PAM_AUTH,
-    PAM_USER_SET_PASS_CMD,
-    PAM_USER_REMOVE_CMD,
-    PAM_USER_EDIT_CMD,
     PAM_CHECK_IN_GROUP_CMD,
-    PAM_USER_ADD_CMD,
     PAM_GROUP_ADD_CMD,
-    PAM_TASK_TIMEOUT,
-    PAM_SUDO_CMD,
     PAM_KILL_PROC_CMD,
+    PAM_SUDO_CMD,
+    PAM_TASK_TIMEOUT,
+    PAM_USER_ADD_CMD,
+    PAM_USER_EDIT_CMD,
+    PAM_USER_REMOVE_CMD,
+    PAM_USER_SET_PASS_CMD,
 )
 
 if PAM_AUTH and VeilAuthPam:

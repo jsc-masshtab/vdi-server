@@ -1,38 +1,25 @@
 # -*- coding: utf-8 -*-
-import uuid
 import asyncio
-
-from sqlalchemy import desc
+import uuid
 from enum import IntEnum
+
+from asyncpg.exceptions import UniqueViolationError
+
 from ldap3 import (
-    Server as ActiveDirectoryServer,
     Connection as ActiveDirectoryConnection,
     SAFE_SYNC,
+    Server as ActiveDirectoryServer,
 )
 from ldap3.core.exceptions import LDAPException
 
+from sqlalchemy import Enum as AlchemyEnum, desc
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy import Enum as AlchemyEnum
-from asyncpg.exceptions import UniqueViolationError
-from veil_api_client import DomainConfiguration, DomainBackupConfiguration
+
+from veil_api_client import DomainBackupConfiguration, DomainConfiguration
 
 from common.database import db
-from common.settings import (
-    VEIL_OPERATION_WAITING,
-    VEIL_VM_PREPARE_TIMEOUT,
-    VEIL_GUEST_AGENT_EXTRA_WAITING,
-)
-from common.veil.veil_gino import (
-    get_list_of_values_from_db,
-    EntityType,
-    VeilModel,
-    Status,
-)
-from common.veil.veil_errors import VmCreationError, SimpleError
-from common.veil.veil_redis import send_cmd_to_cancel_tasks_associated_with_entity
 from common.languages import lang_init
 from common.log.journal import system_logger
-
 from common.models.auth import (
     Entity as EntityModel,
     EntityOwner as EntityOwnerModel,
@@ -40,6 +27,21 @@ from common.models.auth import (
 )
 from common.models.authentication_directory import AuthenticationDirectory
 from common.models.event import Event, EventReadByUser
+from common.settings import (
+    VEIL_GUEST_AGENT_EXTRA_WAITING,
+    VEIL_MAX_VM_CREATE_ATTEMPTS,
+    VEIL_OPERATION_WAITING,
+    VEIL_VM_PREPARE_TIMEOUT,
+)
+from common.veil.veil_api import compare_error_detail
+from common.veil.veil_errors import SimpleError, VmCreationError
+from common.veil.veil_gino import (
+    EntityType,
+    Status,
+    VeilModel,
+    get_list_of_values_from_db,
+)
+from common.veil.veil_redis import send_cmd_to_cancel_tasks_associated_with_entity
 
 _ = lang_init()
 
@@ -54,9 +56,7 @@ class VmPowerState(IntEnum):
 
 
 class Vm(VeilModel):
-    """Vm однажды включенные в пулы.
-
-    """
+    """Vm однажды включенные в пулы."""
 
     __tablename__ = "vm"
 
@@ -144,12 +144,9 @@ class Vm(VeilModel):
         template_id,
         verbose_name,
         id=None,
-        pool_tag=None,
         created_by_vdi=False,
         status=Status.ACTIVE,
     ):
-        from common.models.pool import Pool as PoolModel
-
         await system_logger.debug(_("Create VM {} on VDI DB.").format(verbose_name))
         try:
             vm = await super().create(
@@ -163,30 +160,11 @@ class Vm(VeilModel):
         except Exception as E:
             raise VmCreationError(str(E))
 
-        pool = await PoolModel.get(pool_id)
-        msg = _("VM {} created.").format(verbose_name)
-        description = _("VM {} created and added to the pool {}.").format(
-            verbose_name, pool.verbose_name
-        )
-        await system_logger.info(message=msg, description=description, entity=vm.entity)
-
-        if pool_tag:
-            await pool.tag_add_entity(
-                tag=pool_tag, entity_id=id, verbose_name=verbose_name
-            )
-
         await EntityModel.create(entity_uuid=id, entity_type=EntityType.VM)
 
         return vm
 
     async def soft_delete(self, creator, remove_on_controller=True):
-        from common.models.pool import Pool as PoolModel
-
-        vm_pool = await PoolModel.get(self.pool_id)
-        pool_tag = vm_pool.tag
-        if pool_tag:
-            await vm_pool.tag_remove_entity(tag=pool_tag, entity_id=self.id)
-
         if remove_on_controller and self.created_by_vdi:
             try:
                 domain_entity = await self.vm_client
@@ -284,7 +262,7 @@ class Vm(VeilModel):
 
     @staticmethod
     async def get_vms_ids_in_pool(pool_id):
-        """Get all vm_ids as list of strings"""
+        """Get all vm_ids as list of strings."""
         vm_ids_data = await Vm.select("id").where((Vm.pool_id == pool_id)).gino.all()
         vm_ids = [str(vm_id) for (vm_id,) in vm_ids_data]
         return vm_ids
@@ -309,73 +287,47 @@ class Vm(VeilModel):
                     vm_controller.verbose_name
                 )
             )
+        # Получаем сущность Domain для запросов к VeiL ECP
         vm_client = vm_controller.veil_client.domain()
-        inner_retry_count = 0
-        while True:
-            inner_retry_count += 1
-            await system_logger.debug(
-                "Trying to create VM on ECP with verbose_name={}".format(verbose_name)
-            )
-
-            # Send request to create vm
-            vm_configuration = DomainConfiguration(
-                verbose_name=verbose_name,
-                resource_pool=resource_pool_id,
-                parent=domain_id,
-                thin=create_thin_clones,
-                count=count,
-            )
-
-            create_response = await vm_client.create(
-                domain_configuration=vm_configuration
-            )
-
-            if create_response.success:
-                await system_logger.debug(
-                    "Request to create VM sent without surprise. Leaving while."
-                )
-                break
-
-            ecp_errors_list = create_response.data.get("errors")
-            if isinstance(ecp_errors_list, list) and len(ecp_errors_list):
-                first_error_dict = ecp_errors_list[0]
-            else:
-                first_error_dict = dict()
-
-            ecp_detail = first_error_dict.get("detail")
-            msg = _("ECP VeiL controller {} error.").format(vm_controller.verbose_name)
-            entity = {"entity_type": EntityType.CONTROLLER, "entity_uuid": None}
-            await system_logger.debug(
-                message=msg, description=ecp_detail, entity=entity
-            )
-
-            # TODO: задействовать новые коды ошибок VeiL
-            if ecp_detail and "not enough free space on data pool" in ecp_detail:
-                await system_logger.debug(
-                    _("Controller has not free space for creating new VM.")
-                )
-                raise VmCreationError(_("Not enough free space on data pool."))
-            elif ecp_detail and inner_retry_count < 10:
-                # Тут мы предполагаем, что контроллер заблокирован выполнением задачи. Это может быть и не так,
-                # но сейчас нам это не понятно.
-                await system_logger.debug(
-                    _("Possibly blocked by active task on ECP. Wait before next try.")
-                )
-                await asyncio.sleep(10)
-            else:
-                await system_logger.debug(_("Something went wrong. Interrupt while."))
-                raise VmCreationError("Can`t create VM")
-
-            await system_logger.debug("One more try")
-            await asyncio.sleep(1)
-
-        response_data = create_response.data
-        copy_result = dict(
-            ids=vm_configuration.domains_ids,
-            task_id=response_data.get("_task", dict()).get("id"),
+        # Параметры создания ВМ
+        vm_configuration = DomainConfiguration(
             verbose_name=verbose_name,
+            resource_pool=resource_pool_id,
+            parent=domain_id,
+            thin=create_thin_clones,
+            count=count,
         )
-        return copy_result
+
+        inner_retry_count = 0
+        while inner_retry_count < VEIL_MAX_VM_CREATE_ATTEMPTS:
+            # Send request to create vm
+            create_response = await vm_client.create(domain_configuration=vm_configuration)
+            # Если задача поставлена - досрочно прерываем попытки
+            if create_response.success:
+                copy_result = dict(
+                    ids=vm_configuration.domains_ids,
+                    task_id=create_response.task.api_object_id,
+                    verbose_name=verbose_name,
+                )
+                return copy_result
+
+            # if response status not in (200, 201, 202, 204)
+            # TODO: задействовать новые коды ошибок VeiL, когда их доделают
+
+            no_space = compare_error_detail(create_response, "free space")
+            if no_space:
+                raise VmCreationError(_("Not enough free space on data pool."))
+
+            # Предполагаем, что контроллер заблокирован выполнением задачи.
+            # Это может быть и не так, но сейчас нам это не понятно.
+            await system_logger.warning(
+                _("Possibly blocked by active task on ECP. Wait before next try.")
+            )
+            await asyncio.sleep(VEIL_OPERATION_WAITING)
+            inner_retry_count += 1
+
+        # Попытки создать ВМ не увенчались успехом
+        raise VmCreationError("Can`t create VM")
 
     @staticmethod
     async def remove_vm(vm_id, creator, remove_vms_on_controller):
@@ -385,10 +337,6 @@ class Vm(VeilModel):
         vm = await Vm.get(vm_id)
         await vm.soft_delete(
             creator=creator, remove_on_controller=remove_vms_on_controller
-        )
-        await system_logger.info(
-            _("VM {} has been removed from the pool.").format(vm.verbose_name),
-            entity=vm.entity,
         )
 
     @staticmethod
@@ -410,7 +358,7 @@ class Vm(VeilModel):
 
     @staticmethod
     async def remove_vms(vm_ids, creator, remove_vms_on_controller=False):
-        """Remove given vms"""
+        """Remove given vms."""
         if not vm_ids:
             return False
         # Ради логгирования и вывода из домена удаление делается по 1 ВМ.
@@ -612,7 +560,7 @@ class Vm(VeilModel):
             )
 
     async def backup(self, creator="system"):
-        """Создает бэкап ВМ на Veil"""
+        """Создает бэкап ВМ на Veil."""
         domain_entity = await self.get_veil_entity()
         backup_configuration = DomainBackupConfiguration()
         response = await domain_entity.backup(backup_configuration)
@@ -671,7 +619,7 @@ class Vm(VeilModel):
         return True
 
     async def set_verbose_name(self, verbose_name):
-        """Обновить имя и хостнейм"""
+        """Обновить имя и хостнейм."""
         # Update on Veil
         vm_controller = await self.controller
         veil_domain = vm_controller.veil_client.domain(domain_id=self.id_str)
@@ -839,7 +787,9 @@ class Vm(VeilModel):
         await self.set_hostname()
         await self.reboot()
         await self.include_in_ad(active_directory_obj)
-        await self.include_in_ad_group(active_directory_obj, ad_cn_pattern)
+        # Ввод в группу AD только, если она прописана
+        if ad_cn_pattern and isinstance(ad_cn_pattern, str):
+            await self.include_in_ad_group(active_directory_obj, ad_cn_pattern)
         # Протоколируем успех
         msg = _("VM {} has been prepared.").format(self.verbose_name)
         await system_logger.info(message=msg, entity=self.entity)

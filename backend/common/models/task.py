@@ -1,30 +1,26 @@
 # -*- coding: utf-8 -*-
-import uuid
 import json
 import textwrap
-
+import uuid
 from enum import Enum
 
-from sqlalchemy import Enum as AlchemyEnum
+from sqlalchemy import Enum as AlchemyEnum, and_
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
 
-from web_app.front_ws_api.subscription_sources import VDI_TASKS_SUBSCRIPTION
-
-from common.models.auth import Entity
-
-from sqlalchemy import and_
 
 from common.database import db
-from common.veil.veil_redis import (
-    redis_error_handle,
-    REDIS_CLIENT,
-    INTERNAL_EVENTS_CHANNEL,
-)
-from common.veil.veil_gino import AbstractSortableStatusModel, EntityType
 from common.languages import lang_init
+from common.models.auth import Entity
 from common.utils import gino_model_to_json_serializable_dict
+from common.veil.veil_gino import AbstractSortableStatusModel, EntityType
+from common.veil.veil_redis import (
+    INTERNAL_EVENTS_CHANNEL,
+    REDIS_CLIENT,
+    redis_error_handle,
+)
 
+from web_app.front_ws_api.subscription_sources import VDI_TASKS_SUBSCRIPTION
 
 _ = lang_init()
 
@@ -73,9 +69,9 @@ class Task(db.Model, AbstractSortableStatusModel):
 
     def get_task_duration(self):
         duration = (
-            self.finished - self.started if (self.finished and self.started) else "0000"
+            self.finished - self.started if (self.finished and self.started) else "00000000"
         )
-        return str(duration)[:-3]
+        return str(duration)[:-7]
 
     @redis_error_handle
     def publish_data_in_internal_channel(self, event_type: str):
@@ -88,21 +84,23 @@ class Task(db.Model, AbstractSortableStatusModel):
     async def form_user_friendly_text(self):
 
         entity_name = await self.get_associated_entity_name()
-
         if self.task_type == PoolTaskType.POOL_CREATE:
-            return _("Creation of pool {}.").format(entity_name)
+            task_message = _("Creation of pool {}.").format(entity_name)
         elif self.task_type == PoolTaskType.POOL_EXPAND:
-            return _("Expanding of pool {}.").format(entity_name)
+            task_message = _("Expanding of pool {}.").format(entity_name)
         elif self.task_type == PoolTaskType.POOL_DELETE:
-            return _("Deleting of pool {}.").format(entity_name)
+            task_message = _("Deleting of pool {}.").format(entity_name)
         elif self.task_type == PoolTaskType.POOL_DECREASE:
-            return _("Decreasing of pool {}.").format(entity_name)
+            task_message = _("Decreasing of pool {}.").format(entity_name)
         elif self.task_type == PoolTaskType.VM_PREPARE:
-            return _("Preparation of vm {}.").format(entity_name)
+            task_message = _("Preparation of vm {}.").format(entity_name)
         elif self.task_type == PoolTaskType.VMS_BACKUP:
-            return _("Backup of {}.").format(entity_name)
+            task_message = _("Backup of {}.").format(entity_name)
         else:
-            return ""
+            task_message = ""
+        if task_message and isinstance(task_message, str):
+            return task_message[:-1]
+        return ""
 
     async def set_status(self, status: TaskStatus, message: str = None):
 
@@ -150,7 +148,7 @@ class Task(db.Model, AbstractSortableStatusModel):
         self.publish_data_in_internal_channel("UPDATED")
 
     async def get_associated_entity_name(self):
-        # Запоминаем имя так как его не будет после удаения пула, например.
+        # Запоминаем имя так как его не будет после удаления пула, например.
         if not hasattr(self, "_associated_entity_name"):
             # В зависимости от типа сущности узнаем verbose_name
             # get entity_type
@@ -175,8 +173,7 @@ class Task(db.Model, AbstractSortableStatusModel):
 
     @staticmethod
     async def set_progress_to_task_associated_with_entity(entity_id, progress):
-        """Изменить статус задачи связанной с сущностью entity_id"""
-
+        """Изменить статус задачи связанной с сущностью entity_id."""
         task_model = await Task.query.where(Task.entity_id == entity_id).gino.first()
         if task_model:
             await task_model.set_progress(progress)

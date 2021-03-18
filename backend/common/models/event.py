@@ -1,25 +1,24 @@
 # -*- coding: utf-8 -*-
 # TODO: удалять зависимые записи журнала событий, возможно через ON_DELETE
 #  при удалении родительской сущности (нет явной связи, сами не удалятся).
-
-import uuid
-import json
 import csv
-import os
+import json
+import uuid
+from datetime import datetime, timedelta
+from pathlib import Path
+
 import redis
 
-from datetime import datetime, timedelta
 from sqlalchemy import and_, between
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
 
-from web_app.front_ws_api.subscription_sources import EVENTS_SUBSCRIPTION
-
 from common.database import db
-from common.veil.veil_redis import INTERNAL_EVENTS_CHANNEL, REDIS_CLIENT
-from common.utils import gino_model_to_json_serializable_dict
 from common.languages import lang_init
+from common.utils import gino_model_to_json_serializable_dict
+from common.veil.veil_redis import INTERNAL_EVENTS_CHANNEL, REDIS_CLIENT
 
+from web_app.front_ws_api.subscription_sources import EVENTS_SUBSCRIPTION
 
 _ = lang_init()
 
@@ -56,29 +55,31 @@ class Event(db.Model):
         self._entity.add(entity)
 
     @staticmethod
-    async def event_export(start, finish, path):
-        """Экспорт журнала по заданному временному периоду
+    async def event_export(start, finish, journal_path):
+        """Экспорт журнала по заданному временному периоду.
+
         :param start: начало периода ('2020-07-01T00:00:00.000001Z')
         :param finish: окончание периода ('2020-07-31T23:59:59.000001Z')
-        :param path: путь для экспорта ('/tmp/')
+        :param journal_path: путь для экспорта ('/tmp/')
         """
-        from common.veil.veil_errors import SilentError
-
+        from common.veil.veil_errors import SilentError, SimpleError
         start_date = datetime.date(start)
         finish_date = datetime.date(finish)
-        path = os.path.join(path, "")
+        real_path = Path(journal_path)
 
         query = await Event.query.where(
-            between(Event.created, start, finish + timedelta(days=1))
+            between(Event.created, start + timedelta(hours=3), finish + timedelta(hours=3))
         ).gino.all()
+        if not query:
+            raise SilentError(_("Journal in this period is empty."))
 
         export = []
         for event in query:
             export.append(event.__values__)
 
-        name = "{}events_{}-{}.csv".format(
-            path, start_date + timedelta(days=1), finish_date + timedelta(days=1)
-        )
+        csv_name = "events_{}-{}.csv".format(
+            start_date + timedelta(days=1), finish_date)
+        name = real_path / csv_name
         try:
             with open("{}".format(name), "w") as f:
                 writer = csv.DictWriter(f, fieldnames=export[0])
@@ -86,19 +87,25 @@ class Event(db.Model):
                 for row in export:
                     writer.writerow(row)
         except FileNotFoundError:
-            raise SilentError(_("Path {} is incorrect.").format(path))
+            raise SilentError(_("Path {} is incorrect.").format(real_path))
         except IndexError:
             raise SilentError(
                 _("Check date. Interval {} - {} is incorrect.").format(
-                    start_date + timedelta(days=1), finish_date + timedelta(days=1)
+                    start_date + timedelta(days=1), finish_date
                 )
             )
+        except MemoryError:
+            raise SilentError(_("Not enough free space."))
+        except Exception as e:
+            raise SimpleError(_("Journal export error."), description=e)
+
         return name
 
     @staticmethod
     async def mark_read_by(user_id, events_id_list):
-        """Отмечаем список сообщений как прочитанные пользователем, если они ещё не
-            Если списка нет, то отмечаем ВСЁ
+        """Отмечаем список сообщений как прочитанные пользователем, если они ещё не.
+
+        Если списка нет, то отмечаем ВСЁ.
         """
         if not events_id_list:
             results = await Event.select("id").gino.all()
@@ -118,8 +125,9 @@ class Event(db.Model):
 
     @staticmethod
     async def unmark_read_by(user_id, events_id_list):
-        """Убираем отметки о прочтении списка сообщений для пользователя
-            Если списка нет, то убираем ВСЁ
+        """Убираем отметки о прочтении списка сообщений для пользователя.
+
+        Если списка нет, то убираем ВСЁ.
         """
         # TODO: возможно, быстрее будет удалять список связей, а затем создавать новый, при связывании сущностей,
         #  нежели чем создавать связи по одной с проверкой на существование
@@ -176,7 +184,7 @@ class Event(db.Model):
 
 
 class EventReadByUser(db.Model):
-    """Связывающая сущность"""
+    """Связывающая сущность."""
 
     __tablename__ = "event_read_by_user"
     event = db.Column(UUID(), db.ForeignKey("event.id"), nullable=False)

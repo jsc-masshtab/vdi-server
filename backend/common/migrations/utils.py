@@ -1,16 +1,14 @@
 # -*- coding: utf-8 -*-
 import os
+from types import SimpleNamespace
 
 from alembic.config import Config
-from types import SimpleNamespace
 
 path = os.path.dirname(__file__)
 
 
 def make_alembic_config(cmd_opts: SimpleNamespace, base_path: str = path) -> Config:
-    """
-    Создает объект конфигурации alembic на основе аргументов командной строки
-    """
+    """Создает объект конфигурации alembic на основе аргументов командной строки."""
     # путь до файла alembic.ini
     cmd_opts.config = os.path.join(base_path, cmd_opts.config)
 

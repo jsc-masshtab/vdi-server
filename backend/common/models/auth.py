@@ -1,32 +1,31 @@
 # -*- coding: utf-8 -*-
 import uuid
 
+from asyncpg.exceptions import UniqueViolationError
+
+from sqlalchemy import Enum as AlchemyEnum, Index
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func, text
-from sqlalchemy import Index
-from sqlalchemy import Enum as AlchemyEnum
-from asyncpg.exceptions import UniqueViolationError
+
 from veil_aio_au import VeilResult as VeilAuthResult
 
-from common.settings import PAM_AUTH, PAM_USER_GROUP, PAM_SUPERUSER_GROUP, SECRET_KEY
 from common.database import db
-from common.veil.veil_gino import (
-    AbstractSortableStatusModel,
-    Role,
-    EntityType,
-    VeilModel,
-)
-from common.veil.veil_errors import SimpleError, PamError
-from common.veil.auth import hashers
 from common.languages import lang_init
 from common.log.journal import system_logger
-from common.veil.auth.veil_pam import veil_auth_class
-
-
 from common.models.user_tk_permission import (
+    GroupTkPermission,
     TkPermission,
     UserTkPermission,
-    GroupTkPermission,
+)
+from common.settings import PAM_AUTH, PAM_SUPERUSER_GROUP, PAM_USER_GROUP, SECRET_KEY
+from common.veil.auth import hashers
+from common.veil.auth.veil_pam import veil_auth_class
+from common.veil.veil_errors import PamError, SimpleError
+from common.veil.veil_gino import (
+    AbstractSortableStatusModel,
+    EntityType,
+    Role,
+    VeilModel,
 )
 
 _ = lang_init()
@@ -34,8 +33,9 @@ _ = lang_init()
 
 class Entity(db.Model):
     """
-    entity_type: тип сущности из Enum
-    entity_uuid: UUID сущности, если в качестве EntityType указано название таблицы
+    entity_type: тип сущности из Enum.
+
+    entity_uuid: UUID сущности, если в качестве EntityType указано название таблицы.
     """
 
     __tablename__ = "entity"
@@ -60,8 +60,10 @@ class Entity(db.Model):
 
 class EntityOwner(db.Model):
     """Ограничение прав доступа к сущности для конкретного типа роли.
-       Если user_id и group_id null, то ограничение доступа к сущности только по Роли
-       Если role пустой, то только по пользователю"""
+
+    Если user_id и group_id null, то ограничение доступа к сущности только по Роли
+    Если role пустой, то только по пользователю.
+    """
 
     __tablename__ = "entity_owner"
 
@@ -100,7 +102,7 @@ class User(AbstractSortableStatusModel, VeilModel):
         return EntityType.USER
 
     async def superuser(self) -> bool:
-        """Should be used instead of is_superuser attr."""
+        """Следует использовать вместо is_superuser attr."""
         if PAM_AUTH:
             return await self.pam_user_in_group(PAM_SUPERUSER_GROUP)
         else:
@@ -242,7 +244,7 @@ class User(AbstractSortableStatusModel, VeilModel):
 
     # permissions
     async def get_permissions_from_groups(self):
-        """Возвращает список разрешений полученных от групп, в которых пользователь состоит"""
+        """Возвращает список разрешений полученных от групп, в которых пользователь состоит."""
         user_groups = await self.assigned_groups
 
         permissions_from_group = list()
@@ -345,13 +347,13 @@ class User(AbstractSortableStatusModel, VeilModel):
         query = User.update.values(is_active=True).where(User.id == self.id)
         operation_status = await query.gino.status()
 
+        if PAM_AUTH:
+            return await self.pam_unlock(creator=creator)
+
         info_message = _("User {username} has been activated.").format(
             username=self.username
         )
         await system_logger.info(info_message, entity=self.entity, user=creator)
-
-        if PAM_AUTH:
-            return await self.pam_unlock(creator=creator)
         return operation_status
 
     async def pam_unlock(self, creator):
@@ -384,13 +386,13 @@ class User(AbstractSortableStatusModel, VeilModel):
         query = User.update.values(is_active=False).where(User.id == self.id)
         operation_status = await query.gino.status()
 
+        if PAM_AUTH:
+            return await self.pam_lock(creator=creator)
+
         info_message = _("User {username} has been deactivated.").format(
             username=self.username
         )
         await system_logger.info(info_message, entity=self.entity, user=creator)
-
-        if PAM_AUTH:
-            return await self.pam_lock(creator=creator)
         return operation_status
 
     async def pam_lock(self, creator):
@@ -503,15 +505,18 @@ class User(AbstractSortableStatusModel, VeilModel):
 
         GECOS: https://en.wikipedia.org/wiki/Gecos_field
         """
-        # full_name = ' '.join([self.last_name, self.first_name])
-        # gecos = '"{}",VDI,,,{}'.format(full_name, self.email)  # type: str
-        gecos = ",VDI,,,{}".format(self.email)  # type: str
-        result = await veil_auth_class.user_create_new(
-            username=self.username,
-            password=raw_password,
-            gecos=gecos,
-            group=PAM_USER_GROUP,
-        )
+        gecos = ",VDI,,,{}".format(self.email) if self.email else ",VDI,,,"
+        if raw_password:
+            result = await veil_auth_class.user_create_new(
+                username=self.username,
+                password=raw_password,
+                gecos=gecos,
+                group=PAM_USER_GROUP,
+            )
+        else:
+            result = await veil_auth_class.user_create(username=self.username,
+                                                       group=PAM_USER_GROUP,
+                                                       gecos=gecos)
         if result.success and superuser:
             pam_result = await self.pam_user_add_group(PAM_SUPERUSER_GROUP)
             if not pam_result.success:
@@ -531,7 +536,7 @@ class User(AbstractSortableStatusModel, VeilModel):
         id=None,
         is_active=True,
     ):
-        """Если password будет None, то make_password вернет unusable password"""
+        """Если password будет None, то make_password вернет unusable password."""
         encoded_password = hashers.make_password(password, salt=SECRET_KEY)
         user_kwargs = {
             "username": username,
@@ -625,7 +630,9 @@ class User(AbstractSortableStatusModel, VeilModel):
                         )
                     elif "email" in update_dict and update_dict.get("email"):
                         pam_result = await update_type.pam_user_set_email(email=email)
-                    if not pam_result.success:
+                    else:
+                        pam_result = None
+                    if pam_result and not pam_result.success:
                         raise PamError(pam_result)
 
         except PamError as err_msg:
@@ -718,8 +725,8 @@ class User(AbstractSortableStatusModel, VeilModel):
 
 
 class UserJwtInfo(db.Model):
-    """
-    При авторизации пользователя выполняется запись.
+    """При авторизации пользователя выполняется запись.
+
     В поле last_changed хранится дата последнего изменения токена. При изменении пароля/логауте/перегенерации токена
     значение поля меняется, вследствие чего токены, сгенерированные с помощью старых значений
     становятся невалидными.
@@ -930,7 +937,7 @@ class Group(AbstractSortableStatusModel, VeilModel):
         return self
 
     async def add_user(self, user_id, creator):
-        """Add user to group"""
+        """Add user to group."""
         try:
             user_in_group = await db.scalar(
                 db.exists(

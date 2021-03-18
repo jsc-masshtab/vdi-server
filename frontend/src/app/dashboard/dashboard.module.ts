@@ -120,7 +120,7 @@ export class DashboardModule {
         console.error(networkError, 'networkError');
         if (networkError['error'] && networkError['error']['errors']) {
           networkError['error']['errors'].forEach(er => {
-            console.warn(er.message)
+            console.warn(er.message);
           });
         }
         this.waitService.setWait(false);
@@ -134,13 +134,13 @@ export class DashboardModule {
 
       if (operation.variables.method === 'POST') {
 
-        const context = operation.getContext()
-        const body = context.response.body
+        const context = operation.getContext();
+        const body = context.response.body;
 
         if (body.errors) {
           return throwError({ message: 'Bad response' });
         } else {
-          return forward(operation)
+          return forward(operation);
         }
       }
 

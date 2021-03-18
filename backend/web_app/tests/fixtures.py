@@ -4,6 +4,7 @@ import uuid
 from subprocess import Popen, TimeoutExpired
 import sys
 import asyncio
+import os
 
 from async_generator import async_generator, yield_
 from graphene import Context
@@ -12,14 +13,14 @@ from common.database import start_gino, stop_gino
 from common.veil.veil_gino import Role
 from common.veil.auth.veil_jwt import encode_jwt
 from common.veil.veil_api import get_veil_client, stop_veil_client
-from common.veil.veil_redis import wait_for_task_result, REDIS_CLIENT
+from common.veil.veil_redis import REDIS_CLIENT, wait_for_task_result
 
 from common.models.controller import Controller
 from common.models.pool import Pool
 from common.models.vm import Vm
 from common.models.auth import Group, User
 from common.models.authentication_directory import AuthenticationDirectory, Mapping
-from common.models.task import TaskStatus, Task
+from common.models.task import Task, TaskStatus
 
 from web_app.controller.schema import controller_schema
 from web_app.pool.schema import pool_schema
@@ -47,7 +48,7 @@ async def get_resources_for_pool_test():
 
 
 def get_test_pool_name():
-    """Generate a test pool name"""
+    """Generate a test pool name."""
     return "test_pool_{}".format(str(uuid.uuid4())[:7])
 
 
@@ -55,12 +56,13 @@ def get_test_pool_name():
 @async_generator
 async def fixt_launch_workers():
 
-    REDIS_CLIENT.flushall()  # без этого если остались данные с предыдущих тестов
-    # могут происходить труднообъяснимые вещи
+    REDIS_CLIENT.flushall()
 
-    # ws_listener_worker = Popen([sys.executable, "../../ws_listener_worker/app.py"])
+    file_path = os.path.dirname(__file__)
+    pool_worker_path = os.path.join(file_path, '../../pool_worker/app.py')
+
     pool_worker = Popen(
-        [sys.executable, "../../pool_worker/app.py", "-do-not-resume-tasks"]
+        [sys.executable, pool_worker_path, "-do-not-resume-tasks"]
     )
 
     await yield_()
@@ -81,7 +83,6 @@ async def fixt_launch_workers():
 @async_generator
 async def fixt_db():
     """Actual fixture for requests working with db."""
-
     await start_gino()
     await yield_()
     await stop_gino()
@@ -89,8 +90,10 @@ async def fixt_db():
 
 async def get_auth_token():
     """Return JWT token for Admin user.
+
     Грязный хак в том, что пользователь и пароль при авторизации проверяется раньше.
-    Тут напрямую вызывается уже генерация токена."""
+    Тут напрямую вызывается уже генерация токена.
+    """
     access_token = "jwt " + encode_jwt("vdiadmin").get("access_token")
     return access_token
 
@@ -117,8 +120,8 @@ async def fixt_auth_context():
 @pytest.fixture
 @async_generator  # prepare_vms: false,
 async def fixt_create_automated_pool(fixt_controller):
-    """Create an automated pool, yield, remove this pool"""
-    # start resources_monitor to receive info  from controller. autopool creation doesnt work without it
+    """Create an automated pool, yield, remove this pool."""
+    # start resources_monitor to receive info  from controller. autopool creation doesn`t work without it
 
     resources = await get_resources_for_pool_test()
     if not resources:
@@ -193,7 +196,7 @@ async def fixt_create_automated_pool(fixt_controller):
 @pytest.fixture
 @async_generator
 async def fixt_create_static_pool(fixt_controller):
-    """Создается пул, пул удаляется"""
+    """Создается пул, пул удаляется."""
     pool_main_resources = await get_resources_for_pool_test()
     controller_id = pool_main_resources["controller_id"]
     resource_pool_id = pool_main_resources["resource_pool_id"]
@@ -517,7 +520,6 @@ def fixt_auth_dir_with_pass_bad(request, event_loop):
 @pytest.fixture
 def fixt_mapping(request, event_loop):
     """Фикстура завязана на фикстуру AD и Групп."""
-
     auth_dir_id = "10913d5d-ba7a-4049-88c5-769267a6cbe4"
     group_id = "10913d5d-ba7a-4049-88c5-769267a6cbe4"
     groups = [group_id]
@@ -548,12 +550,11 @@ def fixt_mapping(request, event_loop):
 
 @pytest.fixture
 def fixt_group_role(request, event_loop):
-    """Фикстура завязана на фикстуру Групп"""
-
+    """Фикстура завязана на фикстуру Групп."""
     group_id = "10913d5d-ba7a-4049-88c5-769267a6cbe4"
 
     async def setup():
-        """Подчищать не надо, группа будет удалена и эти записи удалятся каскадом"""
+        """Подчищать не надо, группа будет удалена и эти записи удалятся каскадом."""
         group = await Group.get(group_id)
         await group.add_role(Role.SECURITY_ADMINISTRATOR, creator="system")
 

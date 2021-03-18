@@ -16,6 +16,7 @@ from common.models.controller import Controller
 from common.settings import PAM_AUTH
 
 pytestmark = [
+    pytest.mark.smoke_test,
     pytest.mark.asyncio,
     pytest.mark.resources,
     pytest.mark.skipif(PAM_AUTH, reason="not finished yet"),

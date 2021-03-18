@@ -11,7 +11,7 @@ export class AddPoolService {
     public getData(type, data: any = {}): QueryRef<any, any> {
         let query: string = '';
 
-        if (type == 'controllers') {
+        if (type === 'controllers') {
             query = `query
                 controllers {
                     controllers {
@@ -19,10 +19,10 @@ export class AddPoolService {
                         verbose_name
                     }
                 }
-            `
+            `;
         }
 
-        if (type == 'resource_pools') {
+        if (type === 'resource_pools') {
             query = `query
                 controllers($id_: UUID) {
                     controller(id_: $id_) {
@@ -33,10 +33,10 @@ export class AddPoolService {
                         }
                     }
                 }
-            `
+            `;
         }
 
-        if (type == 'vms') {
+        if (type === 'vms') {
             query = `query
                 controllers($id_: UUID, $resource_pool_id: UUID) {
                     controller(id_: $id_) {
@@ -47,10 +47,10 @@ export class AddPoolService {
                         }
                     }
                 }
-            `
+            `;
         }
 
-        if (type == 'templates') {
+        if (type === 'templates') {
             query = `query
                 controllers($id_: UUID, $resource_pool_id: UUID) {
                     controller(id_: $id_) {
@@ -61,7 +61,7 @@ export class AddPoolService {
                         }
                     }
                 }
-            `
+            `;
         }
 
         return this.service.watchQuery({

@@ -26,6 +26,6 @@ export class FooterService {
   }
 
   reload() {
-    this.channel.next()
+    this.channel.next();
   }
 }

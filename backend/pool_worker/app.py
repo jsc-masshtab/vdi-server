@@ -1,14 +1,12 @@
 # -*- coding: utf-8 -*-
 import asyncio
 
-
 from common.database import start_gino, stop_gino
-from common.veil.veil_redis import REDIS_POOL
-
 from common.languages import lang_init
-from common.settings import DEBUG
 from common.log.journal import system_logger
+from common.settings import DEBUG
 from common.utils import init_exit_handler
+from common.veil.veil_redis import REDIS_POOL
 
 from pool_worker.pool_task_manager import PoolTaskManager
 from pool_worker.vm_manager import VmManager

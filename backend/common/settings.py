@@ -80,6 +80,7 @@ VEIL_WS_MAX_TIME_TO_WAIT = 60
 VEIL_VM_PREPARE_TIMEOUT = 1200.0
 VEIL_MAX_URL_LEN = 6000
 VEIL_MAX_IDS_LEN = 3780
+VEIL_MAX_VM_CREATE_ATTEMPTS = 10
 
 # Cache settings
 # -----------------------------
@@ -119,6 +120,10 @@ REDIS_THIN_CLIENT_CMD_CHANNEL = (
 )  # канал для комманд обработчикам ws тонких клиентов.
 # Команда по ws будет послана ТК
 REDIS_ASYNC_TIMEOUT = 0.01
+
+# VM manager settings
+# -----------------------------
+VM_MANGER_DATA_QUERY_INTERVAL = 60
 
 try:
     from .local_settings import *  # noqa

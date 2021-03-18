@@ -1,45 +1,42 @@
 # -*- coding: utf-8 -*-
-from abc import ABC
-from typing import Any
-from tornado.web import Application
-from tornado import httputil
-import json
-from json.decoder import JSONDecodeError
-
-from tornado import websocket
-from aiohttp import client_exceptions
 import asyncio
-from common.settings import (
-    REDIS_PORT,
-    REDIS_THIN_CLIENT_CHANNEL,
-    REDIS_PASSWORD,
-    REDIS_DB,
-    REDIS_THIN_CLIENT_CMD_CHANNEL,
-)
-from common.veil.veil_redis import request_to_execute_pool_task, ThinClientCmd
-from common.veil.veil_handlers import BaseHandler
-from common.veil.auth.veil_jwt import jwtauth, decode_jwt
+import json
+from abc import ABC
+from json.decoder import JSONDecodeError
+from typing import Any
+
+from aiohttp import client_exceptions
 
 from sqlalchemy.sql import func
-from common.models.pool import Pool as PoolModel, AutomatedPool
-from common.models.task import PoolTaskType, TaskStatus, Task
-from common.models.active_tk_connection import ActiveTkConnection
-from common.models.auth import User
+
+from tornado import httputil, websocket
+from tornado.web import Application
 
 from veil_api_client import DomainTcpUsb, VeilRetryConfiguration
-from common.veil.veil_handlers import BaseWsHandler
-from common.log.journal import system_logger
+
 from common.languages import lang_init
-
-
-from common.settings import JWT_OPTIONS
-
-from common.veil.veil_redis import (
-    WS_MONITOR_CHANNEL_OUT,
-    REDIS_CLIENT,
-    a_redis_get_message,
+from common.log.journal import system_logger
+from common.models.active_tk_connection import ActiveTkConnection
+from common.models.auth import User
+from common.models.pool import AutomatedPool, Pool as PoolModel
+from common.models.task import PoolTaskType, Task, TaskStatus
+from common.settings import (
+    JWT_OPTIONS,
+    REDIS_DB,
+    REDIS_PASSWORD,
+    REDIS_PORT,
+    REDIS_THIN_CLIENT_CHANNEL,
+    REDIS_THIN_CLIENT_CMD_CHANNEL,
 )
-
+from common.veil.auth.veil_jwt import decode_jwt, jwtauth
+from common.veil.veil_handlers import BaseHandler, BaseWsHandler
+from common.veil.veil_redis import (
+    REDIS_CLIENT,
+    ThinClientCmd,
+    WS_MONITOR_CHANNEL_OUT,
+    a_redis_get_message,
+    request_to_execute_pool_task,
+)
 
 _ = lang_init()
 
@@ -49,7 +46,7 @@ class RedisInfoHandler(BaseHandler, ABC):
     """Данные для подключения тонких клиентов к Redis."""
 
     async def get(self):
-        """
+        """  # noqa
         {
             "data": {
                 "port": 6379,
@@ -256,8 +253,7 @@ class PoolGetVm(BaseHandler, ABC):
         return await self.log_finish(response)
 
     async def _send_cmd_to_expand_pool(self, pool_model):
-        """Запускаем задачу только если расширение возможно и над пулом не выполняютя другие задачи"""
-
+        """Запускаем задачу только если расширение возможно и над пулом не выполняютя другие задачи."""
         if not pool_model:
             return
         # 1) is max reached
@@ -308,7 +304,7 @@ class VmAction(BaseHandler, ABC):
 
 @jwtauth
 class AttachUsb(BaseHandler, ABC):
-    """Добавить usb tcp редирект девайс"""
+    """Добавить usb tcp редирект девайс."""
 
     async def post(self, pool_id):
 
@@ -343,7 +339,7 @@ class AttachUsb(BaseHandler, ABC):
 
 @jwtauth
 class DetachUsb(BaseHandler, ABC):
-    """Убрать usb tcp редирект девайс"""
+    """Убрать usb tcp редирект девайс."""
 
     async def post(self, pool_id):
 
@@ -478,8 +474,7 @@ class ThinClientWsHandler(BaseWsHandler):
         ).gino.status()
 
     async def _send_messages_co(self):
-        """Пересылаем сообщения об апдейте ВМ"""
-
+        """Пересылаем сообщения об апдейте ВМ."""
         redis_subscriber = REDIS_CLIENT.pubsub()
         redis_subscriber.subscribe(WS_MONITOR_CHANNEL_OUT)
 
@@ -503,7 +498,7 @@ class ThinClientWsHandler(BaseWsHandler):
                 await system_logger.debug(str(ex))
 
     async def _listen_for_cmd(self):
-        """Команды от админа"""
+        """Команды от админа."""
         redis_subscriber = REDIS_CLIENT.pubsub()
         redis_subscriber.subscribe(REDIS_THIN_CLIENT_CMD_CHANNEL)
 

@@ -28,12 +28,12 @@ export class RemoveVMStaticPoolComponent implements OnDestroy {
     private waitService: WaitService,
     private dialogRef: MatDialogRef<RemoveVMStaticPoolComponent>,
     @Inject(MAT_DIALOG_DATA) public data: IData
-  ){}
+  ) {}
 
   public send() {
     this.waitService.setWait(true);
 
-    const method = this.data.typePool == 'static' ? 'removeVMStaticPool' : 'removeVmsDynamicPool'
+    const method = this.data.typePool === 'static' ? 'removeVMStaticPool' : 'removeVmsDynamicPool'
 
     this.poolService[method](this.data.idPool, this.idVms).pipe(takeUntil(this.destroy)).subscribe((res) => {
       if (res) {

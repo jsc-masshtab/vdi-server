@@ -7,19 +7,16 @@ from graphene import Enum as GrapheneEnum
 
 from sqlalchemy import and_
 
-from common.veil.veil_errors import SimpleError
+from common.languages import lang_init
+from common.models.task import PoolTaskType, Task, TaskStatus
+from common.utils import convert_gino_model_to_graphene_type
 from common.veil.veil_decorators import administrator_required
+from common.veil.veil_errors import SimpleError
+from common.veil.veil_gino import EntityType
 from common.veil.veil_redis import (
     send_cmd_to_cancel_tasks,
     send_cmd_to_cancel_tasks_associated_with_controller,
 )
-from common.veil.veil_gino import EntityType
-from common.utils import convert_gino_model_to_graphene_type
-
-from common.models.task import Task, TaskStatus, PoolTaskType
-
-from common.languages import lang_init
-
 
 _ = lang_init()
 TaskStatusGraphene = GrapheneEnum.from_enum(TaskStatus)
@@ -119,7 +116,7 @@ class TaskQuery(graphene.ObjectType):
 
 
 class CancelTaskMutation(graphene.Mutation):
-    """Отменяем задачу"""
+    """Отменяем задачу."""
 
     class Arguments:
         task = graphene.UUID()

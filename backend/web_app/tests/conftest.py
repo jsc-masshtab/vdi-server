@@ -6,20 +6,18 @@ import pytest  # noqa
 
 from yarl import URL
 from types import SimpleNamespace
-from sqlalchemy_utils import create_database, drop_database, database_exists
+from sqlalchemy_utils import create_database, database_exists, drop_database
 from alembic.command import upgrade
 
 # from gino_tornado import Gino
 
-from common.settings import DB_USER, DB_PASS, DB_HOST, DB_PORT
+from common.settings import DB_HOST, DB_PASS, DB_PORT, DB_USER
 from common.migrations.utils import make_alembic_config
 
 
 @pytest.fixture(scope="session")
 def pg_url():
-    """
-    Предоставляет базовый URL-адрес PostgreSQL для создания временной базы данных для тестов.
-    """
+    """Предоставляет базовый URL-адрес PostgreSQL для создания временной базы данных для тестов."""
     url = "postgresql://{USER}:{PASS}@{HOST}:{PORT}/".format(
         USER=DB_USER, PASS=DB_PASS, HOST=DB_HOST, PORT=DB_PORT
     )
@@ -29,9 +27,7 @@ def pg_url():
 
 @pytest.fixture(scope="session", autouse=True)
 def postgres(pg_url):
-    """
-    Создает временную БД для запуска теста.
-    """
+    """Создает временную БД для запуска теста."""
     tmp_name = "tests"
     tmp_url = str(pg_url.with_path(tmp_name))
 
@@ -56,9 +52,7 @@ def postgres(pg_url):
 
 @pytest.fixture(scope="session")
 def alembic_config(postgres):
-    """
-    Создает объект с конфигурацией для alembic, настроенный на временную БД.
-    """
+    """Создает объект с конфигурацией для alembic, настроенный на временную БД."""
     cmd_options = SimpleNamespace(
         config="alembic.ini", name="migrations", pg_url=postgres, raiseerr=False, x=None
     )

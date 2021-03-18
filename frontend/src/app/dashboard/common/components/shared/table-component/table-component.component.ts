@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnInit, HostBinding } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, HostBinding, OnChanges } from '@angular/core';
 // @ts-ignore: Unreachable code error
 import * as moment from 'moment';
 
@@ -28,7 +28,7 @@ interface IPropertyBoolean {
   templateUrl: './table-component.component.html',
   styleUrls: ['./table-component.component.scss']
 })
-export class TableComponentComponent implements OnInit {
+export class TableComponentComponent implements OnInit, OnChanges {
   @Input() entity: string | undefined;
   @Input() data: object[] = [];
   @Input() collection: ICollection[] = [];
@@ -45,14 +45,18 @@ export class TableComponentComponent implements OnInit {
 
   public moment: any;
 
-  constructor() {}
+  constructor() { }
 
   ngOnInit() {
     this.moment = moment;
   }
 
   ngOnChanges() {
-    if(this.data) if (this.data.length) this.exist_keys = Object.keys(this.data[0])
+    if (this.data) {
+      if (this.data.length) {
+        this.exist_keys = Object.keys(this.data[0]);
+      }
+    }
   }
 
   public clickRow(item: object) {
@@ -71,9 +75,9 @@ export class TableComponentComponent implements OnInit {
     activeEl.sort = !activeEl.sort; // первый раз сделает false
 
     if (activeEl.sort) {
-      this.sortListNow.emit({nameSort: `-${activeEl.property}`, spin: true });
+      this.sortListNow.emit({ nameSort: `-${activeEl.property}`, spin: true });
     } else {
-      this.sortListNow.emit({nameSort: activeEl.property, spin: true });
+      this.sortListNow.emit({ nameSort: activeEl.property, spin: true });
     }
   }
 
@@ -86,17 +90,20 @@ export class TableComponentComponent implements OnInit {
   }
 
   isExist(key) {
-    if (key == 'index-array') return true
-    return this.exist_keys.includes(key)
+    if (key === 'index-array') {
+      return true;
+    }
+
+    return this.exist_keys.includes(key);
   }
 
   parseNothing(obj, item) {
     if (obj.property_lv2) {
-      return typeof item[obj.property][obj.property_lv2] == 'number' ? 0 : '--'
+      return typeof item[obj.property][obj.property_lv2] === 'number' ? 0 : '--';
     } else if (obj.property) {
-      return typeof item[obj.property] == 'number' ? 0 : '--'
+      return typeof item[obj.property] === 'number' ? 0 : '--';
     } else {
-      return '--'
+      return '--';
     }
   }
 }

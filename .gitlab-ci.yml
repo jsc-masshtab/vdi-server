@@ -1,6 +1,6 @@
 stages:
   - linter
-  - compilemessages
+  - security
   - tests
 
 linter_job:
@@ -10,15 +10,45 @@ linter_job:
     - docker
   before_script:
     - cd backend/
-    - python -m pip install --upgrade pip && python -m pip install flake8 flake8-builtins flake8-bugbear
+    - python -m pip install --upgrade pip && python -m pip install flake8 flake8-builtins flake8-bugbear flake8-import-order flake8-docstrings flake8-quotes
   script:
     - flake8
   only:
     - merge_requests
 
+frontend_linter_job:
+  image: teracy/angular-cli
+  stage: linter
+  tags:
+    - docker
+  before_script:
+    - cd frontend
+    - npm install
+    - pwd
+    - ls
+  script:
+    - ng --version
+    - npm run lint
+  only:
+    - merge_requests
+
+security_check:
+  image: python:3.5.9-alpine
+  stage: security
+  before_script:
+    - apk add build-base
+    - python -m pip install --upgrade pip
+    - python -m pip install pipenv safety
+    - pipenv install
+    - pipenv lock --requirements > requirements.txt
+  script:
+    - safety check -r requirements.txt
+  only:
+    - merge_requests
+
 compilemessages_job:
   image: python:3.5.9-alpine
-  stage: compilemessages
+  stage: linter
   tags:
     - docker
   before_script:

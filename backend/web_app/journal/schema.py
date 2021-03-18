@@ -1,20 +1,21 @@
 # -*- coding: utf-8 -*-
 import graphene
+
 from graphql import GraphQLError
-from sqlalchemy import desc, and_, text
+
+from sqlalchemy import and_, desc, text
 
 from common.database import db
-from common.veil.veil_decorators import operator_required, administrator_required
-from common.utils import extract_ordering_data
-from common.veil.veil_errors import SimpleError
-from common.models.event import Event, EventReadByUser, JournalSettings
-from common.models.auth import Entity
-from web_app.auth.user_schema import User, UserType
-
-from common.settings import DEFAULT_NAME
 from common.languages import lang_init
 from common.log.journal import system_logger
+from common.models.auth import Entity
+from common.models.event import Event, EventReadByUser, JournalSettings
+from common.settings import DEFAULT_NAME
+from common.utils import extract_ordering_data
+from common.veil.veil_decorators import administrator_required, operator_required
+from common.veil.veil_errors import SimpleError
 
+from web_app.auth.user_schema import User, UserType
 
 _ = lang_init()
 
@@ -322,13 +323,13 @@ class EventExportMutation(graphene.Mutation):
         finish = graphene.DateTime(
             description="Дата окончания периода для экспорта журнала"
         )
-        path = graphene.String(description="Адрес директории для экспорта журнала")
+        journal_path = graphene.String(description="Адрес директории для экспорта журнала")
 
     ok = graphene.Boolean()
 
     @operator_required
-    async def mutate(self, _info, start, finish, path="/tmp/", **kwargs):
-        name = await Event.event_export(start, finish, path)
+    async def mutate(self, _info, start, finish, journal_path="/tmp/", **kwargs):
+        name = await Event.event_export(start, finish, journal_path)
         entity = {"entity_type": "SECURITY", "entity_uuid": None}
         await system_logger.info(
             _("Journal is exported."), description=name, entity=entity

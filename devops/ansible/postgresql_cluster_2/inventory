@@ -7,25 +7,25 @@
 
 # if dcs_exists: false and dcs_type: "etcd" (in vars/pgcluster.yml)
 [etcd_cluster]  # recommendation: 3 or 5-7 nodes
-192.168.5.37
-192.168.5.221
-192.168.6.70
+#192.168.5.37
+#192.168.5.221
+#192.168.6.70
 
 
 # if with_haproxy_load_balancing: true (in vars/pgcluster.yml)
 [balancers]
-192.168.5.37
-192.168.5.221
-192.168.6.70
+#192.168.5.37
+#192.168.5.221
+#192.168.6.70
 
 
 # PostgreSQL nodes
 [master]
-192.168.5.37 hostname=pgnode01 postgresql_exists='false'
+#192.168.5.37 hostname=pgnode01 postgresql_exists='false'
 
 [replica]
-192.168.5.221 hostname=pgnode02
-192.168.6.70 hostname=pgnode03
+#192.168.5.221 hostname=pgnode02
+#192.168.6.70 hostname=pgnode03
 
 [postgres_cluster:children]
 master

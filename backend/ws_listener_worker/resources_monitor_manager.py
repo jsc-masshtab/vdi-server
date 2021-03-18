@@ -1,15 +1,14 @@
 # -*- coding: utf-8 -*-
-import json
 import asyncio
-
-from common.models.controller import Controller
-from ws_listener_worker.resources_monitor import ResourcesMonitor
+import json
 
 from common.languages import lang_init
 from common.log.journal import system_logger
-
-from common.veil.veil_redis import WS_MONITOR_CMD_QUEUE, WsMonitorCmd, a_redis_lpop
+from common.models.controller import Controller
 from common.veil.veil_gino import EntityType
+from common.veil.veil_redis import WS_MONITOR_CMD_QUEUE, WsMonitorCmd, a_redis_lpop
+
+from ws_listener_worker.resources_monitor import ResourcesMonitor
 
 _ = lang_init()
 
@@ -20,7 +19,7 @@ class ResourcesMonitorManager:
 
     # PUBLIC METHODS
     async def listen_for_messages(self):
-        """Listen for commands to add/remove controller"""
+        """Listen for commands to add/remove controller."""
         await self.start()
 
         await system_logger.debug("Ws listener worker: start loop now")
@@ -50,8 +49,8 @@ class ResourcesMonitorManager:
                 await system_logger.error("exception:" + str(ex), entity=entity)
 
     async def start(self):
-        """
-        Start monitors
+        """Start monitors.
+
         :return:
         """
         # system_logger.debug('{}: Startup...'.format(__class__.__name__))
@@ -74,8 +73,8 @@ class ResourcesMonitorManager:
             )
 
     async def stop(self):
-        """
-        Stop monitors
+        """Stop monitors.
+
         :return:
         """
         for resources_monitor in self._resources_monitors_list:
