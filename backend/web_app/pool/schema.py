@@ -643,12 +643,12 @@ class ClearPoolMutation(graphene.Mutation):
         pool = await Pool.get(pool_id)
         if (pool.status != Status.ACTIVE) and (pool.status != Status.SERVICE):
             await pool.activate(pool.id)
-            await system_logger.info(_('Pool {} has been restored.').format(pool.verbose_name), user=creator)
+            await system_logger.info(_("Pool {} has been restored.").format(pool.verbose_name), user=creator)
             return ClearPoolMutation(ok=True)
         elif pool.status == Status.SERVICE:
-            raise SilentError(_('Pool {} is in service mode.').format(pool.verbose_name))
+            raise SilentError(_("Pool {} is in service mode.").format(pool.verbose_name))
         else:
-            raise SilentError(_('Pool {} is already active.').format(pool.verbose_name))
+            raise SilentError(_("Pool {} is already active.").format(pool.verbose_name))
 
 
 # --- --- --- --- ---
