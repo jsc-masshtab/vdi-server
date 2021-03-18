@@ -1,45 +1,44 @@
 # -*- coding: utf-8 -*-
-import uvloop
-from tornado.web import Application
-from tornado.httpserver import HTTPServer
 import ssl
+
+from tornado.httpserver import HTTPServer
 from tornado.ioloop import IOLoop
 from tornado.options import define, options
 from tornado.process import task_id
+from tornado.web import Application
 
+import uvloop
+
+from common.database import start_gino, stop_gino
+from common.languages import lang_init
+from common.log.journal import system_logger
 from common.settings import (
-    WS_PING_INTERVAL,
-    WS_PING_TIMEOUT,
     AUTH_ENABLED,
     DEBUG,
     SSL_CRT_FPATH,
     SSL_KEY_FPATH,
+    WS_PING_INTERVAL,
+    WS_PING_TIMEOUT,
 )
-from common.log.journal import system_logger
-from common.languages import lang_init
-
-from common.database import start_gino, stop_gino
-from common.veil.veil_api import get_veil_client, stop_veil_client
-from common.veil.veil_redis import REDIS_POOL
-from common.veil.veil_handlers import VdiTornadoGraphQLHandler
-
-from web_app.thin_client_api.schema import thin_client_schema
-from web_app.task.schema import task_schema
-from web_app.journal.schema import event_schema
-from web_app.auth.license.utils import License
-from web_app.auth.user_schema import user_schema
-from web_app.auth.group_schema import group_schema
-from web_app.auth.authentication_directory.auth_dir_schema import auth_dir_schema
-from web_app.pool.schema import pool_schema
-from web_app.controller.schema import controller_schema
-from web_app.controller.resource_schema import resources_schema
-
-from web_app.auth.urls import auth_api_urls
-from web_app.auth.license.urls import license_api_urls
-from web_app.thin_client_api.urls import thin_client_api_urls
-from web_app.front_ws_api.urls import ws_event_monitoring_urls
-
 from common.utils import init_signals
+from common.veil.veil_api import get_veil_client, stop_veil_client
+from common.veil.veil_handlers import VdiTornadoGraphQLHandler
+from common.veil.veil_redis import REDIS_POOL
+
+from web_app.auth.authentication_directory.auth_dir_schema import auth_dir_schema
+from web_app.auth.group_schema import group_schema
+from web_app.auth.license.urls import license_api_urls
+from web_app.auth.license.utils import License
+from web_app.auth.urls import auth_api_urls
+from web_app.auth.user_schema import user_schema
+from web_app.controller.resource_schema import resources_schema
+from web_app.controller.schema import controller_schema
+from web_app.front_ws_api.urls import ws_event_monitoring_urls
+from web_app.journal.schema import event_schema
+from web_app.pool.schema import pool_schema
+from web_app.task.schema import task_schema
+from web_app.thin_client_api.schema import thin_client_schema
+from web_app.thin_client_api.urls import thin_client_api_urls
 
 _ = lang_init()
 

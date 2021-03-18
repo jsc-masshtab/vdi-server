@@ -1,19 +1,17 @@
 # -*- coding: utf-8 -*-
 import re
+
 import graphene
 from graphene import Enum as GrapheneEnum
 
 from common.database import db
-from common.veil.veil_gino import StatusGraphene, Status
-from common.veil.veil_validators import MutationValidation
-from common.veil.veil_errors import SilentError, ValidationError
-from common.veil.veil_decorators import security_administrator_required
-
-from common.models.authentication_directory import AuthenticationDirectory, Mapping
-from common.models.auth import Group
-
 from common.languages import lang_init
-
+from common.models.auth import Group
+from common.models.authentication_directory import AuthenticationDirectory, Mapping
+from common.veil.veil_decorators import security_administrator_required
+from common.veil.veil_errors import SilentError, ValidationError
+from common.veil.veil_gino import Status, StatusGraphene
+from common.veil.veil_validators import MutationValidation
 
 _ = lang_init()
 
@@ -25,7 +23,7 @@ MappingTypesGraphene = GrapheneEnum.from_enum(Mapping.ValueTypes)
 
 
 class AuthenticationDirectoryValidator(MutationValidation):
-    """Валидатор для сущности AuthenticationDirectory"""
+    """Валидатор для сущности AuthenticationDirectory."""
 
     @staticmethod
     async def validate_id(obj_dict, value):
@@ -93,7 +91,9 @@ class AuthenticationDirectoryValidator(MutationValidation):
 
 class MappingGroupType(graphene.ObjectType):
     """Намеренное дублирование GroupType с сокращением доступных полей.
-    Нет понимания в целесообразности абстрактного класса для обоих типов."""
+
+    Нет понимания в целесообразности абстрактного класса для обоих типов.
+    """
 
     id = graphene.UUID(required=True)
     verbose_name = graphene.String()
@@ -187,7 +187,7 @@ class AuthenticationDirectoryType(graphene.ObjectType):
     possible_ad_groups = graphene.List(AuthenticationDirectoryGroupType)
 
     async def resolve_service_password(self, _info):
-        """Dummy value for not displayed field."""
+        """Will showed dummy value for not displayed field."""
         return "*" * 7
 
     async def resolve_mappings(self, _info, limit, offset):

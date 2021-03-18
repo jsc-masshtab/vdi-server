@@ -1,29 +1,30 @@
 # -*- coding: utf-8 -*-
 import uuid
+
 from sqlalchemy import Enum as AlchemyEnum
 from sqlalchemy.dialects.postgresql import UUID
+
 from veil_api_client import VeilClient, VeilRetryConfiguration
 
 from common.database import db
-from common.veil.veil_api import get_veil_client
-from common.veil.veil_redis import (
-    send_cmd_to_ws_monitor,
-    send_cmd_to_cancel_tasks_associated_with_controller,
-    send_cmd_to_resume_tasks_associated_with_controller,
-    WsMonitorCmd,
-)
-from common.veil.veil_gino import (
-    Status,
-    EntityType,
-    VeilModel,
-    AbstractSortableStatusModel,
-)
-from common.veil.veil_errors import ValidationError
-
 from common.languages import lang_init
 from common.log.journal import system_logger
-
 from common.models.pool import Pool as PoolModel
+from common.veil.veil_api import get_veil_client
+from common.veil.veil_errors import ValidationError
+from common.veil.veil_gino import (
+    AbstractSortableStatusModel,
+    EntityType,
+    Status,
+    VeilModel,
+)
+from common.veil.veil_redis import (
+    WsMonitorCmd,
+    send_cmd_to_cancel_tasks_associated_with_controller,
+    send_cmd_to_resume_tasks_associated_with_controller,
+    send_cmd_to_ws_monitor,
+)
+
 from web_app.front_ws_api.subscription_sources import CONTROLLERS_SUBSCRIPTION
 
 
@@ -128,7 +129,7 @@ class Controller(AbstractSortableStatusModel, VeilModel):
 
     @staticmethod
     async def get_addresses(status=Status.ACTIVE):
-        """Возвращает ip-контроллеров находящихся в переданном статусе"""
+        """Возвращает ip-контроллеров находящихся в переданном статусе."""
         # TODO: выпилить?
         query = Controller.select("address").where(Controller.status == status)
         addresses = await query.gino.all()
@@ -255,7 +256,7 @@ class Controller(AbstractSortableStatusModel, VeilModel):
         return updated_controller
 
     async def full_delete_pools(self, creator):
-        """Полное удаление пулов контроллера"""
+        """Полное удаление пулов контроллера."""
         pools = await self.pools
         for pool_obj in pools:
             await pool_obj.full_delete(creator=creator)
@@ -290,7 +291,6 @@ class Controller(AbstractSortableStatusModel, VeilModel):
         return False
 
     async def activate(self, creator="system"):
-
         """Активируем не активный контроллер и его пулы."""
         if self.active:
             return False

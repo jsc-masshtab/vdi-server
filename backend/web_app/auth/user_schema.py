@@ -1,19 +1,19 @@
 # -*- coding: utf-8 -*-
-import graphene
 import re
+
+import graphene
+from graphene import Enum as GrapheneEnum
+
 from sqlalchemy import and_
 
 from common.database import db
-from common.models.auth import User
-from common.veil.veil_gino import RoleTypeGraphene, Role
-from common.veil.veil_validators import MutationValidation
-from common.veil.veil_errors import SimpleError, ValidationError, AssertError
-from common.veil.veil_decorators import security_administrator_required
-
-from graphene import Enum as GrapheneEnum
-from common.models.user_tk_permission import TkPermission
-
 from common.languages import lang_init
+from common.models.auth import User
+from common.models.user_tk_permission import TkPermission
+from common.veil.veil_decorators import security_administrator_required
+from common.veil.veil_errors import AssertError, SimpleError, ValidationError
+from common.veil.veil_gino import Role, RoleTypeGraphene
+from common.veil.veil_validators import MutationValidation
 
 _ = lang_init()
 
@@ -22,7 +22,7 @@ PermissionTypeGraphene = GrapheneEnum.from_enum(TkPermission)
 
 
 class UserValidator(MutationValidation):
-    """Валидатор для сущности User"""
+    """Валидатор для сущности User."""
 
     @staticmethod
     async def validate_id(obj_dict, value):
@@ -89,7 +89,9 @@ class UserValidator(MutationValidation):
 
 class UserGroupType(graphene.ObjectType):
     """Намеренное дублирование GroupType с сокращением доступных полей.
-    Нет понимания в целесообразности абстрактного класса для обоих типов."""
+
+    Нет понимания в целесообразности абстрактного класса для обоих типов.
+    """
 
     id = graphene.UUID(required=True)
     verbose_name = graphene.String()

@@ -1,30 +1,26 @@
 # -*- coding: utf-8 -*-
-import uuid
 import json
 import textwrap
-
+import uuid
 from enum import Enum
 
-from sqlalchemy import Enum as AlchemyEnum
+from sqlalchemy import Enum as AlchemyEnum, and_
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
 
-from web_app.front_ws_api.subscription_sources import VDI_TASKS_SUBSCRIPTION
-
-from common.models.auth import Entity
-
-from sqlalchemy import and_
 
 from common.database import db
-from common.veil.veil_redis import (
-    redis_error_handle,
-    REDIS_CLIENT,
-    INTERNAL_EVENTS_CHANNEL,
-)
-from common.veil.veil_gino import AbstractSortableStatusModel, EntityType
 from common.languages import lang_init
+from common.models.auth import Entity
 from common.utils import gino_model_to_json_serializable_dict
+from common.veil.veil_gino import AbstractSortableStatusModel, EntityType
+from common.veil.veil_redis import (
+    INTERNAL_EVENTS_CHANNEL,
+    REDIS_CLIENT,
+    redis_error_handle,
+)
 
+from web_app.front_ws_api.subscription_sources import VDI_TASKS_SUBSCRIPTION
 
 _ = lang_init()
 
@@ -177,8 +173,7 @@ class Task(db.Model, AbstractSortableStatusModel):
 
     @staticmethod
     async def set_progress_to_task_associated_with_entity(entity_id, progress):
-        """Изменить статус задачи связанной с сущностью entity_id"""
-
+        """Изменить статус задачи связанной с сущностью entity_id."""
         task_model = await Task.query.where(Task.entity_id == entity_id).gino.first()
         if task_model:
             await task_model.set_progress(progress)

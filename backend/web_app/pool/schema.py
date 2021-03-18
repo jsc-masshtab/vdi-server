@@ -2,47 +2,45 @@
 import asyncio
 import re
 
-import graphene
 from asyncpg.exceptions import UniqueViolationError
 
+import graphene
+
 from common.database import db
-from common.veil.veil_gino import (
-    RoleTypeGraphene,
-    Role,
-    StatusGraphene,
-    Status,
-    EntityType,
-)
-from common.veil.veil_validators import MutationValidation
-from common.veil.veil_errors import SimpleError, SilentError, ValidationError
-from common.veil.veil_decorators import administrator_required
-from common.veil.veil_graphene import (
-    VeilShortEntityType,
-    VeilResourceType,
-    VmState,
-    VeilTagsType,
-)
-
-from common.models.auth import User, Entity
-from common.models.vm import Vm
-from common.models.controller import Controller
-from common.models.pool import AutomatedPool, StaticPool, Pool
-from common.models.task import PoolTaskType, TaskStatus, Task
-
 from common.languages import lang_init
 from common.log.journal import system_logger
+from common.models.auth import Entity, User
+from common.models.controller import Controller
+from common.models.pool import AutomatedPool, Pool, StaticPool
+from common.models.task import PoolTaskType, Task, TaskStatus
+from common.models.vm import Vm
+from common.settings import POOL_MAX_SIZE, POOL_MIN_SIZE
+from common.veil.veil_decorators import administrator_required
+from common.veil.veil_errors import SilentError, SimpleError, ValidationError
+from common.veil.veil_gino import (
+    EntityType,
+    Role,
+    RoleTypeGraphene,
+    Status,
+    StatusGraphene,
+)
+from common.veil.veil_graphene import (
+    VeilResourceType,
+    VeilShortEntityType,
+    VeilTagsType,
+    VmState,
+)
 from common.veil.veil_redis import (
-    request_to_execute_pool_task,
     execute_delete_pool_task,
+    request_to_execute_pool_task,
     wait_for_task_result,
 )
+from common.veil.veil_validators import MutationValidation
 
 from web_app.auth.user_schema import UserType
-from web_app.controller.schema import ControllerType
 from web_app.controller.resource_schema import ResourceDataPoolType
-from web_app.journal.schema import EventType, EntityType as TypeEntity
-
-from common.settings import POOL_MAX_SIZE, POOL_MIN_SIZE
+from web_app.controller.schema import ControllerType
+from web_app.journal.schema import EntityType as TypeEntity, EventType
 
 _ = lang_init()
 
@@ -202,7 +200,7 @@ class VmInput(graphene.InputObjectType):
 
 
 class PoolValidator(MutationValidation):
-    """Валидатор для сущности Pool"""
+    """Валидатор для сущности Pool."""
 
     @staticmethod
     async def validate_pool_id(obj_dict, value):
@@ -349,7 +347,9 @@ class PoolValidator(MutationValidation):
 
 class PoolGroupType(graphene.ObjectType):
     """Намеренное дублирование UserGroupType и GroupType +с сокращением доступных полей.
-    Нет понимания в целесообразности абстрактного класса для обоих типов."""
+
+    Нет понимания в целесообразности абстрактного класса для обоих типов.
+    """
 
     id = graphene.UUID(required=True)
     verbose_name = graphene.String()
@@ -685,7 +685,6 @@ class CreateStaticPoolMutation(graphene.Mutation, ControllerFetcher):
         6. Разрешение удаленного доступа к VM на veil
         7. Активация Pool
         """
-
         # Проверяем наличие записи
         controller = await cls.fetch_by_id(controller_id)
 
@@ -831,7 +830,7 @@ class UpdateStaticPoolMutation(graphene.Mutation, PoolValidator):
 # --- --- --- --- ---
 # Automated (Dynamic) pool mutations
 class ExpandPoolMutation(graphene.Mutation, PoolValidator):
-    """Запускает задачу на расширение пула"""
+    """Запускает задачу на расширение пула."""
 
     class Arguments:
         pool_id = graphene.UUID(required=True)
@@ -935,7 +934,6 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator, ControllerFe
         ad_cn_pattern: str = None,
     ):
         """Мутация создания Автоматического(Динамического) пула виртуальных машин."""
-
         controller = await cls.fetch_by_id(controller_id)
         # TODO: дооживить валидатор
         await cls.validate(vm_name_template=vm_name_template, verbose_name=verbose_name)

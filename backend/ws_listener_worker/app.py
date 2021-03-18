@@ -2,14 +2,14 @@
 import asyncio
 
 from common.database import start_gino, stop_gino
-from ws_listener_worker.resources_monitor_manager import ResourcesMonitorManager
-from ws_listener_worker.thin_client_conn_monitor import ThinClientConnMonitor
+from common.languages import lang_init
+from common.log.journal import system_logger
+from common.settings import DEBUG
+from common.utils import init_exit_handler
 from common.veil.veil_redis import REDIS_POOL
 
-from common.languages import lang_init
-from common.settings import DEBUG
-from common.log.journal import system_logger
-from common.utils import init_exit_handler
+from ws_listener_worker.resources_monitor_manager import ResourcesMonitorManager
+from ws_listener_worker.thin_client_conn_monitor import ThinClientConnMonitor
 
 _ = lang_init()
 

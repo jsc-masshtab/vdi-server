@@ -10,7 +10,7 @@ linter_job:
     - docker
   before_script:
     - cd backend/
-    - python -m pip install --upgrade pip && python -m pip install flake8 flake8-builtins flake8-bugbear
+    - python -m pip install --upgrade pip && python -m pip install flake8 flake8-builtins flake8-bugbear flake8-import-order flake8-docstrings flake8-quotes
   script:
     - flake8
   only:

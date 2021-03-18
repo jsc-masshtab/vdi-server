@@ -4,23 +4,24 @@
 В запросах участвуют только контроллеры в активном статусе.
 Запросы привязанные к конкретному контроллеру находятся в схеме контроллера.
 """
-
 import graphene
 
+from veil_api_client import VeilRestPaginator
+
+from common.languages import lang_init
+from common.models.pool import Pool
+from common.models.vm import Vm
 from common.veil.veil_decorators import administrator_required
+from common.veil.veil_errors import SilentError
+from common.veil.veil_gino import StatusGraphene
 from common.veil.veil_graphene import (
     VeilResourceType,
-    VmState,
     VeilShortEntityType,
     VeilTagsType,
+    VmState,
 )
-from common.veil.veil_gino import StatusGraphene
-from common.veil.veil_errors import SilentError
-from veil_api_client import VeilRestPaginator
+
 from web_app.controller.schema import ControllerFetcher, ControllerType
-from common.languages import lang_init
-from common.models.vm import Vm
-from common.models.pool import Pool
 
 _ = lang_init()
 

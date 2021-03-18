@@ -1,17 +1,16 @@
 # -*- coding: utf-8 -*-
 import uuid
 
-from common.veil.veil_gino import AbstractSortableStatusModel
-from common.database import db
-
-from sqlalchemy.sql import func
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.sql import func
 
+from common.database import db
 from common.models.auth import User
+from common.veil.veil_gino import AbstractSortableStatusModel
 
 
 class ActiveTkConnection(db.Model, AbstractSortableStatusModel):
-    """Таблица соединений тк по вебсокетам"""
+    """Таблица соединений тк по вебсокетам."""
 
     __tablename__ = "active_tk_connection"
 
@@ -37,8 +36,7 @@ class ActiveTkConnection(db.Model, AbstractSortableStatusModel):
 
     @classmethod
     async def soft_create(cls, conn_id, user_name, is_conn_init_by_user, **kwargs):
-        """Создает/заменяет запись о соединении. Возвращает id"""
-
+        """Создает/заменяет запись о соединении. Возвращает id."""
         model = await cls.get(conn_id) if conn_id else None
 
         # update
@@ -99,7 +97,7 @@ class ActiveTkConnection(db.Model, AbstractSortableStatusModel):
         await self.update(last_interaction=func.now(), data_received=func.now()).apply()
 
     async def deactivate(self):
-        """Соединение неативно, когда у него выставлено время дисконнекта"""
+        """Соединение неативно, когда у него выставлено время дисконнекта."""
         await self.update(disconnected=func.now()).apply()
         user = await User.get(self.user_id)
         user_name = user.username if user else ""
@@ -110,8 +108,10 @@ class ActiveTkConnection(db.Model, AbstractSortableStatusModel):
 
 class TkConnectionStatistics(db.Model, AbstractSortableStatusModel):
     """Накопленная статистика о соеднинении ТК.
+
     В данный момент фиксируется факты подключения/отключения к ВМ за время соединения
-    Мб в будущем еще что-то добавим"""
+    Мб в будущем еще что-то добавим.
+    """
 
     __tablename__ = "tk_connection_statistics"
 
@@ -129,7 +129,7 @@ class TkConnectionStatistics(db.Model, AbstractSortableStatusModel):
 
     @staticmethod
     async def create_tk_event(conn_id, message):
-        """Фиксировать подключение/отключение клиента к вм"""
+        """Фиксировать подключение/отключение клиента к вм."""
         if not conn_id:
             return
 

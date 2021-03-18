@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 from web_app.thin_client_api.handlers import (
-    PoolHandler,
-    PoolGetVm,
-    VmAction,
-    ThinClientWsHandler,
-    RedisInfoHandler,
     AttachUsb,
     DetachUsb,
+    PoolGetVm,
+    PoolHandler,
+    RedisInfoHandler,
+    ThinClientWsHandler,
+    VmAction,
 )
 
 

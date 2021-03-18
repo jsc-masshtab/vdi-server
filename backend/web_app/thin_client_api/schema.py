@@ -1,28 +1,25 @@
 # -*- coding: utf-8 -*-
 # GraphQL schema
+import json
+from datetime import datetime, timedelta, timezone
 
 import graphene
-import json
-from datetime import timedelta, datetime, timezone
 
-from common.settings import REDIS_THIN_CLIENT_CMD_CHANNEL
-
-from common.veil.veil_decorators import administrator_required
-from common.veil.veil_redis import REDIS_CLIENT, ThinClientCmd
-
-from common.languages import lang_init
-from common.utils import extract_ordering_data
-from sqlalchemy.sql import desc
 from sqlalchemy import and_
+from sqlalchemy.sql import desc
 
 from common.database import db
+from common.languages import lang_init
 from common.models.active_tk_connection import (
     ActiveTkConnection,
     TkConnectionStatistics,
 )
 from common.models.auth import User
 from common.models.vm import Vm
-
+from common.settings import REDIS_THIN_CLIENT_CMD_CHANNEL
+from common.utils import extract_ordering_data
+from common.veil.veil_decorators import administrator_required
+from common.veil.veil_redis import REDIS_CLIENT, ThinClientCmd
 
 _ = lang_init()
 
@@ -222,7 +219,7 @@ class ThinClientQuery(graphene.ObjectType):
 
     @staticmethod
     def build_thin_clients_stats_filters(conn_id, user_id):
-        """Получть статистику либо по определенному соединению, либо по соеднинениям определенного пользователя"""
+        """Получть статистику либо по определенному соединению, либо по соеднинениям определенного пользователя."""
         filters = []
         if conn_id:
             filters.append(ActiveTkConnection.id == conn_id)
@@ -233,8 +230,10 @@ class ThinClientQuery(graphene.ObjectType):
 
 
 class DisconnectThinClientMutation(graphene.Mutation):
-    """Команда клиенту отключиться. Просим клиента отключиться по ws и по удаленному протоколу,
-    если клиент подключен к ВМ в данный момент"""
+    """Команда клиенту отключиться.
+
+    Просим клиента отключиться по ws и по удаленному протоколу, если клиент подключен к ВМ в данный момент.
+    """
 
     class Arguments:
         conn_id = graphene.UUID(required=True)

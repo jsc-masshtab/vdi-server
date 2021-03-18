@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
-"""Old errors moved from Vdi v0.2"""
+"""Old errors moved from Vdi v0.2."""
 import asyncio
-
 from abc import ABC
 
 from common.languages import lang_init
@@ -99,9 +98,7 @@ class FetchException(BackendError):
 
 
 class HttpError(BackendError):
-    """
-    Usually used to rethrow the FetchException to be consumed by the client
-    """
+    """Usually used to rethrow the FetchException to be consumed by the client."""
 
     def __init__(self, message=None):
         if message:

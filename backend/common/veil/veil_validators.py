@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 from graphene.types.structures import NonNull
-from common.veil.veil_errors import ValidationError
 
 from common.languages import lang_init
+from common.veil.veil_errors import ValidationError
 
 
 _ = lang_init()
@@ -10,7 +10,9 @@ _ = lang_init()
 
 class MutationValidation:
     """Ищет валидаторы вида validation_argument_field_name.
-       На вопрос почему так - не нашел какого-то готового решения для наших реалий."""
+
+    На вопрос почему так - не нашел какого-то готового решения для наших реалий.
+    """
 
     @classmethod
     async def validate(cls, **kwargs):

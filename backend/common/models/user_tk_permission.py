@@ -1,16 +1,16 @@
 # -*- coding: utf-8 -*-
-from enum import Enum
-from sqlalchemy import Enum as AlchemyEnum, UniqueConstraint
-
-from common.veil.veil_gino import AbstractSortableStatusModel
-from common.database import db
-
 import uuid
+from enum import Enum
+
+from sqlalchemy import Enum as AlchemyEnum, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID
+
+from common.database import db
+from common.veil.veil_gino import AbstractSortableStatusModel
 
 
 class TkPermission(Enum):
-    """Права пользователя ТК"""
+    """Права пользователя ТК."""
 
     USB_REDIR = "USB_REDIR"
     FOLDERS_REDIR = "FOLDERS_REDIR"

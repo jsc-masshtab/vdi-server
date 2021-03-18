@@ -1,25 +1,24 @@
 # -*- coding: utf-8 -*-
 # TODO: удалять зависимые записи журнала событий, возможно через ON_DELETE
 #  при удалении родительской сущности (нет явной связи, сами не удалятся).
-
-import uuid
-import json
 import csv
+import json
+import uuid
+from datetime import datetime, timedelta
+from pathlib import Path
+
 import redis
 
-from datetime import datetime, timedelta
 from sqlalchemy import and_, between
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
-from pathlib import Path
-
-from web_app.front_ws_api.subscription_sources import EVENTS_SUBSCRIPTION
 
 from common.database import db
-from common.veil.veil_redis import INTERNAL_EVENTS_CHANNEL, REDIS_CLIENT
-from common.utils import gino_model_to_json_serializable_dict
 from common.languages import lang_init
+from common.utils import gino_model_to_json_serializable_dict
+from common.veil.veil_redis import INTERNAL_EVENTS_CHANNEL, REDIS_CLIENT
 
+from web_app.front_ws_api.subscription_sources import EVENTS_SUBSCRIPTION
 
 _ = lang_init()
 
@@ -57,9 +56,10 @@ class Event(db.Model):
 
     @staticmethod
     async def event_export(start, finish, journal_path):
-        """Экспорт журнала по заданному временному периоду
-        :param start: начало периода ('2021-03-01 00:00:00.939000+00:00')
-        :param finish: окончание периода ('2021-03-01 23:59:59.939000+00:00')
+        """Экспорт журнала по заданному временному периоду.
+
+        :param start: начало периода ('2020-07-01T00:00:00.000001Z')
+        :param finish: окончание периода ('2020-07-31T23:59:59.000001Z')
         :param journal_path: путь для экспорта ('/tmp/')
         """
         from common.veil.veil_errors import SilentError, SimpleError
@@ -71,7 +71,7 @@ class Event(db.Model):
             between(Event.created, start + timedelta(hours=3), finish + timedelta(hours=3))
         ).gino.all()
         if not query:
-            raise SilentError(_('Journal in this period is empty.'))
+            raise SilentError(_("Journal in this period is empty."))
 
         export = []
         for event in query:
@@ -95,16 +95,17 @@ class Event(db.Model):
                 )
             )
         except MemoryError:
-            raise SilentError(_('Not enough free space.'))
+            raise SilentError(_("Not enough free space."))
         except Exception as e:
-            raise SimpleError(_('Journal export error.'), description=e)
+            raise SimpleError(_("Journal export error."), description=e)
 
         return name
 
     @staticmethod
     async def mark_read_by(user_id, events_id_list):
-        """Отмечаем список сообщений как прочитанные пользователем, если они ещё не
-            Если списка нет, то отмечаем ВСЁ
+        """Отмечаем список сообщений как прочитанные пользователем, если они ещё не.
+
+        Если списка нет, то отмечаем ВСЁ.
         """
         if not events_id_list:
             results = await Event.select("id").gino.all()
@@ -124,8 +125,9 @@ class Event(db.Model):
 
     @staticmethod
     async def unmark_read_by(user_id, events_id_list):
-        """Убираем отметки о прочтении списка сообщений для пользователя
-            Если списка нет, то убираем ВСЁ
+        """Убираем отметки о прочтении списка сообщений для пользователя.
+
+        Если списка нет, то убираем ВСЁ.
         """
         # TODO: возможно, быстрее будет удалять список связей, а затем создавать новый, при связывании сущностей,
         #  нежели чем создавать связи по одной с проверкой на существование
@@ -182,7 +184,7 @@ class Event(db.Model):
 
 
 class EventReadByUser(db.Model):
-    """Связывающая сущность"""
+    """Связывающая сущность."""
 
     __tablename__ = "event_read_by_user"
     event = db.Column(UUID(), db.ForeignKey("event.id"), nullable=False)

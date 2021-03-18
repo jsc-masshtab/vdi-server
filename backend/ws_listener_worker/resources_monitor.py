@@ -1,25 +1,19 @@
 # -*- coding: utf-8 -*-
 import asyncio
 
-from web_app.front_ws_api.subscription_sources import SubscriptionCmd
-
 from tornado.websocket import WebSocketClosedError
-
-# from tornado.websocket import WebSocketError
 from tornado.websocket import websocket_connect
-from common.settings import WS_PING_INTERVAL, WS_PING_TIMEOUT
-
-from common.models.controller import Controller
-
-from web_app.front_ws_api.subscription_sources import CONTROLLER_SUBSCRIPTIONS_LIST
-
-from common.utils import cancel_async_task
-
-from common.veil.veil_redis import REDIS_CLIENT, WS_MONITOR_CHANNEL_OUT
-from common.veil.veil_gino import Status
+# from tornado.websocket import WebSocketError
 
 from common.languages import lang_init
 from common.log.journal import system_logger
+from common.models.controller import Controller
+from common.settings import WS_PING_INTERVAL, WS_PING_TIMEOUT
+from common.utils import cancel_async_task
+from common.veil.veil_gino import Status
+from common.veil.veil_redis import REDIS_CLIENT, WS_MONITOR_CHANNEL_OUT
+
+from web_app.front_ws_api.subscription_sources import CONTROLLER_SUBSCRIPTIONS_LIST, SubscriptionCmd
 
 
 _ = lang_init()
@@ -28,9 +22,7 @@ _ = lang_init()
 
 
 class ResourcesMonitor:
-    """
-    monitoring of controller events
-    """
+    """Monitoring of controller events."""
 
     RECONNECT_TIMEOUT = 15
     CONTROLLER_CHECK_TIMEOUT = 15
@@ -73,11 +65,10 @@ class ResourcesMonitor:
 
     # PRIVATE METHODS
     async def _controller_online_checking(self):
-        """
-        Смотрим статус контроллера. Если контроллер деактивирован, то проверяем его доступность.
+        """Смотрим статус контроллера. Если контроллер деактивирован, то проверяем его доступность.
+
         Если все хорошо, то активируем.
         """
-
         while self._running_flag:
 
             await asyncio.sleep(self.CONTROLLER_CHECK_TIMEOUT)
@@ -103,8 +94,8 @@ class ResourcesMonitor:
                 await controller.activate()
 
     async def _processing_ws_messages(self):
-        """
-        Listen for data from controller
+        """Listen for data from controller.
+
         :return:
         """
         while self._running_flag:
