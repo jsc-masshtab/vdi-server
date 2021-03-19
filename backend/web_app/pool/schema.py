@@ -173,23 +173,24 @@ class VmType(VeilResourceType):
 
     async def resolve_backups(self, _info, **kwargs):
         vm_obj = await Vm.get(self.id)
-        domain_entity = await vm_obj.get_veil_entity()
-        await domain_entity.info()
-        # Список бэкапов ВМ
-        response = await domain_entity.backup_list()
-        veil_backups_list = list()
-        backups_list = list()
-        for data in response.response:
-            backup = data.public_attrs
-            backup["file_id"] = backup["api_object_id"]
-            backup["node"] = self.node
-            backup["vm_id"] = self.id
-            backups_list.append(backup)
+        domain_entity = await vm_obj.vm_client
+        if domain_entity:
+            await domain_entity.info()
+            # Список бэкапов ВМ
+            response = await domain_entity.backup_list()
+            veil_backups_list = list()
+            backups_list = list()
+            for data in response.response:
+                backup = data.public_attrs
+                backup["file_id"] = backup["api_object_id"]
+                backup["node"] = self.node
+                backup["vm_id"] = self.id
+                backups_list.append(backup)
 
-        for data in backups_list:
-            veil_backups_list.append(VmBackupType(**data))
+            for data in backups_list:
+                veil_backups_list.append(VmBackupType(**data))
 
-        return veil_backups_list
+            return veil_backups_list
 
 
 class VmInput(graphene.InputObjectType):
@@ -636,6 +637,25 @@ class DeletePoolMutation(graphene.Mutation, PoolValidator):
                 return DeletePoolMutation(ok=is_deleted)
         except Exception as e:
             raise e
+
+
+class ClearPoolMutation(graphene.Mutation):
+    class Arguments:
+        pool_id = graphene.UUID()
+
+    ok = graphene.Boolean()
+
+    @administrator_required
+    async def mutate(self, info, pool_id, creator):
+        pool = await Pool.get(pool_id)
+        if (pool.status != Status.ACTIVE) and (pool.status != Status.SERVICE):
+            await pool.activate(pool.id)
+            await system_logger.info(_("Pool {} has been restored.").format(pool.verbose_name), user=creator)
+            return ClearPoolMutation(ok=True)
+        elif pool.status == Status.SERVICE:
+            raise SilentError(_("Pool {} is in service mode.").format(pool.verbose_name))
+        else:
+            raise SilentError(_("Pool {} is already active.").format(pool.verbose_name))
 
 
 # --- --- --- --- ---
@@ -1436,6 +1456,7 @@ class PoolMutations(graphene.ObjectType):
     updateDynamicPool = UpdateAutomatedPoolMutation.Field()
     updateStaticPool = UpdateStaticPoolMutation.Field()
     expandPool = ExpandPoolMutation.Field()
+    clearPool = ClearPoolMutation.Field()
 
     entitleUsersToPool = PoolUserAddPermissionsMutation.Field()
     removeUserEntitlementsFromPool = PoolUserDropPermissionsMutation.Field()

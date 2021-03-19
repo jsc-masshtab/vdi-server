@@ -380,6 +380,27 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
     });
   }
 
+  public clearPool(): void {
+    this.dialog.open(YesNoFormComponent, {
+      disableClose: true,
+      width: '500px',
+      data: {
+        form: {
+          header: 'Сброс ошибок',
+          question: `Сбросить все ошибки пула ${this.pool.verbose_name}?`,
+          button: 'Выполнить'
+        },
+        request: {
+          service: this.poolService,
+          action: 'clearPool',
+          body: {
+            pool_id: this.idPool,
+          }
+        }
+      }
+    });
+  }
+
   public addUsers(): void {
     this.dialog.open(AddUsersPoolComponent, {
       disableClose: true,
