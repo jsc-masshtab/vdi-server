@@ -35,6 +35,8 @@ frontend_linter_job:
 security_check:
   image: python:3.5.9-alpine
   stage: security
+  tags:
+    - docker
   before_script:
     - apk add build-base
     - python -m pip install --upgrade pip
