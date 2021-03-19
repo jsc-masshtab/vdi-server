@@ -8,6 +8,8 @@ import { map } from 'rxjs/operators';
 import { MatDialog } from '@angular/material';
 import { AddControllerComponent } from '../add-controller/add-controller.component';
 import { RemoveControllerComponent } from '../remove-controller/remove-controller.component';
+import { Subscription } from 'rxjs';
+import { WebsocketService } from 'src/app/dashboard/common/classes/websock.service';
 
 @Component({
   selector: 'vdi-servers',
@@ -15,6 +17,8 @@ import { RemoveControllerComponent } from '../remove-controller/remove-controlle
 })
 
 export class ControllersComponent extends DetailsMove implements OnInit, OnDestroy {
+
+  private socketSub: Subscription;
 
   public controllers: [];
   public collection: object[] = [
@@ -51,13 +55,33 @@ export class ControllersComponent extends DetailsMove implements OnInit, OnDestr
     }
   ];
 
-  constructor(private service: ControllersService, public dialog: MatDialog,
-              private waitService: WaitService, private router: Router) { super(); }
+  constructor(
+    private service: ControllersService,
+    public dialog: MatDialog,
+    private waitService: WaitService,
+    private router: Router,
+    private ws: WebsocketService
+  ) {
+    super();
+  }
 
   @ViewChild('view') view: ElementRef;
 
   ngOnInit() {
     this.getAllControllers();
+    this.listenSockets()
+  }
+
+  private listenSockets() {
+    if (this.socketSub) {
+      this.socketSub.unsubscribe();
+    }
+
+    this.socketSub = this.ws.stream('/controllers/').subscribe((message: any) => {
+      if (message['mgs_type'] === 'data') {
+        this.service.getAllControllers().refetch();
+      }
+    });
   }
 
   public getAllControllers() {
@@ -108,6 +132,9 @@ export class ControllersComponent extends DetailsMove implements OnInit, OnDestr
   ngOnDestroy() {
     this.service.paramsForGetControllers.spin = true;
     this.service.paramsForGetControllers.nameSort = undefined;
-  }
 
+    if (this.socketSub) {
+      this.socketSub.unsubscribe();
+    }
+  }
 }

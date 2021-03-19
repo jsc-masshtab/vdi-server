@@ -19,7 +19,22 @@ export class PoolsService {
         nameSort: undefined
     };
 
-    constructor(private service: Apollo) {}
+    constructor(private service: Apollo) { }
+    
+    public getAllControllers(): QueryRef<any, any> {
+        return this.service.watchQuery({
+            query: gql`
+                query controllers {
+                    controllers {
+                        id
+                    }
+                }
+            `,
+            variables: {
+                method: 'GET'
+            }
+        });
+    }
 
     public getAllPools(): QueryRef<any, any> {
 

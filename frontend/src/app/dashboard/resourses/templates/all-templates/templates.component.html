@@ -1,6 +1,4 @@
-
 <div class="control-panel">
-    
     <div class="crumb">
         <fa-icon [icon]="['fas','tv']"></fa-icon>
         <span class="crumb-name">Шаблоны ВМ</span>
@@ -10,10 +8,15 @@
         <fa-icon [icon]="['fas','sync-alt']"></fa-icon>
     </button>
 
+    <div class="control-btns-end">
+        <button *ngIf="pageRollup" class="bars-btn" (click)="toggleShow()">
+            <fa-icon [icon]="['fas','bars']"></fa-icon>
+        </button>
+    </div>
 </div>
 
 <div class="components-info" #view>
-    <div class="component-list"  [class.page-wrap]="pageRollup" [class.page-rollup]="pageRollup" [style.height]="pageHeight">
+    <div class="component-list"  [class.page-wrap]="pageRollup&&!pageShow" [class.page-rollup]="pageRollup" [style.height]="pageHeight">
         <vdi-table-component [data]="templates" [collection]="collection" (clickRowData)="routeTo($event)" (sortListNow)="sortList($event)" cursor="true"></vdi-table-component>
     </div>
     <div class="component-details" [class.page-height-min]="pageHeight==pageHeightMin" [class.page-height-max]="pageRollup">

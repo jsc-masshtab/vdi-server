@@ -11,8 +11,21 @@
         <mat-label *ngIf="pending">Загрузка ...</mat-label>
         <mat-label *ngIf="data.users?.length && !pending">Выберите пользователей</mat-label>
         <mat-label *ngIf="!data.users?.length && !pending">- нет пользователей -</mat-label>
-        <mat-select (selectionChange)="select($event)" multiple="true">
+
+        <mat-select [formControl]="users" multiple="true">
+
           <input placeholder="Поиск..." (keyup)="search($event.target.value)">
+
+          <mat-option *ngIf="selected_users?.length" disabled="disabled" class="mat-filter-option">
+            <button type="button" class="mat-form-btn" (click)="selectAllUsers()">
+              Выбрать все
+            </button>
+          
+            <button type="button" class="mat-form-btn" (click)="deselectAllUsers()">
+              Очистить выбор
+            </button>
+          </mat-option>
+          
           <mat-option *ngFor="let user of selected_users" [value]="user.id">
             {{user.username}}
           </mat-option>

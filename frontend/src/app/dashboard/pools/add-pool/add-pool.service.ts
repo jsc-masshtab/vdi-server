@@ -73,6 +73,20 @@ export class AddPoolService {
         });
     }
 
+    public getAllAuthenticationDirectory(): QueryRef<any, any> {
+        return this.service.watchQuery({
+            query: gql` query auth_dirs {
+                            auth_dirs {
+                                id
+                            }
+                        }
+                    `,
+            variables: {
+                method: 'GET'
+            }
+        });
+    }
+
     addStaticPool(data) {
         let query: string = ` mutation
             pools(

@@ -9,6 +9,7 @@ import { ActivatedRoute, Router, ParamMap } from '@angular/router';
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { IEditFormObj } from 'types';
 import {FormControl} from '@angular/forms';
+import { YesNoFormComponent } from 'src/app/dashboard/common/forms-dinamic/yes-no-form/yes-no-form.component';
 
 
 @Component({
@@ -52,7 +53,6 @@ export class ControllerDetailsComponent implements OnInit, OnDestroy {
         tag: 'input',
         type: 'text',
         fieldName: 'description',
-        unrequired: true,
         fieldValue: this.controller['description']
       }],
       edit: 'openEditForm',
@@ -116,14 +116,6 @@ export class ControllerDetailsComponent implements OnInit, OnDestroy {
         controller_id: this.idController
       }
     });
-
-    this.is_service.valueChanges.subscribe(() => {
-      if (this.is_service.value === false) {
-        this.activateController();
-        } else {
-          this.serviceController();
-        }
-    });
   }
 
   public getController(): void {
@@ -141,24 +133,62 @@ export class ControllerDetailsComponent implements OnInit, OnDestroy {
       });
   }
 
-  public serviceController(): void {
-    if (this.subController) {
-      this.subController.unsubscribe();
+
+  public toggleService(e) {
+    
+    e.preventDefault();
+
+    if (this.controller.status === 'SERVICE') {
+      this.activateController();
+    } else {
+      this.serviceController();
     }
-    this.subController = this.controllerService.serviceController(this.idController).subscribe( (data) => {
-        this.controller = data;
-        this.getController();
-      });
   }
 
-  public activateController(): void {
-    if (this.subController) {
-      this.subController.unsubscribe();
-    }
-    this.subController = this.controllerService.activateController(this.idController).subscribe( (data) => {
-        this.controller = data;
-        this.getController();
-      });
+  public serviceController() {
+    this.dialog.open(YesNoFormComponent, {
+      disableClose: true,
+      width: '500px',
+      data: {
+        form: {
+          header: 'Подтверждение действия',
+          question: 'Перейти в сервисный режим?',
+          button: 'Выполнить'
+        },
+        request: {
+          service: this.controllerService,
+          action: 'serviceController',
+          body: {
+            id: this.idController
+          }
+        }
+      }
+    }).afterClosed().subscribe(() => {
+      this.getController();
+    })
+  }
+
+  public activateController() {
+    this.dialog.open(YesNoFormComponent, {
+      disableClose: true,
+      width: '500px',
+      data: {
+        form: {
+          header: 'Подтверждение действия',
+          question: 'Перейти в режим контроллера?',
+          button: 'Выполнить'
+        },
+        request: {
+          service: this.controllerService,
+          action: 'activateController',
+          body: {
+            id: this.idController
+          }
+        }
+      }
+    }).afterClosed().subscribe(() => {
+      this.getController();
+    })
   }
 
   public test(): void {
@@ -233,7 +263,7 @@ export class ControllerDetailsComponent implements OnInit, OnDestroy {
   }
 
   public close(): void  {
-    this.router.navigateByUrl('pages/settings/controllers');
+    this.router.navigateByUrl('pages/controllers');
   }
 
   ngOnDestroy() {

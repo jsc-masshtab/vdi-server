@@ -43,6 +43,36 @@ body {
     width: 100%;
 }
 
+.mat-filter-option > .mat-pseudo-checkbox {
+  display: none !important;
+}
+
+.mat-form-btn {
+    display: inline-flex;
+    align-items: center;
+    height: 30px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: bolder;
+    padding-left: 12px;
+    padding-right: 14px;
+    background-color: transparent;
+    border: 1px solid transparent;
+    border-left: 1px solid rgba(0,0,0,0.2);
+    border-radius: 2px;
+    color: rgba(0,0,0,0.55);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    transition: all 200ms;
+
+    &:hover {
+        transition: all 200ms;
+        border: 1px solid rgba(0,0,0,0.2);
+        overflow: initial;
+    }
+}
+
 .mat-select-panel {
     min-width: 100% !important;
 }

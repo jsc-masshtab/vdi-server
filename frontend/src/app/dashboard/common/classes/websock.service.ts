@@ -100,6 +100,18 @@ export class WebsocketService {
 
   private onListenClose(event: CloseEvent): void {
     console.info('%c[WS] Close', 'color: #9a6f0f', event);
+
+    const token = this.authStorageService.getItemStorage('token');
+
+    if (token) {
+      if (this.timeout) {
+        clearTimeout(this.timeout);
+      }
+
+      this.timeout = setTimeout(() => {
+        this.init();
+      }, 5000);
+    }
   }
 
   private onListenError(event: Event): void {

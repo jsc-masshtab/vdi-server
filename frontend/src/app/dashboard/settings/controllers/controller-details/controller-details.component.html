@@ -22,7 +22,7 @@
 
         <div class="toggle" title="Включенный сервисный режим деактивирует контроллер, все операции с контроллером становятся неактивными">
           <label class="switch">
-            <input type="checkbox" [formControl]="is_service" [checked]="controller?.status == 'SERVICE'">
+            <input type="checkbox" (click)="toggleService($event)" [checked]="controller?.status == 'SERVICE'">
             <span class="slider"></span>
             <span class="slider-name" *ngIf="controller?.status != 'SERVICE'">Включить сервисный режим</span>
             <span class="slider-name" *ngIf="controller?.status == 'SERVICE'">Сервисный режим</span>

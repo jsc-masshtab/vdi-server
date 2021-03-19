@@ -220,6 +220,7 @@
 	overflow: hidden;
 	display: flex;
 	flex-direction: column;
+    position: relative;
 
 	.component-list {
         width: 100%;
@@ -247,7 +248,7 @@
 	.page-rollup {
 		position: absolute;
         z-index: 2;
-        top: -1px;
+        top: 0px;
         right: 0px;
         width: calc(100% - 60px);
         height: calc(100% - 100px) !important;
@@ -255,6 +256,10 @@
         max-width: 65%;
         box-shadow: 0px 0px 40px 3px rgba(0, 0, 0, 0.2);
         border: 1px solid #3f606b;
+        border-right: 0;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
         // border-right: 5px solid #3f606b;
 	}
 

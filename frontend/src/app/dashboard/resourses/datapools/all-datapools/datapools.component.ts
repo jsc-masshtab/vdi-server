@@ -7,6 +7,7 @@ import { map } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { DetailsMove } from 'src/app/dashboard/common/classes/details-move';
 import { Subscription } from 'rxjs';
+import { WebsocketService } from 'src/app/dashboard/common/classes/websock.service';
 
 
 @Component({
@@ -37,15 +38,17 @@ export class DatapoolsComponent extends DetailsMove implements OnInit, OnDestroy
       sort: true
     },
     {
-      title: 'Свободно (МБ)',
+      title: 'Свободно',
       property: 'free_space',
-      type: 'string',
+      type: 'bites',
+      delimiter: 'Мб',
       sort: true
     },
     {
-      title: 'Занято (МБ)',
+      title: 'Занято',
       property: 'used_space',
-      type: 'string',
+      type: 'bites',
+      delimiter: 'Мб',
       sort: true
     },
     {
@@ -63,9 +66,14 @@ export class DatapoolsComponent extends DetailsMove implements OnInit, OnDestroy
   ];
 
   private sub: Subscription;
+  private socketSub: Subscription;
 
-
-  constructor(private service: DatapoolsService, private waitService: WaitService,  private router: Router) {
+  constructor(
+    private service: DatapoolsService,
+    private waitService: WaitService,
+    private router: Router,
+    private ws: WebsocketService
+  ) {
     super();
   }
 
@@ -73,6 +81,19 @@ export class DatapoolsComponent extends DetailsMove implements OnInit, OnDestroy
 
   ngOnInit() {
     this.getDatapools();
+    this.listenSockets();
+  }
+
+  private listenSockets() {
+    if (this.socketSub) {
+      this.socketSub.unsubscribe();
+    }
+
+    this.socketSub = this.ws.stream('/data-pools/').subscribe((message: any) => {
+      if (message['mgs_type'] === 'data') {
+        this.service.getAllDatapools(this.filter).refetch();
+      }
+    });
   }
 
   public getDatapools() {
@@ -131,8 +152,13 @@ export class DatapoolsComponent extends DetailsMove implements OnInit, OnDestroy
   ngOnDestroy() {
     this.service.paramsForGetDatapools.spin = true;
     this.service.paramsForGetDatapools.nameSort = undefined;
+
     if (this.sub) {
       this.sub.unsubscribe();
+    }
+
+    if (this.socketSub) {
+      this.socketSub.unsubscribe();
     }
   }
 

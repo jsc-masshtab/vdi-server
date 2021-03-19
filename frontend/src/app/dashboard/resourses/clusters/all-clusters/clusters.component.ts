@@ -6,6 +6,7 @@ import { ClustersService } from './clusters.service';
 import { map } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
+import { WebsocketService } from 'src/app/dashboard/common/classes/websock.service';
 
 @Component({
   selector: 'vdi-clusters',
@@ -41,9 +42,10 @@ export class ClustersComponent extends DetailsMove implements OnInit, OnDestroy 
       sort: true
     },
     {
-      title: 'RAM (МБ)',
+      title: 'RAM',
       property: 'memory_count',
-      type: 'string',
+      type: 'bites',
+      delimiter: 'Мб',
       sort: true
     },
     {
@@ -60,9 +62,14 @@ export class ClustersComponent extends DetailsMove implements OnInit, OnDestroy 
   ];
 
   private sub: Subscription;
+  private socketSub: Subscription;
 
-
-  constructor(private service: ClustersService, private router: Router, private waitService: WaitService) {
+  constructor(
+    private service: ClustersService,
+    private router: Router,
+    private waitService: WaitService,
+    private ws: WebsocketService
+  ) {
     super();
   }
 
@@ -70,6 +77,19 @@ export class ClustersComponent extends DetailsMove implements OnInit, OnDestroy 
 
   ngOnInit() {
     this.getAllClusters();
+    this.listenSockets();
+  }
+
+  private listenSockets() {
+    if (this.socketSub) {
+      this.socketSub.unsubscribe();
+    }
+
+    this.socketSub = this.ws.stream('/clusters/').subscribe((message: any) => {
+      if (message['mgs_type'] === 'data') {
+        this.service.getAllClusters(this.filter).refetch();
+      }
+    });
   }
 
   public getAllClusters(): void {
@@ -128,8 +148,13 @@ export class ClustersComponent extends DetailsMove implements OnInit, OnDestroy 
   ngOnDestroy() {
     this.service.paramsForGetClusters.spin = true;
     this.service.paramsForGetClusters.nameSort = undefined;
+
     if (this.sub) {
       this.sub.unsubscribe();
+    }
+
+    if (this.socketSub) {
+      this.socketSub.unsubscribe();
     }
   }
 
