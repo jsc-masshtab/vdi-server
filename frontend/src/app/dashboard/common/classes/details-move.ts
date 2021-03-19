@@ -3,12 +3,14 @@ import { HostListener, ElementRef } from '@angular/core';
 
 export class DetailsMove  {
 
-    public pageHeightMinNumber: number = 315;
-    public pageHeightMin: string = '315px';
-    public pageHeightMax: string = '100%';
-    public pageHeight: string = '100%';
-    public pageRollup: boolean = false;
-    public timeout: any;
+  public pageHeightMinNumber: number = 315;
+  public pageHeightMin: string = '315px';
+  public pageHeightMax: string = '100%';
+  public pageHeight: string = '100%';
+  public pageRollup: boolean = false;
+  public pageShow: boolean = false
+  public timeout: any;
+  
 
   constructor() {}
 
@@ -38,6 +40,10 @@ export class DetailsMove  {
   public componentDeactivate(): void {
     this.pageHeight = this.pageHeightMax;
     this.pageRollup = false;
+  }
+
+  public toggleShow() {
+    this.pageShow = !this.pageShow
   }
 
 }

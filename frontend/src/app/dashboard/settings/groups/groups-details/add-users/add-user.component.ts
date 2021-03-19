@@ -6,6 +6,7 @@ import { Component, Inject, OnDestroy, OnInit } from '@angular/core';
 import { MAT_DIALOG_DATA } from '@angular/material';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
+import { FormControl } from '@angular/forms';
 
 interface IData {
   id: string;
@@ -21,11 +22,12 @@ interface IData {
 export class AddUserGroupComponent implements OnInit, OnDestroy {
 
   public pending: boolean = false;
-  public users: [] = [];
   private destroy: Subject<any> = new Subject<any>();
   public valid: boolean = true;
 
   public selected_users: string[] = [];
+
+  users = new FormControl([]);
 
   constructor(private service: GroupsService,
               private waitService: WaitService,
@@ -39,7 +41,7 @@ export class AddUserGroupComponent implements OnInit, OnDestroy {
 
   public search(name) {
     let filter = String(name).toLowerCase();
-    this.selected_users = this.data.users.filter((user: any) => user.username.toLowerCase().startsWith(filter) || this.users.some(selected => selected === user.id))
+    this.selected_users = this.data.users.filter((user: any) => user.username.toLowerCase().startsWith(filter) || this.users.value.some(selected => selected === user.id))
   }
 
   public select(value: []) {
@@ -48,9 +50,9 @@ export class AddUserGroupComponent implements OnInit, OnDestroy {
   }
 
   public send() {
-    if (this.users.length) {
+    if (this.users.value.length) {
       this.waitService.setWait(true);
-      this.service.addUsers(this.users, this.data.id).pipe(takeUntil(this.destroy)).subscribe((res) => {
+      this.service.addUsers(this.users.value, this.data.id).pipe(takeUntil(this.destroy)).subscribe((res) => {
         if (res) {
           this.service.getGroup(this.data.id).pipe(takeUntil(this.destroy)).subscribe(() => {
             this.waitService.setWait(false);
@@ -61,6 +63,14 @@ export class AddUserGroupComponent implements OnInit, OnDestroy {
     } else {
       this.valid = false;
     }
+  }
+
+  public selectAllUsers() {
+    this.users.setValue(this.selected_users.map((user: any) => user.id))
+  }
+
+  public deselectAllUsers() {
+    this.users.setValue([])
   }
 
   ngOnDestroy() {

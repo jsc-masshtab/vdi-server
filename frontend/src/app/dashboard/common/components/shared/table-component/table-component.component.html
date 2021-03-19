@@ -80,6 +80,8 @@
                     <span *ngIf="obj.type === 'string'" [class.name-entity]="obj.class == 'name-start'"  class="for-wrap">{{ item[obj.property] }}</span>
                     <span *ngIf="obj.type === 'string-rename'" [class.name-entity]="obj.class == 'name-start'"  class="for-wrap">{{ item[obj.property] | rename }}</span>
 
+                    <span *ngIf="obj.type === 'bites'" [class.name-entity]="obj.class == 'name-start'"  class="for-wrap">{{ formatBytes(item[obj.property], obj.delimiter) }}</span>
+
                     <span *ngIf="obj.type === 'array-type'" [class.name-entity]="obj.class == 'name-start'"  class="for-wrap">{{ item }}</span>
                     <span *ngIf="obj.type === 'array-type-rename'" [class.name-entity]="obj.class == 'name-start'"  class="for-wrap">{{ item | rename }}</span>
 
@@ -102,7 +104,7 @@
                     </ng-container>
 
                     <ng-container *ngIf="obj.type === 'time'">
-                      <ng-container>{{ moment(item[obj.property]).format('DD.MM.YYYY HH:mm:ss')  }}</ng-container>
+                      <ng-container>{{ moment(item[obj.property]).format('DD.MM.YYYY HH:mm:ss Z')  }}</ng-container>
                     </ng-container>
 
                 </ng-container>

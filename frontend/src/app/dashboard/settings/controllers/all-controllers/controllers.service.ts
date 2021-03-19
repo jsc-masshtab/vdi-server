@@ -153,7 +153,7 @@ export class ControllersService {
         });
     }
 
-    public serviceController(id: string) {
+    public serviceController(params: any) {
         return this.service.mutate<any>({
             mutation: gql`
                 mutation controllers($id: UUID!) {
@@ -164,12 +164,12 @@ export class ControllersService {
             `,
             variables: {
                 method: 'POST',
-                id
+                ...params
             }
         });
     }
 
-    public activateController(id: string) {
+    public activateController(params: any) {
         return this.service.mutate<any>({
             mutation: gql`
                 mutation controllers($id: UUID!) {
@@ -180,7 +180,7 @@ export class ControllersService {
             `,
             variables: {
                 method: 'POST',
-                id
+                ...params
             }
         });
     }

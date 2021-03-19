@@ -95,6 +95,16 @@
           <mat-label *ngIf="!data.vms?.length">- нет виртуальных машин -</mat-label>
 
           <mat-select formControlName="vms" multiple="true">
+            <mat-option *ngIf="data.vms?.length" disabled="disabled" class="mat-filter-option">
+              <button type="button" class="mat-form-btn" (click)="selectAllVms()">
+                Выбрать все
+              </button>
+
+              <button type="button" class="mat-form-btn" (click)="deselectAllVms()">
+                Очистить выбор
+              </button>
+            </mat-option>
+            
             <mat-option *ngFor="let vm of data.vms" [value]="vm">
               {{vm.verbose_name}}
             </mat-option>
@@ -150,7 +160,7 @@
         <div class="error" [@animForm]="error" *ngIf="dynamicPool.hasError('pattern', 'vm_name_template')">Имя шаблона не должно превышать 63 символа и может состоять из букв латинского алфавита, цифр и -.</div>
       </label>
 
-      <label class="field">
+      <label class="field" *ngIf="auth_dirs.length">
         <p class="field-name">Наименование групп для добавления ВМ в AD</p>
         <input type="text" formControlName="ad_cn_pattern">
 
@@ -233,7 +243,7 @@
         <p class="description">Создать тонкие клоны</p>
       </label>
 
-      <label class="field-inline" [@animForm]>
+      <label class="field-inline" [@animForm] *ngIf="auth_dirs.length">
         <mat-checkbox [color]="'warn'" formControlName="prepare_vms"></mat-checkbox>
         <p class="description">Подготавливать ВМ</p>
       </label>

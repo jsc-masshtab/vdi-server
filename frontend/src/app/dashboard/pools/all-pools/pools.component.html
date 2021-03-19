@@ -1,6 +1,4 @@
-
 <div class="control-panel">
-
     <div class="crumb">
         <fa-icon [icon]="['fas','desktop']"></fa-icon>
         <span class="crumb-name">Пулы рабочих столов</span>
@@ -11,15 +9,21 @@
     </button>
 
     <div class="control-btns">
-        <button type="button" (click)="openCreatePool()">
+        <button type="button" *ngIf="controllers.length" (click)="openCreatePool()" >
             <fa-icon [icon]="['fas','plus-circle']"></fa-icon>
             <span class="btn-name">Добавить пул</span>
+        </button>
+    </div>
+
+    <div class="control-btns-end">
+        <button *ngIf="pageRollup" class="bars-btn" (click)="toggleShow()">
+            <fa-icon [icon]="['fas','bars']"></fa-icon>
         </button>
     </div>
 </div>
 
 <div class="components-info" #view>
-    <div class="component-list" [class.page-wrap]="pageRollup" [class.page-rollup]="pageRollup" [style.height]="pageHeight">
+    <div class="component-list" [class.page-wrap]="pageRollup&&!pageShow" [class.page-rollup]="pageRollup" [style.height]="pageHeight">
         <vdi-table-component  [data]="pools" [collection]="collection" cursor="true" (clickRowData)="routeTo($event)" (sortListNow)="sortList($event)"></vdi-table-component>
     </div>
     

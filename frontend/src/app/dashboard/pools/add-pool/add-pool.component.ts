@@ -45,6 +45,8 @@ export class PoolAddComponent implements OnInit, OnDestroy {
   public staticPool: FormGroup;
   public dynamicPool: FormGroup;
 
+  public auth_dirs: any[] = []
+
   constructor(
     private addPoolService: AddPoolService,
     private dialogRef: MatDialogRef<PoolAddComponent>,
@@ -52,7 +54,7 @@ export class PoolAddComponent implements OnInit, OnDestroy {
     private waitService: WaitService) { }
 
   ngOnInit() {
-    this.initForms();
+    this.getAllAuthenticationDirectory()
   }
 
   private totalSizeValidator() {
@@ -67,6 +69,13 @@ export class PoolAddComponent implements OnInit, OnDestroy {
         return { ReserveLessMax: true };
       }
     };
+  }
+
+  getAllAuthenticationDirectory() {
+    this.addPoolService.getAllAuthenticationDirectory().valueChanges.pipe(map(data => data.data.auth_dirs)).subscribe((res) => {
+      this.auth_dirs = res
+      this.initForms();
+    })
   }
 
   initForms() {
@@ -86,14 +95,14 @@ export class PoolAddComponent implements OnInit, OnDestroy {
     this.dynamicPool = this.fb.group({
       template_id: ['', Validators.required],
       vm_name_template: ['', [Validators.required, Validators.pattern(/^([a-zA-Z]+[a-zA-Z0-9-]*){0,63}$/)]],
-      ad_cn_pattern: [''],
+      ...this.auth_dirs.length ? { ad_cn_pattern: [''] } : {},
       increase_step: [1, [Validators.required, Validators.max(200), Validators.min(1)]],
       reserve_size: [1, [Validators.required, Validators.max(200), Validators.min(1)]],
       initial_size: [1, [Validators.required, Validators.max(200), Validators.min(1)]],
       total_size: [1, [Validators.required, Validators.max(10000), Validators.min(1)]],
 
       create_thin_clones: true,
-      prepare_vms: true,
+      ...this.auth_dirs.length ? { prepare_vms: true } : {},
     }, { validators: this.totalSizeValidator() });
 
     this.toStep('type');
@@ -119,6 +128,14 @@ export class PoolAddComponent implements OnInit, OnDestroy {
       vms: [],
       templates: []
     };
+  }
+
+  selectAllVms() {
+    this.staticPool.get('vms').setValue(this.data.vms)
+  }
+
+  deselectAllVms() {
+    this.staticPool.get('vms').setValue([])
   }
 
   public toStep(step: string) {
@@ -214,7 +231,7 @@ export class PoolAddComponent implements OnInit, OnDestroy {
         this.dynamicPool.get('total_size').setValue(1);
         this.dynamicPool.get('reserve_size').setValue(1);
         this.dynamicPool.get('create_thin_clones').setValue(true);
-        this.dynamicPool.get('prepare_vms').setValue(true);
+        if (this.auth_dirs.length) { this.dynamicPool.get('prepare_vms').setValue(true); }
       }               break;
 
       case 'check_dynamic': {

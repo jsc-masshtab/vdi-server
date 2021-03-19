@@ -6,6 +6,7 @@ import { map } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { DetailsMove } from 'src/app/dashboard/common/classes/details-move';
 import { Subscription } from 'rxjs';
+import { WebsocketService } from 'src/app/dashboard/common/classes/websock.service';
 
 @Component({
   selector: 'vdi-nodes',
@@ -47,9 +48,10 @@ export class NodesComponent extends DetailsMove implements OnInit, OnDestroy {
       sort: true
     },
     {
-      title: 'RAM (МБ)',
+      title: 'RAM',
       property: 'memory_count',
-      type: 'string',
+      type: 'bites',
+      delimiter: 'Мб',
       sort: true
     },
     {
@@ -66,9 +68,16 @@ export class NodesComponent extends DetailsMove implements OnInit, OnDestroy {
   ];
 
   public nodes: object[] = [];
-  private sub: Subscription;
 
-  constructor(private service: NodesService, private router: Router, private waitService: WaitService) {
+  private sub: Subscription;
+  private socketSub: Subscription;
+
+  constructor(
+    private service: NodesService,
+    private router: Router,
+    private waitService: WaitService,
+    private ws: WebsocketService
+  ) {
     super();
   }
 
@@ -76,6 +85,19 @@ export class NodesComponent extends DetailsMove implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.getNodes();
+    this.listenSockets();
+  }
+
+  private listenSockets() {
+    if (this.socketSub) {
+      this.socketSub.unsubscribe();
+    }
+
+    this.socketSub = this.ws.stream('/nodes/').subscribe((message: any) => {
+      if (message['mgs_type'] === 'data') {
+        this.service.getAllNodes(this.filter).refetch();
+      }
+    });
   }
 
   public getNodes() {
@@ -133,8 +155,13 @@ export class NodesComponent extends DetailsMove implements OnInit, OnDestroy {
   ngOnDestroy() {
     this.service.paramsForGetNodes.spin = true;
     this.service.paramsForGetNodes.nameSort = undefined;
+
     if (this.sub) {
       this.sub.unsubscribe();
+    }
+
+    if (this.socketSub) {
+      this.socketSub.unsubscribe();
     }
   }
 

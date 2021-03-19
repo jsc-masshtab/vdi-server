@@ -1,5 +1,4 @@
 <div class="control-panel">
-
     <div class="crumb">
         <fa-icon [icon]="['fas','server']"></fa-icon>
         <span class="crumb-name">Контроллеры</span>
@@ -16,10 +15,15 @@
         </button>
     </div>
 
+    <div class="control-btns-end">
+        <button *ngIf="pageRollup" class="bars-btn" (click)="toggleShow()">
+            <fa-icon [icon]="['fas','bars']"></fa-icon>
+        </button>
+    </div>
 </div>
 
 <div class="components-info" #view>
-    <div class="component-list" [class.page-wrap]="pageRollup" [class.page-rollup]="pageRollup" [style.height]="pageHeight">
+    <div class="component-list" [class.page-wrap]="pageRollup&&!pageShow" [class.page-rollup]="pageRollup" [style.height]="pageHeight">
         <vdi-table-component [data]="controllers" [collection]="collection" (sortListNow)="sortList($event)" (clickRowData)="routeTo($event)" cursor="true"></vdi-table-component>
     </div>
     <div class="component-details" [class.page-height-min]="pageHeight==pageHeightMin" [class.page-height-max]="pageRollup">

@@ -7,6 +7,7 @@ import { DetailsMove } from 'src/app/dashboard/common/classes/details-move';
 import { Subscription } from 'rxjs';
 import { IParams } from 'types';
 import {FormControl} from '@angular/forms';
+import { WebsocketService } from 'src/app/dashboard/common/classes/websock.service';
 
 @Component({
   selector: 'vdi-vms',
@@ -20,6 +21,8 @@ export class VmsComponent extends DetailsMove implements OnInit, OnDestroy {
   @Input() filter: object
 
   private sub: Subscription;
+  private socketSub: Subscription;
+
   user_power_state = new FormControl('all');
 
   public vms: object[] = [];
@@ -52,7 +55,12 @@ export class VmsComponent extends DetailsMove implements OnInit, OnDestroy {
     }
   ];
 
-  constructor(private service: VmsService, private waitService: WaitService, private router: Router) {
+  constructor(
+    private service: VmsService,
+    private waitService: WaitService,
+    private router: Router,
+    private ws: WebsocketService
+  ) {
     super();
   }
 
@@ -60,11 +68,24 @@ export class VmsComponent extends DetailsMove implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.getAllVms();
+    this.listenSockets();
 
     this.user_power_state.valueChanges.subscribe(() => {
-        this.getAllVms();
-      })
+      this.getAllVms();
+    })
+  }
+
+  private listenSockets() {
+    if (this.socketSub) {
+      this.socketSub.unsubscribe();
     }
+
+    this.socketSub = this.ws.stream('/domains/').subscribe((message: any) => {
+      if (message['mgs_type'] === 'data') {
+        this.service.getAllVms(this.filter).refetch();
+      }
+    });
+  }
 
   public getAllVms() {
     if (this.sub) {
@@ -129,6 +150,10 @@ export class VmsComponent extends DetailsMove implements OnInit, OnDestroy {
   ngOnDestroy() {
     if (this.sub) {
       this.sub.unsubscribe();
+    }
+
+    if (this.socketSub) {
+      this.socketSub.unsubscribe();
     }
   }
 }

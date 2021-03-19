@@ -10,7 +10,7 @@
     background-color: white;
     font-size: 12px;
     padding-left: 14px;
-    padding-right: 14px;
+    padding-right: 8px;
     color: rgba(0,0,0,0.55);
 
     .crumb {
@@ -56,6 +56,29 @@
 
         .btn-name {
             margin-left: 8px;
+        }
+    }
+
+    .control-btns-end {
+        display: flex;
+        width: 100%;
+        justify-content: flex-end;
+        flex: 1;
+        
+        .bars-btn {
+            display: inline-flex;
+            align-items: center;
+            padding: 6px 9px;
+            background-color: white;
+            border: 1px solid rgba(0,0,0,0.2);
+            border-radius: 4px;
+            color: rgba(0,0,0,0.55);
+            font-size: 15px;
+
+            &:hover {
+                transition: all 200ms;
+                background-color: #f6f7f9;
+            }
         }
     }
 

@@ -109,26 +109,31 @@ export class DashboardModule {
 
     const errorLink = onError(({ graphQLErrors, networkError, operation, forward}): any => {
       if (graphQLErrors) {
+
         this.waitService.setWait(false);
+
         graphQLErrors.map(({ message, locations, path }) => {
-          this.errorService.setError(message);
           console.error(`[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`, locations);
         });
       }
 
       if (networkError) {
         console.error(networkError, 'networkError');
+
         if (networkError['error'] && networkError['error']['errors']) {
           networkError['error']['errors'].forEach(er => {
             console.warn(er.message);
           });
         }
+
         this.waitService.setWait(false);
+
         if (networkError['status'] === 401) {
           if (networkError['error'] && networkError['error']['errors']) {
             this.errorService.setError(networkError['error']['errors']);
           }
         }
+
         this.errorService.setError(networkError['message']);
       }
 

@@ -33,4 +33,17 @@ export class TableIntoComponent  {
       return '--'
     }
   }
+
+  formatBytes(bytes, delimiter = 'Байт', decimals = 3) {
+    if (bytes === 0) { return '0 Байт'; }
+
+    const k = 1024;
+    const dm = decimals < 0 ? 0 : decimals;
+    const sizes = ['Байт', 'Кб', 'Мб', 'Гб', 'Тб', 'Пб', 'Эб', 'Зб', 'Йб'];
+
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    const def = sizes.findIndex(size => size === delimiter);
+
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i + def];
+  }
 }

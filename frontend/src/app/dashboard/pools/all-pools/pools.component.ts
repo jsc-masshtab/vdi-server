@@ -22,9 +22,11 @@ import { WebsocketService } from '../../common/classes/websock.service';
 export class PoolsComponent extends DetailsMove implements OnInit, OnDestroy {
 
   private getPoolsSub: Subscription;
+  private getControllerssSub: Subscription;
   private socketSub: Subscription;
 
   public pools: [];
+  public controllers: any[] = [];
 
   public collection: ReadonlyArray<object> = [
     {
@@ -80,6 +82,7 @@ export class PoolsComponent extends DetailsMove implements OnInit, OnDestroy {
   @ViewChild('view') view: ElementRef;
 
   ngOnInit() {
+    this.checkControllers()
     this.getAllPools();
     this.listenSockets();
   }
@@ -89,6 +92,18 @@ export class PoolsComponent extends DetailsMove implements OnInit, OnDestroy {
       disableClose: true,
       width: '500px'
     });
+  }
+
+  public checkControllers() {
+
+    if (this.getControllerssSub) {
+      this.getControllerssSub.unsubscribe();
+    }
+
+    this.getControllerssSub = this.service.getAllControllers().valueChanges.pipe(map(data => data.data['controllers']))
+      .subscribe((data) => {
+        this.controllers = data;
+      });
   }
 
   public getAllPools(): void {

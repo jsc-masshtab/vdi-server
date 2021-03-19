@@ -1,4 +1,3 @@
-
 <div class="control-panel">
     <div class="crumb">
         <fa-icon [icon]="['fas','building']"></fa-icon>
@@ -8,10 +7,16 @@
     <button (click)="getAllClusters()" class="btn-refresh" title="Обновить">
         <fa-icon [icon]="['fas','sync-alt']"></fa-icon>
     </button>
+
+    <div class="control-btns-end">
+        <button *ngIf="pageRollup" class="bars-btn" (click)="toggleShow()">
+            <fa-icon [icon]="['fas','bars']"></fa-icon>
+        </button>
+    </div>
 </div>
 
 <div class="components-info" #view>
-    <div class="component-list" [class.page-wrap]="pageRollup" [class.page-rollup]="pageRollup" [style.height]="pageHeight">
+    <div class="component-list" [class.page-wrap]="pageRollup&&!pageShow" [class.page-rollup]="pageRollup" [style.height]="pageHeight">
         <vdi-table-component [data]="clusters" [collection]="collection" cursor="true" (clickRowData)="routeTo($event)" (sortListNow)="sortList($event)"></vdi-table-component>
     </div>
     <div class="component-details" [class.page-height-min]="pageHeight==pageHeightMin" [class.page-height-max]="pageRollup">

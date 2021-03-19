@@ -32,13 +32,15 @@
           <ng-container *ngIf="item[obj.property] || item[obj.property] === false && obj.type; else nothing">
             <span *ngIf="obj.type === 'string'">{{ item[obj.property] }}</span>
 
+            <span *ngIf="obj.type === 'bites'">{{ formatBytes(item[obj.property], obj.delimiter) }}</span>
+
             <span *ngIf="obj.type === 'array-length'">{{ item[obj.property]?.length }}</span>
 
             <ul *ngIf="obj.type === 'array'">
               <li *ngFor="let item of item[obj.property]">{{item}}</li>
             </ul>
 
-            <span *ngIf="obj.type === 'time'">{{ moment(item[obj.property]).format('DD.MM.YYYY HH:mm:ss')  }}</span>
+            <span *ngIf="obj.type === 'time'">{{ moment(item[obj.property]).format('DD.MM.YYYY HH:mm:ss Z')  }}</span>
 
             <ng-container *ngIf="obj.type.typeDepend === 'propertyInObjectsInArray'">
               <ng-container *ngIf="item[obj.property]?.length; else nothing">

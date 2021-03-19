@@ -58,9 +58,10 @@ export class VmDetalsPopupComponent {
       type: 'string'
     },
     {
-      title: 'Оперативная память (МБ)',
+      title: 'Оперативная память',
       property: 'memory_count',
-      type: 'string'
+      type: 'bites',
+      delimiter: 'Мб'
     },
     {
       title: 'Операционная система',
@@ -190,9 +191,10 @@ export class VmDetalsPopupComponent {
       type: 'string'
     },
     {
-      title: 'Оперативная память (МБ)',
+      title: 'Оперативная память',
       property: 'memory_count',
-      type: 'string'
+      type: 'bites',
+      delimiter: 'Мб'
     },
     {
       title: 'Операционная система',

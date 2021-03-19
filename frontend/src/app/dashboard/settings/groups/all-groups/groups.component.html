@@ -1,5 +1,4 @@
 <div class="control-panel">
-    
     <div class="crumb">
         <fa-icon [icon]="['fas','users-cog']"></fa-icon>
         <span class="crumb-name">Группы</span>
@@ -21,10 +20,15 @@
         <input matInput [formControl]="verbose_name" placeholder="">
     </mat-form-field>
 
+    <div class="control-btns-end">
+        <button *ngIf="pageRollup" class="bars-btn" (click)="toggleShow()">
+            <fa-icon [icon]="['fas','bars']"></fa-icon>
+        </button>
+    </div>
 </div>
 
 <div class="components-info" #view>
-    <div class="component-list" [class.page-wrap]="pageRollup" [class.page-rollup]="pageRollup" [style.height]="pageHeight">
+    <div class="component-list" [class.page-wrap]="pageRollup&&!pageShow" [class.page-rollup]="pageRollup" [style.height]="pageHeight">
         <vdi-table-component cursor="true" [data]="groups" [collection]="collection" (sortListNow)="sortList($event)" (clickRowData)="routeTo($event)"></vdi-table-component>
     </div>
 
