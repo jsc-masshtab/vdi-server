@@ -738,6 +738,9 @@ class Pool(VeilModel):
                         entity=vm.entity,
                     )
                 await VmModel.remove_vms(vm_ids, creator, True)
+            else:
+                vm_ids = await VmModel.get_vms_ids_in_pool(self.id)
+                await VmModel.remove_vms(vm_ids, creator)
 
             if self.tag:
                 await self.tag_remove(self.tag)
@@ -872,7 +875,7 @@ class Pool(VeilModel):
         vms_list = list()
         for ids_str_section in ids_str_list:
             # Запрашиваем на ECP VeiL данные
-            fields = ["id", "user_power_state", "parent", "status", "guest_utils"]
+            fields = ["id", "user_power_state", "parent", "status", "guest_utils", "node"]
             controller_client = pool_controller.veil_client
             if not controller_client:
                 break
@@ -906,6 +909,7 @@ class Pool(VeilModel):
                     parent_name = vms_dict[vm_id]["parent_name"]
                     vm_status = Status(vms_dict[vm_id]["status"])
                     guest_utils = vms_dict[vm_id].get("guest_utils")
+                    node = vms_dict[vm_id]["node"]
                     qemu_state = (
                         guest_utils.get("qemu_state", False) if guest_utils else False
                     )
@@ -920,6 +924,7 @@ class Pool(VeilModel):
                     user_power_state=user_power_state,
                     parent_name=parent_name,
                     qemu_state=3 if qemu_state else 1,
+                    node=node,
                     **vm.__values__
                 )
             )

@@ -73,7 +73,7 @@
         </ng-container>
 
          <ng-container *ngIf="menuActive === 'backups'">
-          <vdi-table-component [data]="data?.vms?.backups" [collection]="collectionBackups"></vdi-table-component>
+          <vdi-table-component cursor="true" [data]="data?.vms?.backups" [collection]="collectionBackups" (clickRowData)="clickRow($event)"></vdi-table-component>
         </ng-container>
 
         <ng-container *ngIf="menuActive === 'events'">

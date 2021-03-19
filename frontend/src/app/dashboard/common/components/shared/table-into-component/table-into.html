@@ -22,8 +22,13 @@
           </ng-container>
         </ng-container>
 
+<!-- obj.property === 'assignment_type' -->
+        <ng-container *ngIf="obj.property === 'assignment_type'">
+            <span>{{ item[obj.property] | assignmentType }}</span>
+        </ng-container>
+
 <!-- obj.property -> all-types-here-->
-        <ng-container *ngIf="obj.property && obj.property != 'status' && !obj.property_lv2">
+        <ng-container *ngIf="obj.property && obj.property != 'status' && obj.property != 'assignment_type' && !obj.property_lv2">
           <ng-container *ngIf="item[obj.property] || item[obj.property] === false && obj.type; else nothing">
             <span *ngIf="obj.type === 'string'">{{ item[obj.property] }}</span>
 

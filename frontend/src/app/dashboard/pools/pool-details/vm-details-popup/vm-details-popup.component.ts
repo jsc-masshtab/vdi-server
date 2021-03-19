@@ -4,6 +4,13 @@ import { MAT_DIALOG_DATA, MatDialog } from '@angular/material';
 import { RemoveUserVmComponent } from './remove-user/remove-user.component';
 import { YesNoFormComponent } from 'src/app/dashboard/common/forms-dinamic/yes-no-form/yes-no-form.component';
 import { PoolDetailsService } from '../pool-details.service';
+import {InfoBackupComponent} from './info-backup/info-backup.component';
+
+interface Backup {
+  backup: {
+    filename: string
+  };
+}
 
 
 @Component({
@@ -358,6 +365,20 @@ export class VmDetalsPopupComponent {
       disableClose: true,
       width: '500px',
       data: this.data
+    });
+  }
+
+  public clickRow(backup): void {
+    this.openBackupDetails(backup);
+  }
+
+  public openBackupDetails(backup: Backup): void {
+    this.dialog.open(InfoBackupComponent, {
+      disableClose: true,
+      width: '700px',
+      data: {
+        backup
+      }
     });
   }
 

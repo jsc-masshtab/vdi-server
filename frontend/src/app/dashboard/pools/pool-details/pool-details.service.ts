@@ -58,6 +58,10 @@ export class PoolDetailsService {
                                             username
                                         }
                                         user_power_state
+                                        node {
+                                            id
+                                            verbose_name
+                                        }
                                         qemu_state
                                         status
                                         parent_name
@@ -75,8 +79,14 @@ export class PoolDetailsService {
                                             }
                                         }
                                         backups {
+                                            file_id
+                                            vm_id
                                             filename
                                             datapool {
+                                                id
+                                                verbose_name
+                                            }
+                                            node {
                                                 id
                                                 verbose_name
                                             }
@@ -141,6 +151,10 @@ export class PoolDetailsService {
                                             username
                                         }
                                         user_power_state
+                                        node {
+                                            id
+                                            verbose_name
+                                        }
                                         qemu_state
                                         status
                                         parent_name
@@ -157,8 +171,14 @@ export class PoolDetailsService {
                                             }
                                         }
                                         backups {
+                                            file_id
+                                            vm_id
                                             filename
                                             datapool {
+                                                id
+                                                verbose_name
+                                            }
+                                            node {
                                                 id
                                                 verbose_name
                                             }
@@ -676,6 +696,32 @@ export class PoolDetailsService {
                 ){
                     backupVm(
                         vm_id: $vm_id
+                    ){
+                        ok
+                    }
+                }
+            `,
+            variables: {
+                method: 'POST',
+                ...data
+            }
+        });
+    }
+
+    public restoreBackupVm(data) {
+        return this.service.mutate<any>({
+            mutation: gql`
+                mutation pools(
+                    $vm_id: UUID!
+                    $file_id: UUID!
+                    $node_id: UUID!
+                    $datapool_id: UUID
+                ){
+                    restoreBackupVm(
+                        vm_id: $vm_id
+                        file_id: $file_id
+                        node_id: $node_id
+                        datapool_id: $datapool_id
                     ){
                         ok
                     }

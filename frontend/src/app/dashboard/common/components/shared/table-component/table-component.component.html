@@ -71,9 +71,7 @@
 
     <!-- obj.property === 'assignment_type' -->
               <ng-container *ngIf="obj.property === 'assignment_type'">
-                <ng-container *ngIf="item[obj.property]; else nothing">
                   <span>{{ item[obj.property] | assignmentType }}</span>
-                </ng-container>
               </ng-container>
 
     <!-- obj.property -> all-types-here-->
