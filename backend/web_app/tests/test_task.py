@@ -47,6 +47,7 @@ async def test_request_tasks(fixt_db, fixt_auth_context):  # noqa
     await execute_scheme(task_schema, qu, context=fixt_auth_context)
 
 
+@pytest.mark.broken_runner
 @pytest.mark.asyncio
 async def test_cancel_tasks(
     fixt_launch_workers, fixt_db, fixt_controller, fixt_auth_context

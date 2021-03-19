@@ -11,7 +11,7 @@ pipeline {
     environment {
         APT_SRV = "192.168.11.118"
         DATE = "${currentDate}"
-        ISO_NAME = "${REPO}-${VERSION}-${DATE}-${BUILD_NUMBER}"
+        ISO_NAME = "veil-broker-${REPO}-${VERSION}-${DATE}-${BUILD_NUMBER}"
     }
 
     post {
@@ -42,10 +42,10 @@ pipeline {
     }
 
     parameters {
-        string(      name: 'BRANCH',               defaultValue: 'dev',                   description: 'branch')
-        string(      name: 'REPO',                 defaultValue: 'veil-broker-test',      description: 'repo for uploading')
-        string(      name: 'VERSION',              defaultValue: '3.0.0',                 description: 'base version')
-        string(      name: 'AGENT',                defaultValue: 'bld-agent',             description: 'jenkins build agent')
+        string(      name: 'BRANCH',      defaultValue: 'dev',                     description: 'branch')
+        choice(      name: 'REPO',        choices: ['test', 'prod-30'],            description: 'repo for uploading')
+        string(      name: 'VERSION',     defaultValue: '3.0.0',                   description: 'base version')
+        string(      name: 'AGENT',       defaultValue: 'bld-agent',               description: 'jenkins build agent')
     }
 
     stages {
@@ -82,8 +82,8 @@ pipeline {
                 sh script: '''
                     # download apt repo
                     mkdir iso
-                    wget -r -nH -nv --reject="index.html*" http://${APT_SRV}/${REPO}/
-                    mv ${REPO}/ iso/repo
+                    wget -r -nH -nv --reject="index.html*" http://${APT_SRV}/veil-broker-${REPO}/
+                    mv veil-broker-${REPO}/ iso/repo
 
                     # copy files
                     cp -r devops/ansible/postgresql_cluster_2 iso/ansible
@@ -91,7 +91,7 @@ pipeline {
                     cp devops/installer/install.sh iso
 
                     # build iso
-                    genisoimage -o ./${ISO_NAME}.iso -V ${REPO} -R -J ./iso
+                    genisoimage -o ./${ISO_NAME}.iso -V veil-broker-${REPO} -R -J ./iso
 
                     # copy iso to nfs
                     mkdir -p /nfs/veil-broker-iso
@@ -103,9 +103,9 @@ pipeline {
         stage ('publish to repo') {
             steps {
                 sh script: '''
-                    ssh uploader@192.168.10.144 mkdir -p /local_storage/veil-broker-iso
-                    ssh uploader@192.168.10.144 rm -f /local_storage/veil-broker-iso/${REPO}-${VERSION}-*.iso
-                    scp /nfs/veil-broker-iso/${ISO_NAME}.iso uploader@192.168.10.144:/local_storage/veil-broker-iso
+                    ssh uploader@192.168.10.144 mkdir -p /local_storage/veil-broker-iso/${REPO}
+                    ssh uploader@192.168.10.144 rm -f /local_storage/veil-broker-iso/${REPO}/veil-broker-${REPO}-${VERSION}-*.iso
+                    scp /nfs/veil-broker-iso/${ISO_NAME}.iso uploader@192.168.10.144:/local_storage/veil-broker-iso/${REPO}
                     rm -f /nfs/veil-broker-iso/${ISO_NAME}.iso
                 '''
             }

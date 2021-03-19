@@ -45,7 +45,8 @@ services:
     working_dir: /opt/veil-vdi/app
     volumes:
       - ../../backend:/opt/veil-vdi/app
-    command: sh -c "sleep 5 && cd common/migrations && pipenv run alembic upgrade head && cd ../../web_app/tests && pipenv run pytest -m 'smoke_test' && pipenv run pytest --cov=web_app -vv"
+    command: sh -c "sleep 5 && cd common/migrations && pipenv run alembic upgrade head && cd ../../web_app/tests && pipenv run pytest -m 'smoke_test' && pipenv run pytest --cov=web_app -vv -m 'not broken_runner'"
+#    command: sh -c "sleep 5 && cd common/migrations && pipenv run alembic upgrade head && cd ../../web_app/tests && pipenv run pytest -m 'smoke_test' && pipenv run pytest --cov=web_app -vv"
     depends_on:
       - vdi-test-postgres
       - vdi-test-redis
