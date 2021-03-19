@@ -27,6 +27,22 @@ export class PoolDetailsService {
         });
     }
 
+    public clearPool(data) {
+        return this.service.mutate<any>({
+            mutation: gql`
+                        mutation pools($pool_id: UUID) {
+                            clearPool(pool_id: $pool_id) {
+                                ok
+                            }
+                        }
+            `,
+            variables: {
+                method: 'POST',
+                ...data,
+            }
+        });
+    }
+
     public getPool(pool_id: string | number, type: string, offset = 0): QueryRef<any, any> {
         if (type === 'automated') {
             return this.service.watchQuery({
