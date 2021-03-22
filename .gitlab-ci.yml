@@ -29,6 +29,7 @@ frontend_linter_job:
   script:
     - ng --version
     - npm run lint
+    - npm run build
   only:
     - merge_requests
 

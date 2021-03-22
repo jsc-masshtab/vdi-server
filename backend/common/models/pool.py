@@ -903,6 +903,7 @@ class Pool(VeilModel):
                 Status.FAILED
             )  # Если с вейла не пришла инфа, то вм считается в статусе FAILED
             parent_name = None
+            node = None
             for vm_id in vms_dict.keys():
                 if str(vm_id) == str(vm.id):
                     user_power_state = vms_dict[vm_id]["user_power_state"]
