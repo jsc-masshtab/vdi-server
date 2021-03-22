@@ -15,7 +15,7 @@ linter_job:
     - flake8
   only:
     changes:
-      - backend/*
+      - backend/**/*
     refs:
       - merge_requests
 
@@ -36,7 +36,7 @@ frontend_linter_job:
     - npm run build
   only:
     changes:
-      - frontend/*
+      - frontend/**/*
     refs:
       - merge_requests
 
@@ -55,7 +55,7 @@ security_check:
     - safety check -r requirements.txt
   only:
     changes:
-      - backend/*
+      - backend/Pipfile
     refs:
       - merge_requests
 
@@ -74,7 +74,7 @@ compilemessages_job:
     refs:
       - merge_requests
     changes:
-      - backend/*
+      - backend/**/*
 
 tests_job:
   stage: tests
@@ -85,7 +85,7 @@ tests_job:
     - docker-compose -f test-docker-compose.yml up --build --force-recreate -V --abort-on-container-exit --exit-code-from vdi-test-tornado
   only:
     changes:
-      - backend/*
+      - backend/**/*
     refs:
       - merge_requests
       - schedules

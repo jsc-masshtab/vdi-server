@@ -766,15 +766,17 @@ class AddVmsToStaticPoolMutation(graphene.Mutation):
                 )
 
         # TODO: использовать нормальный набор данных с verbose_name и id
+        vm_objects = list()
         # Add VMs to db
         for vm in vms:
-            await Vm.create(
+            vm = await Vm.create(
                 id=vm.id,
                 template_id=None,
                 pool_id=pool_id,
                 created_by_vdi=False,
                 verbose_name=vm.verbose_name,
             )
+            vm_objects.append(vm)
             entity = {"entity_type": EntityType.POOL, "entity_uuid": None}
             await system_logger.info(
                 _("VM {} has been added to the pool {}.").format(
@@ -784,16 +786,16 @@ class AddVmsToStaticPoolMutation(graphene.Mutation):
                 entity=entity,
             )
 
-            if pool.tag:
-                await pool.tag_add_entity(
-                    tag=pool.tag, entity_id=vm.id, verbose_name=vm.verbose_name
-                )
-
             # Запустить задачи подготовки машин
             await request_to_execute_pool_task(
                 vm.id, PoolTaskType.VM_PREPARE, full=False
             )
 
+        # Разом прикрепляем теги
+        if pool.tag and vm_objects:
+            await pool.tag_add_entities(
+                tag=pool.tag, vm_objects=vm_objects
+            )
         return {"ok": True}
 
 

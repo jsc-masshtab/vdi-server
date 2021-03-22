@@ -482,7 +482,7 @@ class Vm(VeilModel):
         domain_entity = await self.get_veil_entity()
         if not domain_entity.powered:
             # При старте ВМ если есть по какой-либо причине tcp usb каналы в режиме connect, то вм не запуститься, если
-            # нет соответствующего сервера раздающего usb (а его не будет с больш вероятностью). Так что detach all
+            # нет соответствующего сервера раздающего usb (а его не будет с большей вероятностью). Так что detach all
             await domain_entity.detach_usb(
                 action_type="tcp_usb_device", remove_all=True
             )
@@ -493,6 +493,14 @@ class Vm(VeilModel):
                 entity=self.entity,
             )
             return task_success
+
+    async def start_and_reboot(self, creator="system"):
+        """Включает и перезапускает ВМ."""
+        start_is_success = await self.start(creator=creator)
+        if start_is_success:
+            await self.reboot
+        else:
+            await system_logger.warning(_("VM can`t be powered on or already powered."))
 
     async def shutdown(self, creator="system", force=False):
         """Выключает ВМ - Пересылает shutdown для ВМ на ECP VeiL."""
@@ -719,7 +727,8 @@ class Vm(VeilModel):
     async def set_hostname(self):
         """Попытка задать hostname.
 
-        Т.к. определение hostname гостевым агентом работает нестабильно, то игнорируем результат
+        Note:
+            Определение hostname гостевым агентом работает нестабильно - игнорируем результат.
         """
         # Прежде чем проверять hostname нужно дождаться активации гостевого агента
         await self.qemu_guest_agent_waiting()
@@ -732,7 +741,7 @@ class Vm(VeilModel):
             # Ожидаем выполнения задачи на VeiL
             if action_response.status_code == 202:
                 await self.task_waiting(action_response.task)
-            # Если задача выполнена с ошибкой - логгируем
+            # Если задача выполнена с ошибкой - логируем
             task_success = await action_response.task.is_success()
             if not task_success:
                 await system_logger.warning(
@@ -743,6 +752,13 @@ class Vm(VeilModel):
                 msg = _("VM {} hostname setting success.").format(self.verbose_name)
                 await system_logger.info(message=msg, entity=self.entity)
         return True
+
+    async def set_hostname_and_reboot(self):
+        """Задание hostname и перезагрузка ВМ."""
+        hostname_is_success = await self.set_hostname()
+        # TODO: когда hostname начнет гарантировано задаваться в этой проверке будет смысл
+        if hostname_is_success:
+            await self.reboot()
 
     async def include_in_ad_group(
         self, active_directory_obj: AuthenticationDirectory, ad_cn_pattern: str
@@ -860,13 +876,13 @@ class Vm(VeilModel):
         Вся процедура должна продолжаться не более 10 минут для 1 ВМ.
         """
         await self.enable_remote_access()
-        await self.start()
-        await self.reboot()
-        await self.set_hostname()
-        await self.reboot()
-        await self.include_in_ad(active_directory_obj)
+        await self.start_and_reboot()
+        await self.set_hostname_and_reboot()
+
+        if active_directory_obj:
+            await self.include_in_ad(active_directory_obj)
         # Ввод в группу AD только, если она прописана
-        if ad_cn_pattern and isinstance(ad_cn_pattern, str):
+        if active_directory_obj and ad_cn_pattern and isinstance(ad_cn_pattern, str):
             await self.include_in_ad_group(active_directory_obj, ad_cn_pattern)
         # Протоколируем успех
         msg = _("VM {} has been prepared.").format(self.verbose_name)
