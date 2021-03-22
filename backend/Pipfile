@@ -29,12 +29,12 @@ psycopg2-binary = "==2.8.4"  # alembic migrations
 python2-secrets = "==1.0.5"  # Django-secrets
 cryptography = "==2.8"  # controller password encryption
 python-ldap = "==3.3.*"  # ldap integration
-ldap3 = "==2.8.*"  # ad group computers including
-redis = "==3.4.1"  # thin client message broker
+ldap3 = "==2.8.*"  # ldap integration
+redis = "==3.4.1"
 pymemcache = "==3.2.*"
 uvloop = "==0.14.*"
-veil-api-client = {path = "./veil_api_client-2.2.1-py3-none-any.whl"}
-veil-aio-au = {path = "./veil_aio_au-0.1.3-py3-none-any.whl"}
+veil-api-client = "==2.2.*"
+veil-aio-au = "==0.1.*"
 
 [requires]
 python_version = "3.5"
