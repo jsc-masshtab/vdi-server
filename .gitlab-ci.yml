@@ -14,7 +14,11 @@ linter_job:
   script:
     - flake8
   only:
-    - merge_requests
+    changes:
+      - backend/*
+    refs:
+      - merge_requests
+
 
 frontend_linter_job:
   image: teracy/angular-cli
@@ -31,7 +35,10 @@ frontend_linter_job:
     - npm run lint
     - npm run build
   only:
-    - merge_requests
+    changes:
+      - frontend/*
+    refs:
+      - merge_requests
 
 security_check:
   image: python:3.5.9-alpine
@@ -47,7 +54,10 @@ security_check:
   script:
     - safety check -r requirements.txt
   only:
-    - merge_requests
+    changes:
+      - backend/*
+    refs:
+      - merge_requests
 
 compilemessages_job:
   image: python:3.5.9-alpine
@@ -61,7 +71,10 @@ compilemessages_job:
     - ash compilemessages.sh en
     - ash compilemessages.sh ru
   only:
-    - merge_requests
+    refs:
+      - merge_requests
+    changes:
+      - backend/*
 
 tests_job:
   stage: tests
@@ -71,6 +84,8 @@ tests_job:
     - cd devops/docker/
     - docker-compose -f test-docker-compose.yml up --build --force-recreate -V --abort-on-container-exit --exit-code-from vdi-test-tornado
   only:
+    changes:
+      - backend/*
     refs:
       - merge_requests
       - schedules
