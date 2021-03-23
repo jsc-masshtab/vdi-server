@@ -45,10 +45,10 @@ pipeline {
     }
 
     parameters {
-        string(      name: 'BRANCH',               defaultValue: 'dev',                   description: 'branch')
-        string(      name: 'REPO',                 defaultValue: 'veil-broker-test',      description: 'repo for uploading')
-        string(      name: 'VERSION',              defaultValue: '3.0.0',                 description: 'base version')
-        string(      name: 'AGENT',                defaultValue: 'bld-agent-02',          description: 'jenkins build agent')
+        string(      name: 'BRANCH',      defaultValue: 'dev',                     description: 'branch')
+        choice(      name: 'REPO',        choices: ['test', 'prod-30'],            description: 'repo for uploading')
+        string(      name: 'VERSION',     defaultValue: '3.0.0',                   description: 'base version')
+        string(      name: 'AGENT',       defaultValue: 'bld-agent',               description: 'jenkins build agent')
     }
 
     stages {
@@ -111,20 +111,20 @@ pipeline {
             steps {
                 sh script: '''
                     # remove old debs
-                    curl -s "http://$APT_SRV:8008/api/repos/${REPO}/packages?q=${PRJNAME}" | jq -r '.[]' | while read KEY;
+                    curl -s "http://$APT_SRV:8008/api/repos/veil-broker-${REPO}/packages?q=${PRJNAME}" | jq -r '.[]' | while read KEY;
                     do
-                        curl -X DELETE -H 'Content-Type: application/json' -d '{\"PackageRefs\":[\"'"$KEY"'\"]}' http://$APT_SRV:8008/api/repos/${REPO}/packages
+                        curl -X DELETE -H 'Content-Type: application/json' -d '{\"PackageRefs\":[\"'"$KEY"'\"]}' http://$APT_SRV:8008/api/repos/veil-broker-${REPO}/packages
                     done
 
                     # deploy new deb
                     DISTR=smolensk
                     DEB=$(ls -1 "${DEB_ROOT}/${PRJNAME}"/*.deb)
-                    curl -sS -X POST -F file=@$DEB http://$APT_SRV:8008/api/files/${REPO}; echo ""
-                    curl -sS -X POST http://$APT_SRV:8008/api/repos/${REPO}/file/${REPO}?forceReplace=1
-                    JSON1="{\\"Name\\":\\"${REPO}-${DATE}\\"}"
-                    JSON2="{\\"Snapshots\\":[{\\"Component\\":\\"main\\",\\"Name\\":\\"${REPO}-\${DATE}\\"}],\\"ForceOverwrite\\":true}"
-                    curl -sS -X POST -H 'Content-Type: application/json' -d ${JSON1} http://$APT_SRV:8008/api/repos/${REPO}/snapshots
-                    curl -sS -X PUT -H 'Content-Type: application/json' -d ${JSON2} http://$APT_SRV:8008/api/publish/${REPO}/${DISTR}
+                    curl -sS -X POST -F file=@$DEB http://$APT_SRV:8008/api/files/veil-broker-${REPO}; echo ""
+                    curl -sS -X POST http://$APT_SRV:8008/api/repos/veil-broker-${REPO}/file/veil-broker-${REPO}?forceReplace=1
+                    JSON1="{\\"Name\\":\\"veil-broker-${REPO}-${DATE}\\"}"
+                    JSON2="{\\"Snapshots\\":[{\\"Component\\":\\"main\\",\\"Name\\":\\"veil-broker-${REPO}-\${DATE}\\"}],\\"ForceOverwrite\\":true}"
+                    curl -sS -X POST -H 'Content-Type: application/json' -d ${JSON1} http://$APT_SRV:8008/api/repos/veil-broker-${REPO}/snapshots
+                    curl -sS -X PUT -H 'Content-Type: application/json' -d ${JSON2} http://$APT_SRV:8008/api/publish/veil-broker-${REPO}/${DISTR}
                 '''
             }
         }
