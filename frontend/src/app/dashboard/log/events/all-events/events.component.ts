@@ -2,7 +2,7 @@ import { EventsService } from './events.service';
 import { WaitService } from '../../../common/components/single/wait/wait.service';
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { map } from 'rxjs/operators';
-import { MatDialog } from '@angular/material';
+import { MatDialog } from '@angular/material/dialog';
 import { InfoEventComponent } from '../info-event/info-event.component';
 import { FormControl } from '@angular/forms';
 import { IParams } from 'types';

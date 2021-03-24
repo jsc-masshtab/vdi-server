@@ -34,7 +34,7 @@ import { NgModule } from '@angular/core';
 import { WaitService } from './common/components/single/wait/wait.service';
 
 /*  -----------------------------------   material   --------------------------------------*/
-import { MAT_DIALOG_DEFAULT_OPTIONS } from '@angular/material';
+import { MAT_DIALOG_DEFAULT_OPTIONS } from '@angular/material/dialog';
 /*  -----------------------------------   material   --------------------------------------*/
 
 import { onError } from 'apollo-link-error';

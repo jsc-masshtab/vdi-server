@@ -5,7 +5,7 @@ import { AuthenticationDirectoryService } from '../auth-directory.service';
 import { Subscription } from 'rxjs';
 import { ParamMap, ActivatedRoute, Router } from '@angular/router';
 import { FormForEditComponent } from 'src/app/dashboard/common/forms-dinamic/change-form/form-edit.component';
-import { MatDialog } from '@angular/material';
+import { MatDialog } from '@angular/material/dialog';
 import { RemoveAuthenticationDirectoryComponent } from './remove-auth-directory/remove-auth-directory.component';
 import { map } from 'rxjs/operators';
 import { AddGropComponent } from './add-group/add-group.component';

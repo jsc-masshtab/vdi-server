@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { UsersService } from '../users.service';
 import { ActivatedRoute, Router, ParamMap } from '@angular/router';
-import { MatDialog } from '@angular/material';
+import { MatDialog } from '@angular/material/dialog';
 import { FormForEditComponent } from 'src/app/dashboard/common/forms-dinamic/change-form/form-edit.component';
 import { MutateUserComponent } from './mutate-user/mutate-user.component';
 import { AddGropComponent } from './add-group/add-group.component';

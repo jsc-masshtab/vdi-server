@@ -4,7 +4,7 @@ import { AddAuthenticationDirectoryComponent } from '../add-auth-directory/add-a
 import { Component, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
 import { AuthenticationDirectoryService   } from '../auth-directory.service';
 import { map } from 'rxjs/operators';
-import { MatDialog } from '@angular/material';
+import { MatDialog } from '@angular/material/dialog';
 import { Subscription } from 'rxjs';
 import { DetailsMove } from '../../../common/classes/details-move';
 import { Router } from '@angular/router';
@@ -43,7 +43,7 @@ export class AuthenticationDirectoryComponent extends DetailsMove implements OnI
     super();
   }
 
-  @ViewChild('view') view: ElementRef;
+  @ViewChild('view', { static: true }) view: ElementRef;
 
   ngOnInit() {
     this.getAllAuthenticationDirectory();

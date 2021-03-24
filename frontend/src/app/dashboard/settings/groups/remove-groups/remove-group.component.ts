@@ -1,7 +1,7 @@
 import { GroupsService } from './../groups.service';
 import { Router } from '@angular/router';
 import { WaitService } from '../../../common/components/single/wait/wait.service';
-import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { Component, OnDestroy, Inject } from '@angular/core';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';

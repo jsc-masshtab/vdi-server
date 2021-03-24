@@ -1,6 +1,6 @@
 import { Subscription } from 'rxjs';
 import { WaitService } from '../../../common/components/single/wait/wait.service';
-import { MatDialogRef } from '@angular/material';
+import { MatDialogRef } from '@angular/material/dialog';
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ControllersService } from '../all-controllers/controllers.service';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';

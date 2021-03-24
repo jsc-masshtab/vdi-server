@@ -2,7 +2,7 @@ import { WaitService } from '../../common/components/single/wait/wait.service';
 
 import { AddPoolService } from './add-pool.service';
 
-import { MatDialogRef } from '@angular/material';
+import { MatDialogRef } from '@angular/material/dialog';
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Validators } from '@angular/forms';
 import { map } from 'rxjs/operators';

@@ -11,7 +11,7 @@ import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { AuthenticationDirectoryService } from './auth-directory.service';
-import { MatCheckboxModule } from '@angular/material';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { AuthenticationDirectoryDetailsComponent } from './auth-directory-details/auth-directory-details.component';
 import { RemoveAuthenticationDirectoryComponent } from './auth-directory-details/remove-auth-directory/remove-auth-directory.component';
 import { AddGropComponent } from './auth-directory-details/add-group/add-group.component';

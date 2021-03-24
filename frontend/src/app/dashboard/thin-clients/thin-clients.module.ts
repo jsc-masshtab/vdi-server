@@ -8,7 +8,7 @@ import { ThinClientDetailsComponent } from './thin-client-details/thin-client-de
 import { AppRoutingModule } from 'src/app/app-routing.module';
 import { ThinClientStatisticComponent } from './thin-client-statistic/thin-client-statistic.component';
 import { DisconnectThinClientComponent } from './thin-client-details/disconnect-thin-client/disconnect-thin-client.component';
-import { MatDialogModule } from '@angular/material';
+import { MatDialogModule } from '@angular/material/dialog';
 import { ReactiveFormsModule } from '@angular/forms';
 
 @NgModule({

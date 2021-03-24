@@ -3,7 +3,7 @@ import { DetailsMove } from '../common/classes/details-move';
 import { Subscription } from 'rxjs';
 import { FormControl } from '@angular/forms';
 import { ThinClientsService } from './thin-clients.service';
-import { MatDialog } from '@angular/material';
+import { MatDialog } from '@angular/material/dialog';
 import { WaitService } from '../common/components/single/wait/wait.service';
 import { Router } from '@angular/router';
 import { map } from 'rxjs/operators';
@@ -77,7 +77,7 @@ export class ThinClientsComponent extends DetailsMove implements OnInit, OnDestr
     super();
   }
 
-  @ViewChild('view') view: ElementRef;
+  @ViewChild('view', { static: true }) view: ElementRef;
 
   ngOnInit() {
     this.refresh();

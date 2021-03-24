@@ -5,7 +5,7 @@ import { Component, OnInit, ViewChild, ElementRef, OnDestroy } from '@angular/co
 import { PoolsService } from './pools.service';
 
 import { Router } from '@angular/router';
-import { MatDialog } from '@angular/material';
+import { MatDialog } from '@angular/material/dialog';
 import { Subscription } from 'rxjs';
 import { DetailsMove } from 'src/app/dashboard/common/classes/details-move';
 import { map } from 'rxjs/operators';
@@ -79,7 +79,7 @@ export class PoolsComponent extends DetailsMove implements OnInit, OnDestroy {
     super();
   }
 
-  @ViewChild('view') view: ElementRef;
+  @ViewChild('view', { static: true }) view: ElementRef;
 
   ngOnInit() {
     this.checkControllers()

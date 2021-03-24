@@ -4,7 +4,7 @@ import { AddGroupComponent } from '../add-groups/add-groups.component';
 import { Component, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
 import { GroupsService   } from '../groups.service';
 import { map } from 'rxjs/operators';
-import { MatDialog } from '@angular/material';
+import { MatDialog } from '@angular/material/dialog';
 import { Subscription } from 'rxjs';
 import { Router } from '@angular/router';
 import { DetailsMove } from '../../../common/classes/details-move';
@@ -56,7 +56,7 @@ export class GroupsComponent extends DetailsMove implements OnInit, OnDestroy {
     super();
   }
 
-  @ViewChild('view') view: ElementRef;
+  @ViewChild('view', { static: true }) view: ElementRef;
 
   ngOnInit() {
     this.refresh();

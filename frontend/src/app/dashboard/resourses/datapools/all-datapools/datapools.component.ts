@@ -77,7 +77,7 @@ export class DatapoolsComponent extends DetailsMove implements OnInit, OnDestroy
     super();
   }
 
-  @ViewChild('view') view: ElementRef;
+  @ViewChild('view', { static: true }) view: ElementRef;
 
   ngOnInit() {
     this.getDatapools();

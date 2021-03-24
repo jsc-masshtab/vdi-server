@@ -1,7 +1,7 @@
 import { WebsocketService } from './common/classes/websock.service';
 
 import { Component, OnInit, HostListener } from '@angular/core';
-import { MatDialog } from '@angular/material';
+import { MatDialog } from '@angular/material/dialog';
 
 
 @Component({

@@ -13,7 +13,8 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
 
 import { GroupsDetailsComponent } from './groups-details/groups-details.component';
-import { MatCheckboxModule, MatInputModule } from '@angular/material';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatInputModule } from '@angular/material/input';
 import { GroupsService } from './groups.service';
 import { AddRoleComponent } from './groups-details/add-role/add-role.component';
 import { RemoveRoleComponent } from './groups-details/remove-role/remove-role.component';

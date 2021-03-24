@@ -63,7 +63,7 @@ export class ResourcePoolsComponent extends DetailsMove implements OnInit, OnDes
     super();
   }
 
-  @ViewChild('view') view: ElementRef;
+  @ViewChild('view', { static: true }) view: ElementRef;
 
   ngOnInit() {
     this.getResourcePools();

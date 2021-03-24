@@ -1,6 +1,6 @@
 import { RemoveControllerComponent } from './../remove-controller/remove-controller.component';
 import { FormForEditComponent } from './../../../common/forms-dinamic/change-form/form-edit.component';
-import { MatDialog } from '@angular/material';
+import { MatDialog } from '@angular/material/dialog';
 import { map } from 'rxjs/operators';
 import { Subscription } from 'rxjs';
 import { ControllersService } from './../all-controllers/controllers.service';
