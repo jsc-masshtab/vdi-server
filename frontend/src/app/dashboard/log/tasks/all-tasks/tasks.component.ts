@@ -2,7 +2,7 @@ import { TasksService } from './tasks.service';
 import { WaitService } from '../../../common/components/single/wait/wait.service';
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { map } from 'rxjs/operators';
-import { MatDialog } from '@angular/material';
+import { MatDialog } from '@angular/material/dialog';
 import { InfoTaskComponent } from '../info-tasks/info-tasks.component';
 import { FormControl } from '@angular/forms';
 import { IParams } from 'types';

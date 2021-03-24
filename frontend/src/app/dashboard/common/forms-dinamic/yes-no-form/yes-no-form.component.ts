@@ -1,6 +1,6 @@
 import { Component, OnInit, Inject } from '@angular/core';
 import { WaitService } from '../../components/single/wait/wait.service';
-import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 
 @Component({
   selector: 'vdi-yes-no-form',

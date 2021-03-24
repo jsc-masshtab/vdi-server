@@ -1,5 +1,5 @@
 import { WaitService } from '../../../common/components/single/wait/wait.service';
-import { MatDialogRef } from '@angular/material';
+import { MatDialogRef } from '@angular/material/dialog';
 import { Component, OnDestroy } from '@angular/core';
 import { GroupsService } from '../groups.service';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';

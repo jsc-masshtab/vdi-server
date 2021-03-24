@@ -5,7 +5,7 @@ import { WaitService } from '../../../common/components/single/wait/wait.service
 import { Component, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
 import { ControllersService } from './controllers.service';
 import { map } from 'rxjs/operators';
-import { MatDialog } from '@angular/material';
+import { MatDialog } from '@angular/material/dialog';
 import { AddControllerComponent } from '../add-controller/add-controller.component';
 import { RemoveControllerComponent } from '../remove-controller/remove-controller.component';
 import { Subscription } from 'rxjs';
@@ -65,7 +65,7 @@ export class ControllersComponent extends DetailsMove implements OnInit, OnDestr
     super();
   }
 
-  @ViewChild('view') view: ElementRef;
+  @ViewChild('view', { static: true }) view: ElementRef;
 
   ngOnInit() {
     this.getAllControllers();

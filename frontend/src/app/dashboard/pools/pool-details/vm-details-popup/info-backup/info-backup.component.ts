@@ -1,6 +1,6 @@
 import { Component, Inject } from '@angular/core';
-import { MAT_DIALOG_DATA } from '@angular/material';
-import { MatDialog } from '@angular/material';
+import { MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { MatDialog } from '@angular/material/dialog';
 import { PoolDetailsService } from '../../pool-details.service';
 import {YesNoFormComponent} from '../../../../common/forms-dinamic/yes-no-form/yes-no-form.component';
 

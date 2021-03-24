@@ -5,7 +5,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { GroupsService} from '../groups.service';
 import { ActivatedRoute, Router, ParamMap } from '@angular/router';
-import { MatDialog } from '@angular/material';
+import { MatDialog } from '@angular/material/dialog';
 import { AddRoleComponent } from './add-role/add-role.component';
 import { RemoveRoleComponent } from './remove-role/remove-role.component';
 import { AddUserGroupComponent } from './add-users/add-user.component';

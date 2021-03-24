@@ -1,5 +1,5 @@
 import { WaitService } from '../../../../common/components/single/wait/wait.service';
-import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { Component, Inject, OnDestroy } from '@angular/core';
 import { AuthenticationDirectoryService } from '../../auth-directory.service';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';

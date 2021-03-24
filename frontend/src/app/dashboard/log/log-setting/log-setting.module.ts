@@ -4,13 +4,11 @@ import { LogSettingComponent } from './log-setting.component';
 import { SharedModule } from '../../common/shared.module';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { AppRoutingModule } from 'src/app/app-routing.module';
-import {
-  MatDatepickerModule,
-  MatNativeDateModule,
-  MatDialogModule,
-  MatSelectModule,
-  MatCheckboxModule
-} from '@angular/material';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatNativeDateModule } from '@angular/material/core';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatDialogModule } from '@angular/material/dialog';
+import { MatSelectModule } from '@angular/material/select';
 import {
   FormsModule,
   ReactiveFormsModule

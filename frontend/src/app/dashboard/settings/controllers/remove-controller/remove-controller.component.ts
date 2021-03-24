@@ -1,6 +1,6 @@
 import { Router } from '@angular/router';
 import { WaitService } from '../../../common/components/single/wait/wait.service';
-import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { Component, OnDestroy, Inject } from '@angular/core';
 import { ControllersService } from '../all-controllers/controllers.service';
 import { Subject } from 'rxjs';

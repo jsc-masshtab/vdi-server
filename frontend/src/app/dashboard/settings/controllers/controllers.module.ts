@@ -11,7 +11,7 @@ import { CommonModule } from '@angular/common';
 import { AddControllerComponent } from './add-controller/add-controller.component';
 import { RemoveControllerComponent } from './remove-controller/remove-controller.component';
 import { ReactiveFormsModule } from '@angular/forms';
-import { MatCheckboxModule } from '@angular/material';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { ControllerDetailsComponent } from './controller-details/controller-details.component';
 import { NodesModule } from '../../resourses/nodes/nodes.module';
 import { DatapoolsModule } from '../../resourses/datapools/datapools.module';
