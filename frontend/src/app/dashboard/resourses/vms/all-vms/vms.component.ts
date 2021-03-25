@@ -81,7 +81,7 @@ export class VmsComponent extends DetailsMove implements OnInit, OnDestroy {
     }
 
     this.socketSub = this.ws.stream('/domains/').subscribe((message: any) => {
-      if (message['mgs_type'] === 'data') {
+      if (message['msg_type'] === 'data') {
         this.service.getAllVms(this.filter).refetch();
       }
     });

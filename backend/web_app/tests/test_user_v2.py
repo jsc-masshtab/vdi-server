@@ -21,7 +21,6 @@ pytestmark = [
 
 @pytest.mark.usefixtures("fixt_db")
 class TestUserSchema:
-
     @pytest.mark.smoke_test
     async def test_users_list(self, snapshot, fixt_auth_context):  # noqa
         query = """{

@@ -12,9 +12,10 @@ from sqlalchemy.sql.schema import Column
 
 from common.database import db
 from common.languages import lang_init
-from common.settings import VEIL_OPERATION_WAITING
+from common.settings import INTERNAL_EVENTS_CHANNEL, VEIL_OPERATION_WAITING
+from common.subscription_sources import WsMessageType
 from common.utils import gino_model_to_json_serializable_dict
-from common.veil.veil_redis import INTERNAL_EVENTS_CHANNEL, REDIS_CLIENT
+from common.veil.veil_redis import REDIS_CLIENT
 
 _ = lang_init()
 
@@ -291,7 +292,9 @@ class VeilModel(db.Model):
         Anybody can get messages from this channel. For example vdi frontend.
         """
         msg_dict = dict(
-            resource=self.get_resource_type(), mgs_type="data", event=event_type
+            resource=self.get_resource_type(),
+            msg_type=WsMessageType.DATA.value,
+            event=event_type,
         )
         msg_dict.update(gino_model_to_json_serializable_dict(self))
         additional_data = await self.additional_model_to_json_data()

@@ -623,20 +623,17 @@ class DeletePoolMutation(graphene.Mutation, PoolValidator):
             entity = {"entity_type": EntityType.POOL, "entity_uuid": None}
             raise SimpleError(_("No such pool."), entity=entity)
 
-        try:
-            pool_type = await pool.pool_type
+        pool_type = await pool.pool_type
 
-            # Авто пул
-            if pool_type == Pool.PoolTypes.AUTOMATED:
-                await execute_delete_pool_task(
-                    str(pool.id), full=full, wait_for_result=False
-                )
-                return DeletePoolMutation(ok=True)
-            else:
-                is_deleted = await Pool.delete_pool(pool, creator)
-                return DeletePoolMutation(ok=is_deleted)
-        except Exception as e:
-            raise e
+        # Авто пул
+        if pool_type == Pool.PoolTypes.AUTOMATED:
+            await execute_delete_pool_task(
+                str(pool.id), full=full, wait_for_result=False
+            )
+            return DeletePoolMutation(ok=True)
+        else:
+            is_deleted = await Pool.delete_pool(pool, creator)
+            return DeletePoolMutation(ok=is_deleted)
 
 
 class ClearPoolMutation(graphene.Mutation):
@@ -650,10 +647,14 @@ class ClearPoolMutation(graphene.Mutation):
         pool = await Pool.get(pool_id)
         if (pool.status != Status.ACTIVE) and (pool.status != Status.SERVICE):
             await pool.activate(pool.id)
-            await system_logger.info(_("Pool {} has been restored.").format(pool.verbose_name), user=creator)
+            await system_logger.info(
+                _("Pool {} has been restored.").format(pool.verbose_name), user=creator
+            )
             return ClearPoolMutation(ok=True)
         elif pool.status == Status.SERVICE:
-            raise SilentError(_("Pool {} is in service mode.").format(pool.verbose_name))
+            raise SilentError(
+                _("Pool {} is in service mode.").format(pool.verbose_name)
+            )
         else:
             raise SilentError(_("Pool {} is already active.").format(pool.verbose_name))
 
@@ -793,9 +794,7 @@ class AddVmsToStaticPoolMutation(graphene.Mutation):
 
         # Разом прикрепляем теги
         if pool.tag and vm_objects:
-            await pool.tag_add_entities(
-                tag=pool.tag, vm_objects=vm_objects
-            )
+            await pool.tag_add_entities(tag=pool.tag, vm_objects=vm_objects)
         return {"ok": True}
 
 
@@ -1437,12 +1436,18 @@ class VmRestoreBackup(graphene.Mutation):
     ok = graphene.Boolean()
 
     @administrator_required
-    async def mutate(self, _info, vm_id, file_id, node_id, creator, datapool_id=None, **kwargs):
+    async def mutate(
+        self, _info, vm_id, file_id, node_id, creator, datapool_id=None, **kwargs
+    ):
         vm = await Vm.get(vm_id)
-        ok = asyncio.ensure_future(vm.restore_backup(file_id=file_id,
-                                                     node_id=node_id,
-                                                     datapool_id=datapool_id,
-                                                     creator=creator))
+        ok = asyncio.ensure_future(
+            vm.restore_backup(
+                file_id=file_id,
+                node_id=node_id,
+                datapool_id=datapool_id,
+                creator=creator,
+            )
+        )
         return VmRestoreBackup(ok=ok)
 
 

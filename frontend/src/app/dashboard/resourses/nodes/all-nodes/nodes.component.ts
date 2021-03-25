@@ -94,7 +94,7 @@ export class NodesComponent extends DetailsMove implements OnInit, OnDestroy {
     }
 
     this.socketSub = this.ws.stream('/nodes/').subscribe((message: any) => {
-      if (message['mgs_type'] === 'data') {
+      if (message['msg_type'] === 'data') {
         this.service.getAllNodes(this.filter).refetch();
       }
     });

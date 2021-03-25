@@ -9,7 +9,7 @@ from aiohttp import client_exceptions
 
 from sqlalchemy.sql import func
 
-from tornado import httputil, websocket
+from tornado import httputil
 from tornado.web import Application
 
 from veil_api_client import DomainTcpUsb, VeilRetryConfiguration
@@ -17,23 +17,21 @@ from veil_api_client import DomainTcpUsb, VeilRetryConfiguration
 from common.languages import lang_init
 from common.log.journal import system_logger
 from common.models.active_tk_connection import ActiveTkConnection
-from common.models.auth import User
 from common.models.pool import AutomatedPool, Pool as PoolModel
 from common.models.task import PoolTaskType, Task, TaskStatus
 from common.settings import (
-    JWT_OPTIONS,
-    REDIS_DB,
-    REDIS_PASSWORD,
-    REDIS_PORT,
-    REDIS_THIN_CLIENT_CHANNEL,
-    REDIS_THIN_CLIENT_CMD_CHANNEL,
+    REDIS_DB, REDIS_PASSWORD, REDIS_PORT, REDIS_TEXT_MSG_CHANNEL,
+    REDIS_THIN_CLIENT_CHANNEL, REDIS_THIN_CLIENT_CMD_CHANNEL,
+    WS_MONITOR_CHANNEL_OUT
 )
-from common.veil.auth.veil_jwt import decode_jwt, jwtauth
+from common.subscription_sources import (
+    USERS_SUBSCRIPTION, WsMessageDirection, WsMessageType
+)
+from common.veil.auth.veil_jwt import jwtauth
 from common.veil.veil_handlers import BaseHandler, BaseWsHandler
 from common.veil.veil_redis import (
     REDIS_CLIENT,
     ThinClientCmd,
-    WS_MONITOR_CHANNEL_OUT,
     a_redis_get_message,
     request_to_execute_pool_task,
 )
@@ -207,7 +205,8 @@ class PoolGetVm(BaseHandler, ABC):
 
         if (
             remote_protocol == PoolModel.PoolConnectionTypes.RDP.name
-            or remote_protocol == PoolModel.PoolConnectionTypes.NATIVE_RDP.name  # noqa: W503
+            or remote_protocol  # noqa: W503
+            == PoolModel.PoolConnectionTypes.NATIVE_RDP.name  # noqa: W503
         ):
             try:
                 vm_address = veil_domain.first_ipv4
@@ -364,6 +363,42 @@ class DetachUsb(BaseHandler, ABC):
         return await self.log_finish(response)
 
 
+@jwtauth
+class SendTextMsgHandler(BaseHandler, ABC):
+    """Текстовое сообщение от пользователя ТК.
+
+    Пользователь ТК ничего не знает об админах, поэтому шлет сообщение всем текущим активным администраторам
+    в канал REDIS_TEXT_MSG_CHANNEL
+    """
+
+    async def post(self):
+        user = await self.get_user_model_instance()
+
+        text_message = self.args.get("message")
+        if not text_message:
+            response = {"errors": [{"message": _("Message can not be empty")}]}
+            return await self.log_finish(response)
+
+        try:
+            msg_data_dict = dict(
+                message=text_message,
+                msg_type=WsMessageType.TEXT_MSG.value,
+                direction=WsMessageDirection.USER_TO_ADMIN.value,
+                sender_id=str(user.id),
+                resource=USERS_SUBSCRIPTION,
+            )
+
+            REDIS_CLIENT.publish(REDIS_TEXT_MSG_CHANNEL, json.dumps(msg_data_dict))
+
+            response = {"data": "success"}
+            return await self.log_finish(response)
+
+        except (KeyError, JSONDecodeError, TypeError) as ex:
+            message = _("Wrong message format.") + str(ex)
+            response = {"errors": [{"message": message}]}
+            return await self.log_finish(response)
+
+
 class ThinClientWsHandler(BaseWsHandler):
     def __init__(
         self,
@@ -371,36 +406,25 @@ class ThinClientWsHandler(BaseWsHandler):
         request: httputil.HTTPServerRequest,
         **kwargs: Any
     ):
-        websocket.WebSocketHandler.__init__(self, application, request, **kwargs)
+        super().__init__(application, request, **kwargs)
 
         self.conn_id = None
         self._send_messages_task = None
         self._listen_for_cmd_task = None
 
     async def open(self):
-        token = await self._validate_token()
-        if not token:
+        is_validated = await self._validate_token()
+        if not is_validated:
             return
 
         try:
-            # Извлекаем инфу из токена
-            JWT_OPTIONS["verify_exp"] = False
-            payload = decode_jwt(token, JWT_OPTIONS)
-            user_name = payload["username"]
-
-            # Фиксируем  данные известные на стороне сервера
-            user_id = await User.get_id(user_name)
-            if not user_id:
-                raise AssertionError(_("User {} not found.").format(user_name))
-
             # Сохраняем юзера с инфой
             tk_conn = await ActiveTkConnection.soft_create(
                 conn_id=self.conn_id,
-                user_name=user_name,
                 is_conn_init_by_user=int(
                     self.get_query_argument(name="is_conn_init_by_user")
                 ),
-                user_id=user_id,
+                user_id=self.user_id,
                 veil_connect_version=self.get_query_argument("veil_connect_version"),
                 vm_id=self.get_query_argument(name="vm_id", default=None),
                 tk_ip=self.remote_ip,
@@ -408,11 +432,19 @@ class ThinClientWsHandler(BaseWsHandler):
             )
             self.conn_id = tk_conn.id
 
-            response = {"msg_type": "control", "error": False, "msg": "Auth success"}
+            response = {
+                "msg_type": WsMessageType.CONTROL.value,
+                "error": False,
+                "msg": "Auth success",
+            }
             await self._write_msg(json.dumps(response))
 
         except Exception as ex:  # noqa
-            response = {"msg_type": "control", "error": True, "msg": str(ex)}
+            response = {
+                "msg_type": WsMessageType.CONTROL.value,
+                "error": True,
+                "msg": str(ex),
+            }
             await self._write_msg(json.dumps(response))
             self.close()
 
@@ -427,15 +459,15 @@ class ThinClientWsHandler(BaseWsHandler):
             msg_type = recv_data_dict["msg_type"]
         except (KeyError, JSONDecodeError) as ex:
             response = {
-                "msg_type": "control",
+                "msg_type": WsMessageType.CONTROL.value,
                 "error": True,
                 "msg": "Wrong msg format " + str(ex),
             }
             await self._write_msg(json.dumps(response))
             return
 
-        # Сообщения UPDATED
-        if msg_type == "UPDATED":
+        if msg_type == WsMessageType.UPDATED.value:
+            # Сообщение об апдэйте (вм, afk)
             try:
                 event_type = recv_data_dict["event"]
                 tk_conn = await ActiveTkConnection.get(self.conn_id)
@@ -474,9 +506,9 @@ class ThinClientWsHandler(BaseWsHandler):
         ).gino.status()
 
     async def _send_messages_co(self):
-        """Пересылаем сообщения об апдейте ВМ."""
+        """Отсылка сообщений на ТК. Сообщения достаются из редис каналов."""
         redis_subscriber = REDIS_CLIENT.pubsub()
-        redis_subscriber.subscribe(WS_MONITOR_CHANNEL_OUT)
+        redis_subscriber.subscribe(WS_MONITOR_CHANNEL_OUT, REDIS_TEXT_MSG_CHANNEL)
 
         while True:
             try:
@@ -486,16 +518,39 @@ class ThinClientWsHandler(BaseWsHandler):
                     redis_message_data = redis_message["data"].decode()
                     redis_message_data_dict = json.loads(redis_message_data)
 
-                    if redis_message_data_dict["resource"] == "/domains/":
+                    msg_type = redis_message_data_dict.get("msg_type")
+                    if not msg_type:
+                        continue
 
-                        vm_id = await ActiveTkConnection.get_vm_id(self.conn_id)
-                        if redis_message_data_dict["id"] == str(vm_id):
+                    if msg_type == WsMessageType.DATA.value:
+                        # Пересылаем сообщения об апдейте ВМ.
+                        if redis_message_data_dict["resource"] == "/domains/":
+                            vm_id = await ActiveTkConnection.get_vm_id(self.conn_id)
+                            if vm_id and redis_message_data_dict["id"] == str(vm_id):
+                                await self._write_msg(redis_message_data)
+
+                    elif (
+                        msg_type == WsMessageType.TEXT_MSG.value
+                        and redis_message_data_dict["direction"]  # noqa: W503
+                        == WsMessageDirection.ADMIN_TO_USER.value  # noqa: W503
+                    ):
+                        # Посылка текстовых сообщений (от админа) на ТК
+                        recipient_id = redis_message_data_dict.get("recipient_id")
+
+                        # Если recipient is None то считаем что  сообщение предназначено для всех текущих
+                        # пользователей ТК, если не None, то шлем только указанному
+                        if (recipient_id is None) or (
+                            recipient_id == str(self.user_id)
+                        ):
                             await self._write_msg(redis_message_data)
 
             except asyncio.CancelledError:
                 break
-            except Exception as ex:
-                await system_logger.debug(str(ex))
+            except (KeyError, ValueError, TypeError, JSONDecodeError) as ex:
+                await system_logger.debug(
+                    message="Sending msg error in thin client ws handler.",
+                    description=str(ex),
+                )
 
     async def _listen_for_cmd(self):
         """Команды от админа."""
@@ -510,14 +565,17 @@ class ThinClientWsHandler(BaseWsHandler):
                     redis_message_data = redis_message["data"].decode()
                     redis_message_data_dict = json.loads(redis_message_data)
 
-                    if redis_message_data_dict["command"] == ThinClientCmd.DISCONNECT.name:
+                    if (
+                        redis_message_data_dict["command"]
+                        == ThinClientCmd.DISCONNECT.name  # noqa: W503
+                    ):
                         conn_id = redis_message_data_dict["conn_id"]
 
                         # От админа приходит команда с id соединения, которое надо закрыть
                         if self.conn_id and conn_id == str(self.conn_id):
                             # Отсылаем клиенту команду. По ней он отключится от машины
                             response = {
-                                "msg_type": "control",
+                                "msg_type": WsMessageType.CONTROL.value,
                                 "cmd": ThinClientCmd.DISCONNECT.name,
                                 "error": False,
                                 "msg": "Disconnect requested",
@@ -527,5 +585,8 @@ class ThinClientWsHandler(BaseWsHandler):
 
             except asyncio.CancelledError:
                 break
-            except Exception as ex:
-                await system_logger.debug(str(ex))
+            except (KeyError, ValueError, TypeError, JSONDecodeError) as ex:
+                await system_logger.debug(
+                    message="Thin client ws listening commands error.",
+                    description=str(ex),
+                )

@@ -11,34 +11,15 @@ import redis
 
 import common.settings as settings
 from common.languages import lang_init
-
-from web_app.front_ws_api.subscription_sources import VDI_TASKS_SUBSCRIPTION
-
+from common.subscription_sources import VDI_TASKS_SUBSCRIPTION
 
 _ = lang_init()
-
-
-# Pool worker related
-POOL_TASK_QUEUE = "POOL_TASK_QUEUE"  # Очередь задач пул воркера
-POOL_WORKER_CMD_QUEUE = (
-    "POOL_WORKER_CMD_QUEUE"
-)  # Очередь для команд, которые принимаются пул воркером (Например,
-# команда на отмену задачи)
 
 
 class PoolWorkerCmd(Enum):
 
     CANCEL_TASK = "CANCEL_TASK"
     RESUME_TASK = "RESUME_TASK"
-
-
-WS_MONITOR_CHANNEL_OUT = (
-    "WS_MONITOR_CHANNEL_OUT"
-)  # по этому каналу сообщения полученные по ws от контроллеров
-WS_MONITOR_CMD_QUEUE = (
-    "WS_MONITOR_CMD_QUEUE"
-)  # Очередь для команд, которые принимаются монитором ws. Переходим на
-# очередь, чтобы гарантировать порядок команд
 
 
 class WsMonitorCmd(Enum):
@@ -50,10 +31,6 @@ class WsMonitorCmd(Enum):
 
 class ThinClientCmd(Enum):
     DISCONNECT = "DISCONNECT"
-
-
-#
-INTERNAL_EVENTS_CHANNEL = "INTERNAL_EVENTS_CHANNEL"  # Канал для внутренних событий vdi
 
 
 REDIS_POOL = redis.ConnectionPool.from_url(
@@ -197,7 +174,7 @@ async def a_redis_wait_for_task_completion(task_id):
     from common.models.task import TaskStatus
 
     redis_subscriber = REDIS_CLIENT.pubsub()
-    redis_subscriber.subscribe(INTERNAL_EVENTS_CHANNEL)
+    redis_subscriber.subscribe(settings.INTERNAL_EVENTS_CHANNEL)
 
     try:
         while True:
@@ -255,7 +232,7 @@ async def request_to_execute_pool_task(entity_id, task_type, **additional_data):
     task = await Task.create(entity_id=entity_id, task_type=task_type)
     task_id = str(task.id)
     data = {"task_id": task_id, "task_type": task_type.name, **additional_data}
-    REDIS_CLIENT.rpush(POOL_TASK_QUEUE, json.dumps(data))
+    REDIS_CLIENT.rpush(settings.POOL_TASK_QUEUE, json.dumps(data))
     return task.id
 
 
@@ -288,7 +265,7 @@ def send_cmd_to_cancel_tasks(task_ids: list, cancel_all=False):
         "task_ids": task_ids,
         "cancel_all": cancel_all,
     }
-    REDIS_CLIENT.rpush(POOL_WORKER_CMD_QUEUE, json.dumps(cmd_dict))
+    REDIS_CLIENT.rpush(settings.POOL_WORKER_CMD_QUEUE, json.dumps(cmd_dict))
 
 
 async def send_cmd_to_cancel_tasks_associated_with_controller(
@@ -304,7 +281,7 @@ async def send_cmd_to_cancel_tasks_associated_with_controller(
         "controller_id": str(controller_id),
         "resumable": True,
     }
-    REDIS_CLIENT.rpush(POOL_WORKER_CMD_QUEUE, json.dumps(cmd_dict))
+    REDIS_CLIENT.rpush(settings.POOL_WORKER_CMD_QUEUE, json.dumps(cmd_dict))
 
     #  Wait for result
     if wait_for_result:
@@ -326,7 +303,7 @@ async def send_cmd_to_cancel_tasks_associated_with_entity(entity_id):
         "entity_id": str(entity_id),
         "resumable": True,
     }
-    REDIS_CLIENT.rpush(POOL_WORKER_CMD_QUEUE, json.dumps(cmd_dict))
+    REDIS_CLIENT.rpush(settings.POOL_WORKER_CMD_QUEUE, json.dumps(cmd_dict))
 
 
 @redis_error_handle
@@ -336,11 +313,11 @@ def send_cmd_to_resume_tasks_associated_with_controller(controller_id):
         "command": PoolWorkerCmd.RESUME_TASK.name,
         "controller_id": str(controller_id),
     }
-    REDIS_CLIENT.rpush(POOL_WORKER_CMD_QUEUE, json.dumps(cmd_dict))
+    REDIS_CLIENT.rpush(settings.POOL_WORKER_CMD_QUEUE, json.dumps(cmd_dict))
 
 
 @redis_error_handle
 def send_cmd_to_ws_monitor(controller_id, ws_monitor_cmd: WsMonitorCmd):
     """Send command to ws monitor."""
     cmd_dict = {"controller_id": str(controller_id), "command": ws_monitor_cmd.name}
-    REDIS_CLIENT.rpush(WS_MONITOR_CMD_QUEUE, json.dumps(cmd_dict))
+    REDIS_CLIENT.rpush(settings.WS_MONITOR_CMD_QUEUE, json.dumps(cmd_dict))

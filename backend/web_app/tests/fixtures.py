@@ -59,11 +59,9 @@ async def fixt_launch_workers():
     REDIS_CLIENT.flushall()
 
     file_path = os.path.dirname(__file__)
-    pool_worker_path = os.path.join(file_path, '../../pool_worker/app.py')
+    pool_worker_path = os.path.join(file_path, "../../pool_worker/app.py")
 
-    pool_worker = Popen(
-        [sys.executable, pool_worker_path, "-do-not-resume-tasks"]
-    )
+    pool_worker = Popen([sys.executable, pool_worker_path, "-do-not-resume-tasks"])
 
     await yield_()
 

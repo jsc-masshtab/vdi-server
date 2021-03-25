@@ -1,26 +1,28 @@
 # -*- coding: utf-8 -*-
 import asyncio
 import json
+from json.decoder import JSONDecodeError
 from typing import Any
 
 from tornado import httputil
-from tornado import websocket
 from tornado.web import Application
 
 from common.languages import lang_init
 from common.log.journal import system_logger
-from common.veil.veil_handlers import BaseWsHandler
-from common.veil.veil_redis import (
+from common.settings import (
     INTERNAL_EVENTS_CHANNEL,
-    REDIS_CLIENT,
+    REDIS_TEXT_MSG_CHANNEL,
     WS_MONITOR_CHANNEL_OUT,
-    a_redis_get_message,
 )
-
-from web_app.front_ws_api.subscription_sources import (
+from common.subscription_sources import (
     SubscriptionCmd,
+    USERS_SUBSCRIPTION,
     VDI_FRONT_ALLOWED_SUBSCRIPTIONS_LIST,
+    WsMessageDirection,
+    WsMessageType
 )
+from common.veil.veil_handlers import BaseWsHandler
+from common.veil.veil_redis import REDIS_CLIENT, a_redis_get_message
 
 _ = lang_init()
 
@@ -32,7 +34,7 @@ class VdiFrontWsHandler(BaseWsHandler):  # noqa
         request: httputil.HTTPServerRequest,
         **kwargs: Any
     ):
-        websocket.WebSocketHandler.__init__(self, application, request, **kwargs)
+        super().__init__(application, request, **kwargs)
 
         # subscription sources
         self._subscriptions = []
@@ -40,8 +42,8 @@ class VdiFrontWsHandler(BaseWsHandler):  # noqa
 
     async def open(self):
 
-        token = await self._validate_token()
-        if not token:
+        is_validated = await self._validate_token()
+        if not is_validated:
             return
 
         # on success
@@ -51,10 +53,21 @@ class VdiFrontWsHandler(BaseWsHandler):  # noqa
 
     async def on_message(self, message):
         await system_logger.debug(_("Message: {}.").format(message))
-        response = {"msg_type": "control", "error": False}
+        await self._check_for_subscription_cmd(message)
+
+    def on_close(self):
+        try:
+            if self._send_messages_task:
+                self._send_messages_task.cancel()
+        except asyncio.CancelledError:
+            pass
+
+    async def _check_for_subscription_cmd(self, command):
+        """Проверить есть ли команда для подписки и подписаться."""
+        response = {"msg_type": WsMessageType.CONTROL.value, "error": False}
         # determine if message contains subscription command ('delete /domains/' for example)
         try:
-            subscription_cmd, subscription_source = message.split(" ")
+            subscription_cmd, subscription_source = command.split(" ")
             response["msg"] = subscription_cmd
             response["resource"] = subscription_source
         except ValueError:
@@ -101,18 +114,13 @@ class VdiFrontWsHandler(BaseWsHandler):  # noqa
         # send response
         await self._write_msg(response)
 
-    def on_close(self):
-        try:
-            if self._send_messages_task:
-                self._send_messages_task.cancel()
-        except asyncio.CancelledError:
-            pass
-
     async def _send_messages_co(self):
         """Wait for message and send it to front client."""
         # subscribe to channels  INTERNAL_EVENTS_CHANNEL and WS_MONITOR_CHANNEL_OUT
         redis_subscriber = REDIS_CLIENT.pubsub()
-        redis_subscriber.subscribe(INTERNAL_EVENTS_CHANNEL, WS_MONITOR_CHANNEL_OUT)
+        redis_subscriber.subscribe(
+            INTERNAL_EVENTS_CHANNEL, WS_MONITOR_CHANNEL_OUT, REDIS_TEXT_MSG_CHANNEL
+        )
 
         while True:
             try:
@@ -122,12 +130,30 @@ class VdiFrontWsHandler(BaseWsHandler):  # noqa
                     redis_message_data = redis_message["data"].decode()
                     redis_message_data_dict = json.loads(redis_message_data)
 
-                    # Шлем только те сообщения, которые хочет фронт
-                    if redis_message_data_dict["resource"] in self._subscriptions:
-                        # print("_send_messages_co: redis_message_data ", redis_message_data)
-                        await self._write_msg(redis_message_data)
+                    resource = redis_message_data_dict.get("resource")
+                    if not resource:
+                        continue
+
+                    elif resource in self._subscriptions:
+                        # USERS_SUBSCRIPTION resource
+                        if resource == USERS_SUBSCRIPTION:
+                            if (
+                                redis_message_data_dict["msg_type"]
+                                == WsMessageType.TEXT_MSG.value  # noqa: W503
+                                and redis_message_data_dict["direction"]  # noqa: W503
+                                == WsMessageDirection.USER_TO_ADMIN.value  # noqa: W503
+                            ):
+                                # Текстовые сообщения (от пользователей ТК) администратору
+                                await self._write_msg(redis_message_data)
+                        # other resources
+                        else:
+                            # print("_send_messages_co: redis_message_data ", redis_message_data)
+                            await self._write_msg(redis_message_data)
 
             except asyncio.CancelledError:
                 break
-            except Exception as ex:
-                await system_logger.debug(str(ex))
+            except (KeyError, ValueError, TypeError, JSONDecodeError) as ex:
+                await system_logger.debug(
+                    message="Sending msg error in frontend ws handler.",
+                    description=str(ex),
+                )

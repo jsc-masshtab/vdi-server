@@ -78,7 +78,7 @@ export class ControllersComponent extends DetailsMove implements OnInit, OnDestr
     }
 
     this.socketSub = this.ws.stream('/controllers/').subscribe((message: any) => {
-      if (message['mgs_type'] === 'data') {
+      if (message['msg_type'] === 'data') {
         this.service.getAllControllers().refetch();
       }
     });

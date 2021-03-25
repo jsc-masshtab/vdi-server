@@ -8,19 +8,14 @@ from sqlalchemy import Enum as AlchemyEnum, and_
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
 
-
 from common.database import db
 from common.languages import lang_init
 from common.models.auth import Entity
+from common.settings import INTERNAL_EVENTS_CHANNEL
+from common.subscription_sources import VDI_TASKS_SUBSCRIPTION, WsMessageType
 from common.utils import gino_model_to_json_serializable_dict
 from common.veil.veil_gino import AbstractSortableStatusModel, EntityType
-from common.veil.veil_redis import (
-    INTERNAL_EVENTS_CHANNEL,
-    REDIS_CLIENT,
-    redis_error_handle,
-)
-
-from web_app.front_ws_api.subscription_sources import VDI_TASKS_SUBSCRIPTION
+from common.veil.veil_redis import REDIS_CLIENT, redis_error_handle
 
 _ = lang_init()
 
@@ -69,14 +64,18 @@ class Task(db.Model, AbstractSortableStatusModel):
 
     def get_task_duration(self):
         duration = (
-            self.finished - self.started if (self.finished and self.started) else "00000000"
+            self.finished - self.started
+            if (self.finished and self.started)
+            else "00000000"
         )
         return str(duration)[:-7]
 
     @redis_error_handle
     def publish_data_in_internal_channel(self, event_type: str):
         msg_dict = dict(
-            resource=VDI_TASKS_SUBSCRIPTION, mgs_type="data", event=event_type
+            resource=VDI_TASKS_SUBSCRIPTION,
+            msg_type=WsMessageType.DATA.value,
+            event=event_type,
         )
         msg_dict.update(gino_model_to_json_serializable_dict(self))
         REDIS_CLIENT.publish(INTERNAL_EVENTS_CHANNEL, json.dumps(msg_dict))

@@ -86,7 +86,7 @@ export class ClustersComponent extends DetailsMove implements OnInit, OnDestroy 
     }
 
     this.socketSub = this.ws.stream('/clusters/').subscribe((message: any) => {
-      if (message['mgs_type'] === 'data') {
+      if (message['msg_type'] === 'data') {
         this.service.getAllClusters(this.filter).refetch();
       }
     });

@@ -20,7 +20,9 @@ _ = lang_init()
 class AbstractTask(ABC):
     """Выполняет задачу do_task."""
 
-    task_list = list()  # Список, в котором держим объекты выполняемым в данный момент таскок
+    task_list = (
+        list()
+    )  # Список, в котором держим объекты выполняемым в данный момент таскок
 
     def __init__(self):
 
@@ -249,7 +251,9 @@ class ExpandPoolTask(AbstractTask):
                     try:
                         vm_list = await automated_pool.add_vm(real_amount_to_add)
                     except VmCreationError as vm_error:
-                        await system_logger.error(_("VM creating error."), description=vm_error)
+                        await system_logger.error(
+                            _("VM creating error."), description=vm_error
+                        )
 
             # Подготовка ВМ для подключения к ТК  (под async with pool_lock)
             try:

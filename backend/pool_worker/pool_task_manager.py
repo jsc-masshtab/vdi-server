@@ -11,13 +11,9 @@ from common.log.journal import system_logger
 from common.models.pool import Pool
 from common.models.task import PoolTaskType, Task, TaskStatus
 from common.models.vm import Vm
+from common.settings import POOL_TASK_QUEUE, POOL_WORKER_CMD_QUEUE
 from common.veil.veil_gino import EntityType
-from common.veil.veil_redis import (
-    POOL_TASK_QUEUE,
-    POOL_WORKER_CMD_QUEUE,
-    PoolWorkerCmd,
-    a_redis_lpop,
-)
+from common.veil.veil_redis import PoolWorkerCmd, a_redis_lpop
 
 from pool_worker.pool_locks import PoolLocks
 from pool_worker.pool_tasks import (
@@ -246,7 +242,9 @@ class PoolTaskManager:
             if cancel_all or (str(task.task_model.id) in task_ids):
                 await task.cancel(wait_for_result=False)
 
-    async def cancel_tasks_associated_with_controller(self, controller_id, resumable=False):
+    async def cancel_tasks_associated_with_controller(
+        self, controller_id, resumable=False
+    ):
         """Сancel_tasks_associated_with_controller."""
         await system_logger.debug("cancel_tasks_associated_with_controller")
 

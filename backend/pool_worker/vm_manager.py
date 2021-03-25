@@ -2,6 +2,8 @@
 import asyncio
 import json
 
+import redis
+
 from common.database import db
 from common.languages import lang_init
 from common.log.journal import system_logger
@@ -9,13 +11,15 @@ from common.models.auth import Entity as EntityModel, EntityOwner as EntityOwner
 from common.models.controller import Controller
 from common.models.pool import Pool
 from common.models.vm import Vm, VmPowerState
-from common.settings import VM_MANGER_DATA_QUERY_INTERVAL
-from common.veil.veil_gino import EntityType, Status
-from common.veil.veil_redis import (
-    REDIS_CLIENT,
-    WS_MONITOR_CHANNEL_OUT,
-    a_redis_get_message,
+from common.settings import (
+    REDIS_TIMEOUT,
+    VM_MANGER_DATA_QUERY_INTERVAL,
+    WS_MONITOR_CHANNEL_OUT
 )
+from common.subscription_sources import WsMessageType
+from common.veil.veil_gino import EntityType, Status
+from common.veil.veil_redis import REDIS_CLIENT, a_redis_get_message
+
 
 _ = lang_init()
 
@@ -72,27 +76,34 @@ class VmManager:
                     ids_str = ",".join(vm_ids_from_db)
                     fields = ["id", "user_power_state", "status"]
                     domains_list_response = await controller.veil_client.domain().list(
-                        fields=fields, params={"ids": ids_str})
+                        fields=fields, params={"ids": ids_str}
+                    )
 
                     controller_vms = domains_list_response.paginator_results
                     # print('!!!controller_vms ', controller_vms, flush=True)
 
                     # Сформировать список вм которые НЕ включены и имеют активный статус
-                    vm_ids_to_power_on = [vm_info["id"] for vm_info in controller_vms
-                                          if vm_info["user_power_state"] != VmPowerState.ON.value and  # noqa: W504
-                                          vm_info["status"] == Status.ACTIVE.value]
+                    vm_ids_to_power_on = [
+                        vm_info["id"]
+                        for vm_info in controller_vms
+                        if vm_info["user_power_state"] != VmPowerState.ON.value  # noqa: W503
+                        and vm_info["status"] == Status.ACTIVE.value  # noqa: W503
+                    ]
                     # print('!!!vm_ids_to_power_on ', vm_ids_to_power_on, flush=True)
                     if not vm_ids_to_power_on:
                         continue
 
                     # turn them on
-                    await controller.veil_client.domain(template=0).multi_start(entity_ids=vm_ids_to_power_on)
+                    await controller.veil_client.domain(template=0).multi_start(
+                        entity_ids=vm_ids_to_power_on
+                    )
 
             except asyncio.CancelledError:
                 break
             except Exception as ex:
-                await system_logger.debug(message=_("Keep vms on task error."),
-                                          description=str(ex))
+                await system_logger.debug(
+                    message=_("Keep vms on task error."), description=str(ex)
+                )
 
             await asyncio.sleep(VM_MANGER_DATA_QUERY_INTERVAL)
 
@@ -111,7 +122,8 @@ class VmManager:
 
                     if (
                         redis_message_data_dict["resource"] == "/domains/"
-                        and redis_message_data_dict["msg_type"] == "data"  # noqa: W503
+                        and redis_message_data_dict["msg_type"]  # noqa: W503
+                        == WsMessageType.DATA.value  # noqa: W503
                     ):
                         vm_id = redis_message_data_dict["id"]
                         vm = await Vm.get(vm_id)
@@ -125,8 +137,14 @@ class VmManager:
                                 # await vm.soft_update(verbose_name=fresh_name, creator='system')
                                 await vm.update(verbose_name=fresh_name).apply()
 
+            except redis.ConnectionError as ex:
+                await system_logger.debug(
+                    message="Redis connection error.", description=str(ex)
+                )
+                await asyncio.sleep(REDIS_TIMEOUT)
             except asyncio.CancelledError:
                 break
             except Exception as ex:
-                await system_logger.debug(message=_("Synchronize vm data task error."),
-                                          description=str(ex))
+                await system_logger.debug(
+                    message=_("Synchronize vm data task error."), description=str(ex)
+                )

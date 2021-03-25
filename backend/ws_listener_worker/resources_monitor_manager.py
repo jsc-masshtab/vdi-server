@@ -5,8 +5,9 @@ import json
 from common.languages import lang_init
 from common.log.journal import system_logger
 from common.models.controller import Controller
+from common.settings import WS_MONITOR_CMD_QUEUE
 from common.veil.veil_gino import EntityType
-from common.veil.veil_redis import WS_MONITOR_CMD_QUEUE, WsMonitorCmd, a_redis_lpop
+from common.veil.veil_redis import WsMonitorCmd, a_redis_lpop
 
 from ws_listener_worker.resources_monitor import ResourcesMonitor
 

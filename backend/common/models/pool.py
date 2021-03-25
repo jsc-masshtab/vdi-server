@@ -18,8 +18,13 @@ from sqlalchemy import (
 )
 from sqlalchemy.dialects.postgresql import ARRAY, UUID
 
-from veil_api_client import (TagConfiguration, VeilApiObjectStatus, VeilEntityConfiguration,
-                             VeilRestPaginator, VeilRetryConfiguration)
+from veil_api_client import (
+    TagConfiguration,
+    VeilApiObjectStatus,
+    VeilEntityConfiguration,
+    VeilRestPaginator,
+    VeilRetryConfiguration,
+)
 
 from common.database import db
 from common.languages import lang_init
@@ -34,7 +39,12 @@ from common.models.auth import (
 from common.models.authentication_directory import AuthenticationDirectory
 from common.models.task import Task
 from common.models.vm import Vm as VmModel
-from common.settings import POOL_MAX_CREATE_ATTEMPTS, VEIL_MAX_IDS_LEN, VEIL_OPERATION_WAITING
+from common.settings import (
+    POOL_MAX_CREATE_ATTEMPTS,
+    VEIL_MAX_IDS_LEN,
+    VEIL_OPERATION_WAITING,
+)
+from common.subscription_sources import POOLS_SUBSCRIPTION
 from common.utils import extract_ordering_data
 from common.veil.veil_errors import (
     PoolCreationError,
@@ -47,8 +57,6 @@ from common.veil.veil_graphene import VmState
 from common.veil.veil_redis import get_thin_clients_count
 
 from web_app.auth.license.utils import License
-from web_app.front_ws_api.subscription_sources import POOLS_SUBSCRIPTION
-
 
 _ = lang_init()
 
@@ -734,7 +742,9 @@ class Pool(VeilModel):
                 for vm_id in vm_ids:
                     vm = await VmModel.get(vm_id)
                     await system_logger.info(
-                        _("VM {} has been removed from ECP VeiL.").format(vm.verbose_name),
+                        _("VM {} has been removed from ECP VeiL.").format(
+                            vm.verbose_name
+                        ),
                         entity=vm.entity,
                     )
                 await VmModel.remove_vms(vm_ids, creator, True)
@@ -792,7 +802,8 @@ class Pool(VeilModel):
                 if vm.status != Status.RESERVED:
                     await vm.update(status=Status.FAILED).apply()
         await system_logger.warning(
-            _("Pool {} status changed to {}.").format(pool.verbose_name, status.value), entity=entity
+            _("Pool {} status changed to {}.").format(pool.verbose_name, status.value),
+            entity=entity,
         )
         return True
 
@@ -875,7 +886,14 @@ class Pool(VeilModel):
         vms_list = list()
         for ids_str_section in ids_str_list:
             # Запрашиваем на ECP VeiL данные
-            fields = ["id", "user_power_state", "parent", "status", "guest_utils", "node"]
+            fields = [
+                "id",
+                "user_power_state",
+                "parent",
+                "status",
+                "guest_utils",
+                "node",
+            ]
             controller_client = pool_controller.veil_client
             if not controller_client:
                 break
@@ -962,11 +980,13 @@ class Pool(VeilModel):
                 vms_list.append(vm)
 
             if automated_pool:
-                msg = _("VM {} has been removed from the pool {} and ECP VeiL.").format(vm.verbose_name,
-                                                                                        self.verbose_name)
+                msg = _("VM {} has been removed from the pool {} and ECP VeiL.").format(
+                    vm.verbose_name, self.verbose_name
+                )
             else:
-                msg = _("VM {} has been removed from the pool {}.").format(vm.verbose_name,
-                                                                           self.verbose_name)
+                msg = _("VM {} has been removed from the pool {}.").format(
+                    vm.verbose_name, self.verbose_name
+                )
             await system_logger.info(msg, entity=vm.entity, user=creator)
         # Remove tag for every VM
         if tag_must_be_detached and vms_list:
@@ -1023,13 +1043,13 @@ class Pool(VeilModel):
     @staticmethod
     async def tag_create(controller, verbose_name, creator):
         pool_tag = TagConfiguration(
-            verbose_name=verbose_name,
-            slug=verbose_name,
-            colour=Pool.pool_tag_colour(),
+            verbose_name=verbose_name, slug=verbose_name, colour=Pool.pool_tag_colour()
         )
         controller_client = controller.veil_client
         # Попытки повтора заблокированы намеренно
-        tag_response = await controller_client.tag(retry_opts=VeilRetryConfiguration()).create(pool_tag)
+        tag_response = await controller_client.tag(
+            retry_opts=VeilRetryConfiguration()
+        ).create(pool_tag)
         errors = tag_response.errors
         if tag_response.success:
             task = tag_response.task
@@ -1042,7 +1062,9 @@ class Pool(VeilModel):
             )
             return tag
         elif isinstance(errors, list) and errors[0].get("verbose_name"):
-            response = await controller_client.tag(retry_opts=VeilRetryConfiguration()).list(name=verbose_name)
+            response = await controller_client.tag(
+                retry_opts=VeilRetryConfiguration()
+            ).list(name=verbose_name)
             existing_name = response.response[0].verbose_name
             if existing_name == verbose_name:
                 tag = response.response[0].api_object_id
@@ -1083,12 +1105,17 @@ class Pool(VeilModel):
     async def tag_remove_entities(self, tag: str, vm_objects: list):
         """Remove 1 tag from many entities."""
         pool_tag = await self.get_tag(tag)
-        ent_list = [VeilEntityConfiguration(entity_uuid=vm.id, entity_class="domain") for vm in vm_objects]
+        ent_list = [
+            VeilEntityConfiguration(entity_uuid=vm.id, entity_class="domain")
+            for vm in vm_objects
+        ]
         entity_response = await pool_tag.remove_entities(entities_conf=ent_list)
         if entity_response.success:
             for vm in vm_objects:
                 await system_logger.info(
-                    _("Tag {} removed from VM {}.").format(pool_tag.verbose_name, vm.verbose_name),
+                    _("Tag {} removed from VM {}.").format(
+                        pool_tag.verbose_name, vm.verbose_name
+                    ),
                     user="system",
                     entity=vm.entity,
                 )
@@ -1110,12 +1137,17 @@ class Pool(VeilModel):
     async def tag_add_entities(self, tag: str, vm_objects: list):
         """Attach 1 tag to many entities."""
         pool_tag = await self.get_tag(tag)
-        ent_list = [VeilEntityConfiguration(entity_uuid=vm.id, entity_class="domain") for vm in vm_objects]
+        ent_list = [
+            VeilEntityConfiguration(entity_uuid=vm.id, entity_class="domain")
+            for vm in vm_objects
+        ]
         entity_response = await pool_tag.add_entities(entities_conf=ent_list)
         if entity_response.success:
             for vm in vm_objects:
                 await system_logger.info(
-                    _("Tag {} added to VM {}.").format(pool_tag.verbose_name, vm.verbose_name),
+                    _("Tag {} added to VM {}.").format(
+                        pool_tag.verbose_name, vm.verbose_name
+                    ),
                     user="system",
                     entity=vm.entity,
                 )
@@ -1206,12 +1238,12 @@ class StaticPool(db.Model):
                 description = _("VM {} created and added to the pool {}.").format(
                     vm.verbose_name, verbose_name
                 )
-                await system_logger.info(message=msg, description=description, entity=vm.entity)
+                await system_logger.info(
+                    message=msg, description=description, entity=vm.entity
+                )
             # Разом добавляем теги для всех ВМ
             if tag and vm_obj_list:
-                await pl.tag_add_entities(
-                    tag=tag, vm_objects=vm_obj_list
-                )
+                await pl.tag_add_entities(tag=tag, vm_objects=vm_obj_list)
             # Записываем в лог успех
             await system_logger.info(
                 _("Static pool {} created.").format(verbose_name),
@@ -1472,17 +1504,22 @@ class AutomatedPool(db.Model):
         pool_controller = await self.controller_obj
         task_client = pool_controller.veil_client.task()
         # get all success subtasks
-        sub_tasks = await task_client.list(parent=multitask_id,
-                                           status=VeilApiObjectStatus.success,
-                                           paginator=VeilRestPaginator(ordering="created", limit=10000),
-                                           extra_params={"fields": "id,name,entities"})
+        sub_tasks = await task_client.list(
+            parent=multitask_id,
+            status=VeilApiObjectStatus.success,
+            paginator=VeilRestPaginator(ordering="created", limit=10000),
+            extra_params={"fields": "id,name,entities"},
+        )
         # prepare conditions
         success_ids = list()
         creating_task_pattern = "Creating a virtual"
         thin_clones_pattern = "snapshot."
         # parse VeiL ECP response
         for task in sub_tasks.response:
-            if creating_task_pattern in task.name and task.name[-9:] != thin_clones_pattern:
+            if (
+                creating_task_pattern in task.name
+                and task.name[-9:] != thin_clones_pattern  # noqa: W503
+            ):
                 for entity_id, entity_type in task.entities.items():
                     if entity_type == "domain":
                         success_ids.append(entity_id)
@@ -1528,9 +1565,11 @@ class AutomatedPool(db.Model):
             task_success = await task_client.is_success()
             if not task_success:
                 success_vm_ids = await self.process_failed_multitask(vm_multi_task_id)
-                await system_logger.warning(message=_("VM creation task {} finished with error.").format(
-                    task_client.api_object_id
-                ))
+                await system_logger.warning(
+                    message=_("VM creation task {} finished with error.").format(
+                        task_client.api_object_id
+                    )
+                )
                 await self.deactivate(status=Status.PARTIAL)
             else:
                 success_vm_ids = pending_vm_ids
@@ -1570,14 +1609,18 @@ class AutomatedPool(db.Model):
                 pool = await Pool.get(self.id)
                 # Создаем ВМ
                 for domain in response.response:
-                    vm_status = Status.ACTIVE if domain.api_object_id in success_vm_ids else Status.FAILED
+                    vm_status = (
+                        Status.ACTIVE
+                        if domain.api_object_id in success_vm_ids
+                        else Status.FAILED
+                    )
                     vm_object = await VmModel.create(
                         id=domain.api_object_id,
                         pool_id=str(self.id),
                         template_id=str(self.template_id),
                         created_by_vdi=True,
                         verbose_name=domain.verbose_name,
-                        status=vm_status
+                        status=vm_status,
                     )
                     vm_obj_list.append(vm_object)
 
@@ -1585,12 +1628,12 @@ class AutomatedPool(db.Model):
                     description = _("VM {} created and added to the pool {}.").format(
                         vm_object.verbose_name, verbose_name
                     )
-                    await system_logger.info(message=msg, description=description, entity=vm_object.entity)
+                    await system_logger.info(
+                        message=msg, description=description, entity=vm_object.entity
+                    )
                 # Добавляем разом теги для созданных ВМ
                 if pool.tag and vm_obj_list:
-                    await pool.tag_add_entities(
-                        tag=pool.tag, vm_objects=vm_obj_list
-                    )
+                    await pool.tag_add_entities(tag=pool.tag, vm_objects=vm_obj_list)
 
         # Логирование результата созданных ВМ (совпадение количества) происходит выше
         return vm_obj_list
@@ -1646,9 +1689,7 @@ class AutomatedPool(db.Model):
             )
             # исключение не лишнее, без него таска завершится с FINISHED а не FAILED Перехватится в InitPoolTask
             # но сообщение лишнее
-            raise PoolCreationError(
-                msg
-            )
+            raise PoolCreationError(msg)
 
     async def prepare_initial_vms(self):
         """Подготавливает ВМ для дальнейшего использования тонким клиентом."""

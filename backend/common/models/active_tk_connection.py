@@ -35,7 +35,7 @@ class ActiveTkConnection(db.Model, AbstractSortableStatusModel):
     )  # Если это поле None, значит соединение активно
 
     @classmethod
-    async def soft_create(cls, conn_id, user_name, is_conn_init_by_user, **kwargs):
+    async def soft_create(cls, conn_id, is_conn_init_by_user, **kwargs):
         """Создает/заменяет запись о соединении. Возвращает id."""
         model = await cls.get(conn_id) if conn_id else None
 
@@ -50,8 +50,9 @@ class ActiveTkConnection(db.Model, AbstractSortableStatusModel):
         ):  # Флаг чтобы различить инициировано ли соединение ползователем или это авторекконкт
             await model.update_last_interaction()
 
+        user = await User.get(kwargs["user_id"])
         await TkConnectionStatistics.create_tk_event(
-            conn_id=model.id, message="{} connected.".format(user_name)
+            conn_id=model.id, message="{} connected.".format(user.username)
         )
         return model
 
@@ -77,18 +78,19 @@ class ActiveTkConnection(db.Model, AbstractSortableStatusModel):
     async def update_vm_id(self, vm_id):
 
         user = await User.get(self.user_id)
-        user_name = user.username if user else ""
 
         from common.models.vm import Vm
 
         if vm_id:
             vm = await Vm.get(vm_id)
             vm_verbose_name = vm.verbose_name if vm else ""
-            message = "{} connected to VM {}.".format(user_name, vm_verbose_name)
+            message = "{} connected to VM {}.".format(user.username, vm_verbose_name)
         else:
             vm = await Vm.get(self.vm_id)
             vm_verbose_name = vm.verbose_name if vm else ""
-            message = "{} disconnected from VM {}.".format(user_name, vm_verbose_name)
+            message = "{} disconnected from VM {}.".format(
+                user.username, vm_verbose_name
+            )
         await TkConnectionStatistics.create_tk_event(conn_id=self.id, message=message)
 
         await self.update(vm_id=vm_id, data_received=func.now()).apply()
@@ -100,9 +102,8 @@ class ActiveTkConnection(db.Model, AbstractSortableStatusModel):
         """Соединение неативно, когда у него выставлено время дисконнекта."""
         await self.update(disconnected=func.now()).apply()
         user = await User.get(self.user_id)
-        user_name = user.username if user else ""
         await TkConnectionStatistics.create_tk_event(
-            conn_id=self.id, message="{} disconnected.".format(user_name)
+            conn_id=self.id, message="{} disconnected.".format(user.username)
         )
 
 

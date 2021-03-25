@@ -514,9 +514,9 @@ class User(AbstractSortableStatusModel, VeilModel):
                 group=PAM_USER_GROUP,
             )
         else:
-            result = await veil_auth_class.user_create(username=self.username,
-                                                       group=PAM_USER_GROUP,
-                                                       gecos=gecos)
+            result = await veil_auth_class.user_create(
+                username=self.username, group=PAM_USER_GROUP, gecos=gecos
+            )
         if result.success and superuser:
             pam_result = await self.pam_user_add_group(PAM_SUPERUSER_GROUP)
             if not pam_result.success:

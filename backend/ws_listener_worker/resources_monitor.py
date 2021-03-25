@@ -3,18 +3,15 @@ import asyncio
 
 from tornado.websocket import WebSocketClosedError
 from tornado.websocket import websocket_connect
-# from tornado.websocket import WebSocketError
 
 from common.languages import lang_init
 from common.log.journal import system_logger
 from common.models.controller import Controller
-from common.settings import WS_PING_INTERVAL, WS_PING_TIMEOUT
+from common.settings import WS_MONITOR_CHANNEL_OUT, WS_PING_INTERVAL, WS_PING_TIMEOUT
+from common.subscription_sources import CONTROLLER_SUBSCRIPTIONS_LIST, SubscriptionCmd
 from common.utils import cancel_async_task
 from common.veil.veil_gino import Status
-from common.veil.veil_redis import REDIS_CLIENT, WS_MONITOR_CHANNEL_OUT
-
-from web_app.front_ws_api.subscription_sources import CONTROLLER_SUBSCRIPTIONS_LIST, SubscriptionCmd
-
+from common.veil.veil_redis import REDIS_CLIENT
 
 _ = lang_init()
 
