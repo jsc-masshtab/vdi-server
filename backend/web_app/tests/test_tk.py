@@ -14,19 +14,21 @@ from web_app.tests.utils import execute_scheme
 from web_app.thin_client_api.schema import thin_client_schema
 from common.settings import PAM_AUTH
 from web_app.tests.fixtures import (
-    fixt_db,
-    fixt_user_locked,
-    fixt_user,
+    fixt_db,  # noqa: F401
+    fixt_user_locked,  # noqa: F401
+    fixt_user,  # noqa: F401
     fixt_user_admin,  # noqa: F401
-    fixt_auth_dir,
-    fixt_mapping,
-    fixt_group,
+    fixt_auth_dir,  # noqa: F401
+    fixt_mapping,  # noqa: F401
+    fixt_group,  # noqa: F401
     fixt_group_role,  # noqa: F401
-    fixt_create_static_pool,
-    fixt_controller,
+    fixt_create_static_pool,  # noqa: F401
+    fixt_controller,  # noqa: F401
     fixt_veil_client,  # noqa: F401
     get_auth_context,
-)
+)  # noqa: F401
+
+from common.subscription_sources import WsMessageType
 
 
 pytestmark = [
@@ -59,7 +61,7 @@ class TestTk(VdiHttpTestCase):
             # update
             vm_id = "201d318f-d57e-4f1b-9097-93d69f8782dd"
             update_data_dict = {
-                "msg_type": "UPDATED",
+                "msg_type": WsMessageType.UPDATED.value,
                 "vm_id": vm_id,
                 "event": "vm_changed",
             }

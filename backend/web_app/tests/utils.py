@@ -30,9 +30,8 @@ async def execute_scheme(_schema, query, variables=None, context=None):
 
 
 class VdiHttpTestCase(AsyncHTTPTestCase, ABC):
-    async def do_login(self):
-        user_name = "test_user_admin"
-        body = {"username": user_name, "password": "veil"}
+    async def do_login(self, user_name="test_user_admin", password="veil"):
+        body = {"username": user_name, "password": password}
         response_dict = await self.get_response(body=json.dumps(body))
         access_token = response_dict["data"]["access_token"]
         self.assertTrue(access_token)

@@ -166,10 +166,14 @@ class Vm(VeilModel):
 
     async def soft_delete(self, creator, remove_on_controller=True):
         entity = EntityModel.select("id").where(
-            (EntityModel.entity_type == self.entity_type) & (EntityModel.entity_uuid == self.id))
+            (EntityModel.entity_type == self.entity_type)
+            & (EntityModel.entity_uuid == self.id)  # noqa: W503
+        )
         entity_id = await entity.gino.all()
         if entity_id:
-            await EntityOwnerModel.delete.where(EntityOwnerModel.entity_id == entity).gino.status()
+            await EntityOwnerModel.delete.where(
+                EntityOwnerModel.entity_id == entity
+            ).gino.status()
 
         if remove_on_controller and self.created_by_vdi:
             try:
@@ -307,7 +311,9 @@ class Vm(VeilModel):
         inner_retry_count = 0
         while inner_retry_count < VEIL_MAX_VM_CREATE_ATTEMPTS:
             # Send request to create vm
-            create_response = await vm_client.create(domain_configuration=vm_configuration)
+            create_response = await vm_client.create(
+                domain_configuration=vm_configuration
+            )
             # Если задача поставлена - досрочно прерываем попытки
             if create_response.success:
                 copy_result = dict(
@@ -600,15 +606,18 @@ class Vm(VeilModel):
                 )
             return task_success
 
-    async def restore_backup(self, file_id, node_id, datapool_id: None, creator="system"):
+    async def restore_backup(
+        self, file_id, node_id, datapool_id: None, creator="system"
+    ):
         """Восстанавливает бэкап ВМ на Veil и помещает в пул."""
         from common.models.pool import AutomatedPool, Pool
+
         domain_entity = await self.get_veil_entity()
         if datapool_id:
             datapool_id = str(datapool_id)
-        response = await domain_entity.automated_restore(file_id=str(file_id),
-                                                         node_id=str(node_id),
-                                                         datapool_id=datapool_id)
+        response = await domain_entity.automated_restore(
+            file_id=str(file_id), node_id=str(node_id), datapool_id=datapool_id
+        )
         if not response.success:
             raise ValueError(response.error_detail)
 
@@ -628,48 +637,73 @@ class Vm(VeilModel):
                 if vm_count == automated_pool.total_size:
                     # увеличиваем общий размер пула, если восстанавливаемая ВМ становится крайней
                     vm_count += 1
-                    await automated_pool.soft_update(verbose_name=pool.verbose_name,
-                                                     reserve_size=automated_pool.reserve_size,
-                                                     total_size=vm_count,
-                                                     increase_step=automated_pool.increase_step,
-                                                     vm_name_template=automated_pool.vm_name_template,
-                                                     keep_vms_on=pool.keep_vms_on,
-                                                     create_thin_clones=automated_pool.create_thin_clones,
-                                                     prepare_vms=automated_pool.prepare_vms,
-                                                     ad_cn_pattern=automated_pool.ad_cn_pattern,
-                                                     connection_types=pool.connection_types,
-                                                     creator=creator)
+                    await automated_pool.soft_update(
+                        verbose_name=pool.verbose_name,
+                        reserve_size=automated_pool.reserve_size,
+                        total_size=vm_count,
+                        increase_step=automated_pool.increase_step,
+                        vm_name_template=automated_pool.vm_name_template,
+                        keep_vms_on=pool.keep_vms_on,
+                        create_thin_clones=automated_pool.create_thin_clones,
+                        prepare_vms=automated_pool.prepare_vms,
+                        ad_cn_pattern=automated_pool.ad_cn_pattern,
+                        connection_types=pool.connection_types,
+                        creator=creator,
+                    )
                     await system_logger.warning(
-                        _("Total size of pool {} increased.").format(pool.verbose_name), description=vm_count)
-            restored_vm = await self.create(id=restored_vm_id,
-                                            pool_id=str(self.pool_id),
-                                            template_id=str(self.template_id),
-                                            created_by_vdi=True,
-                                            verbose_name=veil_domain.verbose_name,
-                                            pool_tag=pool.tag)
+                        _("Total size of pool {} increased.").format(pool.verbose_name),
+                        description=vm_count,
+                    )
+            restored_vm = await self.create(
+                id=restored_vm_id,
+                pool_id=str(self.pool_id),
+                template_id=str(self.template_id),
+                created_by_vdi=True,
+                verbose_name=veil_domain.verbose_name,
+                pool_tag=pool.tag,
+            )
             await system_logger.info(
-                _("VM {} has been added to the pool {}.").format(veil_domain.verbose_name, pool.verbose_name),
-                user=creator, entity=pool.entity)
+                _("VM {} has been added to the pool {}.").format(
+                    veil_domain.verbose_name, pool.verbose_name
+                ),
+                user=creator,
+                entity=pool.entity,
+            )
 
             # Переназначение пользователя
             entity = EntityModel.select("id").where(
-                (EntityModel.entity_type == self.entity_type) & (EntityModel.entity_uuid == self.id))
-            user = await EntityOwnerModel.select("user_id").where(EntityOwnerModel.entity_id == entity).gino.first()
+                (EntityModel.entity_type == self.entity_type)
+                & (EntityModel.entity_uuid == self.id)  # noqa: W503
+            )
+            user = (
+                await EntityOwnerModel.select("user_id")
+                .where(EntityOwnerModel.entity_id == entity)
+                .gino.first()
+            )
             if user:
-                await EntityOwnerModel.delete.where(EntityOwnerModel.entity_id == entity).gino.status()
-                await system_logger.info(_("VM {} is clear from users.").format(self.verbose_name), user=creator,
-                                         entity=self.entity)
-                await self.soft_update(id=self.id, status=Status.SERVICE, creator=creator)
+                await EntityOwnerModel.delete.where(
+                    EntityOwnerModel.entity_id == entity
+                ).gino.status()
+                await system_logger.info(
+                    _("VM {} is clear from users.").format(self.verbose_name),
+                    user=creator,
+                    entity=self.entity,
+                )
+                await self.soft_update(
+                    id=self.id, status=Status.SERVICE, creator=creator
+                )
                 await restored_vm.add_user(user[0], creator=creator)
 
             if not task_success:
                 await system_logger.error(_("Backup restore finished with error."))
             else:
                 await system_logger.info(
-                    _("Backup from VM {} restored to pool {} as {}.").format(self.verbose_name, pool.verbose_name,
-                                                                             restored_vm.verbose_name),
+                    _("Backup from VM {} restored to pool {} as {}.").format(
+                        self.verbose_name, pool.verbose_name, restored_vm.verbose_name
+                    ),
                     user=creator,
-                    entity=self.entity)
+                    entity=self.entity,
+                )
             return task_success
 
     async def enable_remote_access(self):

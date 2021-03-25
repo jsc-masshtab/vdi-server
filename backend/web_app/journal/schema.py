@@ -323,7 +323,9 @@ class EventExportMutation(graphene.Mutation):
         finish = graphene.DateTime(
             description="Дата окончания периода для экспорта журнала"
         )
-        journal_path = graphene.String(description="Адрес директории для экспорта журнала")
+        journal_path = graphene.String(
+            description="Адрес директории для экспорта журнала"
+        )
 
     ok = graphene.Boolean()
 

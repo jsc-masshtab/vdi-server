@@ -1,4 +1,8 @@
 # -*- coding: utf-8 -*-
+from enum import Enum
+
+
+USERS_SUBSCRIPTION = "/users/"
 POOLS_SUBSCRIPTION = "/pools/"
 # subscription to receive events
 EVENTS_SUBSCRIPTION = "/events/"
@@ -18,6 +22,7 @@ CONTROLLER_SUBSCRIPTIONS_LIST = [
 # subscriptions to data which VDI front can receive from VDI back
 VDI_FRONT_ALLOWED_SUBSCRIPTIONS_LIST = [
     *CONTROLLER_SUBSCRIPTIONS_LIST,
+    USERS_SUBSCRIPTION,
     POOLS_SUBSCRIPTION,
     EVENTS_SUBSCRIPTION,
     CONTROLLERS_SUBSCRIPTION,
@@ -28,3 +33,15 @@ VDI_FRONT_ALLOWED_SUBSCRIPTIONS_LIST = [
 class SubscriptionCmd:
     add = "add"
     delete = "delete"
+
+
+class WsMessageType(Enum):
+    CONTROL = "control"
+    DATA = "data"
+    TEXT_MSG = "text_msg"
+    UPDATED = "UPDATED"
+
+
+class WsMessageDirection(Enum):
+    ADMIN_TO_USER = "admin_to_user"
+    USER_TO_ADMIN = "user_to_admin"

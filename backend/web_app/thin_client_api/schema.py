@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-# GraphQL schema
 import json
+import textwrap
 from datetime import datetime, timedelta, timezone
 
 import graphene
@@ -16,7 +16,8 @@ from common.models.active_tk_connection import (
 )
 from common.models.auth import User
 from common.models.vm import Vm
-from common.settings import REDIS_THIN_CLIENT_CMD_CHANNEL
+from common.settings import REDIS_TEXT_MSG_CHANNEL, REDIS_THIN_CLIENT_CMD_CHANNEL
+from common.subscription_sources import WsMessageDirection, WsMessageType
 from common.utils import extract_ordering_data
 from common.veil.veil_decorators import administrator_required
 from common.veil.veil_redis import REDIS_CLIENT, ThinClientCmd
@@ -248,8 +249,40 @@ class DisconnectThinClientMutation(graphene.Mutation):
         return DisconnectThinClientMutation(ok=True)
 
 
+class SendMessageToThinClientMutation(graphene.Mutation):
+    """Посылка текстового сообщения пользователям ТК.
+
+    Если recipient_id==None, то сообщение шлется всем текущим пользователям ТК
+    """
+
+    class Arguments:
+        recipient_id = graphene.UUID(
+            required=True, default_value=None, description="id получателя"
+        )
+        message = graphene.String(required=True, description="Текстовое сообщение")
+
+    ok = graphene.Boolean()
+
+    @administrator_required
+    async def mutate(self, _info, recipient_id, message, creator, **kwargs):
+        shorten_msg = textwrap.shorten(message, width=2048)
+        message_data_dict = dict(
+            msg_type=WsMessageType.TEXT_MSG.value,
+            recipient_id=str(recipient_id),
+            sender_name=creator,  # шлем имя так как юзер ТК не может иметь список админов,
+            # поэтому id был бы ему бесполезен
+            message=shorten_msg,
+            direction=WsMessageDirection.ADMIN_TO_USER.value,
+        )
+        # print('message_data_dict ', message_data_dict, flush=True)
+        REDIS_CLIENT.publish(REDIS_TEXT_MSG_CHANNEL, json.dumps(message_data_dict))
+
+        return SendMessageToThinClientMutation(ok=True)
+
+
 class ThinClientMutations(graphene.ObjectType):
     disconnectThinClient = DisconnectThinClientMutation.Field()
+    sendMessageToThinClient = SendMessageToThinClientMutation.Field()
 
 
 thin_client_schema = graphene.Schema(

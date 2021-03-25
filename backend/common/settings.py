@@ -119,7 +119,27 @@ REDIS_THIN_CLIENT_CMD_CHANNEL = (
     "TC_CMD_CHANNEL"
 )  # канал для комманд обработчикам ws тонких клиентов.
 # Команда по ws будет послана ТК
+REDIS_TEXT_MSG_CHANNEL = (
+    "TEXT_MSG_CHANNEL"
+)  # Канал для обмена текстовыми сообщениями между админом и
+# пользователями ТК
 REDIS_ASYNC_TIMEOUT = 0.01
+
+POOL_TASK_QUEUE = "POOL_TASK_QUEUE"  # Очередь задач воркера
+POOL_WORKER_CMD_QUEUE = (
+    "POOL_WORKER_CMD_QUEUE"
+)  # Очередь для команд, которые принимаются пул воркером (Например,
+# команда на отмену задачи)
+
+WS_MONITOR_CHANNEL_OUT = (
+    "WS_MONITOR_CHANNEL_OUT"
+)  # канал для сообщений полученных монитором по ws от контроллеров
+WS_MONITOR_CMD_QUEUE = (
+    "WS_MONITOR_CMD_QUEUE"
+)  # Очередь для команд, которые принимаются монитором ws.
+
+INTERNAL_EVENTS_CHANNEL = "INTERNAL_EVENTS_CHANNEL"  # Канал для внутренних событий vdi
+
 
 # VM manager settings
 # -----------------------------

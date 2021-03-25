@@ -1,19 +1,20 @@
 # -*- coding: utf-8 -*-
 import textwrap
 from abc import ABC
-from typing import Awaitable, Optional
+from typing import Any, Awaitable, Optional
 
 from graphene_tornado.tornado_graphql_handler import TornadoGraphQLHandler
 
-from tornado import websocket
+from tornado import httputil, websocket
 from tornado.escape import json_decode
-from tornado.web import RequestHandler
+from tornado.web import Application, RequestHandler
 
 from common.languages import lang_init
 from common.log.journal import system_logger
 from common.models.auth import User, UserJwtInfo
 from common.models.pool import Pool
 from common.veil.auth.veil_jwt import (
+    JWT_OPTIONS,
     decode_jwt,
     extract_user,
     extract_user_object,
@@ -127,12 +128,22 @@ class VdiTornadoGraphQLHandler(TornadoGraphQLHandler, ABC):
 
 
 class BaseWsHandler(websocket.WebSocketHandler, ABC):
+    def __init__(
+        self,
+        application: Application,
+        request: httputil.HTTPServerRequest,
+        **kwargs: Any
+    ):
+        super().__init__(application, request, **kwargs)
+
+        self.user_id = None
+
     def check_origin(self, origin):
         # TODO: временное решение
         return True
 
     async def _validate_token(self):
-        """Проверить токен. Вернуть token, если валидация прошла. Иначе None."""
+        """Проверить токен. Вернуть True, если валидация прошла. Иначе False."""
         try:
             token = self.get_query_argument("token")
             if not token:
@@ -148,18 +159,29 @@ class BaseWsHandler(websocket.WebSocketHandler, ABC):
             if not is_valid:
                 raise AssertionError("Auth failed. Wrong jwt token")
 
-            return token
+            # extract user
+            payload = decode_jwt(token, JWT_OPTIONS)
+            user_name = payload["username"]
+
+            self.user_id = await User.get_id(user_name)
+            if not self.user_id:
+                raise AssertionError("User {} not found.".format(user_name))
+
+            return True
 
         except Exception as ex:  # noqa
-            await self._write_msg("Token validation error. {}.".format(str(ex)))
-            self.close()
-            return None
+            error_msg = "Token validation error. {}".format(str(ex))
+            await self._write_msg(error_msg)
+            self.close(code=4001, reason=error_msg)
+            return False
 
     async def _write_msg(self, msg):
         try:
             await self.write_message(msg)
-        except websocket.WebSocketError:
-            await system_logger.debug(_("Write error."))
+        except (websocket.WebSocketError, IOError) as ex:
+            await system_logger.debug(
+                message=_("Ws write error."), description=(str(ex))
+            )
 
     # unused abstract method implementation
     def data_received(self, chunk: bytes) -> Optional[Awaitable[None]]:

@@ -1,12 +1,7 @@
 # -*- coding: utf-8 -*-
 from web_app.thin_client_api.handlers import (
-    AttachUsb,
-    DetachUsb,
-    PoolGetVm,
-    PoolHandler,
-    RedisInfoHandler,
-    ThinClientWsHandler,
-    VmAction,
+    AttachUsb, DetachUsb, PoolGetVm, PoolHandler,
+    RedisInfoHandler, SendTextMsgHandler, ThinClientWsHandler, VmAction
 )
 
 
@@ -30,4 +25,5 @@ thin_client_api_urls = [
     ),
     (r"/ws/client/?", ThinClientWsHandler),
     (r"/client/message_broker/?", RedisInfoHandler),
+    (r"/client/send_text_message/?", SendTextMsgHandler),
 ]

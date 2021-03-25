@@ -15,10 +15,10 @@ from sqlalchemy.sql import func
 
 from common.database import db
 from common.languages import lang_init
+from common.settings import INTERNAL_EVENTS_CHANNEL
+from common.subscription_sources import EVENTS_SUBSCRIPTION, WsMessageType
 from common.utils import gino_model_to_json_serializable_dict
-from common.veil.veil_redis import INTERNAL_EVENTS_CHANNEL, REDIS_CLIENT
-
-from web_app.front_ws_api.subscription_sources import EVENTS_SUBSCRIPTION
+from common.veil.veil_redis import REDIS_CLIENT
 
 _ = lang_init()
 
@@ -63,12 +63,15 @@ class Event(db.Model):
         :param journal_path: путь для экспорта ('/tmp/')
         """
         from common.veil.veil_errors import SilentError, SimpleError
+
         start_date = datetime.date(start)
         finish_date = datetime.date(finish)
         real_path = Path(journal_path)
 
         query = await Event.query.where(
-            between(Event.created, start + timedelta(hours=3), finish + timedelta(hours=3))
+            between(
+                Event.created, start + timedelta(hours=3), finish + timedelta(hours=3)
+            )
         ).gino.all()
         if not query:
             raise SilentError(_("Journal in this period is empty."))
@@ -78,7 +81,8 @@ class Event(db.Model):
             export.append(event.__values__)
 
         csv_name = "events_{}-{}.csv".format(
-            start_date + timedelta(days=1), finish_date)
+            start_date + timedelta(days=1), finish_date
+        )
         name = real_path / csv_name
         try:
             with open("{}".format(name), "w") as f:
@@ -162,7 +166,10 @@ class Event(db.Model):
     ):  # noqa
 
         msg_dict = dict(
-            event_type=event_type, event="event", resource=EVENTS_SUBSCRIPTION
+            event_type=event_type,
+            event="event",
+            resource=EVENTS_SUBSCRIPTION,
+            msg_type=WsMessageType.DATA.value,
         )
 
         event_obj = await cls.soft_create(

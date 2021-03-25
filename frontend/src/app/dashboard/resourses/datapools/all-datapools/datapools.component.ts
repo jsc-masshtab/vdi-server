@@ -90,7 +90,7 @@ export class DatapoolsComponent extends DetailsMove implements OnInit, OnDestroy
     }
 
     this.socketSub = this.ws.stream('/data-pools/').subscribe((message: any) => {
-      if (message['mgs_type'] === 'data') {
+      if (message['msg_type'] === 'data') {
         this.service.getAllDatapools(this.filter).refetch();
       }
     });

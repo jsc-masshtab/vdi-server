@@ -59,8 +59,8 @@ async def test_export_journal(fixt_db, fixt_user, fixt_auth_context):  # noqa
                 ok
               }
          }""" % (
-      start.replace(microsecond=0).isoformat(),
-      finish.replace(microsecond=0).isoformat()
+        start.replace(microsecond=0).isoformat(),
+        finish.replace(microsecond=0).isoformat(),
     )
     executed = await execute_scheme(event_schema, qu, context=fixt_auth_context)
     assert executed["eventExport"]["ok"]

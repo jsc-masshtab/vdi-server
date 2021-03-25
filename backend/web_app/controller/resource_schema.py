@@ -248,7 +248,9 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
     vms = templates
 
     @classmethod
-    async def get_resources_list(cls, resource_type, limit, offset, ordering: str = None, template: bool = None):
+    async def get_resources_list(
+        cls, resource_type, limit, offset, ordering: str = None, template: bool = None
+    ):
         """Все ресурсы на подключенных ECP VeiL."""
         controllers = await cls.fetch_all()
         resources_list = list()
@@ -259,15 +261,25 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
                 continue
             # Получаем список для отдельного типа ресурсов
             if resource_type == "cluster":
-                veil_response = await controller.veil_client.cluster().list(paginator=paginator)
+                veil_response = await controller.veil_client.cluster().list(
+                    paginator=paginator
+                )
             elif resource_type == "node":
-                veil_response = await controller.veil_client.node().list(paginator=paginator)
+                veil_response = await controller.veil_client.node().list(
+                    paginator=paginator
+                )
             elif resource_type == "datapool":
-                veil_response = await controller.veil_client.data_pool().list(paginator=paginator)
+                veil_response = await controller.veil_client.data_pool().list(
+                    paginator=paginator
+                )
             elif resource_type == "resource_pool":
-                veil_response = await controller.veil_client.resource_pool().list(paginator=paginator)
+                veil_response = await controller.veil_client.resource_pool().list(
+                    paginator=paginator
+                )
             elif resource_type == "domain":
-                veil_response = await controller.veil_client.domain(template=template).list(paginator=paginator)
+                veil_response = await controller.veil_client.domain(
+                    template=template
+                ).list(paginator=paginator)
 
             for data in veil_response.response:
                 resource = data.public_attrs
@@ -303,15 +315,25 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
             return
         # Получаем инфо для отдельного типа ресурсов
         if resource_type == "cluster":
-            resource_info = await controller.veil_client.cluster(cluster_id=str(resource_id)).info()
+            resource_info = await controller.veil_client.cluster(
+                cluster_id=str(resource_id)
+            ).info()
         elif resource_type == "node":
-            resource_info = await controller.veil_client.node(node_id=str(resource_id)).info()
+            resource_info = await controller.veil_client.node(
+                node_id=str(resource_id)
+            ).info()
         elif resource_type == "datapool":
-            resource_info = await controller.veil_client.data_pool(data_pool_id=str(resource_id)).info()
+            resource_info = await controller.veil_client.data_pool(
+                data_pool_id=str(resource_id)
+            ).info()
         elif resource_type == "resource_pool":
-            resource_info = await controller.veil_client.resource_pool(resource_pool_id=str(resource_id)).info()
+            resource_info = await controller.veil_client.resource_pool(
+                resource_pool_id=str(resource_id)
+            ).info()
         elif resource_type == "domain":
-            resource_info = await controller.veil_client.domain(domain_id=str(resource_id)).info()
+            resource_info = await controller.veil_client.domain(
+                domain_id=str(resource_id)
+            ).info()
 
         if resource_info.success:
             # В случае успеха добавляем параметры контроллера на VDI
@@ -328,8 +350,9 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
     @classmethod
     @administrator_required
     async def resolve_cluster(cls, root, info, creator, cluster_id, controller_id):
-        resource_data = await cls.get_resource_data(resource_type="cluster", resource_id=cluster_id,
-                                                    controller_id=controller_id)
+        resource_data = await cls.get_resource_data(
+            resource_type="cluster", resource_id=cluster_id, controller_id=controller_id
+        )
         return ResourceClusterType(**resource_data)
 
     @classmethod
@@ -337,8 +360,9 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
     async def resolve_clusters(
         cls, root, info, creator, limit, offset, ordering: str = None
     ):
-        clusters_list = await cls.get_resources_list(limit=limit, offset=offset, ordering=ordering,
-                                                     resource_type="cluster")
+        clusters_list = await cls.get_resources_list(
+            limit=limit, offset=offset, ordering=ordering, resource_type="cluster"
+        )
         veil_clusters_list = list()
         for resource_data in clusters_list:
             veil_clusters_list.append(ResourceClusterType(**resource_data))
@@ -350,8 +374,11 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
     async def resolve_resource_pool(
         cls, root, info, creator, resource_pool_id, controller_id
     ):
-        resource_data = await cls.get_resource_data(resource_type="resource_pool", resource_id=resource_pool_id,
-                                                    controller_id=controller_id)
+        resource_data = await cls.get_resource_data(
+            resource_type="resource_pool",
+            resource_id=resource_pool_id,
+            controller_id=controller_id,
+        )
         return ResourcePoolType(**resource_data)
 
     @classmethod
@@ -359,8 +386,9 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
     async def resolve_resource_pools(
         cls, root, info, creator, limit, offset, ordering: str = None
     ):
-        resource_pools_list = await cls.get_resources_list(limit=limit, offset=offset, ordering=ordering,
-                                                           resource_type="resource_pool")
+        resource_pools_list = await cls.get_resources_list(
+            limit=limit, offset=offset, ordering=ordering, resource_type="resource_pool"
+        )
         veil_resource_pools_list = list()
         for data in resource_pools_list:
             veil_resource_pools_list.append(ResourcePoolType(**data))
@@ -370,8 +398,9 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
     @classmethod
     @administrator_required
     async def resolve_node(cls, root, info, creator, node_id, controller_id):
-        resource_data = await cls.get_resource_data(resource_type="node", resource_id=node_id,
-                                                    controller_id=controller_id)
+        resource_data = await cls.get_resource_data(
+            resource_type="node", resource_id=node_id, controller_id=controller_id
+        )
         resource_data["cpu_count"] = resource_data["cpu_topology"]["cpu_count"]
         return ResourceNodeType(**resource_data)
 
@@ -380,8 +409,9 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
     async def resolve_nodes(
         cls, root, info, creator, limit, offset, ordering: str = None
     ):
-        nodes_list = await cls.get_resources_list(limit=limit, offset=offset, ordering=ordering,
-                                                  resource_type="node")
+        nodes_list = await cls.get_resources_list(
+            limit=limit, offset=offset, ordering=ordering, resource_type="node"
+        )
         veil_nodes_list = list()
         for resource_data in nodes_list:
             veil_nodes_list.append(ResourceNodeType(**resource_data))
@@ -391,8 +421,11 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
     @classmethod
     @administrator_required
     async def resolve_datapool(cls, root, info, creator, datapool_id, controller_id):
-        resource_data = await cls.get_resource_data(resource_type="datapool", resource_id=datapool_id,
-                                                    controller_id=controller_id)
+        resource_data = await cls.get_resource_data(
+            resource_type="datapool",
+            resource_id=datapool_id,
+            controller_id=controller_id,
+        )
         return ResourceDataPoolType(**resource_data)
 
     @classmethod
@@ -400,8 +433,9 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
     async def resolve_datapools(
         cls, root, info, creator, limit, offset, ordering: str = None
     ):
-        datapools_list = await cls.get_resources_list(limit=limit, offset=offset, ordering=ordering,
-                                                      resource_type="datapool")
+        datapools_list = await cls.get_resources_list(
+            limit=limit, offset=offset, ordering=ordering, resource_type="datapool"
+        )
         veil_datapools_list = list()
         for resource_data in datapools_list:
             veil_datapools_list.append(ResourceDataPoolType(**resource_data))
@@ -417,8 +451,9 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
         controller = await cls.fetch_by_id(controller_id)
         veil_domain = controller.veil_client.domain(domain_id=str(domain_id))
         await veil_domain.info()
-        resource_data = await cls.get_resource_data(resource_type="domain", resource_id=domain_id,
-                                                    controller_id=controller_id)
+        resource_data = await cls.get_resource_data(
+            resource_type="domain", resource_id=domain_id, controller_id=controller_id
+        )
         tag_list = await veil_domain.tags_list()
         resource_data["domain_tags"] = list()
         for tag in tag_list.response:
@@ -452,8 +487,13 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
 
     @classmethod
     async def domain_list(cls, limit, offset, ordering, template: bool):
-        domains = await cls.get_resources_list(limit=limit, offset=offset, ordering=ordering, template=template,
-                                               resource_type="domain")
+        domains = await cls.get_resources_list(
+            limit=limit,
+            offset=offset,
+            ordering=ordering,
+            template=template,
+            resource_type="domain",
+        )
         domain_list = list()
 
         for data in domains:

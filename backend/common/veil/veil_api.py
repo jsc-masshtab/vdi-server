@@ -144,7 +144,9 @@ class VdiVeilClient(VeilClient):
                 vm_object = await Vm.get(api_object.api_object_id)
                 if vm_object and vm_object.active:
                     await vm_object.make_failed()
-                await system_logger.warning(_("Can`t find VM {} on VeiL ECP.").format(api_object.api_object_id))
+                await system_logger.warning(
+                    _("Can`t find VM {} on VeiL ECP.").format(api_object.api_object_id)
+                )
             elif response.status_code == 404 and isinstance(api_object, VeilTag):
                 from common.models.pool import Pool
 
@@ -152,7 +154,9 @@ class VdiVeilClient(VeilClient):
                     Pool.tag == api_object.api_object_id
                 )
                 await query.gino.status()
-                await system_logger.warning(_("Can`t find Tag {} on VeiL ECP.").format(api_object.api_object_id))
+                await system_logger.warning(
+                    _("Can`t find Tag {} on VeiL ECP.").format(api_object.api_object_id)
+                )
 
         if not response.success:
             # Переключить и деактивировать контроллер
@@ -168,7 +172,11 @@ class VdiVeilClient(VeilClient):
                     # Деактивируем контроллер только для критичных ситуаций
                     await controller_object.deactivate()
 
-            controller_name = controller_object.verbose_name if controller_object else self.server_address
+            controller_name = (
+                controller_object.verbose_name
+                if controller_object
+                else self.server_address
+            )
             error_message = _("VeiL ECP {} request error.").format(controller_name)
             error_description = "status code: {}\nurl: {}\nparams: {}\nresponse:{}".format(
                 response.status_code, url, params, response.data
@@ -245,7 +253,9 @@ async def stop_veil_client():
 
 def compare_error_detail(response: VeilApiResponse, message: str) -> bool:
     """Extract VeiL ECP error detail from response and check message`s occurrence."""
-    bad_input_types = not isinstance(response, VeilApiResponse) or not isinstance(message, str)
+    bad_input_types = not isinstance(response, VeilApiResponse) or not isinstance(
+        message, str
+    )
     nothing_to_parse = bad_input_types or not response.error_code or not response.errors
     if nothing_to_parse:
         return False
