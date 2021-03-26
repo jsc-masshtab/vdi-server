@@ -60,3 +60,10 @@
     name: "{{ item }}"
     state: started
   loop: "{{ broker_services_list }}"
+
+- name: Broker | Remove apt repo
+  apt_repository:
+    repo: "{{ broker_apt_repo }}"
+    state: absent
+  notify:
+    - apt update

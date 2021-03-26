@@ -92,3 +92,16 @@ tests_job:
     variables:
       - $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^release.*$/ || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "dev"
       - $BY_SCHEDULE == "true"
+
+kostyl_job:
+  image: python:3.5.9-alpine
+  stage: linter
+  tags:
+    - docker
+  script:
+    - exit 0
+  only:
+    changes:
+      - devops/**/*
+    refs:
+      - merge_requests
