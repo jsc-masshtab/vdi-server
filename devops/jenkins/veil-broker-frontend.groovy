@@ -47,7 +47,7 @@ pipeline {
     parameters {
         string(      name: 'BRANCH',      defaultValue: 'dev',                     description: 'branch')
         choice(      name: 'REPO',        choices: ['test', 'prod-30'],            description: 'repo for uploading')
-        string(      name: 'VERSION',     defaultValue: '3.0.0',                   description: 'base version')
+        string(      name: 'VERSION',     defaultValue: '3.0.1',                   description: 'base version')
         string(      name: 'AGENT',       defaultValue: 'bld-agent',               description: 'jenkins build agent')
     }
 
