@@ -1,12 +1,17 @@
-/* tslint:disable:no-unused-variable */
+import { TestBed, inject } from '@angular/core/testing';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { RouterTestingModule } from '@angular/router/testing';
 
-import { TestBed, async, inject } from '@angular/core/testing';
 import { FooterService } from './footer.service';
 
 describe('Service: Footer', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [FooterService]
+      imports: [
+        HttpClientTestingModule,
+        RouterTestingModule
+      ],
+      providers: [ FooterService ]
     });
   });
 

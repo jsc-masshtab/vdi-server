@@ -1,20 +1,53 @@
+import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { RouterTestingModule } from '@angular/router/testing';
+import { MatDialog } from '@angular/material/dialog';
+import { of } from 'rxjs';
 
-import { PoolDetailsComponent } from './pool-details.component';
+import { ControllerDetailsComponent } from './controller-details.component';
+import { ControllersService } from './../all-controllers/controllers.service';
 
-describe('TemplatesComponent', () => {
-  let component: PoolDetailsComponent;
-  let fixture: ComponentFixture<PoolDetailsComponent>;
+describe('ControllerDetailsComponent', () => {
+  let component: ControllerDetailsComponent;
+  let fixture: ComponentFixture<ControllerDetailsComponent>;
+
+  let serviceStub: Partial<ControllersService>;
 
   beforeEach(async(() => {
+    serviceStub = {
+      getController(): any {
+        return of({
+          data: {
+            controller: {}
+          }
+        });
+      }
+    };
+
     TestBed.configureTestingModule({
-      declarations: [ PoolDetailsComponent ]
+      imports: [
+        RouterTestingModule
+      ],
+      declarations: [ ControllerDetailsComponent ],
+      providers: [
+        {
+          provide: ControllersService,
+          useValue: serviceStub
+        },
+        {
+          provide: MatDialog,
+          useValue: {}
+        },
+      ],
+      schemas: [
+        CUSTOM_ELEMENTS_SCHEMA
+      ]
     })
     .compileComponents();
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(PoolDetailsComponent);
+    fixture = TestBed.createComponent(ControllerDetailsComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

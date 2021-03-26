@@ -1,14 +1,34 @@
+import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { of } from 'rxjs';
 
 import { ErrorsComponent } from './errors.component';
+import { ErrorsService } from './errors.service';
 
-describe('BreadcrumbsComponent', () => {
+describe('ErrorsComponent', () => {
   let component: ErrorsComponent;
   let fixture: ComponentFixture<ErrorsComponent>;
 
+  let serviceStub: Partial<ErrorsService>;
+
   beforeEach(async(() => {
+    serviceStub = {
+      getErrors() {
+        return of({});
+      }
+    };
+
     TestBed.configureTestingModule({
-      declarations: [ ErrorsComponent ]
+      declarations: [ ErrorsComponent ],
+      providers: [
+        {
+          provide: ErrorsService,
+          useValue: serviceStub
+        }
+      ],
+      schemas: [
+        CUSTOM_ELEMENTS_SCHEMA
+      ]
     })
     .compileComponents();
   }));

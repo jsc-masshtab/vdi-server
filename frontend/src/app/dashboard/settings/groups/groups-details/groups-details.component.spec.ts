@@ -1,23 +1,51 @@
-/* tslint:disable:no-unused-variable */
+import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
-import { By } from '@angular/platform-browser';
-import { DebugElement } from '@angular/core';
+import { RouterTestingModule } from '@angular/router/testing';
+import { MatDialog } from '@angular/material/dialog';
+import { of } from 'rxjs';
 
-import { UserDetailsComponent } from './user-details.component';
+import { GroupsDetailsComponent } from './groups-details.component';
+import { GroupsService} from '../groups.service';
 
-describe('UserDetailsComponent', () => {
-  let component: UserDetailsComponent;
-  let fixture: ComponentFixture<UserDetailsComponent>;
+describe('GroupsDetailsComponent', () => {
+  let component: GroupsDetailsComponent;
+  let fixture: ComponentFixture<GroupsDetailsComponent>;
+
+  let serviceStub: Partial<GroupsService>;
 
   beforeEach(async(() => {
+    serviceStub = {
+      getGroup(): any {
+        return of({
+          data: {
+            group: {}
+          }
+        })
+      },
+    };
+
     TestBed.configureTestingModule({
-      declarations: [ UserDetailsComponent ]
+      imports: [ RouterTestingModule ],
+      declarations: [ GroupsDetailsComponent ],
+      providers: [
+        {
+          provide: MatDialog,
+          useValue: {}
+        },
+        {
+          provide: GroupsService,
+          useValue: serviceStub
+        }
+      ],
+      schemas: [
+        CUSTOM_ELEMENTS_SCHEMA
+      ]
     })
     .compileComponents();
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(UserDetailsComponent);
+    fixture = TestBed.createComponent(GroupsDetailsComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

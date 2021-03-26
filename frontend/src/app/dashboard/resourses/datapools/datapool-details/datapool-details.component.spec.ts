@@ -1,20 +1,49 @@
+import { CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA } from '@angular/core';
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { RouterTestingModule } from '@angular/router/testing';
 
-import { ResourcePoolDetailsComponent } from './datapool-details.component';
+import { DatapoolDetailsComponent } from './datapool-details.component';
+import { DatapoolsService } from '../all-datapools/datapools.service';
+import { of } from 'rxjs';
 
-describe('TemplatesComponent', () => {
-  let component: ResourcePoolDetailsComponent;
-  let fixture: ComponentFixture<ResourcePoolDetailsComponent>;
+describe('DatapoolDetailsComponent', () => {
+  let component: DatapoolDetailsComponent;
+  let fixture: ComponentFixture<DatapoolDetailsComponent>;
+
+  let serviceStub: Partial<DatapoolsService>;
 
   beforeEach(async(() => {
+    serviceStub = {
+      getDatapool(): any {
+        return {
+          valueChanges: of({
+            data: {
+              datapool: []
+            }
+          })
+        };
+      }
+    };
+
     TestBed.configureTestingModule({
-      declarations: [ ResourcePoolDetailsComponent ]
+      imports: [ RouterTestingModule ],
+      declarations: [ DatapoolDetailsComponent ],
+      providers: [
+        {
+          provide: DatapoolsService,
+          useValue: serviceStub
+        }
+      ],
+      schemas: [
+        CUSTOM_ELEMENTS_SCHEMA,
+        NO_ERRORS_SCHEMA
+      ]
     })
     .compileComponents();
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(ResourcePoolDetailsComponent);
+    fixture = TestBed.createComponent(DatapoolDetailsComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

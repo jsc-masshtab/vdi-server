@@ -1,14 +1,43 @@
+import { CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA } from '@angular/core';
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { RouterTestingModule } from '@angular/router/testing';
 
 import { ClusterDetailsComponent } from './cluster-details.component';
+import { ClustersService } from '../all-clusters/clusters.service';
+import { of } from 'rxjs';
 
-describe('TemplatesComponent', () => {
+describe('ClusterDetailsComponent', () => {
   let component: ClusterDetailsComponent;
   let fixture: ComponentFixture<ClusterDetailsComponent>;
 
+  let serviceStub: Partial<ClustersService>;
+
   beforeEach(async(() => {
+    serviceStub = {
+      getCluster(): any {
+        return {
+          valueChanges: of({
+            data: {
+              cluster: {}
+            }
+          })
+        };
+      }
+    };
+
     TestBed.configureTestingModule({
-      declarations: [ ClusterDetailsComponent ]
+      imports: [ RouterTestingModule ],
+      declarations: [ ClusterDetailsComponent ],
+      providers: [
+        {
+          provide: ClustersService,
+          useValue: serviceStub
+        }
+      ],
+      schemas: [
+        CUSTOM_ELEMENTS_SCHEMA,
+        NO_ERRORS_SCHEMA
+      ]
     })
     .compileComponents();
   }));

@@ -1,20 +1,49 @@
+import { CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA } from '@angular/core';
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { RouterTestingModule } from '@angular/router/testing';
+import { of } from 'rxjs';
 
-import { ClusterDetailsComponent } from './template-details.component';
+import { TemplateDetailsComponent } from './template-details.component';
+import { TemplatesService } from '../all-templates/templates.service';
 
-describe('TemplatesComponent', () => {
-  let component: ClusterDetailsComponent;
-  let fixture: ComponentFixture<ClusterDetailsComponent>;
+describe('TemplateDetailsComponent', () => {
+  let component: TemplateDetailsComponent;
+  let fixture: ComponentFixture<TemplateDetailsComponent>;
+
+  let serviceStub: Partial<TemplatesService>;
 
   beforeEach(async(() => {
+    serviceStub = {
+      getTemplate(): any {
+        return {
+          valueChanges: of({
+            data: {
+              template: []
+            }
+          })
+        };
+      }
+    };
+
     TestBed.configureTestingModule({
-      declarations: [ ClusterDetailsComponent ]
+      imports: [ RouterTestingModule ],
+      declarations: [ TemplateDetailsComponent ],
+      providers: [
+        {
+          provide: TemplatesService,
+          useValue: serviceStub
+        },
+      ],
+      schemas: [
+        CUSTOM_ELEMENTS_SCHEMA,
+        NO_ERRORS_SCHEMA
+      ]
     })
     .compileComponents();
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(ClusterDetailsComponent);
+    fixture = TestBed.createComponent(TemplateDetailsComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });
