@@ -1,5 +1,11 @@
 #!/bin/bash
 
+# check network
+if [ -z  $(hostname -I) ]; then
+    echo "Network error: Local IP address not found"
+    exit 1
+fi
+
 # install ansible
 apt-get install -y /media/cdrom/repo/pool/main/a/ansible/ansible_*.deb
 
