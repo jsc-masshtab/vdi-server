@@ -1,25 +1,55 @@
-// import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA } from '@angular/core';
+import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { of } from 'rxjs';
 
-// import { RemoveControllerComponent } from './remove-controller.component';
+import { AddVMStaticPoolComponent } from './add-vms.component';
+import { PoolDetailsService } from '../pool-details.service';
 
-// describe('AddControllerComponent', () => {
-//   let component: AddControllerComponent;
-//   let fixture: ComponentFixture<AddControllerComponent>;
+describe('AddVMStaticPoolComponent', () => {
+  let component: AddVMStaticPoolComponent;
+  let fixture: ComponentFixture<AddVMStaticPoolComponent>;
 
-//   beforeEach(async(() => {
-//     TestBed.configureTestingModule({
-//       declarations: [ RemoveControllerComponent ]
-//     })
-//     .compileComponents();
-//   }));
+  let poolServiceStub: Partial<PoolDetailsService>;
 
-//   beforeEach(() => {
-//     fixture = TestBed.createComponent(RemoveControllerComponent);
-//     component = fixture.componentInstance;
-//     fixture.detectChanges();
-//   });
+  beforeEach(async(() => {
+    poolServiceStub = {
+      getAllVms(): any {
+        return of([]);
+      }
+    };
 
-//   it('should create', () => {
-//     expect(component).toBeTruthy();
-//   });
-// });
+    TestBed.configureTestingModule({
+      declarations: [ AddVMStaticPoolComponent ],
+      providers: [
+        {
+          provide: PoolDetailsService,
+          useValue: poolServiceStub
+        },
+        {
+          provide: MatDialogRef,
+          useValue: {}
+        },
+        {
+          provide: MAT_DIALOG_DATA,
+          useValue: {}
+        }
+      ],
+      schemas: [
+        CUSTOM_ELEMENTS_SCHEMA,
+        NO_ERRORS_SCHEMA
+      ]
+    })
+    .compileComponents();
+  }));
+
+  beforeEach(() => {
+    fixture = TestBed.createComponent(AddVMStaticPoolComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+  });
+
+  it('should create', () => {
+    expect(component).toBeTruthy();
+  });
+});

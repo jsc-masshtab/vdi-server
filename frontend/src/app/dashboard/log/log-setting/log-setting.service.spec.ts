@@ -1,12 +1,19 @@
-/* tslint:disable:no-unused-variable */
-
+import { Apollo } from 'apollo-angular';
 import { TestBed, inject } from '@angular/core/testing';
+
 import { LogSettingService } from './log-setting.service';
 
 describe('Service: LogSetting', () => {
+  let serviceStub: Partial<Apollo>;
+
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [LogSettingService]
+      providers: [
+        {
+          provide: Apollo,
+          useValue: serviceStub
+        }
+      ]
     });
   });
 

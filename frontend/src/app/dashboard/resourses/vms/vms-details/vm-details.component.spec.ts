@@ -1,20 +1,45 @@
+import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { RouterTestingModule } from '@angular/router/testing';
+import { of } from 'rxjs';
 
-import { ClusterDetailsComponent } from './vm-details.component';
+import { VmDetailsComponent } from './vm-details.component';
+import { VmsService } from '../all-vms/vms.service';
 
-describe('TemplatesComponent', () => {
-  let component: ClusterDetailsComponent;
-  let fixture: ComponentFixture<ClusterDetailsComponent>;
+describe('VmDetailsComponent', () => {
+  let component: VmDetailsComponent;
+  let fixture: ComponentFixture<VmDetailsComponent>;
+
+  let serviceStub: Partial<VmsService>;
 
   beforeEach(async(() => {
+    serviceStub = {
+      getVm(): any {
+        return {
+          valueChanges: of({
+            data: {
+              vm: {}
+            }
+          })
+        };
+      }
+    };
     TestBed.configureTestingModule({
-      declarations: [ ClusterDetailsComponent ]
+      imports: [ RouterTestingModule ],
+      declarations: [ VmDetailsComponent ],
+      providers: [
+        {
+          provide: VmsService,
+          useValue: serviceStub
+        },
+      ],
+      schemas: [ NO_ERRORS_SCHEMA ]
     })
     .compileComponents();
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(ClusterDetailsComponent);
+    fixture = TestBed.createComponent(VmDetailsComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

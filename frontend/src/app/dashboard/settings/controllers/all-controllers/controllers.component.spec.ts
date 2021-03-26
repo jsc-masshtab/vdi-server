@@ -1,14 +1,51 @@
+import { CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA } from '@angular/core';
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { RouterTestingModule } from '@angular/router/testing';
+import { MatDialog } from '@angular/material/dialog';
+import { of } from 'rxjs';
 
 import { ControllersComponent } from './controllers.component';
+import { ControllersService } from './controllers.service';
 
-describe('TemplatesComponent', () => {
+describe('ControllersComponent', () => {
   let component: ControllersComponent;
   let fixture: ComponentFixture<ControllersComponent>;
 
+  let serviceStub: Partial<ControllersService>;
+
   beforeEach(async(() => {
+    serviceStub = {
+      getAllControllers(): any {
+        return {
+          valueChanges: of({
+            data: {
+              controllers: []
+            }
+          })
+        };
+      },
+      paramsForGetControllers: {
+        spin: false
+      }
+    };
+
     TestBed.configureTestingModule({
-      declarations: [ ControllersComponent ]
+      imports: [ RouterTestingModule ],
+      declarations: [ ControllersComponent ],
+      providers: [
+        {
+          provide: ControllersService,
+          useValue: serviceStub
+        },
+        {
+          provide: MatDialog,
+          useValue: {}
+        },
+      ],
+      schemas: [
+        CUSTOM_ELEMENTS_SCHEMA,
+        NO_ERRORS_SCHEMA
+      ]
     })
     .compileComponents();
   }));

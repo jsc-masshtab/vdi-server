@@ -1,14 +1,60 @@
+import { CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA } from '@angular/core';
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { RouterTestingModule } from '@angular/router/testing';
+import { MatDialog } from '@angular/material/dialog';
+import { of } from 'rxjs';
 
 import { EventsComponent } from './events.component';
+import { EventsService } from './events.service';
 
-describe('TemplatesComponent', () => {
+describe('EventsComponent', () => {
   let component: EventsComponent;
   let fixture: ComponentFixture<EventsComponent>;
 
+  let serviceStub: Partial<EventsService>;
+  let dialogStub: Partial<MatDialog>;
+
   beforeEach(async(() => {
+    serviceStub = {
+      getAllEvents(): any {
+        return {
+          valueChanges: of({
+            data: {
+              events: [],
+              entity_types: [],
+              count: 1
+            }
+          })
+        }
+      },
+      getAllUsers(): any {
+        return {
+          valueChanges: of({
+            data: {
+              users: []
+            }
+          })
+        }
+      }
+    };
+
     TestBed.configureTestingModule({
-      declarations: [EventsComponent ]
+      imports: [ RouterTestingModule ],
+      declarations: [ EventsComponent ],
+      providers: [
+        {
+          provide: MatDialog,
+          useValue: dialogStub
+        },
+        {
+          provide: EventsService,
+          useValue: serviceStub
+        }
+      ],
+      schemas: [
+        CUSTOM_ELEMENTS_SCHEMA,
+        NO_ERRORS_SCHEMA
+      ]
     })
     .compileComponents();
   }));

@@ -1,6 +1,36 @@
+import { Pipe, PipeTransform, CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA } from '@angular/core';
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { TableComponentComponent } from './table-component.component';
+
+// Mocked pipes
+@Pipe({ name: 'statusIcon' })
+class StatusIconPipe implements PipeTransform {
+  transform(value: string): string {
+    return value;
+  }
+}
+
+@Pipe({ name: 'status' })
+class StatusPipe implements PipeTransform {
+  transform(value: string): string {
+      return value;
+  }
+}
+
+@Pipe({ name: 'assignmentType' })
+class AssignmentTypePipe implements PipeTransform {
+  transform(value: string): string {
+      return value;
+  } 
+}
+
+@Pipe({ name: 'rename' })
+class TranslatePipe implements PipeTransform {
+  transform(value: string): string {
+      return value;
+  }
+}
 
 describe('TableComponentComponent', () => {
   let component: TableComponentComponent;
@@ -8,7 +38,17 @@ describe('TableComponentComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ TableComponentComponent ]
+      declarations: [
+        TableComponentComponent,
+        StatusIconPipe,
+        StatusPipe,
+        AssignmentTypePipe,
+        TranslatePipe
+      ],
+      schemas: [
+        CUSTOM_ELEMENTS_SCHEMA,
+        NO_ERRORS_SCHEMA
+      ]
     })
     .compileComponents();
   }));

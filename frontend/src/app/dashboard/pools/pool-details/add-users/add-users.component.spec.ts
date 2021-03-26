@@ -1,20 +1,47 @@
+import { CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA } from '@angular/core';
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { of } from 'rxjs';
 
-import { RemoveControllerComponent } from './remove-controller.component';
+import { AddUsersPoolComponent } from './add-users.component';
+import { PoolDetailsService } from '../pool-details.service';
 
-describe('AddControllerComponent', () => {
-  let component: AddControllerComponent;
-  let fixture: ComponentFixture<AddControllerComponent>;
+describe('AddUsersPoolComponent', () => {
+  let component: AddUsersPoolComponent;
+  let fixture: ComponentFixture<AddUsersPoolComponent>;
+
+  let poolServiceStub: Partial<PoolDetailsService>;
 
   beforeEach(async(() => {
+    poolServiceStub = {
+      getAllUsersNoEntitleToPool(): any {
+        return of([]);
+      }
+    };
+
     TestBed.configureTestingModule({
-      declarations: [ RemoveControllerComponent ]
+      declarations: [ AddUsersPoolComponent ],
+      providers: [
+        {
+          provide: PoolDetailsService,
+          useValue: poolServiceStub
+        },
+        {
+          provide: MatDialogRef,
+          useValue: {}
+        },
+        {
+          provide: MAT_DIALOG_DATA,
+          useValue: {}
+        }
+      ],
+      schemas: [ CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA ]
     })
     .compileComponents();
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(RemoveControllerComponent);
+    fixture = TestBed.createComponent(AddUsersPoolComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

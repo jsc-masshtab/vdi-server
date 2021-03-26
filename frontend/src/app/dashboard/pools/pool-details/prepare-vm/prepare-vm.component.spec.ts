@@ -1,25 +1,48 @@
-// import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA } from '@angular/core';
+import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 
-// import { RemoveControllerComponent } from './remove-controller.component';
+import { PrepareVmPoolComponent } from './prepare-vm.component';
+import { PoolDetailsService } from '../pool-details.service';
 
-// describe('AddControllerComponent', () => {
-//   let component: AddControllerComponent;
-//   let fixture: ComponentFixture<AddControllerComponent>;
+describe('PrepareVmPoolComponent', () => {
+  let component: PrepareVmPoolComponent;
+  let fixture: ComponentFixture<PrepareVmPoolComponent>;
 
-//   beforeEach(async(() => {
-//     TestBed.configureTestingModule({
-//       declarations: [ RemoveControllerComponent ]
-//     })
-//     .compileComponents();
-//   }));
+  let poolServiceStub: Partial<PoolDetailsService>;
 
-//   beforeEach(() => {
-//     fixture = TestBed.createComponent(RemoveControllerComponent);
-//     component = fixture.componentInstance;
-//     fixture.detectChanges();
-//   });
+  beforeEach(async(() => {
+    TestBed.configureTestingModule({
+      declarations: [ PrepareVmPoolComponent ],
+      providers: [
+        {
+          provide: PoolDetailsService,
+          useValue: poolServiceStub
+        },
+        {
+          provide: MatDialogRef,
+          useValue: {}
+        },
+        {
+          provide: MAT_DIALOG_DATA,
+          useValue: {}
+        }
+      ],
+      schemas: [
+        CUSTOM_ELEMENTS_SCHEMA,
+        NO_ERRORS_SCHEMA
+      ]
+    })
+    .compileComponents();
+  }));
 
-//   it('should create', () => {
-//     expect(component).toBeTruthy();
-//   });
-// });
+  beforeEach(() => {
+    fixture = TestBed.createComponent(PrepareVmPoolComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+  });
+
+  it('should create', () => {
+    expect(component).toBeTruthy();
+  });
+});

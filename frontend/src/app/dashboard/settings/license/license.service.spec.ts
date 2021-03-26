@@ -1,12 +1,17 @@
-/* tslint:disable:no-unused-variable */
+import { TestBed, inject } from '@angular/core/testing';
+import { RouterTestingModule } from '@angular/router/testing';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
 
-import { TestBed, async, inject } from '@angular/core/testing';
 import { LicenseService } from './license.service';
 
 describe('Service: License', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [LicenseService]
+      imports: [
+        HttpClientTestingModule,
+        RouterTestingModule
+      ],
+      providers: [ LicenseService ]
     });
   });
 

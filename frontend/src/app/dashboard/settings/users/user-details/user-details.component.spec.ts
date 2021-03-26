@@ -1,17 +1,46 @@
-/* tslint:disable:no-unused-variable */
+import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
-import { By } from '@angular/platform-browser';
-import { DebugElement } from '@angular/core';
+import { RouterTestingModule } from '@angular/router/testing';
+import { MatDialog } from '@angular/material/dialog';
+import { of } from 'rxjs';
 
 import { UserDetailsComponent } from './user-details.component';
+import { UsersService } from '../users.service';
 
 describe('UserDetailsComponent', () => {
   let component: UserDetailsComponent;
   let fixture: ComponentFixture<UserDetailsComponent>;
 
+  let dialogStub: Partial<MatDialog>;
+  let serviceStub: Partial<UsersService>;
+
   beforeEach(async(() => {
+    serviceStub = {
+      getUser(): any {
+        return {
+          valueChanges: of({
+            data: {
+              user: ''
+            }
+          })
+        };
+      }
+    };
+  
     TestBed.configureTestingModule({
-      declarations: [ UserDetailsComponent ]
+      imports: [RouterTestingModule],
+      declarations: [ UserDetailsComponent ],
+      providers: [
+        {
+          provide: MatDialog,
+          useValue: dialogStub
+        },
+        {
+          provide: UsersService,
+          useValue: serviceStub
+        }
+      ],
+      schemas: [ CUSTOM_ELEMENTS_SCHEMA ]
     })
     .compileComponents();
   }));
