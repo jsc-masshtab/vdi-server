@@ -1538,7 +1538,9 @@ class AutomatedPool(db.Model):
             raise AssertionError(
                 _("There is no client for pool {}.").format(pool_verbose_name)
             )
-        # Подбор имени выполняет VeiL ECP
+        # Подбор имени выполняет VeiL ECP, но, если ВМ 1 - не будет присвоен индекс.
+        if count == 1:
+            verbose_name = "{name}-1".format(name=verbose_name)
         params = {
             "verbose_name": verbose_name,
             "domain_id": str(self.template_id),
