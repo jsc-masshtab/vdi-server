@@ -1,6 +1,10 @@
 # -*- coding: utf-8 -*-
 import asyncio
 
+from asyncpg.exceptions._base import PostgresError
+
+import redis
+
 from tornado.websocket import WebSocketClosedError
 from tornado.websocket import websocket_connect
 
@@ -109,14 +113,14 @@ class ResourcesMonitor:
             while self._running_flag:
                 msg = await self._ws_connection.read_message()
                 if msg is None:  # according to doc it means that connection closed
-                    await system_logger.debug(
+                    await system_logger.warning(
                         "{} Probably connection is closed by server.".format(
                             __class__.__name__
                         )
                     )  # noqa
                     break
                 elif "token error" in msg:
-                    await system_logger.debug(
+                    await system_logger.warning(
                         "{} token error. Closing connection.".format(__class__.__name__)
                     )  # noqa
                     # Если токен эррор, то закрываем соединение и и переходим к попыткам коннекта (начало первого while)
@@ -128,7 +132,11 @@ class ResourcesMonitor:
             await asyncio.sleep(self.RECONNECT_TIMEOUT)
 
     async def _connect(self):
-        controller = await Controller.get(self._controller_id)
+        try:
+            controller = await Controller.get(self._controller_id)
+        except PostgresError as ex:
+            await system_logger.error(str(ex))
+            return False
 
         # check if controller active
         if not controller or not controller.active:
@@ -138,7 +146,7 @@ class ResourcesMonitor:
         try:
             token = controller.token.split()[1]
         except IndexError:
-            await system_logger.debug("{} Cant get token for controller.").format(
+            await system_logger.warning("{} Cant get token for controller.").format(
                 __class__.__name__
             )
             return False
@@ -152,11 +160,10 @@ class ResourcesMonitor:
                 ping_interval=WS_PING_INTERVAL,
                 ping_timeout=WS_PING_TIMEOUT,
             )
-        except Exception:  # noqa
+        except Exception as ex:  # noqa
             # Причин для исключения может быть множество включая OS specific
-            msg = _("Resource monitor can`t connect to controller.")
-            description = _("Can`t connect to {}.").format(controller.address)
-            await system_logger.error(message=msg, description=description)
+            msg = _("Resource monitor can`t connect to controller {}.").format(controller.address)
+            await system_logger.error(message=msg, description=str(ex))
             return False
 
         # subscribe to events on controller
@@ -165,15 +172,21 @@ class ResourcesMonitor:
                 await self._ws_connection.write_message(
                     SubscriptionCmd.add + " " + format(subscription_name)
                 )
-        except WebSocketClosedError as ws_error:
-            await system_logger.error(ws_error)
+        except WebSocketClosedError:
+            return False
+        except IOError as ex:
+            await self._close_connection()
+            await system_logger.error(str(ex))
             return False
 
         return True
 
     async def _on_message_received(self, message):
         # await system_logger.debug('_on_message_received: message ' + message)
-        REDIS_CLIENT.publish(WS_MONITOR_CHANNEL_OUT, message)
+        try:
+            REDIS_CLIENT.publish(WS_MONITOR_CHANNEL_OUT, message)
+        except redis.RedisError as ex:
+            await system_logger.error(message="Resource monitor ws. Redis error.", description=str(ex))
 
     async def _close_connection(self):
         if self._ws_connection:

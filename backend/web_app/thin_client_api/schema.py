@@ -15,18 +15,23 @@ from common.models.active_tk_connection import (
     TkConnectionStatistics,
 )
 from common.models.auth import User
+from common.models.pool import Pool
 from common.models.vm import Vm
 from common.settings import REDIS_TEXT_MSG_CHANNEL, REDIS_THIN_CLIENT_CMD_CHANNEL
 from common.subscription_sources import WsMessageDirection, WsMessageType
 from common.utils import extract_ordering_data
 from common.veil.veil_decorators import administrator_required
+from common.veil.veil_errors import SilentError
 from common.veil.veil_redis import REDIS_CLIENT, ThinClientCmd
 
 _ = lang_init()
 
+ConnectionTypesGraphene = graphene.Enum.from_enum(Pool.PoolConnectionTypes)
+
 
 class ThinClientType(graphene.ObjectType):
     conn_id = graphene.UUID()
+    user_id = graphene.UUID()
     user_name = graphene.String()
     veil_connect_version = graphene.String()
     vm_name = graphene.String()
@@ -39,6 +44,9 @@ class ThinClientType(graphene.ObjectType):
     )  # время когда последний раз получили что-то по ws от тк
     last_interaction = graphene.DateTime()  # время последнего взаимоействия юзера с гуи
     is_afk = graphene.Boolean()  # AFK ли пользователь
+
+    connection_type = ConnectionTypesGraphene()
+    is_connection_secure = graphene.Boolean()
 
     async def resolve_is_afk(self, _info):
 
@@ -54,9 +62,9 @@ class ThinClientType(graphene.ObjectType):
 
     @staticmethod
     async def create_from_db_data(tk_db_data):
-
         thin_client_type = ThinClientType()
-        thin_client_type.conn_id = tk_db_data.id
+        thin_client_type.conn_id = tk_db_data.conn_id
+        thin_client_type.user_id = tk_db_data.user_id
         thin_client_type.user_name = tk_db_data.username
         thin_client_type.veil_connect_version = tk_db_data.veil_connect_version
         thin_client_type.vm_name = tk_db_data.verbose_name
@@ -66,6 +74,8 @@ class ThinClientType(graphene.ObjectType):
         thin_client_type.disconnected = tk_db_data.disconnected
         thin_client_type.data_received = tk_db_data.data_received
         thin_client_type.last_interaction = tk_db_data.last_interaction
+        thin_client_type.connection_type = tk_db_data.connection_type
+        thin_client_type.is_connection_secure = tk_db_data.is_connection_secure
 
         return thin_client_type
 
@@ -90,7 +100,9 @@ class ThinClientConnStatType(graphene.ObjectType):
 
 class ThinClientQuery(graphene.ObjectType):
 
-    thin_clients_count = graphene.Int(default_value=0)
+    thin_clients_count = graphene.Int(get_disconnected=graphene.Boolean(),
+                                      user_id=graphene.UUID(),
+                                      default_value=0)
 
     thin_clients = graphene.List(
         ThinClientType,
@@ -112,7 +124,9 @@ class ThinClientQuery(graphene.ObjectType):
 
     @administrator_required
     async def resolve_thin_clients_count(self, _info, **kwargs):
-        conn_count = await ActiveTkConnection.get_active_thin_clients_count()
+
+        conn_count = await ActiveTkConnection.get_thin_clients_conn_count(
+            kwargs.get("get_disconnected"), kwargs.get("user_id"))
         return conn_count
 
     @administrator_required
@@ -121,7 +135,7 @@ class ThinClientQuery(graphene.ObjectType):
     ):
         query = db.select(
             [
-                ActiveTkConnection.id,
+                ActiveTkConnection.id.label("conn_id"),
                 ActiveTkConnection.veil_connect_version,
                 ActiveTkConnection.tk_ip,
                 ActiveTkConnection.tk_os,
@@ -129,6 +143,9 @@ class ThinClientQuery(graphene.ObjectType):
                 ActiveTkConnection.disconnected,
                 ActiveTkConnection.data_received,
                 ActiveTkConnection.last_interaction,
+                ActiveTkConnection.connection_type,
+                ActiveTkConnection.is_connection_secure,
+                User.id.label("user_id"),
                 User.username,
                 Vm.verbose_name,
             ]
@@ -158,13 +175,13 @@ class ThinClientQuery(graphene.ObjectType):
             query = ActiveTkConnection.build_ordering(query, ordering)
 
         # filter.
-        filters = ThinClientQuery.build_thin_clients_filters(get_disconnected, user_id)
+        filters = ActiveTkConnection.build_thin_clients_filters(get_disconnected, user_id)
         if filters:
             query = query.where(and_(*filters))
 
         # request to db
         tk_db_data_container = await query.limit(limit).offset(offset).gino.all()
-
+        # print('tk_db_data_container ', tk_db_data_container, flush=True)
         # conversion
         graphene_types = [
             ThinClientType.create_from_db_data(tk_db_data)
@@ -208,17 +225,6 @@ class ThinClientQuery(graphene.ObjectType):
         return graphene_types
 
     @staticmethod
-    def build_thin_clients_filters(get_disconnected, user_id):
-        filters = []
-        # Если get_disconnected == false, то берем только активные соединения (disconnected == None)
-        if not get_disconnected:
-            filters.append(ActiveTkConnection.disconnected == None)  # noqa
-        if user_id:
-            filters.append(ActiveTkConnection.user_id == user_id)
-
-        return filters
-
-    @staticmethod
     def build_thin_clients_stats_filters(conn_id, user_id):
         """Получть статистику либо по определенному соединению, либо по соеднинениям определенного пользователя."""
         filters = []
@@ -256,25 +262,32 @@ class SendMessageToThinClientMutation(graphene.Mutation):
     """
 
     class Arguments:
-        recipient_id = graphene.UUID(
-            required=True, default_value=None, description="id получателя"
-        )
+        recipient_id = graphene.UUID(default_value=None, description="id получателя")
         message = graphene.String(required=True, description="Текстовое сообщение")
 
     ok = graphene.Boolean()
 
     @administrator_required
-    async def mutate(self, _info, recipient_id, message, creator, **kwargs):
+    async def mutate(self, _info, message, creator, **kwargs):
+
         shorten_msg = textwrap.shorten(message, width=2048)
+
         message_data_dict = dict(
             msg_type=WsMessageType.TEXT_MSG.value,
-            recipient_id=str(recipient_id),
             sender_name=creator,  # шлем имя так как юзер ТК не может иметь список админов,
             # поэтому id был бы ему бесполезен
             message=shorten_msg,
             direction=WsMessageDirection.ADMIN_TO_USER.value,
         )
-        # print('message_data_dict ', message_data_dict, flush=True)
+
+        # Добавляем данные о получателе если есть
+        recipient_id = kwargs.get("recipient_id")
+        if recipient_id:
+            user = await User.get(recipient_id)
+            if not user:
+                raise SilentError(_("User {} does not exist.").format(recipient_id))
+            message_data_dict.update(recipient_id=str(recipient_id))
+
         REDIS_CLIENT.publish(REDIS_TEXT_MSG_CHANNEL, json.dumps(message_data_dict))
 
         return SendMessageToThinClientMutation(ok=True)

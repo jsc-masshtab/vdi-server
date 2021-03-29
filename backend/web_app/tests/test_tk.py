@@ -2,6 +2,7 @@
 import pytest
 import json
 import asyncio
+from common.database import db
 
 import tornado
 from tornado.testing import gen_test
@@ -44,6 +45,9 @@ class TestTk(VdiHttpTestCase):
     @gen_test
     async def test_ws_connect_update_disconnect_ok(self):
         """Check ws communication"""
+        # clear all
+        await db.status(db.text('TRUNCATE TABLE active_tk_connection CASCADE;'))
+
         # login
         (user_name, access_token) = await self.do_login()
 

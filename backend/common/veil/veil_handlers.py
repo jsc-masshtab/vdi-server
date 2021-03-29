@@ -117,7 +117,7 @@ class BaseHandler(RequestHandler, ABC):
         except Exception:  # noqa
             pass
         finally:
-            shorten_msg = textwrap.shorten(message, width=80)
+            shorten_msg = textwrap.shorten(message, width=100)
             response = {"errors": [{"message": shorten_msg}]}
             self.write(response)
 
