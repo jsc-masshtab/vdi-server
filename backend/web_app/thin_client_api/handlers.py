@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import asyncio
 import json
+import textwrap
 from abc import ABC
 from json.decoder import JSONDecodeError
 from typing import Any
@@ -380,11 +381,14 @@ class SendTextMsgHandler(BaseHandler, ABC):
             return await self.log_finish(response)
 
         try:
+            shorten_msg = textwrap.shorten(text_message, width=2048)
+
             msg_data_dict = dict(
-                message=text_message,
+                message=shorten_msg,
                 msg_type=WsMessageType.TEXT_MSG.value,
                 direction=WsMessageDirection.USER_TO_ADMIN.value,
                 sender_id=str(user.id),
+                sender_name=user.username,
                 resource=USERS_SUBSCRIPTION,
             )
 
@@ -457,29 +461,27 @@ class ThinClientWsHandler(BaseWsHandler):
         try:
             recv_data_dict = json.loads(message)
             msg_type = recv_data_dict["msg_type"]
-        except (KeyError, JSONDecodeError) as ex:
+
+            if msg_type == WsMessageType.UPDATED.value:
+                # Сообщение об апдэйте (вм, afk)
+                event_type = recv_data_dict["event"]
+                tk_conn = await ActiveTkConnection.get(self.conn_id)
+                if tk_conn:
+                    if event_type == "vm_changed":  # юзер подключился/отключился от машины
+                        conn_type = recv_data_dict.get("connection_type")
+                        is_conn_secure = recv_data_dict.get("is_connection_secure")
+                        await tk_conn.update_vm_data(recv_data_dict["vm_id"], conn_type, is_conn_secure)
+
+                    elif event_type == "user_gui":  # юзер нажал кнопку/кликнул
+                        await tk_conn.update_last_interaction()
+
+        except (KeyError, ValueError, TypeError, JSONDecodeError) as ex:
             response = {
                 "msg_type": WsMessageType.CONTROL.value,
                 "error": True,
                 "msg": "Wrong msg format " + str(ex),
             }
             await self._write_msg(json.dumps(response))
-            return
-
-        if msg_type == WsMessageType.UPDATED.value:
-            # Сообщение об апдэйте (вм, afk)
-            try:
-                event_type = recv_data_dict["event"]
-                tk_conn = await ActiveTkConnection.get(self.conn_id)
-                if tk_conn:
-                    if (
-                        event_type == "vm_changed"
-                    ):  # юзер подключился/отключился от машины
-                        await tk_conn.update_vm_id(recv_data_dict["vm_id"])
-                    elif event_type == "user_gui":  # юзер нажал кнопку/кликнул
-                        await tk_conn.update_last_interaction()
-            except KeyError:
-                pass
 
     def on_close(self):
         # print("!!!WebSocket closed", flush=True)

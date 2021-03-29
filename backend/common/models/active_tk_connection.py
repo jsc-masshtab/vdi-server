@@ -1,11 +1,15 @@
 # -*- coding: utf-8 -*-
 import uuid
 
+from sqlalchemy import (
+    Enum as AlchemyEnum
+)
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.sql import func
+from sqlalchemy.sql import and_, func
 
 from common.database import db
 from common.models.auth import User
+from common.models.pool import Pool
 from common.veil.veil_gino import AbstractSortableStatusModel
 
 
@@ -21,6 +25,7 @@ class ActiveTkConnection(db.Model, AbstractSortableStatusModel):
     vm_id = db.Column(UUID())
     tk_ip = db.Column(db.Unicode(length=128))
     tk_os = db.Column(db.Unicode(length=128))
+
     connected = db.Column(
         db.DateTime(timezone=True), nullable=False, server_default=func.now()
     )
@@ -33,6 +38,9 @@ class ActiveTkConnection(db.Model, AbstractSortableStatusModel):
     disconnected = db.Column(
         db.DateTime(timezone=True)
     )  # Если это поле None, значит соединение активно
+
+    connection_type = db.Column(AlchemyEnum(Pool.PoolConnectionTypes), nullable=True)  # тип подключения к ВМ
+    is_connection_secure = db.Column(db.Boolean(), default=False, nullable=False)  # используется ли TLS
 
     @classmethod
     async def soft_create(cls, conn_id, is_conn_init_by_user, **kwargs):
@@ -57,13 +65,15 @@ class ActiveTkConnection(db.Model, AbstractSortableStatusModel):
         return model
 
     @staticmethod
-    async def get_active_thin_clients_count():
-        conn_count = (
-            await db.select([db.func.count()])
-            .select_from(ActiveTkConnection)
-            .where(ActiveTkConnection.disconnected == None)  # noqa: E711
-            .gino.scalar()
-        )  # noqa
+    async def get_thin_clients_conn_count(get_disconnected, user_id):
+
+        query = db.select([db.func.count()]).select_from(ActiveTkConnection)
+
+        filters = ActiveTkConnection.build_thin_clients_filters(get_disconnected, user_id)
+        if filters:
+            query = query.where(and_(*filters))
+
+        conn_count = await query.gino.scalar()
         return conn_count
 
     @staticmethod
@@ -75,7 +85,18 @@ class ActiveTkConnection(db.Model, AbstractSortableStatusModel):
         )
         return vm_id
 
-    async def update_vm_id(self, vm_id):
+    @staticmethod
+    def build_thin_clients_filters(get_disconnected, user_id):
+        filters = []
+        # Если get_disconnected == false, то берем только активные соединения (disconnected == None)
+        if not get_disconnected:
+            filters.append(ActiveTkConnection.disconnected == None)  # noqa
+        if user_id:
+            filters.append(ActiveTkConnection.user_id == user_id)
+
+        return filters
+
+    async def update_vm_data(self, vm_id, conn_type, is_conn_secure):
 
         user = await User.get(self.user_id)
 
@@ -93,7 +114,9 @@ class ActiveTkConnection(db.Model, AbstractSortableStatusModel):
             )
         await TkConnectionStatistics.create_tk_event(conn_id=self.id, message=message)
 
-        await self.update(vm_id=vm_id, data_received=func.now()).apply()
+        is_conn_secure = is_conn_secure if (is_conn_secure is not None) else False
+        await self.update(vm_id=vm_id, connection_type=conn_type, is_connection_secure=is_conn_secure,
+                          data_received=func.now()).apply()
 
     async def update_last_interaction(self):
         await self.update(last_interaction=func.now(), data_received=func.now()).apply()
