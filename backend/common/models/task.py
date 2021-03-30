@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import json
 import textwrap
 import uuid
 from enum import Enum
@@ -11,11 +10,9 @@ from sqlalchemy.sql import func
 from common.database import db
 from common.languages import lang_init
 from common.models.auth import Entity
-from common.settings import INTERNAL_EVENTS_CHANNEL
-from common.subscription_sources import VDI_TASKS_SUBSCRIPTION, WsMessageType
-from common.utils import gino_model_to_json_serializable_dict
+from common.subscription_sources import VDI_TASKS_SUBSCRIPTION
 from common.veil.veil_gino import AbstractSortableStatusModel, EntityType
-from common.veil.veil_redis import REDIS_CLIENT, redis_error_handle
+from common.veil.veil_redis import publish_data_in_internal_channel
 
 _ = lang_init()
 
@@ -69,16 +66,6 @@ class Task(db.Model, AbstractSortableStatusModel):
             else "00000000"
         )
         return str(duration)[:-7]
-
-    @redis_error_handle
-    def publish_data_in_internal_channel(self, event_type: str):
-        msg_dict = dict(
-            resource=VDI_TASKS_SUBSCRIPTION,
-            msg_type=WsMessageType.DATA.value,
-            event=event_type,
-        )
-        msg_dict.update(gino_model_to_json_serializable_dict(self))
-        REDIS_CLIENT.publish(INTERNAL_EVENTS_CHANNEL, json.dumps(msg_dict))
 
     async def form_user_friendly_text(self):
 
@@ -134,7 +121,7 @@ class Task(db.Model, AbstractSortableStatusModel):
         await self.update(message=shorten_msg).apply()
 
         # publish task event
-        self.publish_data_in_internal_channel("UPDATED")
+        await publish_data_in_internal_channel(VDI_TASKS_SUBSCRIPTION, "UPDATED", self)
 
     async def set_progress(self, progress: int):
 
@@ -144,7 +131,7 @@ class Task(db.Model, AbstractSortableStatusModel):
         await self.update(progress=progress).apply()
 
         # publish task event
-        self.publish_data_in_internal_channel("UPDATED")
+        await publish_data_in_internal_channel(VDI_TASKS_SUBSCRIPTION, "UPDATED", self)
 
     async def get_associated_entity_name(self):
         # Запоминаем имя так как его не будет после удаления пула, например.
@@ -169,6 +156,14 @@ class Task(db.Model, AbstractSortableStatusModel):
                     self._associated_entity_name = vm.verbose_name if vm else ""
 
         return self._associated_entity_name
+
+    @classmethod
+    async def soft_create(cls, entity_id, task_type, **kwargs):
+        task = await Task.create(entity_id=entity_id, task_type=task_type)
+
+        await publish_data_in_internal_channel(VDI_TASKS_SUBSCRIPTION, "CREATED", task)
+
+        return task
 
     @staticmethod
     async def set_progress_to_task_associated_with_entity(entity_id, progress):

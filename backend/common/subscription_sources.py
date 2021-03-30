@@ -2,6 +2,7 @@
 from enum import Enum
 
 
+THIN_CLIENTS_SUBSCRIPTION = "/thin_clients/"
 USERS_SUBSCRIPTION = "/users/"
 POOLS_SUBSCRIPTION = "/pools/"
 # subscription to receive events
@@ -22,6 +23,7 @@ CONTROLLER_SUBSCRIPTIONS_LIST = [
 # subscriptions to data which VDI front can receive from VDI back
 VDI_FRONT_ALLOWED_SUBSCRIPTIONS_LIST = [
     *CONTROLLER_SUBSCRIPTIONS_LIST,
+    THIN_CLIENTS_SUBSCRIPTION,
     USERS_SUBSCRIPTION,
     POOLS_SUBSCRIPTION,
     EVENTS_SUBSCRIPTION,

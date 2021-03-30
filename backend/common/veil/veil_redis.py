@@ -11,7 +11,8 @@ import redis
 
 import common.settings as settings
 from common.languages import lang_init
-from common.subscription_sources import VDI_TASKS_SUBSCRIPTION
+from common.subscription_sources import VDI_TASKS_SUBSCRIPTION, WsMessageType
+from common.utils import gino_model_to_json_serializable_dict
 
 _ = lang_init()
 
@@ -229,7 +230,7 @@ async def request_to_execute_pool_task(entity_id, task_type, **additional_data):
     """Send request to task worker to execute a task. Return task id."""
     from common.models.task import Task
 
-    task = await Task.create(entity_id=entity_id, task_type=task_type)
+    task = await Task.soft_create(entity_id=entity_id, task_type=task_type)
     task_id = str(task.id)
     data = {"task_id": task_id, "task_type": task_type.name, **additional_data}
     REDIS_CLIENT.rpush(settings.POOL_TASK_QUEUE, json.dumps(data))
@@ -321,3 +322,26 @@ def send_cmd_to_ws_monitor(controller_id, ws_monitor_cmd: WsMonitorCmd):
     """Send command to ws monitor."""
     cmd_dict = {"controller_id": str(controller_id), "command": ws_monitor_cmd.name}
     REDIS_CLIENT.rpush(settings.WS_MONITOR_CMD_QUEUE, json.dumps(cmd_dict))
+
+
+def publish_to_redis(channel, message):
+    try:
+        REDIS_CLIENT.publish(channel, message)
+    except redis.RedisError as error:
+        from common.log.journal import system_logger
+        system_logger._debug("Redis error ", str(error))
+
+
+async def publish_data_in_internal_channel(resource_type: str, event_type: str,
+                                           model, additional_model_to_json_data=None):
+    """Publish db model data in redis channel INTERNAL_EVENTS_CHANNEL."""
+    msg_dict = dict(
+        resource=resource_type,
+        msg_type=WsMessageType.DATA.value,
+        event=event_type,
+    )
+
+    msg_dict.update(gino_model_to_json_serializable_dict(model))
+    if additional_model_to_json_data:
+        msg_dict.update(additional_model_to_json_data)
+    publish_to_redis(settings.INTERNAL_EVENTS_CHANNEL, json.dumps(msg_dict))

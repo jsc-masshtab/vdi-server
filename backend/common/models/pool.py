@@ -54,9 +54,10 @@ from common.veil.veil_errors import (
 )
 from common.veil.veil_gino import EntityType, Status, VeilModel
 from common.veil.veil_graphene import VmState
-from common.veil.veil_redis import get_thin_clients_count
+from common.veil.veil_redis import get_thin_clients_count, publish_data_in_internal_channel
 
 from web_app.auth.license.utils import License
+
 
 _ = lang_init()
 
@@ -722,7 +723,8 @@ class Pool(VeilModel):
         )
 
         # Оповещаем о создании пула
-        await pool.publish_data_in_internal_channel("CREATED")
+        additional_data = await pool.additional_model_to_json_data()
+        await publish_data_in_internal_channel(pool.get_resource_type(), "CREATED", pool, additional_data)
 
         return pool
 
@@ -767,7 +769,8 @@ class Pool(VeilModel):
             raise
 
         # Оповещаем об удалении пула
-        await self.publish_data_in_internal_channel("DELETED")
+        additional_data = await self.additional_model_to_json_data()
+        await publish_data_in_internal_channel(self.get_resource_type(), "DELETED", self, additional_data)
         return True
 
     @staticmethod

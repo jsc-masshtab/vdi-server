@@ -14,7 +14,7 @@ from common.models.auth import User
 from web_app.thin_client_api.schema import thin_client_schema
 
 from web_app.tests.utils import VdiHttpTestCase
-from web_app.tests.utils import execute_scheme
+from web_app.tests.utils import execute_scheme, ws_wait_for_text_msg_with_timeout
 
 from common.subscription_sources import (
     USERS_SUBSCRIPTION,
@@ -53,7 +53,7 @@ class TestMessageChat(VdiHttpTestCase):
     async def test_chat_ok(self):
         """Тестируется сценарий общения пользователя с админом
         """
-        msg_wait_timeout = 3
+
         tk_ws_client = None
         admin_ws_client = None
         try:
@@ -110,10 +110,7 @@ class TestMessageChat(VdiHttpTestCase):
 
             # Thin client waits for test text message
             # Должно прийти очень быстро
-
-            tk_received_msg_dict = await asyncio.wait_for(
-                TestMessageChat.wait_for_text_msg(tk_ws_client), msg_wait_timeout
-            )
+            tk_received_msg_dict = await ws_wait_for_text_msg_with_timeout(tk_ws_client)
 
             # print('tk_received_msg_dict: ', tk_received_msg_dict, flush=True)
             assert tk_received_msg_dict["msg_type"] == WsMessageType.TEXT_MSG.value
@@ -129,12 +126,9 @@ class TestMessageChat(VdiHttpTestCase):
             #
             # Админ подписывается на получение сообщений от пользователей
             admin_ws_client.write_message("add {}".format(USERS_SUBSCRIPTION))
-            admin_received_msg_dict = await asyncio.wait_for(
-                TestMessageChat.wait_for_text_msg(
-                    ws_conn=admin_ws_client, msg_type=WsMessageType.CONTROL.value
-                ),
-                msg_wait_timeout,
-            )
+            admin_received_msg_dict = await ws_wait_for_text_msg_with_timeout(
+                ws_conn=admin_ws_client, msg_type=WsMessageType.CONTROL.value)
+
             self.assertEqual(
                 admin_received_msg_dict["error"], False
             )  # Проверка успешности подписки
@@ -157,9 +151,8 @@ class TestMessageChat(VdiHttpTestCase):
             self.assertEqual(response.code, 200)
 
             # Получение сообщение админом от тк
-            admin_received_msg_dict = await asyncio.wait_for(
-                TestMessageChat.wait_for_text_msg(admin_ws_client), msg_wait_timeout
-            )
+
+            admin_received_msg_dict = await ws_wait_for_text_msg_with_timeout(admin_ws_client)
 
             assert admin_received_msg_dict["msg_type"] == WsMessageType.TEXT_MSG.value
             assert admin_received_msg_dict["message"] == test_text_message_to_admin
