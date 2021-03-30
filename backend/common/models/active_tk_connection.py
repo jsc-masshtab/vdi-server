@@ -10,7 +10,9 @@ from sqlalchemy.sql import and_, func
 from common.database import db
 from common.models.auth import User
 from common.models.pool import Pool
+from common.subscription_sources import THIN_CLIENTS_SUBSCRIPTION
 from common.veil.veil_gino import AbstractSortableStatusModel
+from common.veil.veil_redis import publish_data_in_internal_channel
 
 
 class ActiveTkConnection(db.Model, AbstractSortableStatusModel):
@@ -44,14 +46,16 @@ class ActiveTkConnection(db.Model, AbstractSortableStatusModel):
 
     @classmethod
     async def soft_create(cls, conn_id, is_conn_init_by_user, **kwargs):
-        """Создает/заменяет запись о соединении. Возвращает id."""
+        """Создает/заменяет запись о соединении."""
         model = await cls.get(conn_id) if conn_id else None
 
         # update
         if model:
             await model.update(**kwargs, data_received=func.now()).apply()
+            await publish_data_in_internal_channel(THIN_CLIENTS_SUBSCRIPTION, "UPDATED", model)
         else:
             model = await cls.create(**kwargs)
+            await publish_data_in_internal_channel(THIN_CLIENTS_SUBSCRIPTION, "CREATED", model)
 
         if (
             is_conn_init_by_user
@@ -118,6 +122,9 @@ class ActiveTkConnection(db.Model, AbstractSortableStatusModel):
         await self.update(vm_id=vm_id, connection_type=conn_type, is_connection_secure=is_conn_secure,
                           data_received=func.now()).apply()
 
+        # front ws notification
+        await publish_data_in_internal_channel(THIN_CLIENTS_SUBSCRIPTION, "UPDATED", self)
+
     async def update_last_interaction(self):
         await self.update(last_interaction=func.now(), data_received=func.now()).apply()
 
@@ -128,6 +135,8 @@ class ActiveTkConnection(db.Model, AbstractSortableStatusModel):
         await TkConnectionStatistics.create_tk_event(
             conn_id=self.id, message="{} disconnected.".format(user.username)
         )
+        # front ws notification
+        await publish_data_in_internal_channel(THIN_CLIENTS_SUBSCRIPTION, "UPDATED", self)
 
 
 class TkConnectionStatistics(db.Model, AbstractSortableStatusModel):

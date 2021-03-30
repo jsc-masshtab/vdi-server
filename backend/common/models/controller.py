@@ -20,10 +20,10 @@ from common.veil.veil_gino import (
     VeilModel,
 )
 from common.veil.veil_redis import (
-    WsMonitorCmd,
+    WsMonitorCmd, publish_data_in_internal_channel,
     send_cmd_to_cancel_tasks_associated_with_controller,
     send_cmd_to_resume_tasks_associated_with_controller,
-    send_cmd_to_ws_monitor,
+    send_cmd_to_ws_monitor
 )
 
 
@@ -198,6 +198,9 @@ class Controller(AbstractSortableStatusModel, VeilModel):
         msg = _("Controller {} added.").format(verbose_name)
         await system_logger.info(msg, user=creator, entity=controller.entity)
 
+        # Ws сообщение о создание
+        await publish_data_in_internal_channel(controller.get_resource_type(), "CREATED", controller)
+
         # Возвращаем инстанс созданного контроллера
         return controller
 
@@ -244,6 +247,8 @@ class Controller(AbstractSortableStatusModel, VeilModel):
             controller_kwargs.pop("token")
         # Протоколируем результат операции
         if controller_is_ok:
+            await publish_data_in_internal_channel(self.get_resource_type(), "UPDATED", self)
+
             msg = _("Controller {} has been successfully updated.").format(
                 self.verbose_name
             )
@@ -281,6 +286,9 @@ class Controller(AbstractSortableStatusModel, VeilModel):
             user=creator,
             entity=self.entity,
         )
+        # Оповещаем об удалении контоллера
+        await publish_data_in_internal_channel(self.get_resource_type(), "DELETED", self)
+
         return status
 
     async def enable(self, creator="system"):

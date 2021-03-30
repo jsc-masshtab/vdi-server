@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from abc import ABC
 import json
+import asyncio
 
 from graphql.execution.executors.asyncio import AsyncioExecutor
 from graphql.graphql import graphql
@@ -9,6 +10,8 @@ from tornado.ioloop import IOLoop
 from tornado.escape import json_decode
 
 from web_app.app import make_app
+
+from common.subscription_sources import WsMessageType
 
 
 class ExecError(Exception):
@@ -27,6 +30,24 @@ async def execute_scheme(_schema, query, variables=None, context=None):
     if r.errors:
         raise ExecError(repr(r.errors))
     return r.data
+
+
+async def ws_wait_for_text_msg(ws_conn, msg_type=WsMessageType.TEXT_MSG.value):
+
+    while True:
+        msg = await ws_conn.read_message()
+        msg_dict = json.loads(msg)
+        if msg_dict["msg_type"] == msg_type:
+            return msg_dict
+
+
+async def ws_wait_for_text_msg_with_timeout(ws_conn, msg_type=WsMessageType.TEXT_MSG.value):
+
+    msg_wait_timeout = 3
+    msg_dict = await asyncio.wait_for(
+        ws_wait_for_text_msg(ws_conn, msg_type), msg_wait_timeout
+    )
+    return msg_dict
 
 
 class VdiHttpTestCase(AsyncHTTPTestCase, ABC):

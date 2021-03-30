@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import asyncio
-import json
 from enum import Enum
 
 from asyncpg import DataError
@@ -12,10 +11,8 @@ from sqlalchemy.sql.schema import Column
 
 from common.database import db
 from common.languages import lang_init
-from common.settings import INTERNAL_EVENTS_CHANNEL, VEIL_OPERATION_WAITING
-from common.subscription_sources import WsMessageType
-from common.utils import gino_model_to_json_serializable_dict
-from common.veil.veil_redis import REDIS_CLIENT
+from common.settings import VEIL_OPERATION_WAITING
+from common.veil.veil_redis import publish_data_in_internal_channel
 
 _ = lang_init()
 
@@ -286,28 +283,14 @@ class VeilModel(db.Model):
         """Дополнительные данные для сериализации модели в json."""
         return dict()
 
-    async def publish_data_in_internal_channel(self, event_type: str):
-        """Publish current data in redis channel INTERNAL_EVENTS_CHANNEL.
-
-        Anybody can get messages from this channel. For example vdi frontend.
-        """
-        msg_dict = dict(
-            resource=self.get_resource_type(),
-            msg_type=WsMessageType.DATA.value,
-            event=event_type,
-        )
-        msg_dict.update(gino_model_to_json_serializable_dict(self))
-        additional_data = await self.additional_model_to_json_data()
-        msg_dict.update(additional_data)
-        REDIS_CLIENT.publish(INTERNAL_EVENTS_CHANNEL, json.dumps(msg_dict))
-
     async def set_status(self, status: Status):
 
         if status == self.status:
             return
         await self.update(status=status).apply()
 
-        await self.publish_data_in_internal_channel("UPDATED")
+        additional_data = await self.additional_model_to_json_data()
+        await publish_data_in_internal_channel(self.get_resource_type(), "UPDATED", self, additional_data)
 
 
 StatusGraphene = GrapheneEnum.from_enum(Status)
