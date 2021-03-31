@@ -49,16 +49,6 @@ import { AddPermissionComponent } from './user-details/add-permission/add-permis
    ],
    exports: [
       UsersComponent
-   ],
-   entryComponents: [
-      AddUserComponent,
-      AddGropComponent,
-      AddRoleComponent,
-      AddPermissionComponent,
-      MutateUserComponent,
-      RemoveRoleComponent,
-      RemoveGroupComponent,
-      RemovePermissionComponent
    ]
 })
 export class UsersModule { }

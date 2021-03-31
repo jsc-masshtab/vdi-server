@@ -35,9 +35,6 @@ import { faTimesCircle } from '@fortawesome/free-solid-svg-icons';
     MatCheckboxModule
   ],
   providers: [TasksService],
-  entryComponents: [
-    InfoTaskComponent
-  ],
   exports: [
     TasksComponent
   ]

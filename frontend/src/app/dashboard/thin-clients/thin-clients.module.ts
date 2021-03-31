@@ -28,9 +28,6 @@ import { ReactiveFormsModule } from '@angular/forms';
   ],
   providers: [
     ThinClientsService
-  ],
-  entryComponents: [
-    DisconnectThinClientComponent
   ]
 })
 export class ThinClientsModule { }

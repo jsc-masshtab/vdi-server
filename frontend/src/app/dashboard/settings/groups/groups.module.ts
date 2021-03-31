@@ -54,16 +54,6 @@ import { RemovePermissionComponent } from './remove-permission/remove-permission
    ],
    exports: [
       GroupsComponent
-   ],
-   entryComponents: [
-      AddGroupComponent,
-      AddRoleComponent,
-      AddPermissionComponent,
-      RemoveRoleComponent,
-      AddUserGroupComponent,
-      RemoveUserGroupComponent,
-      RemoveGroupComponent,
-      RemovePermissionComponent
    ]
 })
 export class GroupsModule { }

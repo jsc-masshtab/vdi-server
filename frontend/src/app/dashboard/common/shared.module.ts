@@ -68,9 +68,6 @@ const FORMS_DINAMIC = [
     AppRoutingModule,
     FormsModule
   ],
-  entryComponents: [
-    ...FORMS_DINAMIC
-  ],
   providers: [
     FooterService
   ]
