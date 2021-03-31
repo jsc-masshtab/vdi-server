@@ -5,4 +5,4 @@ RUN chown -R node: /home/node/app
 ADD frontend/package.json .
 ADD frontend/package-lock.json .
 USER node
-RUN npm install
+RUN rm -rf node_modules && npm install

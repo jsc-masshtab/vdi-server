@@ -1,3 +1,5 @@
+# если появляется новый пакет в зависимостях его нужно как раньше добавить в Pipenv, затем выполнить
+# pipenv lock -r -d > dev-requirements.txt && pipenv lock -r > requirements.txt
 # docker system prune -a -f --volumes && docker-compose up
 
 version: '3.7'
@@ -19,13 +21,6 @@ services:
     network_mode: "host"
     depends_on:
       - vdi-postgres
-  vdi-memcached:
-    image: memcached:alpine
-    container_name: vdi-memcached
-    command: sh -c "memcached -m 64"
-    network_mode: "host"
-    depends_on:
-      - vdi-postgres
   vdi-tornado:
     build:
       context: ../../
@@ -33,10 +28,12 @@ services:
     container_name: vdi-tornado
     environment:
       - PYTHONPATH=/opt/veil-vdi/app
+      - PYTHONDONTWRITEBYTECODE=1
+      - PYTHONPYCACHEPREFIX=/tmp
     working_dir: /opt/veil-vdi/app
     volumes:
       - ../../backend:/opt/veil-vdi/app
-    command: sh -c "sleep 5 && cd common/migrations && pipenv run alembic upgrade head && cd ../../ && pipenv run python web_app/app.py --logging=DEBUG --workers=1"
+    command: sh -c "sleep 5 && pip install -U veil_api_client veil_aio_au && cd common/migrations && alembic upgrade head && cd ../../ && python web_app/app.py --logging=DEBUG"
     network_mode: "host"
     depends_on:
       - vdi-postgres
@@ -48,10 +45,12 @@ services:
     container_name: vdi-pool-worker
     environment:
       - PYTHONPATH=/opt/veil-vdi/app
+      - PYTHONDONTWRITEBYTECODE=1
+      - PYTHONPYCACHEPREFIX=/tmp
     working_dir: /opt/veil-vdi/app
     volumes:
       - ../../backend:/opt/veil-vdi/app
-    command: sh -c "sleep 10 && pipenv run python pool_worker/app.py"
+    command: sh -c "sleep 10 && pip install -U veil_api_client veil_aio_au && python pool_worker/app.py"
     network_mode: "host"
     depends_on:
       - vdi-tornado
@@ -62,10 +61,12 @@ services:
     container_name: vdi-ws-listener-worker
     environment:
       - PYTHONPATH=/opt/veil-vdi/app
+      - PYTHONDONTWRITEBYTECODE=1
+      - PYTHONPYCACHEPREFIX=/tmp
     working_dir: /opt/veil-vdi/app
     volumes:
       - ../../backend:/opt/veil-vdi/app
-    command: sh -c "sleep 15 && pipenv run python ws_listener_worker/app.py"
+    command: sh -c "sleep 15 && pip install -U veil_api_client veil_aio_au && python ws_listener_worker/app.py"
     network_mode: "host"
     depends_on:
       - vdi-tornado

@@ -1,6 +1,5 @@
-# Набор контейнеров для прогона тестов
-# docker system prune -a -f --volumes && docker-compose -f test-docker-compose.yml up --exit-code-from vdi-test-tornado
-version: '3.4'
+# docker-compose -f test-docker-compose.yml up --build --force-recreate -V --abort-on-container-exit --exit-code-from vdi-test-tornado
+version: '3.7'
 services:
   vdi-test-postgres:
     image: postgres:9.6
@@ -16,24 +15,23 @@ services:
     image: redis
     container_name: vdi-test-redis
     network_mode: "host"
+    logging:
+      driver: none
     command: redis-server --requirepass 4NZ7GpHn4IlshPhb --bind 0.0.0.0
-  vdi-test-memcached:
-    image: memcached:alpine
-    container_name: vdi-test-memcached
-    network_mode: "host"
-    command: sh -c "memcached -m 64"
   vdi-test-veil-server:
     build:
       context: ../../
-      dockerfile: ./devops/docker/test-veil-server/Dockerfile
+      dockerfile: ./devops/docker/python/Dockerfile
     container_name: vdi-test-veil-server
     network_mode: "host"
     environment:
       - PYTHONPATH=/opt/veil-vdi/app
+      - PYTHONDONTWRITEBYTECODE=1
+      - PYTHONPYCACHEPREFIX=/tmp
     working_dir: /opt/veil-vdi/app
     volumes:
-      - ../../test_veil_server:/opt/veil-vdi/app
-    command: pipenv run python veil_test_server.py
+      - ../../backend/web_app/tests/veil_server:/opt/veil-vdi/app
+    command: sh -c "echo 'running veil-test-server...' && python test_server.py"
   vdi-test-tornado:
     build:
       context: ../../
@@ -43,15 +41,17 @@ services:
     environment:
       - PYTHONPATH=/opt/veil-vdi/app
       - ASYNC_TEST_TIMEOUT=20
+      - PYTHONDONTWRITEBYTECODE=1
+      - PYTHONPYCACHEPREFIX=/tmp
     working_dir: /opt/veil-vdi/app
     volumes:
       - ../../backend:/opt/veil-vdi/app
-    command: sh -c "sleep 5 && cd common/migrations && pipenv run alembic upgrade head && cd ../../web_app/tests && pipenv run pytest -m 'smoke_test' && pipenv run pytest --cov=web_app -vv -m 'not broken_runner'"
-#    command: sh -c "sleep 5 && cd common/migrations && pipenv run alembic upgrade head && cd ../../web_app/tests && pipenv run pytest -m 'smoke_test' && pipenv run pytest --cov=web_app -vv"
+    command: sh -c "sleep 10 && pip install -U veil_api_client veil_aio_au && cd /opt/veil-vdi/app/common/migrations && alembic upgrade head && cd /opt/veil-vdi/app/web_app/tests && pytest -m 'smoke_test' && pytest --cov=web_app -vv -m 'not broken_runner'"
     depends_on:
       - vdi-test-postgres
       - vdi-test-redis
       - vdi-test-veil-server
+#
 # manual run only
 #  vdi-black:
 #    image: mercutiodesign/docker-black
