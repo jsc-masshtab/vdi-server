@@ -42,6 +42,7 @@ services:
     network_mode: "host"
     environment:
       - PYTHONPATH=/opt/veil-vdi/app
+      - ASYNC_TEST_TIMEOUT=20
     working_dir: /opt/veil-vdi/app
     volumes:
       - ../../backend:/opt/veil-vdi/app
