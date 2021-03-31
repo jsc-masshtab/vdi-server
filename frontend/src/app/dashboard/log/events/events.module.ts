@@ -37,10 +37,6 @@ import { AddExportComponent } from './add-exports/add-exports.component';
     MatCheckboxModule
   ],
   providers: [EventsService],
-  entryComponents: [
-    InfoEventComponent,
-    AddExportComponent
-  ],
   exports: [
     EventsComponent
   ]

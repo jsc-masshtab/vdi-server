@@ -22,7 +22,7 @@ import { RemoveVMStaticPoolComponent } from './pool-details/remove-vms/remove-vm
 import { RemovePoolComponent } from './pool-details/remove-pool/remove-pool.component';
 import { VmDetalsPopupComponent } from './pool-details/vm-details-popup/vm-details-popup.component';
 
-import {MatCheckboxModule, MAT_CHECKBOX_CLICK_ACTION} from '@angular/material/checkbox';
+import { MatCheckboxModule, MAT_CHECKBOX_DEFAULT_OPTIONS, MatCheckboxDefaultOptions } from '@angular/material/checkbox';
 import { RemoveGroupComponent } from './pool-details/remove-group/remove-group.component';
 import { AddGropComponent } from './pool-details/add-group/add-group.component';
 import { PrepareVmPoolComponent } from './pool-details/prepare-vm/prepare-vm.component';
@@ -63,22 +63,10 @@ import { InfoBackupComponent } from './pool-details/vm-details-popup/info-backup
     PoolsService,
     PoolDetailsService,
     AddPoolService,
-    {provide: MAT_CHECKBOX_CLICK_ACTION, useValue: 'check'}
-  ],
-  entryComponents: [
-    PoolAddComponent,
-    AddUsersPoolComponent,
-    RemoveUsersPoolComponent,
-    AddVMStaticPoolComponent,
-    PrepareVmPoolComponent,
-    RemoveVMStaticPoolComponent,
-    RemovePoolComponent,
-    VmDetalsPopupComponent,
-    AddUserVmComponent,
-    RemoveUserVmComponent,
-    RemoveGroupComponent,
-    AddGropComponent,
-    InfoBackupComponent,
+    {
+      provide: MAT_CHECKBOX_DEFAULT_OPTIONS,
+      useValue: { clickAction: 'check' } as MatCheckboxDefaultOptions
+    }
   ],
   exports: [
     PoolsComponent,

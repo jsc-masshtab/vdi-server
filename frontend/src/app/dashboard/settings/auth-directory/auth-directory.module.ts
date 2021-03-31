@@ -46,15 +46,6 @@ import { SyncGroupComponent } from './auth-directory-details/sync-group/sync-gro
    ],
    exports: [
       AuthenticationDirectoryComponent
-   ],
-   entryComponents: [
-      AddAuthenticationDirectoryComponent,
-      RemoveAuthenticationDirectoryComponent,
-      AddMappingComponent,
-      MappingComponent,
-      AddGropComponent,
-      RemoveGroupComponent,
-      SyncGroupComponent
    ]
 })
 export class AuthenticationDirectoryModule {}

@@ -47,10 +47,6 @@ import { ResourcePoolsModule } from '../../resourses/resource_pools/resource_poo
   exports: [
     ControllersComponent,
     ControllerDetailsComponent
-  ],
-  entryComponents: [
-    AddControllerComponent,
-    RemoveControllerComponent
   ]
 })
 export class ControllersModule { }
