@@ -71,7 +71,14 @@
 
 
       </div>
-      <ng-template #nothing><div class="table-area-value">--</div></ng-template>
+      <ng-template #nothing>
+        <div *ngIf="!item; else noitem" class="table-area-value">
+          {{ parseNothing(obj, item) }}
+        </div>
+        <ng-template #noitem>
+          {{ parseNothing(obj, item) }}
+        </ng-template>
+      </ng-template>
 
   </div>
 </div>

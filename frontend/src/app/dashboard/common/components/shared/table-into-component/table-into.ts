@@ -25,13 +25,17 @@ export class TableIntoComponent  {
   }
 
   parseNothing(obj, item) {
-    if (obj.property_lv2) {
-      return typeof item[obj.property][obj.property_lv2] === 'number' ? 0 : '--'
-    } else if (obj.property) {
-      return typeof item[obj.property] === 'number' ? 0 : '--'
-    } else {
-      return '--'
+    if (!item) {
+      return '--';
     }
+
+    if (obj.property_lv2 && item[obj.property]) {
+      return typeof item[obj.property][obj.property_lv2] === 'number' ? 0 : '--';
+    }
+    if (obj.property) {
+      return typeof item[obj.property] === 'number' ? 0 : '--';
+    }
+    return '--';
   }
 
   formatBytes(bytes, delimiter = 'Байт', decimals = 3) {
