@@ -1,17 +1,18 @@
 # -*- coding: utf-8 -*-
 import pytest
+from tornado.testing import gen_test
 
 from web_app.tests.utils import execute_scheme, VdiHttpTestCase
 from web_app.tests.fixtures import (
-    fixt_db,
-    fixt_auth_context,
-    fixt_user,
+    fixt_db,  # noqa: F401
+    fixt_auth_context,  # noqa: F401
+    fixt_user,  # noqa: F401
     fixt_user_admin,  # noqa: F401
-    fixt_controller,
-    fixt_create_static_pool,
+    fixt_controller,  # noqa: F401
+    fixt_create_static_pool,  # noqa: F401
     fixt_create_automated_pool,  # noqa: F401
-    fixt_vm,
-    fixt_veil_client,
+    fixt_vm,  # noqa: F401
+    fixt_veil_client,  # noqa: F401
 )  # noqa: F401
 from common.settings import PAM_AUTH
 from common.models.vm import Vm
@@ -19,7 +20,7 @@ from common.models.pool import Pool
 from web_app.pool.schema import pool_schema
 
 
-pytestmark = [pytest.mark.vms, pytest.mark.skipif(PAM_AUTH, reason="not finished yet")]
+pytestmark = [pytest.mark.asyncio, pytest.mark.vms, pytest.mark.skipif(PAM_AUTH, reason="not finished yet")]
 
 
 @pytest.mark.asyncio
@@ -162,6 +163,7 @@ class TestVmStatus:
 )
 class VmActionTestCase(VdiHttpTestCase):
     async def get_moking_dict(self, action):
+
         # Получаем pool_id из динамической фикстуры пула
         pool_id = await Pool.select("id").gino.scalar()
 
@@ -171,40 +173,17 @@ class VmActionTestCase(VdiHttpTestCase):
         # Закрепляем VM за тестовым пользователем
         await vm.add_user("10913d5d-ba7a-4049-88c5-769267a6cbe3", creator="system")
 
-        # Авторизуемся, чтобы получить токен
-        body = '{"username": "test_user_admin","password": "veil"}'
-        response_dict = await self.get_response(body=body, url="/auth")
-        access_token = response_dict["data"]["access_token"]
-        self.assertTrue(access_token)
-
         # Формируем данные для тестируемого параметра
-        headers = {
-            "Content-Type": "application/json",
-            "Authorization": "jwt {}".format(access_token),
-        }
+        headers = await self.generate_headers_for_tk()
         body = '{"force": true}'
         url = "/client/pools/{pool_id}/{action}/".format(pool_id=pool_id, action=action)
         return {"headers": headers, "body": body, "url": url}
 
-    # @gen_test
-    # def test_valid_action(self):
-    #     action = 'start'  # Заведомо правильное действие.
-    #     moking_dict = yield self.get_moking_dict(action=action)
-    #     self.assertIsInstance(moking_dict, dict)
-    # TODO: поправить
-    # Этот тест не может закончится успехом, потому что таймаут 5 сек, а выполнения action
-    # занимает как минимум 10 сек. models/vm.py строка 340 (await asyncio.sleep(VEIL_OPERATION_WAITING))
-    #  response_dict = yield self.get_response(**moking_dict)
-    #  response_data = response_dict['data']
-    #  self.assertEqual(response_data, 'success')
-
-    # @gen_test
-    # def test_bad_action(self):
-    # TODO: поправить
-    #     action = 'upstart'  # Заведомо неправильное действие.
-    #     moking_dict = yield self.get_moking_dict(action=action)
-    #     self.assertIsInstance(moking_dict, dict)
-    #     response_dict = yield self.get_response(**moking_dict)
-    #     response_error = response_dict['errors'][0]['message']
-    #     expected_error = 'Параметр action значения {} неверный'.format(action)
-    #     self.assertIn(expected_error, response_error)
+    @gen_test
+    async def test_valid_action(self):
+        action = 'start'  # Заведомо правильное действие.
+        moking_dict = await self.get_moking_dict(action=action)
+        self.assertIsInstance(moking_dict, dict)
+        response_dict = await self.get_response(**moking_dict)
+        response_data = response_dict['data']
+        self.assertEqual(response_data, 'success')

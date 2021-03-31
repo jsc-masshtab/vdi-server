@@ -80,3 +80,14 @@ class VdiHttpTestCase(AsyncHTTPTestCase, ABC):
         response_dict = json_decode(response.body)
         self.assertIsInstance(response_dict, dict)
         return response_dict
+
+    async def generate_headers_for_tk(self, user_name="test_user_admin", password="veil"):
+        # Авторизуемся, чтобы получить токен
+        (_, access_token) = await self.do_login(user_name, password)
+
+        # Формируем данные для тестируемого параметра
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": "jwt {}".format(access_token),
+        }
+        return headers

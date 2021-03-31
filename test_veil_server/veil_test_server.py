@@ -12,6 +12,10 @@ class VeilTestServer:
 
         self.app = web.Application()
 
+        # ssl
+        self.ssl_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+        self.ssl_context.load_cert_chain("87658490_0.0.0.0.cert", "87658490_0.0.0.0.key")
+
         # handlers
         self.app.add_routes([web.get(self.base_url + "domains/{domain_id}/", self.get_domain_info)])
         self.app.add_routes([web.get(self.base_url + "domains/", self.get_domains)])
@@ -43,14 +47,14 @@ class VeilTestServer:
         self.app.add_routes([web.get(self.base_url + "data-pools/", self.get_datapools)])
         self.app.add_routes([web.get(self.base_url + "data-pools/{datapool_id}/", self.get_datapool)])
 
-        # ssl
-        self.ssl_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
-        self.ssl_context.load_cert_chain("87658490_0.0.0.0.cert", "87658490_0.0.0.0.key")
-
         # tags
         self.app.add_routes([web.get(self.base_url + "tags/", self.get_tags)])
         self.app.add_routes([web.post(self.base_url + "tags/", self.get_tags)])
         self.app.add_routes([web.put(self.base_url + "tags/", self.get_tags)])
+
+        # USB
+        self.app.add_routes([web.post(self.base_url + "domains/{domain_id}/attach-usb/", self.attach_usb)])
+        self.app.add_routes([web.post(self.base_url + "domains/{domain_id}/detach-usb/", self.detach_usb)])
 
     def start(self):
 
@@ -1491,6 +1495,26 @@ class VeilTestServer:
             ]
         }
         return web.Response(body=json.dumps(res_dict), content_type="application/json")
+
+    async def attach_usb(self, request):
+
+        request_json = await request.json()
+
+        res_dict = {
+                "tcp_usb_devices": [
+                    {
+                        "host": request_json["tcp_usb"]["host"],
+                        "service": request_json["tcp_usb"]["service"],
+                        "uuid": "10b2543f-cc35-4f80-9238-bec86c08174d"
+                    }
+                ]
+        }
+        return web.Response(text=json.dumps(res_dict), content_type="application/json", status=200)
+
+    async def detach_usb(self, request):
+        # print('!!!detach_usb', flush=True)
+        res_dict = {}
+        return web.Response(text=json.dumps(res_dict), content_type="application/json", status=202)
 
 
 if __name__ == "__main__":
