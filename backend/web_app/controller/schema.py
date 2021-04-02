@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import re
 from asyncio import TimeoutError
+from datetime import datetime
 
 import graphene
 
@@ -11,9 +12,9 @@ from common.models.controller import Controller
 from common.models.pool import Pool
 from common.models.vm import Vm
 from common.veil.veil_decorators import administrator_required
-from common.veil.veil_errors import SimpleError, ValidationError
+from common.veil.veil_errors import SilentError, SimpleError, ValidationError
 from common.veil.veil_gino import Status, StatusGraphene
-from common.veil.veil_graphene import VeilResourceType, VeilShortEntityType, VmState
+from common.veil.veil_graphene import VeilEventTypeEnum, VeilResourceType, VeilShortEntityType, VmState
 from common.veil.veil_validators import MutationValidation
 
 _ = lang_init()
@@ -101,6 +102,15 @@ class ControllerPoolType(graphene.ObjectType):
         # В self лежит объект модели Pool
         assigned_users = await self.assigned_users
         return len(assigned_users)
+
+
+class VeilEventType(VeilResourceType):
+    id = graphene.UUID()
+    event_type = graphene.Int()
+    message = graphene.String()
+    description = graphene.String()
+    created = graphene.DateTime()
+    user = graphene.String()
 
 
 class ControllerClusterType(VeilResourceType):
@@ -243,6 +253,15 @@ class ControllerType(graphene.ObjectType, ControllerFetcher):
         node_id=graphene.UUID(),
         exclude_existed=graphene.Boolean(),
         ordering=graphene.String(),
+        limit=graphene.Int(default_value=100),
+        offset=graphene.Int(default_value=0),
+    )
+    veil_event = graphene.Field(lambda: VeilEventType, event_id=graphene.UUID())
+    veil_events_count = graphene.Int(event_type=graphene.Int())
+    veil_events = graphene.List(
+        VeilEventType,
+        ordering=graphene.String(),
+        event_type=graphene.Int(),
         limit=graphene.Int(default_value=100),
         offset=graphene.Int(default_value=0),
     )
@@ -405,6 +424,56 @@ class ControllerType(graphene.ObjectType, ControllerFetcher):
         for resource in resolves:
             vms_list.append(ControllerVmType(**resource))
         return vms_list
+
+    async def resolve_veil_events_count(
+        self,
+        _info,
+        event_type=None,
+        **kwargs
+    ):
+        controller = await Controller.get(self.id)
+        veil_user = await controller.get_veil_user
+        veil_events = await controller.veil_client.event().list(event_type=event_type, user=veil_user)
+        return veil_events.paginator_count
+
+    async def resolve_veil_events(self, _info, limit, offset, event_type=None, ordering: str = None):
+        controller = await Controller.get(self.id)
+        veil_user = await controller.get_veil_user
+        paginator = VeilRestPaginator(ordering=ordering, limit=limit, offset=offset)
+        if not controller.veil_client:
+            return
+        for type_ in VeilEventTypeEnum:
+            if event_type is type_.value:
+                event_type = type_.name
+        veil_response = await controller.veil_client.event().list(
+            paginator=paginator, user=veil_user, event_type=event_type
+        )
+        veil_events = list()
+        for data in veil_response.response:
+            event = data.public_attrs
+            # Добавляем id, так как в response он не присутствует в чистом виде
+            event["id"] = event["api_object_id"]
+            event["event_type"] = VeilEventTypeEnum[event["type"]]
+            event["description"] = event["detail_message"]
+            event["created"] = datetime.strptime("{}".format(event["created"]), "%Y-%m-%dT%H:%M:%S.%fZ")
+            veil_events.append(VeilEventType(**event))
+
+        return veil_events
+
+    async def resolve_veil_event(self, _info, event_id, **kwargs):
+        controller = await Controller.get(self.id)
+        veil_response = controller.veil_client.event(event_id=str(event_id))
+        event_info = await veil_response.info()
+
+        if event_info.success:
+            event = event_info.value
+            event["description"] = event["detail_message"]
+            event["event_type"] = VeilEventTypeEnum[event["type"]]
+            event["created"] = datetime.strptime("{}".format(event["created"]), "%Y-%m-%dT%H:%M:%S.%fZ")
+
+            return VeilEventType(**event)
+        else:
+            raise SilentError(_("No such event."))
 
     @staticmethod
     def obj_to_type(controller_obj: Controller) -> dict:

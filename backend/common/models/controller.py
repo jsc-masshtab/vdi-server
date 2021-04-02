@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 import uuid
 
+import jwt
+
 from sqlalchemy import Enum as AlchemyEnum
 from sqlalchemy.dialects.postgresql import UUID
 
@@ -97,6 +99,12 @@ class Controller(AbstractSortableStatusModel, VeilModel):
         """Зависимые объекты модели Pool."""
         query = PoolModel.query.where(PoolModel.controller == self.id)
         return await query.gino.all()
+
+    @property
+    async def get_veil_user(self):
+        """Возвращает имя пользователя на ECP VeiL относительно используемого токена."""
+        data = jwt.decode(self.token[4:], verify=False)
+        return data["username"]
 
     async def is_ok(self):
         """Проверяем доступность контроллера независимо от его статуса."""

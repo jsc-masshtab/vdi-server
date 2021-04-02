@@ -1,9 +1,13 @@
 # -*- coding: utf-8 -*-
+from datetime import datetime
+
 import graphene
 
 from graphql import GraphQLError
 
 from sqlalchemy import and_, desc, text
+
+from veil_api_client import VeilRestPaginator
 
 from common.database import db
 from common.languages import lang_init
@@ -14,8 +18,10 @@ from common.settings import DEFAULT_NAME
 from common.utils import extract_ordering_data
 from common.veil.veil_decorators import administrator_required, operator_required
 from common.veil.veil_errors import SimpleError
+from common.veil.veil_graphene import VeilEventTypeEnum, VeilResourceType
 
 from web_app.auth.user_schema import User, UserType
+from web_app.controller.schema import ControllerFetcher
 
 _ = lang_init()
 
@@ -57,6 +63,15 @@ class EventType(graphene.ObjectType):
     entity = graphene.List(EntityType)
     entity_types = graphene.List(graphene.String)
     entity_id = graphene.UUID()
+
+
+class VeilEventType(VeilResourceType):
+    id = graphene.UUID()
+    event_type = graphene.Int()
+    message = graphene.String()
+    description = graphene.String()
+    created = graphene.DateTime()
+    user = graphene.String()
 
 
 class JournalSettingsType(graphene.ObjectType):
@@ -106,6 +121,16 @@ class EventQuery(graphene.ObjectType):
         user=graphene.String(),
         read_by=graphene.UUID(),
         entity_type=graphene.String(),
+    )
+
+    veil_events_count = graphene.Int(event_type=graphene.Int())
+    veil_events = graphene.List(
+        lambda: VeilEventType,
+        ordering=graphene.String(),
+        event_type=graphene.Int(),
+        controller=graphene.UUID(),
+        limit=graphene.Int(default_value=100),
+        offset=graphene.Int(default_value=0),
     )
 
     journal_settings = graphene.Field(JournalSettingsType)
@@ -274,6 +299,46 @@ class EventQuery(graphene.ObjectType):
         )
 
         return event_type
+
+    async def resolve_veil_events_count(
+        self,
+        _info,
+        event_type=None,
+        **kwargs
+    ):
+        controllers = await ControllerFetcher.fetch_all()
+        count = 0
+        for controller in controllers:
+            veil_user = await controller.get_veil_user
+            veil_events = await controller.veil_client.event().list(event_type=event_type, user=veil_user)
+            count += veil_events.paginator_count
+        return count
+
+    @administrator_required
+    async def resolve_veil_events(self, _info, limit, offset, event_type=None, ordering: str = None, **kwargs):
+        controllers = await ControllerFetcher.fetch_all()
+        veil_events = list()
+        for controller in controllers:
+            paginator = VeilRestPaginator(ordering=ordering, limit=limit, offset=offset)
+            veil_user = await controller.get_veil_user
+            if not controller.veil_client:
+                return
+            for type_ in VeilEventTypeEnum:
+                if event_type is type_.value:
+                    event_type = type_.name
+            veil_response = await controller.veil_client.event().list(
+                paginator=paginator, user=veil_user, event_type=event_type
+            )
+            for data in veil_response.response:
+                event = data.public_attrs
+                # Добавляем id, так как в response он не присутствует в чистом виде
+                event["id"] = event["api_object_id"]
+                event["event_type"] = VeilEventTypeEnum[event["type"]]
+                event["description"] = event["detail_message"]
+                event["created"] = datetime.strptime("{}".format(event["created"]), "%Y-%m-%dT%H:%M:%S.%fZ")
+                veil_events.append(VeilEventType(**event))
+        veil_events.sort(key=lambda events: events.created, reverse=True)
+        return veil_events
 
 
 class MarkEventsReadByMutation(graphene.Mutation):

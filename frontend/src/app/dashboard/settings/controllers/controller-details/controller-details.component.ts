@@ -135,7 +135,7 @@ export class ControllerDetailsComponent implements OnInit, OnDestroy {
 
 
   public toggleService(e) {
-    
+
     e.preventDefault();
 
     if (this.controller.status === 'SERVICE') {
