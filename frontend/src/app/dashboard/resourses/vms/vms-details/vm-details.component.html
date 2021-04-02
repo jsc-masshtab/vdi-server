@@ -9,6 +9,11 @@
     </div>
     <div class="details-control-panel">
         <button (click)="getVM()" class="btn-refresh" title="Обновить"><fa-icon [icon]="['fas','sync-alt']"></fa-icon></button>
+
+        <button (click)="attachVeilUtils()" title="Монтировать образ VeiL utils" class="btn-control">
+            <fa-icon [icon]="['fas','plus-circle']" size="xs"></fa-icon>
+            <span class="name">Монтировать образ VeiL utils</span>
+        </button>
     </div>
 
     <div class="details-row">

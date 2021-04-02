@@ -115,6 +115,10 @@ export class DashboardModule {
         graphQLErrors.map(({ message, locations, path }) => {
           console.error(`[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`, locations);
         });
+
+        graphQLErrors.forEach((error) => {
+          this.errorService.setError(error.message)
+        })
       }
 
       if (networkError) {

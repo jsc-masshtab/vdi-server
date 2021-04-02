@@ -1,14 +1,15 @@
 import { TemplatesService } from '../all-templates/templates.service';
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { map } from 'rxjs/operators';
+import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute, ParamMap } from '@angular/router';
 import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
+import {YesNoFormComponent} from '../../../common/forms-dinamic/yes-no-form/yes-no-form.component';
 
 interface ICollection {
   [index: string]: string;
 }
-
 
 @Component({
   selector: 'vdi-template-details',
@@ -136,7 +137,8 @@ export class TemplateDetailsComponent implements OnInit, OnDestroy {
 
   constructor(private activatedRoute: ActivatedRoute,
               private service: TemplatesService,
-              private router: Router) { }
+              private router: Router,
+              public dialog: MatDialog) { }
 
   ngOnInit() {
     this.activatedRoute.paramMap.subscribe((param: ParamMap) => {
@@ -159,6 +161,28 @@ export class TemplateDetailsComponent implements OnInit, OnDestroy {
       () => {
         this.host = true;
       });
+  }
+
+  public attachVeilUtils() {
+    this.dialog.open(YesNoFormComponent, {
+        disableClose: true,
+        width: '500px',
+        data: {
+          form: {
+            header: 'Подтверждение действия',
+            question: `Монтировать образ VeiL utils для шаблона ${this.template.verbose_name}?`,
+            button: 'Выполнить'
+          },
+          request: {
+            service: this.service,
+            action: 'attachVeilUtils',
+            body: {
+              id: this.idTemplate,
+              controller_id: this.address
+            }
+          }
+        }
+      })
   }
 
   public close() {

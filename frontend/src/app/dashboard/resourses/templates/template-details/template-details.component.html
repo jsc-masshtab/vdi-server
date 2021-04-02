@@ -9,20 +9,25 @@
     </div>
     <div class="details-control-panel">
         <button (click)="getTemplate()" class="btn-refresh" title="Обновить"><fa-icon [icon]="['fas','sync-alt']"></fa-icon></button>
+
+        <button (click)="attachVeilUtils()" title="Монтировать образ VeiL utils" class="btn-control">
+            <fa-icon [icon]="['fas','plus-circle']" size="xs"></fa-icon>
+            <span class="name">Монтировать образ VeiL utils</span>
+        </button>
     </div>
 
     <div class="details-row">
         <ul class="details-menu">
             <li (click)="routeTo('info')" [class.active]="menuActive === 'info'" title="Информация"><fa-icon [icon]="['fas','chart-bar']"></fa-icon><span class="name">Информация</span></li>
         </ul>
-        
+
         <div class="details-slide" *ngIf="host">
             <div class="details-slide-header">
                 <ng-container *ngIf="menuActive === 'info'">Информация о шаблоне</ng-container>
             </div>
             <div class="details-slide-into">
                 <vdi-table-into [item]="template" [collection]="collectionDetails" *ngIf="menuActive === 'info'"></vdi-table-into>
-            </div>     
+            </div>
         </div>
     </div>
 
