@@ -1,6 +1,7 @@
+/* tslint:disable:directive-class-suffix */
+import { HostListener, ElementRef, Directive } from '@angular/core';
 
-import { HostListener, ElementRef } from '@angular/core';
-
+@Directive()
 export class DetailsMove  {
 
   public pageHeightMinNumber: number = 315;

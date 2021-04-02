@@ -1,5 +1,5 @@
 import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { waitForAsync, ComponentFixture, TestBed } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
 
 import { HeaderUserComponent } from './header-user.component';
@@ -11,7 +11,7 @@ describe('HeaderUserComponent', () => {
 
   let loginServiceStub: Partial<LoginService>;
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       imports: [ RouterTestingModule ],
       declarations: [ HeaderUserComponent ],

@@ -1,5 +1,5 @@
 import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { waitForAsync, ComponentFixture, TestBed } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
 
 import { ClustersComponent } from './clusters.component';
@@ -12,7 +12,7 @@ describe('ClustersComponent', () => {
 
   let serviceStub: Partial<ClustersService>;
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     serviceStub = {
       getAllClusters(): any {
         return {

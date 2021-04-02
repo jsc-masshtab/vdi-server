@@ -1,5 +1,5 @@
 import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { waitForAsync, ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { WaitComponent } from './wait.component';
 
@@ -7,7 +7,7 @@ describe('WaitComponent', () => {
   let component: WaitComponent;
   let fixture: ComponentFixture<WaitComponent>;
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [ WaitComponent ],
       schemas: [ CUSTOM_ELEMENTS_SCHEMA ]

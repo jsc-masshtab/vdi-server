@@ -1,5 +1,5 @@
 import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { waitForAsync, ComponentFixture, TestBed } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
 import { MatDialog } from '@angular/material/dialog';
 import { of } from 'rxjs';
@@ -15,7 +15,7 @@ describe('PoolsComponent', () => {
   let serviceStub: Partial<PoolsService>;
   let dialogStub: Partial<MatDialog>;
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     serviceStub = {
       getAllControllers(): any {
         return {

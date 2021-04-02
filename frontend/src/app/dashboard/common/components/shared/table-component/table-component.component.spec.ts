@@ -1,5 +1,5 @@
 import { Pipe, PipeTransform, CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA } from '@angular/core';
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { waitForAsync, ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { TableComponentComponent } from './table-component.component';
 
@@ -36,7 +36,7 @@ describe('TableComponentComponent', () => {
   let component: TableComponentComponent;
   let fixture: ComponentFixture<TableComponentComponent>;
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [
         TableComponentComponent,

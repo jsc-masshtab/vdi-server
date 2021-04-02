@@ -1,5 +1,5 @@
 import { CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA } from '@angular/core';
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { waitForAsync, ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatDialog, MAT_DIALOG_DATA } from '@angular/material/dialog';
 
 import { VmDetalsPopupComponent } from './vm-details-popup.component';
@@ -11,7 +11,7 @@ describe('VmDetalsPopupComponent', () => {
 
   let poolServiceStub: Partial<PoolDetailsService>;
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [ VmDetalsPopupComponent ],
       providers: [

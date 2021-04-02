@@ -1,5 +1,5 @@
 import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { waitForAsync, ComponentFixture, TestBed } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
 import { MatDialog } from '@angular/material/dialog';
 
@@ -13,7 +13,7 @@ describe('DashboardComponent', () => {
   let dialogStub: Partial<MatDialog>;
   let wsStub: Partial<WebsocketService>;
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     wsStub = {
       init() {}
     };
