@@ -1,5 +1,5 @@
 import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { waitForAsync, ComponentFixture, TestBed } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
 
 import { NodeDetailsComponent } from './node-details.component';
@@ -12,7 +12,7 @@ describe('NodeDetailsComponent', () => {
 
   let serviceStub: Partial<NodesService>;
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     serviceStub = {
       getNode(): any {
         return {

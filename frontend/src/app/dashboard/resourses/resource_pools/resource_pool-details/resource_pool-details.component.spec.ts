@@ -1,5 +1,5 @@
 import { NO_ERRORS_SCHEMA, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { waitForAsync, ComponentFixture, TestBed } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
 import { of } from 'rxjs';
 
@@ -12,7 +12,7 @@ describe('ResourcePoolDetailsComponent', () => {
 
   let serviceStub: Partial<ResourcePoolsService>;
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     serviceStub = {
       getResourcePool(): any {
         return {

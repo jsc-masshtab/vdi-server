@@ -1,6 +1,6 @@
 import { CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { waitForAsync, ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatDialogRef } from '@angular/material/dialog';
 import { of } from 'rxjs';
 
@@ -13,7 +13,7 @@ describe('PoolAddComponent', () => {
 
   let addPoolServiceStub: Partial<AddPoolService>;
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     addPoolServiceStub = {
       getAllAuthenticationDirectory(): any {
         return {

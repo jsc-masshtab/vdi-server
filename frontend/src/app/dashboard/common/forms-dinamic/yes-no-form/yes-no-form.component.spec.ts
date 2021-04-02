@@ -1,5 +1,5 @@
 import { CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA } from '@angular/core';
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { waitForAsync, ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 
 import { YesNoFormComponent } from './yes-no-form.component';
@@ -8,7 +8,7 @@ describe('YesNoFormComponent', () => {
   let component: YesNoFormComponent;
   let fixture: ComponentFixture<YesNoFormComponent>;
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [ YesNoFormComponent ],
       providers: [

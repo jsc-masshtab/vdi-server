@@ -1,4 +1,4 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { waitForAsync, ComponentFixture, TestBed } from '@angular/core/testing';
 import { CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { of } from 'rxjs';
@@ -12,7 +12,7 @@ describe('AddGropComponent', () => {
 
   let serviceStub: Partial<AuthenticationDirectoryService>;
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     serviceStub = {
       getAuthenticationDirectoryGroups(): any {
         return {

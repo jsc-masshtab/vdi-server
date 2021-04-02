@@ -1,5 +1,5 @@
 import { Pipe, PipeTransform, CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA } from '@angular/core';
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { waitForAsync, ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { TableIntoComponent } from './table-into';
 
@@ -29,7 +29,7 @@ describe('TableIntoComponent', () => {
   let component: TableIntoComponent;
   let fixture: ComponentFixture<TableIntoComponent>;
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [
         TableIntoComponent,
