@@ -1481,6 +1481,37 @@ class AttachVeilUtilsMutation(graphene.Mutation):
         return AttachVeilUtilsMutation(ok=ok)
 
 
+class TemplateChange(graphene.Mutation):
+    """Мутация для ВМ, которая внесет изменения текущей ВМ во все тонкие клоны через изменение шаблона."""
+
+    class Arguments:
+        vm_id = graphene.UUID(required=True)
+        controller_id = graphene.UUID(required=True)
+
+    ok = graphene.Boolean()
+
+    @classmethod
+    @administrator_required
+    async def mutate(cls, root, info, vm_id, controller_id, creator):
+        controller = await Controller.get(controller_id)
+        veil_domain = controller.veil_client.domain(domain_id=str(vm_id))
+        await veil_domain.info()
+        if veil_domain.powered:
+            raise SilentError(
+                _("VM {} is powered. Please shutdown this.").format(veil_domain.public_attrs["verbose_name"]))
+        response = await veil_domain.change_template()
+        ok = response.success
+        if not ok:
+            for error in response.errors:
+                raise SilentError(error["detail"])
+
+        await system_logger.info(
+            _("The template {} change and distribute this changes to thin clones.").format(
+                veil_domain.parent_name),
+            user=creator)
+        return TemplateChange(ok=ok)
+
+
 # --- --- --- --- ---
 # Schema concatenation
 class PoolMutations(graphene.ObjectType):
@@ -1513,6 +1544,7 @@ class PoolMutations(graphene.ObjectType):
     testDomainVm = VmTestDomain.Field()
     restoreBackupVm = VmRestoreBackup.Field()
     attachVeilUtilsVm = AttachVeilUtilsMutation.Field()
+    changeTemplate = TemplateChange.Field()
 
 
 pool_schema = graphene.Schema(
