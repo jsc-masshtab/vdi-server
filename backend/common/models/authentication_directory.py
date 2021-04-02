@@ -505,7 +505,6 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
             # данными, то аутентификация в системе считается неуспешной и создается событие с
             # сообщением о неуспешности.
             success = False
-            created = False
             # await system_logger.debug(ldap_error)
             raise ValidationError(
                 _("Invalid credentials (ldap): {}.").format(ldap_error)
@@ -515,7 +514,6 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
             # сервера, так как не можем сделать вывод о правильности предоставленных данных.
             # self.server_down = True
             success = False
-            created = False
             raise ValidationError(_("Server down (ldap)."))
         except Exception as E:
             await system_logger.debug(E)
