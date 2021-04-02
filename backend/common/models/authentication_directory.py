@@ -503,9 +503,8 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
         except ldap.INVALID_CREDENTIALS as ldap_error:
             # Если пользователь не проходит аутентификацию в службе каталогов с предоставленными
             # данными, то аутентификация в системе считается неуспешной и создается событие с
-            # сообщением о неуспешности.
+            # сообщением о провале.
             success = False
-            # await system_logger.debug(ldap_error)
             raise ValidationError(
                 _("Invalid credentials (ldap): {}.").format(ldap_error)
             )
@@ -516,6 +515,7 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
             success = False
             raise ValidationError(_("Server down (ldap)."))
         except Exception as E:
+            success = False
             await system_logger.debug(E)
         finally:
             try:
