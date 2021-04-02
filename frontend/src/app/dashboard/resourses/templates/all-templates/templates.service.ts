@@ -93,4 +93,19 @@ export class TemplatesService {
             }
         });
     }
+
+    public attachVeilUtils(data) {
+        return this.service.mutate<any>({
+            mutation: gql` mutation resources($id: UUID!, $controller_id: UUID!) {
+                            attachVeilUtils(domain_id: $id, controller_id: $controller_id) {
+                                ok
+                            }
+                        }
+                    `,
+            variables: {
+                method: 'POST',
+                ...data
+            }
+        });
+    }
 }

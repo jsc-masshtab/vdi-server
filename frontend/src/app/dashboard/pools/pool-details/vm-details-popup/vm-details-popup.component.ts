@@ -588,6 +588,29 @@ export class VmDetalsPopupComponent {
     }
   }
 
+  public attachVeilUtils() {
+    console.log(this.data)
+    this.dialog.open(YesNoFormComponent, {
+        disableClose: true,
+        width: '500px',
+        data: {
+          form: {
+            header: 'Подтверждение действия',
+            question: `Монтировать образ VeiL utils для ВМ ${this.data.vm.verbose_name}?`,
+            button: 'Выполнить'
+          },
+          request: {
+            service: this.service,
+            action: 'attachVeilUtils',
+            body: {
+              id: this.data.vm.id,
+              controller_id: this.data.vms.controller.id
+            }
+          }
+        }
+      })
+  }
+
   public toPage(message: any): void {
     this.offset = message.offset;
     this.service.getPool(this.data.idPool, this.data.typePool, this.offset).refetch();

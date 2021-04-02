@@ -73,7 +73,7 @@ class ControllerFetcher:
 class VmBackupType(VeilResourceType):
     file_id = graphene.String()
     filename = graphene.String()
-    size = graphene.Int()
+    size = graphene.String()
     assignment_type = graphene.String()
     datapool = graphene.Field(ResourceDataPoolType)
     node = graphene.Field(VeilShortEntityType)
@@ -1451,6 +1451,36 @@ class VmRestoreBackup(graphene.Mutation):
         return VmRestoreBackup(ok=ok)
 
 
+class AttachVeilUtilsMutation(graphene.Mutation):
+    """Монтирование образа veil utils к ВМ в пуле."""
+
+    class Arguments:
+        vm_id = graphene.UUID(required=True)
+        controller_id = graphene.UUID(required=True)
+
+    ok = graphene.Boolean()
+
+    @classmethod
+    @administrator_required
+    async def mutate(cls, root, info, vm_id, controller_id, creator):
+        controller = await Controller.get(controller_id)
+        veil_domain = controller.veil_client.domain(domain_id=str(vm_id))
+        await veil_domain.info()
+        if veil_domain.powered:
+            raise SilentError(
+                _("Cant create CD-ROM for powered domain {}.").format(veil_domain.public_attrs["verbose_name"]))
+        response = await veil_domain.attach_veil_utils_iso()
+        ok = response.success
+        if not ok:
+            for error in response.errors:
+                raise SimpleError(error["detail"])
+
+        await system_logger.info(
+            _("Creating a CDROM on the virtual machine {}").format(veil_domain.public_attrs["verbose_name"]),
+            user=creator)
+        return AttachVeilUtilsMutation(ok=ok)
+
+
 # --- --- --- --- ---
 # Schema concatenation
 class PoolMutations(graphene.ObjectType):
@@ -1482,6 +1512,7 @@ class PoolMutations(graphene.ObjectType):
     backupVms = PoolVmsBackup.Field()
     testDomainVm = VmTestDomain.Field()
     restoreBackupVm = VmRestoreBackup.Field()
+    attachVeilUtilsVm = AttachVeilUtilsMutation.Field()
 
 
 pool_schema = graphene.Schema(

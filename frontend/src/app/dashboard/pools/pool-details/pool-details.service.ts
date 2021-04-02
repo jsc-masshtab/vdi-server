@@ -170,6 +170,9 @@ export class PoolDetailsService {
                                                 username
                                             }
                                         }
+                                        controller {
+                                            id
+                                        }
                                         backups {
                                             file_id
                                             vm_id
@@ -748,6 +751,21 @@ export class PoolDetailsService {
             variables: {
                 method: 'POST',
                 vm_id
+            }
+        });
+    }
+
+    public attachVeilUtils(data) {
+        return this.service.mutate<any>({
+            mutation: gql` mutation pools($id: UUID!, $controller_id: UUID!) {
+                            attachVeilUtilsVm(vm_id: $id, controller_id: $controller_id) {
+                                ok
+                            }
+                        }
+                    `,
+            variables: {
+                method: 'POST',
+                ...data
             }
         });
     }

@@ -50,6 +50,11 @@
 
       <span class="ad-status-text" [class.ad-success]="connected" [class.ad-failed]="!connected" *ngIf="tested">{{ connected ? 'В домене' : 'Не в домене' }}</span>
     </button>
+
+    <button (click)="attachVeilUtils()" title="Монтировать образ VeiL utils" class="btn-control">
+            <fa-icon [icon]="['fas','plus-circle']" size="xs"></fa-icon>
+            <span class="name">Монтировать образ VeiL utils</span>
+    </button>
   </div>
 
   <div class="details-row details-static">

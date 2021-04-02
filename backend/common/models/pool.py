@@ -947,6 +947,7 @@ class Pool(VeilModel):
                     parent_name=parent_name,
                     qemu_state=3 if qemu_state else 1,
                     node=node,
+                    controller={"id": pool_controller.id},
                     **vm.__values__
                 )
             )

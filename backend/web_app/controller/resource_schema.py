@@ -9,10 +9,12 @@ import graphene
 from veil_api_client import VeilRestPaginator
 
 from common.languages import lang_init
+from common.log.journal import system_logger
+from common.models.controller import Controller
 from common.models.pool import Pool
 from common.models.vm import Vm
 from common.veil.veil_decorators import administrator_required
-from common.veil.veil_errors import SilentError
+from common.veil.veil_errors import SilentError, SimpleError
 from common.veil.veil_gino import StatusGraphene
 from common.veil.veil_graphene import (
     VeilResourceType,
@@ -540,4 +542,38 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
         return template_type_list
 
 
-resources_schema = graphene.Schema(query=ResourcesQuery, auto_camelcase=False)
+class AttachVeilUtilsMutation(graphene.Mutation):
+    """Монтирование образа veil utils к ВМ/Шаблону."""
+
+    class Arguments:
+        domain_id = graphene.UUID(required=True)
+        controller_id = graphene.UUID(required=True)
+
+    ok = graphene.Boolean()
+
+    @classmethod
+    @administrator_required
+    async def mutate(cls, root, info, domain_id, controller_id, creator):
+        controller = await Controller.get(controller_id)
+        veil_domain = controller.veil_client.domain(domain_id=str(domain_id))
+        await veil_domain.info()
+        if veil_domain.powered:
+            raise SilentError(
+                _("Cant create CD-ROM for powered domain {}.").format(veil_domain.public_attrs["verbose_name"]))
+        response = await veil_domain.attach_veil_utils_iso()
+        ok = response.success
+        if not ok:
+            for error in response.errors:
+                raise SimpleError(error["detail"])
+
+        await system_logger.info(
+            _("Creating a CDROM on the virtual machine {}").format(veil_domain.public_attrs["verbose_name"]),
+            user=creator)
+        return AttachVeilUtilsMutation(ok=ok)
+
+
+class ControllerResourcesMutations(graphene.ObjectType):
+    attachVeilUtils = AttachVeilUtilsMutation.Field()
+
+
+resources_schema = graphene.Schema(query=ResourcesQuery, mutation=ControllerResourcesMutations, auto_camelcase=False)
