@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from enum import Enum
+
 import graphene
 
 from common.veil.veil_gino import StatusGraphene
@@ -24,6 +26,14 @@ class VmState(graphene.Enum):
     OFF = 1
     SUSPENDED = 2
     ON = 3
+
+
+class VeilEventTypeEnum(int, Enum):
+    """Типы сообщений на ECP VeiL."""
+
+    info = 0
+    warning = 1
+    error = 2
 
 
 class VeilShortEntityType(VeilResourceType):
