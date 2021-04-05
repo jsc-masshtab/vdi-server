@@ -377,7 +377,7 @@ class SendTextMsgHandler(BaseHandler, ABC):
 
         text_message = self.args.get("message")
         if not text_message:
-            response = {"errors": [{"message": _("Message can not be empty")}]}
+            response = {"errors": [{"message": _("Message can not be empty.")}]}
             return await self.log_finish(response)
 
         try:

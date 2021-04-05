@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-03-22 10:41+0300\n"
+"POT-Creation-Date: 2021-04-05 14:20+0300\n"
 "PO-Revision-Date: 2020-07-30 11:25+0300\n"
 "Last-Translator: Emil <emil@emil-pc>\n"
 "Language-Team: Russian\n"
@@ -233,7 +233,7 @@ msgid "Mapping for auth directory {} is updated."
 msgstr "Mapping for auth directory {} is updated."
 
 #: ../common/models/authentication_directory.py:331
-#: ../common/models/authentication_directory.py:550
+#: ../common/models/authentication_directory.py:548
 msgid "Authentication directory server {} is down."
 msgstr "Сервер службы каталогов {} не работает."
 
@@ -270,301 +270,289 @@ msgstr "Прикрепление пользователя {} к группе {}.
 msgid "No authentication directory controllers."
 msgstr "Нет контроллеров служб каталогов."
 
-#: ../common/models/authentication_directory.py:511
+#: ../common/models/authentication_directory.py:509
 msgid "Invalid credentials (ldap): {}."
 msgstr "Неверные учетные данные (ldap): {}."
 
-#: ../common/models/authentication_directory.py:519
+#: ../common/models/authentication_directory.py:516
 msgid "Server down (ldap)."
 msgstr "Сервер не отвечает (ldap)."
 
-#: ../common/models/authentication_directory.py:535
+#: ../common/models/authentication_directory.py:533
 msgid "LDAP username and password can`t be empty."
 msgstr "Имя пользователя и пароль LDAP не могут быть пустыми."
 
-#: ../common/models/authentication_directory.py:543
+#: ../common/models/authentication_directory.py:541
 msgid "Authentication directory server {} has bad auth info."
 msgstr "Не удалось подключиться к серверу службы каталогов {}."
 
-#: ../common/models/authentication_directory.py:624
-#: ../common/models/authentication_directory.py:713
+#: ../common/models/authentication_directory.py:622
+#: ../common/models/authentication_directory.py:711
 msgid "Fail to connect to Authentication Directory. Check service information."
 msgstr "Ошибка подключения к службе каталогов."
 
-#: ../common/models/authentication_directory.py:770
+#: ../common/models/authentication_directory.py:768
 msgid "{} new users synced from Authentication Directory."
 msgstr "{} новых пользователей синхронизировано из службы каталогов."
 
-#: ../common/models/authentication_directory.py:781
+#: ../common/models/authentication_directory.py:779
 #: ../web_app/auth/group_schema.py:219
 msgid "No such Group."
 msgstr "Отсутствует такая группа."
 
-#: ../common/models/authentication_directory.py:784
+#: ../common/models/authentication_directory.py:782
 msgid "Group {} is not synchronized by AD."
 msgstr "Группа {} не синхронизирована со службой каталогов."
 
-#: ../common/models/authentication_directory.py:791
+#: ../common/models/authentication_directory.py:789
 msgid "There is no users to sync."
 msgstr "В группе не найдены пользователи для синхронизации."
 
-#: ../common/models/controller.py:153
+#: ../common/models/controller.py:160
 msgid "Controller {} has no api client."
 msgstr "Контроллер {} не имеет подключения к ECP VeiL."
 
-#: ../common/models/controller.py:159
+#: ../common/models/controller.py:166
 msgid "ECP VeiL version could not be obtained. Check your token."
 msgstr "Не удается получить версию ECP VeiL. Проверьте свой токен."
 
-#: ../common/models/controller.py:167
+#: ../common/models/controller.py:174
 msgid "ECP VeiL version should be 4.3 or higher. Current version is incompatible."
 msgstr "Версия ECP VeiL должна быть 4.3 или выше. Текущая версия не поддерживается."
 
-#: ../common/models/controller.py:199
+#: ../common/models/controller.py:206
 msgid "Controller {} added."
 msgstr "Контроллер {} добавлен."
 
-#: ../common/models/controller.py:248
+#: ../common/models/controller.py:260
 msgid "Controller {} has been successfully updated."
 msgstr "Контроллер {} успешно обновлен."
 
-#: ../common/models/controller.py:252
+#: ../common/models/controller.py:264
 msgid "Controller {} update failed."
 msgstr "Ошибка обновления контроллера {}."
 
-#: ../common/models/controller.py:281
+#: ../common/models/controller.py:293
 msgid "Controller {} has been removed."
 msgstr "Контроллер {} удалён."
 
-#: ../common/models/controller.py:309
+#: ../common/models/controller.py:324
 msgid "Controller {} has been activated."
 msgstr "Контроллер {} активирован."
 
-#: ../common/models/controller.py:332 ../common/models/controller.py:359
+#: ../common/models/controller.py:347 ../common/models/controller.py:374
 msgid "Controller {} status has been switched to {}."
 msgstr "Статус контроллера {} изменен на {}."
 
-#: ../common/models/event.py:74
+#: ../common/models/event.py:77
 msgid "Journal in this period is empty."
 msgstr "Журнал для этого периода пуст."
 
-#: ../common/models/event.py:90
+#: ../common/models/event.py:94
 msgid "Path {} is incorrect."
 msgstr "Неверный путь: {}."
 
-#: ../common/models/event.py:93
+#: ../common/models/event.py:97
 msgid "Check date. Interval {} - {} is incorrect."
 msgstr "Проверьте дату. Некорректный промежуток {} - {}."
 
-#: ../common/models/event.py:98
+#: ../common/models/event.py:102
 msgid "Not enough free space."
 msgstr "Недостаточно свободного места."
 
-#: ../common/models/event.py:100
+#: ../common/models/event.py:104
 msgid "Journal export error."
 msgstr "Ошибка экспорта журнала."
 
-#: ../common/models/event.py:244
+#: ../common/models/event.py:251
 msgid "Choose right period."
 msgstr "Выберите правильный период."
 
-#: ../common/models/event.py:250
+#: ../common/models/event.py:257
 msgid "Count must be more than 1."
 msgstr "Количество должно быть больше 1."
 
-#: ../common/models/event.py:254
+#: ../common/models/event.py:261
 msgid "Journal settings changed."
 msgstr "Настройки журнала изменены."
 
-#: ../common/models/pool.py:216
+#: ../common/models/pool.py:225
 msgid "Incorrect sorting option {}."
 msgstr "Неверный параметр сортировки {}."
 
-#: ../common/models/pool.py:572
+#: ../common/models/pool.py:581
 msgid "User {} has been included to pool {}."
 msgstr "Пользователь {} был включен в пул {}."
 
-#: ../common/models/pool.py:580 ../common/models/vm.py:238
+#: ../common/models/pool.py:589 ../common/models/vm.py:242
 msgid "{} already has permission."
 msgstr "{} уже имеет разрешение."
 
-#: ../common/models/pool.py:601
+#: ../common/models/pool.py:610
 msgid "Removing user {} from pool {}."
 msgstr "Удаление пользователя {} из пула {}."
 
-#: ../common/models/pool.py:609
+#: ../common/models/pool.py:618
 msgid "User {} has no direct right to pool {}."
 msgstr "У пользователя {} нет прямых прав на пул {}. Пропускаем."
 
-#: ../common/models/pool.py:637
+#: ../common/models/pool.py:646
 msgid "Group {} has been included to pool {}."
 msgstr "Группа {} включена в пул {}."
 
-#: ../common/models/pool.py:645
+#: ../common/models/pool.py:654
 msgid "Pool already has permission."
 msgstr "Пул уже имеет разрешение."
 
-#: ../common/models/pool.py:658
+#: ../common/models/pool.py:667
 msgid "Removing group {} from pool {}."
 msgstr "Удаление группы {} из пула {}."
 
-#: ../common/models/pool.py:705
+#: ../common/models/pool.py:714
 msgid "Controller {} not found."
 msgstr "Контроллер {} не найден."
 
-#: ../common/models/pool.py:731
+#: ../common/models/pool.py:741
 msgid "Delete VMs for AutomatedPool {}."
 msgstr "Удаление виртуальных машин для автоматического пула {}."
 
-#: ../common/models/pool.py:737
+#: ../common/models/pool.py:747
 msgid "VM {} has been removed from ECP VeiL."
 msgstr "ВМ {} удалена  из ECP VeiL."
 
-#: ../common/models/pool.py:749
+#: ../common/models/pool.py:761
 #, python-brace-format
 msgid "Complete removal pool of desktops {verbose_name} is done."
 msgstr "Выполнено полное удаление пула рабочих столов {verbose_name}."
 
-#: ../common/models/pool.py:779
+#: ../common/models/pool.py:792
 msgid "Pool {} has been activated."
 msgstr "Пул {} активирован."
 
-#: ../common/models/pool.py:795
+#: ../common/models/pool.py:808
 msgid "Pool {} status changed to {}."
 msgstr "Статус пула {} изменен на {}."
 
-#: ../common/models/pool.py:938
+#: ../common/models/pool.py:960
 msgid "List of VM should not be empty."
 msgstr "Список виртуальных машин не должен быть пустым."
 
-#: ../common/models/pool.py:949
+#: ../common/models/pool.py:978
 msgid "VM doesn't belong to specified pool."
 msgstr "Виртуальная машина не принадлежит заданному пулу."
 
-#: ../common/models/pool.py:958
-msgid "Tag {} removed from VM {}."
-msgstr "Тэг {} удален для ВМ {}."
-
-#: ../common/models/pool.py:966
+#: ../common/models/pool.py:987
 msgid "VM {} has been removed from the pool {} and ECP VeiL."
 msgstr "ВМ {} удалена из пула {} и из ECP VeiL."
 
-#: ../common/models/pool.py:969
+#: ../common/models/pool.py:991
 msgid "VM {} has been removed from the pool {}."
 msgstr "ВМ {} удалена из пула {}."
 
-#: ../common/models/pool.py:1037
+#: ../common/models/pool.py:1063
 #, python-brace-format
 msgid "Tag {name} created for pool {name}."
 msgstr "Тэг {name} добавлен к пулу {name}."
 
-#: ../common/models/pool.py:1054
+#: ../common/models/pool.py:1082
 msgid "Tag {} removed from ECP VeiL."
 msgstr "Тэг {} удален из ECP VeiL."
 
-#: ../common/models/pool.py:1065
+#: ../common/models/pool.py:1093
 #, python-brace-format
 msgid "Tag {name} updated for pool {name} and all vms in pool."
 msgstr "Тэг {name} обновлен для пула {name} и всех ВМ в пуле."
 
-#: ../common/models/pool.py:1088
+#: ../common/models/pool.py:1120
+msgid "Tag {} removed from VM {}."
+msgstr "Тэг {} удален для ВМ {}."
+
+#: ../common/models/pool.py:1135 ../common/models/pool.py:1152
 msgid "Tag {} added to VM {}."
 msgstr "Тэг {} назначен ВМ {}."
 
-#: ../common/models/pool.py:1151
-msgid "StaticPool: Create Pool."
-msgstr "Статический пул: создание пула."
-
-#: ../common/models/pool.py:1160
-msgid "StaticPool: Create StaticPool."
-msgstr "Статический пул: создание статического пула."
-
-#: ../common/models/pool.py:1162
-msgid "StaticPool: Create VMs."
-msgstr "Статический пул: создание виртуальных машин."
-
-#: ../common/models/pool.py:1173 ../common/models/pool.py:1176
-#: ../common/models/pool.py:1555
+#: ../common/models/pool.py:1238 ../common/models/pool.py:1241
+#: ../common/models/pool.py:1633
 msgid "VM {} created."
 msgstr "ВМ {} создана."
 
-#: ../common/models/pool.py:1177 ../common/models/pool.py:1556
+#: ../common/models/pool.py:1242 ../common/models/pool.py:1634
 msgid "VM {} created and added to the pool {}."
 msgstr "ВМ {} создана и добавлена в пул {}."
 
-#: ../common/models/pool.py:1188
+#: ../common/models/pool.py:1253
 msgid "Static pool {} created."
 msgstr "Статический пул {} создан."
 
-#: ../common/models/pool.py:1209 ../common/models/pool.py:1432
+#: ../common/models/pool.py:1275 ../common/models/pool.py:1498
 msgid "Pool {} has been updated."
 msgstr "Пул {} обновлен."
 
-#: ../common/models/pool.py:1352
+#: ../common/models/pool.py:1418
 msgid "Initial_size: {}, total_size: {}, increase_step {}, reserve_size {}."
 msgstr "Начальный размер: {}, Максимальный размер: {}, Шаг расширения: {}, Резервный размер: {}."
 
-#: ../common/models/pool.py:1355
+#: ../common/models/pool.py:1421
 msgid "AutomatedPool {} is created."
 msgstr "Создан автоматический пул {}."
 
-#: ../common/models/pool.py:1397
+#: ../common/models/pool.py:1463
 msgid "Update Pool values for AutomatedPool {}."
 msgstr "Обновление значений пула для автоматического пула {}."
 
-#: ../common/models/pool.py:1422
+#: ../common/models/pool.py:1488
 msgid "Update AutomatedPool values for {}."
 msgstr "Обновление значений автоматического пула {}."
 
-#: ../common/models/pool.py:1472
+#: ../common/models/pool.py:1543
 msgid "There is no client for pool {}."
 msgstr "Пул {} не имеет подключения к ECP VeiL. Проверьте контроллер."
 
-#: ../common/models/pool.py:1501
+#: ../common/models/pool.py:1575
 msgid "VM creation task {} finished with error."
 msgstr "Задача {} создания ВМ завершилась с ошибкой."
 
-#: ../common/models/pool.py:1520
+#: ../common/models/pool.py:1595
 msgid "Fail to cancel VM creation task."
 msgstr "Ошибка отмены задачи создания ВМ."
 
-#: ../common/models/pool.py:1599
+#: ../common/models/pool.py:1677
 msgid "VM creation error."
 msgstr "Ошибка создания ВМ."
 
-#: ../common/models/pool.py:1604
+#: ../common/models/pool.py:1682
 msgid "{} vm(s) are successfully added in the {} pool."
 msgstr "{} ВМ успешно добавлены в пул {}."
 
-#: ../common/models/pool.py:1609
+#: ../common/models/pool.py:1687
 msgid "Adding VM to the pool {} finished with errors."
 msgstr "Добавление ВМ в пул {} закончилось с ошибками."
 
-#: ../common/models/pool.py:1612
+#: ../common/models/pool.py:1690
 msgid "Required: {}, created: {}."
 msgstr "Необходимо: {}, создано: {}."
 
-#: ../common/models/task.py:88
+#: ../common/models/task.py:74
 msgid "Creation of pool {}."
 msgstr "Создание пула {}."
 
-#: ../common/models/task.py:90
+#: ../common/models/task.py:76
 msgid "Expanding of pool {}."
 msgstr "Расширение пула {}."
 
-#: ../common/models/task.py:92
+#: ../common/models/task.py:78
 msgid "Deleting of pool {}."
 msgstr "Удаление пула {}."
 
-#: ../common/models/task.py:94
+#: ../common/models/task.py:80
 msgid "Decreasing of pool {}."
 msgstr "Уменьшение пула {}."
 
-#: ../common/models/task.py:96
+#: ../common/models/task.py:82
 msgid "Preparation of vm {}."
 msgstr "Подготовка ВМ {}."
 
-#: ../common/models/task.py:98
+#: ../common/models/task.py:84
 msgid "Backup of {}."
 msgstr "Бэкап {}."
 
@@ -572,164 +560,169 @@ msgstr "Бэкап {}."
 msgid "Create VM {} on VDI DB."
 msgstr "Создание виртуальной машины {} на VDI DB."
 
-#: ../common/models/vm.py:178 ../web_app/thin_client_api/handlers.py:326
+#: ../common/models/vm.py:182 ../web_app/thin_client_api/handlers.py:326
 #: ../web_app/thin_client_api/handlers.py:356
 msgid "VM has no api client."
 msgstr "ВМ не имеет клиента. Проверьте состояние контроллера."
 
-#: ../common/models/vm.py:189
+#: ../common/models/vm.py:193
 msgid "VM deletion task {} finished with error."
 msgstr "Задача {} удаления ВМ завершилась с ошибкой."
 
-#: ../common/models/vm.py:194
+#: ../common/models/vm.py:198
 msgid "VM {} removed from ECP."
 msgstr "ВМ {} удалена из ECP."
 
-#: ../common/models/vm.py:202
+#: ../common/models/vm.py:206
 msgid "VM {} deletion task finished with error."
 msgstr "Задача удаления ВМ {} завершилась с ошибкой."
 
-#: ../common/models/vm.py:230
+#: ../common/models/vm.py:234
 msgid "User {} has been included to VM {}."
 msgstr "ВМ {} закреплена за пользователем {}."
 
-#: ../common/models/vm.py:251 ../common/models/vm.py:652
+#: ../common/models/vm.py:255 ../common/models/vm.py:688
 msgid "VM {} is clear from users."
 msgstr "ВМ {} освобождена от пользователей."
 
-#: ../common/models/vm.py:292 ../common/models/vm.py:465
+#: ../common/models/vm.py:296 ../common/models/vm.py:471
 msgid "There is no client for controller {}."
 msgstr "Контролер {} не имеет подключения к ECP VeiL."
 
-#: ../common/models/vm.py:325
+#: ../common/models/vm.py:331
 msgid "Not enough free space on data pool."
 msgstr "Недостаточно свободного места в пуле данных."
 
-#: ../common/models/vm.py:330
+#: ../common/models/vm.py:336
 msgid "Possibly blocked by active task on ECP. Wait before next try."
 msgstr "Возможно, заблокировано активным заданием на ECP. Подождите перед следующей попыткой."
 
-#: ../common/models/vm.py:358
+#: ../common/models/vm.py:364
 msgid "VM {} deleting cancelled by timeout."
 msgstr "Удаление ВМ {} отменено по таймауту."
 
-#: ../common/models/vm.py:396 ../web_app/journal/schema.py:268
+#: ../common/models/vm.py:402 ../web_app/controller/schema.py:476
+#: ../web_app/journal/schema.py:293
 msgid "No such event."
 msgstr "Нет такого события."
 
-#: ../common/models/vm.py:491
+#: ../common/models/vm.py:497
 msgid "VM {} is powered."
 msgstr "ВМ {} включена."
 
-#: ../common/models/vm.py:502
+#: ../common/models/vm.py:509
+msgid "VM can`t be powered on or already powered."
+msgstr "ВМ не включается или уже включена."
+
+#: ../common/models/vm.py:516
 msgid "VM {} already shutdown."
 msgstr "ВМ {} уже выключена."
 
-#: ../common/models/vm.py:511
+#: ../common/models/vm.py:525
 msgid "VM {} is force shutdown."
 msgstr "ВМ {} принудительно выключена."
 
-#: ../common/models/vm.py:517
+#: ../common/models/vm.py:531
 msgid "VM {} is shutdown."
 msgstr "ВМ {} выключена."
 
-#: ../common/models/vm.py:528 ../common/models/vm.py:563
+#: ../common/models/vm.py:542 ../common/models/vm.py:577
 msgid "VM {} is shutdown. Please power this."
 msgstr "ВМ {} выключена. Пожалуйста включите её."
 
-#: ../common/models/vm.py:538
+#: ../common/models/vm.py:552
 msgid "VM {} was force reboot."
 msgstr "ВМ {} принудительно перезагружена."
 
-#: ../common/models/vm.py:544
+#: ../common/models/vm.py:558
 msgid "VM {} was reboot."
 msgstr "ВМ {} перезагружена."
 
-#: ../common/models/vm.py:556
+#: ../common/models/vm.py:570
 msgid "VM {} is suspended."
 msgstr "ВМ {} приостановлена."
 
-#: ../common/models/vm.py:575
+#: ../common/models/vm.py:589
 msgid "Forbid create backup from a thin clone: {}."
 msgstr "Запрещено создание резервной копии от тонкого клона: {}."
 
-#: ../common/models/vm.py:586 ../pool_worker/pool_tasks.py:456
+#: ../common/models/vm.py:600 ../pool_worker/pool_tasks.py:460
 msgid "Creating backup finished with error."
 msgstr "Создание резервной копии завершилось с ошибкой."
 
-#: ../common/models/vm.py:589
+#: ../common/models/vm.py:603
 msgid "Backup for VM {} is created."
 msgstr "Создана резервная копия для ВМ {}."
 
-#: ../common/models/vm.py:635
+#: ../common/models/vm.py:654
 msgid "Total size of pool {} increased."
 msgstr "Увеличен максимальный размер пула {}."
 
-#: ../common/models/vm.py:643 ../web_app/pool/schema.py:780
+#: ../common/models/vm.py:666 ../web_app/pool/schema.py:783
 msgid "VM {} has been added to the pool {}."
 msgstr "ВМ {} добавлена в пул {}."
 
-#: ../common/models/vm.py:658
+#: ../common/models/vm.py:698
 msgid "Backup restore finished with error."
 msgstr "Восстановление из резервной копии завершилось с ошибкой."
 
-#: ../common/models/vm.py:661
+#: ../common/models/vm.py:701
 msgid "Backup from VM {} restored to pool {} as {}."
 msgstr "Резервная копия для ВМ {} восстановлена в пул {} с именем {}."
 
-#: ../common/models/vm.py:683
+#: ../common/models/vm.py:725
 msgid "VM {} remote access enabled."
 msgstr "Удаленный доступ ВМ {} включен."
 
-#: ../common/models/vm.py:707
+#: ../common/models/vm.py:749
 msgid "Can`t set verbose name."
 msgstr "Can`t set verbose name."
 
-#: ../common/models/vm.py:739
+#: ../common/models/vm.py:782
 msgid "VM {} hostname setting task failed."
 msgstr "Ошибка задания hostname ВМ {}."
 
-#: ../common/models/vm.py:743
+#: ../common/models/vm.py:786
 msgid "VM {} hostname setting success."
 msgstr "ВМ {} успешно задан hostname."
 
-#: ../common/models/vm.py:760
+#: ../common/models/vm.py:810
 msgid "Active directory object has no service username or password. Including skipped."
 msgstr "У службы каталогов не указаны имя пользователя и пароль. Пропускаем."
 
-#: ../common/models/vm.py:792
+#: ../common/models/vm.py:842
 msgid "VM {} active directory group including error."
 msgstr "Ошибка ввода ВМ {} в группу AD."
 
-#: ../common/models/vm.py:801
+#: ../common/models/vm.py:851
 msgid "VM {} AD group including successful."
 msgstr "ВМ {} успешно заведена в контейнер/группу AD."
 
-#: ../common/models/vm.py:825
+#: ../common/models/vm.py:875
 msgid "VM {} failed to receive DHCP ip address ({})."
 msgstr "VM {} не удалось получить IP-адрес по DHCP ({})."
 
-#: ../common/models/vm.py:844
+#: ../common/models/vm.py:894
 msgid "VM {} domain including task failed."
 msgstr "Ошибка включения ВМ {} в домен."
 
-#: ../common/models/vm.py:846
+#: ../common/models/vm.py:896
 msgid "VM {} AD inclusion success."
 msgstr "ВМ {} успешно заведена в AD."
 
-#: ../common/models/vm.py:849
+#: ../common/models/vm.py:899
 msgid "VM {} AD inclusion skipped."
 msgstr "Заведение ВМ {} в домен пропущено."
 
-#: ../common/models/vm.py:872
+#: ../common/models/vm.py:922
 msgid "VM {} has been prepared."
 msgstr "ВМ {} подготовлена."
 
-#: ../common/models/vm.py:889
+#: ../common/models/vm.py:939
 msgid "{} preparation cancelled by timeout."
 msgstr "подготовка {} отменена по таймауту."
 
-#: ../common/models/vm.py:900
+#: ../common/models/vm.py:950
 msgid "VM {} preparation error."
 msgstr "Ошибка подготовки ВМ {}."
 
@@ -754,15 +747,15 @@ msgstr "Неправильный заголовок авторизации."
 msgid "Missing authorization header."
 msgstr "Пропущен заголовок авторизации."
 
-#: ../common/veil/veil_api.py:147
+#: ../common/veil/veil_api.py:148
 msgid "Can`t find VM {} on VeiL ECP."
 msgstr "Не удалось найти ВМ {} на VeiL ECP."
 
-#: ../common/veil/veil_api.py:155
+#: ../common/veil/veil_api.py:158
 msgid "Can`t find Tag {} on VeiL ECP."
 msgstr "Не удалось найти Тег {} на VeiL ECP."
 
-#: ../common/veil/veil_api.py:172
+#: ../common/veil/veil_api.py:180
 msgid "VeiL ECP {} request error."
 msgstr "Ошибка запроса ECP VeiL {}."
 
@@ -783,48 +776,47 @@ msgstr "Не удалось войти в систему с предоставл
 msgid "401: Unauthorized."
 msgstr "Ошибка 401: проблема с авторизацией."
 
-#: ../common/veil/veil_gino.py:86
+#: ../common/veil/veil_gino.py:84
 msgid "Incorrect sort parameter {}."
 msgstr "Неверный параметр сортировки {}."
 
-#: ../common/veil/veil_gino.py:97
+#: ../common/veil/veil_gino.py:95
 msgid "Incorrect request parameter {}."
 msgstr "Неверный параметр запроса {}."
 
-#: ../common/veil/veil_gino.py:225
+#: ../common/veil/veil_gino.py:223
 msgid "{} {} has been disabled."
 msgstr "{} {} деактивирована."
 
-#: ../common/veil/veil_gino.py:227
+#: ../common/veil/veil_gino.py:225
 msgid "{} {} has`t been found in ECP VeiL. Switched to FAILED."
 msgstr "{} {} не найдена на ECP VeiL. Переключена в стутус FAILED."
 
-#: ../common/veil/veil_gino.py:239
+#: ../common/veil/veil_gino.py:237
 msgid "Soft_delete exception: {}."
 msgstr "Ошибка удаления: {}."
 
-#: ../common/veil/veil_handlers.py:53 ../common/veil/veil_handlers.py:96
-#: ../web_app/thin_client_api/handlers.py:394
+#: ../common/veil/veil_handlers.py:54 ../common/veil/veil_handlers.py:97
 msgid "User {} not found."
 msgstr "Пользователь {} не найден."
 
-#: ../common/veil/veil_handlers.py:100
+#: ../common/veil/veil_handlers.py:101
 msgid "There is no pool with id: {}."
 msgstr "Отсутствует пул с ID: {}."
 
-#: ../common/veil/veil_handlers.py:104
+#: ../common/veil/veil_handlers.py:105
 msgid "User {} has no VM on pool {}."
 msgstr "У пользователя {} нет виртуальной машины в пуле {}."
 
-#: ../common/veil/veil_handlers.py:162
-msgid "Write error."
-msgstr "Ошибка записи."
+#: ../common/veil/veil_handlers.py:183
+msgid "Ws write error."
+msgstr "Ошибка записи WS."
 
-#: ../common/veil/veil_redis.py:175
+#: ../common/veil/veil_redis.py:153
 msgid "Redis waiting exception."
 msgstr "Ошибка Redis."
 
-#: ../common/veil/veil_redis.py:236
+#: ../common/veil/veil_redis.py:214
 msgid "Redis task waiting exception."
 msgstr "Ошибка redis-задачи."
 
@@ -832,71 +824,71 @@ msgstr "Ошибка redis-задачи."
 msgid "Field \"{}\" - {}."
 msgstr "Поле \"{}\" - {}."
 
-#: ../pool_worker/pool_task_manager.py:78
+#: ../pool_worker/pool_task_manager.py:74
 msgid "Can`t launch task."
 msgstr "Нет такого задания."
 
-#: ../pool_worker/pool_tasks.py:75
+#: ../pool_worker/pool_tasks.py:77
 msgid "Task '{}' started."
 msgstr "Задача '{}' начала выполнение."
 
-#: ../pool_worker/pool_tasks.py:84
+#: ../pool_worker/pool_tasks.py:86
 msgid "Task '{}' finished successfully."
 msgstr "Задача '{}' завершилась успешно."
 
-#: ../pool_worker/pool_tasks.py:90
+#: ../pool_worker/pool_tasks.py:92
 msgid "Task '{}' cancelled."
 msgstr "Задача '{}' отменена."
 
-#: ../pool_worker/pool_tasks.py:96
+#: ../pool_worker/pool_tasks.py:98
 msgid "Task '{}' failed."
 msgstr "Задача '{}' завершилась с ошибками."
 
-#: ../pool_worker/pool_tasks.py:157
+#: ../pool_worker/pool_tasks.py:159
 msgid "Pool Creation cancelled."
 msgstr "Создание пула отменено."
 
-#: ../pool_worker/pool_tasks.py:162
+#: ../pool_worker/pool_tasks.py:164
 msgid "Failed to init pool."
 msgstr "Ошибка инициализации пула."
 
-#: ../pool_worker/pool_tasks.py:182
+#: ../pool_worker/pool_tasks.py:184
 msgid "Pool initialization VM(s) preparation error."
 msgstr "В момент инициализации пула подготовка виртуальных машин завершилась с ошибкой."
 
-#: ../pool_worker/pool_tasks.py:252
+#: ../pool_worker/pool_tasks.py:255
 msgid "VM creating error."
 msgstr "Ошибка создания ВМ."
 
-#: ../pool_worker/pool_tasks.py:273
+#: ../pool_worker/pool_tasks.py:277
 msgid "VM preparation error."
 msgstr "Ошибка подготовки ВМ."
 
-#: ../pool_worker/pool_tasks.py:367
+#: ../pool_worker/pool_tasks.py:371
 msgid "Another task works on this VM."
 msgstr "ВМ заблокирована выполнением другой задачи."
 
-#: ../pool_worker/pool_tasks.py:410
+#: ../pool_worker/pool_tasks.py:414
 msgid "ECP VeiL domain request error."
 msgstr "Ошибка запроса ECP VeiL ВМ."
 
-#: ../pool_worker/pool_tasks.py:413
+#: ../pool_worker/pool_tasks.py:417
 msgid "Task has`t been created."
 msgstr "Задача не была создана."
 
-#: ../pool_worker/pool_tasks.py:427
+#: ../pool_worker/pool_tasks.py:431
 msgid "VM remote access task {} finished with error."
 msgstr "Задача {} включения удаленного доступа ВМ завершилась с ошибкой."
 
-#: ../pool_worker/pool_tasks.py:453
+#: ../pool_worker/pool_tasks.py:457
 msgid "Wrong entity type."
 msgstr "Неверный тип сущности."
 
-#: ../pool_worker/vm_manager.py:94
+#: ../pool_worker/vm_manager.py:105
 msgid "Keep vms on task error."
 msgstr "Сохранить ВМ при ошибке задачи."
 
-#: ../pool_worker/vm_manager.py:131
+#: ../pool_worker/vm_manager.py:149
 msgid "Synchronize vm data task error."
 msgstr "Ошибка задачи синхронизации данных виртуальной машины."
 
@@ -1081,67 +1073,75 @@ msgstr "Укажите ID или имя пользователя."
 msgid "Can`t remove permission(s) {} because they are granted to groups of user {}."
 msgstr "Невозможно удалить разрешения {}, так как они выданы группам, в которых состоит пользователь."
 
-#: ../web_app/controller/resource_schema.py:325
+#: ../web_app/controller/resource_schema.py:349
 msgid "{} is unreachable on ECP VeiL."
 msgstr "{} недоступен на ECP VeiL."
 
-#: ../web_app/controller/schema.py:30
+#: ../web_app/controller/resource_schema.py:562 ../web_app/pool/schema.py:1471
+msgid "Cant create CD-ROM for powered domain {}."
+msgstr "Невозможно создать CD-ROM для включенной виртуальной машины {}."
+
+#: ../web_app/controller/resource_schema.py:570 ../web_app/pool/schema.py:1479
+msgid "Creating a CD-ROM on the virtual machine {}."
+msgstr "Создание CD-ROM на виртуальной машине {}."
+
+#: ../web_app/controller/schema.py:31
 msgid "name can`t be empty."
 msgstr "имя не может быть пустым."
 
-#: ../web_app/controller/schema.py:40
+#: ../web_app/controller/schema.py:41
 msgid "name `{}` is busy."
 msgstr "имя `{}` уже используется."
 
-#: ../web_app/controller/schema.py:48
+#: ../web_app/controller/schema.py:49
 msgid "address can`t be empty."
 msgstr "адресс не может быть пустым."
 
-#: ../web_app/controller/schema.py:58
+#: ../web_app/controller/schema.py:59
 msgid "address `{}` is busy."
 msgstr "адресс `{}` уже используется."
 
-#: ../web_app/controller/schema.py:65
+#: ../web_app/controller/schema.py:66
 msgid "token can`t be empty."
 msgstr "токен не может быть пустым."
 
-#: ../web_app/controller/schema.py:76 ../web_app/pool/schema.py:64
+#: ../web_app/controller/schema.py:77 ../web_app/pool/schema.py:64
 msgid "No such controller."
 msgstr "Нет такого контроллера."
 
-#: ../web_app/controller/schema.py:447 ../web_app/controller/schema.py:480
+#: ../web_app/controller/schema.py:516 ../web_app/controller/schema.py:549
 msgid "Connection to ECP has been failed."
 msgstr "Соединение с ECP не удалось."
 
-#: ../web_app/front_ws_api/handlers.py:48
+#: ../web_app/front_ws_api/handlers.py:50
 msgid "WebSocket opened."
 msgstr "WebSocket открыт."
 
-#: ../web_app/front_ws_api/handlers.py:53
+#: ../web_app/front_ws_api/handlers.py:55
 msgid "Message: {}."
 msgstr "Сообщение: {}."
 
-#: ../web_app/front_ws_api/handlers.py:66
+#: ../web_app/front_ws_api/handlers.py:79
 msgid "WS listener error."
 msgstr "Ошибка сервиса прослушивания WS."
 
-#: ../web_app/front_ws_api/handlers.py:67
+#: ../web_app/front_ws_api/handlers.py:80
 msgid "Unknown subscription source."
 msgstr "Неизвестный источник подписки."
 
-#: ../web_app/front_ws_api/handlers.py:84
+#: ../web_app/front_ws_api/handlers.py:97
 msgid "Already subscribed."
 msgstr "Уже подписан."
 
-#: ../web_app/front_ws_api/handlers.py:91
+#: ../web_app/front_ws_api/handlers.py:104
 msgid "Not subscribed."
 msgstr "Не подписан."
 
-#: ../web_app/journal/schema.py:246
+#: ../web_app/journal/schema.py:271
 msgid "The sort parameter is incorrect."
 msgstr "Неверный параметр сортировки."
 
-#: ../web_app/journal/schema.py:335
+#: ../web_app/journal/schema.py:402
 msgid "Journal is exported."
 msgstr "Журнал экспортирован."
 
@@ -1190,11 +1190,11 @@ msgstr "Шаг увеличения должен быть положительн
 msgid "Connection type cannot be empty."
 msgstr "Тип подключения не может быть пустым."
 
-#: ../web_app/pool/schema.py:492 ../web_app/thin_client_api/handlers.py:179
+#: ../web_app/pool/schema.py:492 ../web_app/thin_client_api/handlers.py:178
 msgid "VM is unreachable on ECP VeiL."
 msgstr "ВМ недоступна на ECP VeiL."
 
-#: ../web_app/pool/schema.py:653
+#: ../web_app/pool/schema.py:651
 msgid "Pool {} has been restored."
 msgstr "Ошибки пула {} сброшены."
 
@@ -1202,61 +1202,69 @@ msgstr "Ошибки пула {} сброшены."
 msgid "Pool {} is in service mode."
 msgstr "Пул {} находится в сервисном режиме."
 
-#: ../web_app/pool/schema.py:658
+#: ../web_app/pool/schema.py:659
 msgid "Pool {} is already active."
 msgstr "Пул {} уже активирован."
 
-#: ../web_app/pool/schema.py:729
+#: ../web_app/pool/schema.py:730
 msgid "Failed to create static pool {}."
 msgstr "Ошибка создания статического пула {}."
 
-#: ../web_app/pool/schema.py:765
+#: ../web_app/pool/schema.py:766
 msgid "VM {} is already in one of pools."
 msgstr "Виртуальная машина {} уже в одном из пулов."
 
-#: ../web_app/pool/schema.py:843
+#: ../web_app/pool/schema.py:844
 msgid "Failed to update static pool {}. Name must be unique."
 msgstr "Ошибка редактирования статического пула {}. Имя должно быть уникальным."
 
-#: ../web_app/pool/schema.py:876
+#: ../web_app/pool/schema.py:877
 msgid "Can not expand pool {} because it reached its total_size."
 msgstr "Не удается расширить пул {} т.к. достигнут максимальный размер."
 
-#: ../web_app/pool/schema.py:886
+#: ../web_app/pool/schema.py:887
 msgid "Another task works on pool {}."
 msgstr "Другая задача выполняется над пулом {}."
 
-#: ../web_app/pool/schema.py:893
+#: ../web_app/pool/schema.py:894
 msgid "Increase_step {}."
 msgstr "Шаг расширения пула {}."
 
-#: ../web_app/pool/schema.py:895
+#: ../web_app/pool/schema.py:896
 msgid "Expansion of pool {} requested."
 msgstr "Запрошено расширение пула {}."
 
-#: ../web_app/pool/schema.py:985
+#: ../web_app/pool/schema.py:986
 msgid "Failed to create automated pool {}."
 msgstr "Ошибка создания автоматического пула {}."
 
-#: ../web_app/pool/schema.py:1074
+#: ../web_app/pool/schema.py:1075
 msgid "Failed to update automated pool {}. Name must be unique."
 msgstr "Ошибка редактирования автоматического пула {}. Имя должно быть уникальным."
 
-#: ../web_app/pool/schema.py:1209
+#: ../web_app/pool/schema.py:1210
 msgid "There is no VM {}."
 msgstr "Нет ВМ {}."
 
-#: ../web_app/pool/schema.py:1227
+#: ../web_app/pool/schema.py:1228
 msgid "User does not have the right to use pool, which has VM."
 msgstr "У пользователя нет прав на использование пула, которому принадлежит ВМ."
 
-#: ../web_app/pool/schema.py:1271
+#: ../web_app/pool/schema.py:1272
 msgid "Another task works on VM {}."
 msgstr "Другая задача выполняется над ВМ {}."
 
-#: ../web_app/pool/schema.py:1423
+#: ../web_app/pool/schema.py:1424
 msgid "Only VM with Windows OS can be in domain."
 msgstr "Только ВМ на ОС Windows могут находиться в домене."
+
+#: ../web_app/pool/schema.py:1501
+msgid "VM {} is powered. Please shutdown this."
+msgstr "ВМ {} включена. Пожалуйста выключите её."
+
+#: ../web_app/pool/schema.py:1509
+msgid "The template {} change and distribute this changes to thin clones."
+msgstr "Шаблон {} изменен и распространен с изменениями на тонкие клоны."
 
 #: ../web_app/task/schema.py:101
 msgid "No such task."
@@ -1266,39 +1274,39 @@ msgstr "Нет такого задания."
 msgid "No such task or status of task {} is not {}."
 msgstr "Нет такого задания или статус задания {} не {}."
 
-#: ../web_app/thin_client_api/handlers.py:79
+#: ../web_app/thin_client_api/handlers.py:78
 msgid "User {} requested pools data."
 msgstr "Пользователь {} запросил список пулов."
 
-#: ../web_app/thin_client_api/handlers.py:103
+#: ../web_app/thin_client_api/handlers.py:102
 msgid "Thin client limit exceeded."
 msgstr "Превышен лимит тонких клиентов."
 
-#: ../web_app/thin_client_api/handlers.py:110
+#: ../web_app/thin_client_api/handlers.py:109
 msgid "Pool not found."
 msgstr "Пул не найден."
 
-#: ../web_app/thin_client_api/handlers.py:120
+#: ../web_app/thin_client_api/handlers.py:119
 msgid "The pool doesnt support connection type {}."
 msgstr "Пул не поддерживает тип соединения {}."
 
-#: ../web_app/thin_client_api/handlers.py:146
+#: ../web_app/thin_client_api/handlers.py:145
 msgid "The pool doesn`t have free machines. Try again after 5 minutes."
 msgstr "В пуле нет свободных машин. Повторите попытку через 5 минут."
 
-#: ../web_app/thin_client_api/handlers.py:158
+#: ../web_app/thin_client_api/handlers.py:157
 msgid "The pool doesn`t have free machines."
 msgstr "В пуле нет свободных машин."
 
-#: ../web_app/thin_client_api/handlers.py:187
+#: ../web_app/thin_client_api/handlers.py:186
 msgid "User {} connected to pool {}."
 msgstr "Пользователь {} подключился к пулу {}."
 
-#: ../web_app/thin_client_api/handlers.py:192
+#: ../web_app/thin_client_api/handlers.py:191
 msgid "User {} connected to VM {}."
 msgstr "Пользователь {} подключился к ВМ {}."
 
-#: ../web_app/thin_client_api/handlers.py:204
+#: ../web_app/thin_client_api/handlers.py:203
 msgid "The remote controller is unavailable."
 msgstr "Контроллер недоступен."
 
@@ -1314,76 +1322,96 @@ msgstr "Пользователь {} выполнил действие {} над 
 msgid "User {} failed to execute action {} on VM {}."
 msgstr "Пользователю {} не удалось выполнить действие {} над ВМ {}."
 
-#: ../ws_listener_worker/resources_monitor.py:104
+#: ../web_app/thin_client_api/handlers.py:380
+msgid "Message can not be empty."
+msgstr "Сообщение не может быть пустым."
+
+#: ../web_app/thin_client_api/handlers.py:401
+msgid "Wrong message format."
+msgstr "Неправильны формат сообщения."
+
+#: ../web_app/thin_client_api/schema.py:288
+msgid "User {} does not exist."
+msgstr "Не существует пользователя {}."
+
+#: ../ws_listener_worker/resources_monitor.py:105
 msgid "{} is connected: {}."
 msgstr "{} подключен: {}."
 
-#: ../ws_listener_worker/resources_monitor.py:160
-msgid "Resource monitor can`t connect to controller."
-msgstr "Не удается подключиться к контроллеру."
+#: ../ws_listener_worker/resources_monitor.py:165
+msgid "Resource monitor can`t connect to controller {}."
+msgstr "Монитор ресурсов не может подключиться к контроллеру {}."
 
-#: ../ws_listener_worker/resources_monitor.py:161
-msgid "Can`t connect to {}."
-msgstr "Не удается подключиться к {}."
-
-#: ../ws_listener_worker/resources_monitor.py:184
+#: ../ws_listener_worker/resources_monitor.py:194
 msgid "Closing ws connection {}."
 msgstr "Закрываем WS соединение {}."
 
-#: ../ws_listener_worker/resources_monitor_manager.py:61
+#: ../ws_listener_worker/resources_monitor_manager.py:62
 #, python-brace-format
 msgid "{cls}: connected controllers -- {controllers}."
 msgstr "{cls}: подключенные контроллеры -- {controllers}."
 
-#: ../ws_listener_worker/resources_monitor_manager.py:72
+#: ../ws_listener_worker/resources_monitor_manager.py:73
 msgid "{}: Started."
 msgstr "{}: Запущен."
 
-#: ../ws_listener_worker/resources_monitor_manager.py:88
+#: ../ws_listener_worker/resources_monitor_manager.py:89
 #, python-brace-format
 msgid "{cls}: Controller {name} is already monitored."
 msgstr "{cls}: Контроллер {name} уже отслеживается."
 
-#: ../ws_listener_worker/resources_monitor_manager.py:95
+#: ../ws_listener_worker/resources_monitor_manager.py:96
 #, python-brace-format
 msgid "{cls}: resource monitor for controller {name} connected."
 msgstr "{cls}: монитор ресурсов для контроллера {name} подключен."
 
-#~ msgid "Pool {} has been deactivated."
-#~ msgstr "Пул {} деактивирован."
-
-#~ msgid "Controller has not free space for creating new VM."
-#~ msgstr "На контроллере отсутствует место для создания новой виртуальной машины."
-
-#~ msgid "Something went wrong. Interrupt while."
-#~ msgstr "Что-то пошло не так. Прерываем while."
-
-#~ msgid "User {} created with role {}."
-#~ msgstr "Пользователь {} создан с ролью {}."
-
-#~ msgid "  Duration: {}."
-#~ msgstr "  Продолжительность: {}."
-
-#~ msgid "Attempts to create VM {} have been exhausted."
-#~ msgstr "Превышен лимит попыток создания ВМ {}."
-
-#~ msgid "Unknown node {}."
-#~ msgstr "Неизвестный узел {}."
-
-#~ msgid "Controller can`t create VM. Unknown node."
-#~ msgstr "Контроллер не может создать ВМ. Неизвестный узел."
-
-#~ msgid "Roles: {} was deleted to pool {}."
-#~ msgstr "Роли: {} удалены в пуле {}."
-
-#~ msgid "Pool already has role."
-#~ msgstr "Пул уже имеет роль."
-
-#~ msgid "Role {} has been set to pool {}."
-#~ msgstr "Роль {} добавлена в пул {}."
+#~ msgid "ECP VeiL controller {} error."
+#~ msgstr "Ошибка контроллера ECP VeiL {}."
 
 #~ msgid "Critical controller error."
 #~ msgstr "Критическая ошибка контроллера."
 
-#~ msgid "ECP VeiL controller {} error."
-#~ msgstr "Ошибка контроллера ECP VeiL {}."
+#~ msgid "Role {} has been set to pool {}."
+#~ msgstr "Роль {} добавлена в пул {}."
+
+#~ msgid "Pool already has role."
+#~ msgstr "Пул уже имеет роль."
+
+#~ msgid "Roles: {} was deleted to pool {}."
+#~ msgstr "Роли: {} удалены в пуле {}."
+
+#~ msgid "Controller can`t create VM. Unknown node."
+#~ msgstr "Контроллер не может создать ВМ. Неизвестный узел."
+
+#~ msgid "Unknown node {}."
+#~ msgstr "Неизвестный узел {}."
+
+#~ msgid "Attempts to create VM {} have been exhausted."
+#~ msgstr "Превышен лимит попыток создания ВМ {}."
+
+#~ msgid "  Duration: {}."
+#~ msgstr "  Продолжительность: {}."
+
+#~ msgid "User {} created with role {}."
+#~ msgstr "Пользователь {} создан с ролью {}."
+
+#~ msgid "Something went wrong. Interrupt while."
+#~ msgstr "Что-то пошло не так. Прерываем while."
+
+#~ msgid "Controller has not free space for creating new VM."
+#~ msgstr "На контроллере отсутствует место для создания новой виртуальной машины."
+
+#~ msgid "Pool {} has been deactivated."
+#~ msgstr "Пул {} деактивирован."
+
+#~ msgid "Can`t connect to {}."
+#~ msgstr "Не удается подключиться к {}."
+
+#~ msgid "StaticPool: Create VMs."
+#~ msgstr "Статический пул: создание виртуальных машин."
+
+#~ msgid "StaticPool: Create StaticPool."
+#~ msgstr "Статический пул: создание статического пула."
+
+#~ msgid "StaticPool: Create Pool."
+#~ msgstr "Статический пул: создание пула."

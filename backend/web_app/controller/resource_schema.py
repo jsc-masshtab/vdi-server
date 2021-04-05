@@ -567,7 +567,7 @@ class AttachVeilUtilsMutation(graphene.Mutation):
                 raise SimpleError(error["detail"])
 
         await system_logger.info(
-            _("Creating a CDROM on the virtual machine {}").format(veil_domain.public_attrs["verbose_name"]),
+            _("Creating a CD-ROM on the virtual machine {}.").format(veil_domain.public_attrs["verbose_name"]),
             user=creator)
         return AttachVeilUtilsMutation(ok=ok)
 
