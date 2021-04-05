@@ -239,8 +239,8 @@ export class UserDetailsComponent implements OnInit, OnDestroy {
         },
         params: {
           method: 'deactivateUser',
-          args: `$id: UUID!`,
-          call: `id: $id`,
+          args: '$id: UUID!',
+          call: 'id: $id',
           props: {
             id: this.id,
           }
@@ -262,8 +262,8 @@ export class UserDetailsComponent implements OnInit, OnDestroy {
         },
         params: {
           method: 'activateUser',
-          args: `$id: UUID!`,
-          call: `id: $id`,
+          args: '$id: UUID!',
+          call: 'id: $id',
           props: {
             id: this.id,
           }

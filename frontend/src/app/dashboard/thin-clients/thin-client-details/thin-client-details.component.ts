@@ -108,6 +108,6 @@ export class ThinClientDetailsComponent implements OnInit {
   }
 
   public close() {
-    this.router.navigate([`pages/clients/session/`]);
+    this.router.navigate(['pages/clients/session/']);
   }
 }

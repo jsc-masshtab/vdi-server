@@ -62,12 +62,10 @@ export class AddVMStaticPoolComponent implements OnInit, OnDestroy {
   }
 
   public selectVm(value: []) {
-    this.vmsInput = value['value'].map((vm) => {
-      return {
+    this.vmsInput = value['value'].map((vm) => ({
         id: vm.id,
         verbose_name: vm.verbose_name
-      };
-    });
+      }));
   }
 
   ngOnDestroy() {

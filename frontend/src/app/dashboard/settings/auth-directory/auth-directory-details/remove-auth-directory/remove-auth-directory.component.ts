@@ -25,7 +25,7 @@ export class RemoveAuthenticationDirectoryComponent  {
       if (res) {
         setTimeout(() => {
           this.dialogRef.close();
-          this.router.navigate([`pages/settings/auth-directory`]);
+          this.router.navigate(['pages/settings/auth-directory']);
           this.service.getAllAuthenticationDirectory().refetch();
           this.waitService.setWait(false);
         }, 1000);
