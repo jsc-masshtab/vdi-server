@@ -25,32 +25,6 @@ module.exports = {
     "@angular-eslint/use-pipe-transform-interface": "error",
     "@typescript-eslint/adjacent-overload-signatures": "error",
     "@typescript-eslint/array-type": "off",
-    "@typescript-eslint/ban-types": [
-      "error",
-      {
-        types: {
-          Object: {
-            message: "Avoid using the `Object` type. Did you mean `object`?",
-          },
-          Function: {
-            message:
-              "Avoid using the `Function` type. Prefer a specific function type, like `() => void`.",
-          },
-          Boolean: {
-            message: "Avoid using the `Boolean` type. Did you mean `boolean`?",
-          },
-          Number: {
-            message: "Avoid using the `Number` type. Did you mean `number`?",
-          },
-          String: {
-            message: "Avoid using the `String` type. Did you mean `string`?",
-          },
-          Symbol: {
-            message: "Avoid using the `Symbol` type. Did you mean `symbol`?",
-          },
-        },
-      },
-    ],
     "@typescript-eslint/consistent-type-assertions": "error",
     "@typescript-eslint/dot-notation": "off",
     "@typescript-eslint/explicit-member-accessibility": [
@@ -73,7 +47,7 @@ module.exports = {
         },
       },
     ],
-    "@typescript-eslint/member-ordering": "error",
+    "@typescript-eslint/member-ordering": "off",
     "@typescript-eslint/naming-convention": "off",
     "@typescript-eslint/no-empty-function": "off",
     "@typescript-eslint/no-empty-interface": "error",
@@ -109,7 +83,7 @@ module.exports = {
     "@typescript-eslint/unified-signatures": "error",
     "arrow-body-style": "error",
     "arrow-parens": ["off", "always"],
-    "comma-dangle": "error",
+    "comma-dangle": ["error", "only-multiline"],
     complexity: "off",
     "constructor-super": "error",
     curly: "error",
