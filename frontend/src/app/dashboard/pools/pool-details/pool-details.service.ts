@@ -43,10 +43,10 @@ export class PoolDetailsService {
         });
     }
 
-    public getPool(pool_id: string | number, type: string, offset = 0): QueryRef<any, any> {
+    public getPool(pool_id: string | number, type: string): QueryRef<any, any> {
         if (type === 'automated') {
             return this.service.watchQuery({
-                query: gql`  query pools($pool_id: String, $offset: Int) {
+                query: gql`  query pools($pool_id: String) {
                                 pool(pool_id: $pool_id) {
                                     pool_id
                                     verbose_name
@@ -65,35 +65,6 @@ export class PoolDetailsService {
                                         qemu_state
                                         status
                                         parent_name
-                                        count
-                                        events(offset: $offset) {
-                                            id
-                                            event_type
-                                            message
-                                            description
-                                            created
-                                            user
-                                            read_by {
-                                                id
-                                                username
-                                            }
-                                        }
-                                        backups {
-                                            file_id
-                                            vm_id
-                                            filename
-                                            datapool {
-                                                id
-                                                verbose_name
-                                            }
-                                            node {
-                                                id
-                                                verbose_name
-                                            }
-                                            assignment_type
-                                            size
-                                            status
-                                        }
                                     }
                                     controller {
                                         id
@@ -132,15 +103,14 @@ export class PoolDetailsService {
                             }`,
                 variables: {
                     method: 'GET',
-                    pool_id,
-                    offset
+                    pool_id
                 }
             });
         }
 
         if (type === 'static') {
             return this.service.watchQuery({
-                query: gql`  query pools($pool_id: String, $offset: Int) {
+                query: gql`  query pools($pool_id: String) {
                                 pool(pool_id: $pool_id) {
                                     verbose_name
                                     pool_type
@@ -158,36 +128,8 @@ export class PoolDetailsService {
                                         qemu_state
                                         status
                                         parent_name
-                                        events(offset: $offset) {
-                                            id
-                                            event_type
-                                            message
-                                            description
-                                            created
-                                            user
-                                            read_by {
-                                                id
-                                                username
-                                            }
-                                        }
                                         controller {
                                             id
-                                        }
-                                        backups {
-                                            file_id
-                                            vm_id
-                                            filename
-                                            datapool {
-                                                id
-                                                verbose_name
-                                            }
-                                            node {
-                                                id
-                                                verbose_name
-                                            }
-                                            assignment_type
-                                            size
-                                            status
                                         }
                                     }
                                     controller {
@@ -216,8 +158,7 @@ export class PoolDetailsService {
                             }`,
                 variables: {
                     method: 'GET',
-                    pool_id,
-                    offset
+                    pool_id
                 }
             });
         }
@@ -770,9 +711,9 @@ export class PoolDetailsService {
         });
     }
 
-    public getVm(pool_id: string, vm_id: string, controller_address: string): QueryRef<any, any> {
+    public getVm(pool_id: string, vm_id: string, controller_address: string, offset = 0): QueryRef<any, any> {
         return  this.service.watchQuery({
-            query: gql` query pools($pool_id: String, $vm_id: UUID, $controller_address:UUID) {
+            query: gql` query pools($pool_id: String, $vm_id: UUID, $controller_address: UUID, $offset: Int) {
                                 pool(pool_id: $pool_id) {
                                   vm(vm_id: $vm_id, controller_id: $controller_address) {
                                       id
@@ -804,6 +745,42 @@ export class PoolDetailsService {
                                           id
                                           verbose_name
                                       }
+                                      node {
+                                            id
+                                            verbose_name
+                                      }
+                                      events(offset: $offset) {
+                                          id
+                                          event_type
+                                          message
+                                          description
+                                          created
+                                          user
+                                          read_by {
+                                              id
+                                              username
+                                          }
+                                      }
+                                      count
+                                      controller {
+                                          id
+                                      }
+                                      backups {
+                                          file_id
+                                          vm_id
+                                          filename
+                                          datapool {
+                                              id
+                                              verbose_name
+                                          }
+                                          node {
+                                              id
+                                              verbose_name
+                                          }
+                                          assignment_type
+                                          size
+                                          status
+                                      }
                                   }
                                 }
                         }
@@ -812,7 +789,8 @@ export class PoolDetailsService {
                 method: 'GET',
                 pool_id,
                 vm_id,
-                controller_address
+                controller_address,
+                offset
             }
         });
     }

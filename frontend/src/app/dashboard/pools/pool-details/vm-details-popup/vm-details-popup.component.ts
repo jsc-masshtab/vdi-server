@@ -613,6 +613,6 @@ export class VmDetalsPopupComponent {
 
   public toPage(message: any): void {
     this.offset = message.offset;
-    this.service.getPool(this.data.idPool, this.data.typePool, this.offset).refetch();
+    this.service.getPool(this.data.idPool, this.data.typePool).refetch();
   }
 }
