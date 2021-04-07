@@ -1,4 +1,5 @@
-# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*
+import json
 import uuid
 
 from asyncpg.exceptions import UniqueViolationError
@@ -17,7 +18,7 @@ from common.models.user_tk_permission import (
     TkPermission,
     UserTkPermission,
 )
-from common.settings import PAM_AUTH, PAM_SUPERUSER_GROUP, PAM_USER_GROUP, SECRET_KEY
+from common.settings import PAM_AUTH, PAM_SUPERUSER_GROUP, PAM_USER_GROUP, REDIS_THIN_CLIENT_CMD_CHANNEL, SECRET_KEY
 from common.veil.auth import hashers
 from common.veil.auth.veil_pam import veil_auth_class
 from common.veil.veil_errors import PamError, SimpleError
@@ -27,6 +28,7 @@ from common.veil.veil_gino import (
     Role,
     VeilModel,
 )
+from common.veil.veil_redis import REDIS_CLIENT, ThinClientCmd
 
 _ = lang_init()
 
@@ -393,6 +395,11 @@ class User(AbstractSortableStatusModel, VeilModel):
             username=self.username
         )
         await system_logger.info(info_message, entity=self.entity, user=creator)
+
+        # Разорвать соединение ТК, если присутствуют
+        cmd_dict = dict(command=ThinClientCmd.DISCONNECT.name, user_id=str(self.id))
+        REDIS_CLIENT.publish(REDIS_THIN_CLIENT_CMD_CHANNEL, json.dumps(cmd_dict))
+
         return operation_status
 
     async def pam_lock(self, creator):
