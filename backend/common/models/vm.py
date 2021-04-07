@@ -660,8 +660,8 @@ class Vm(VeilModel):
                 template_id=str(self.template_id),
                 created_by_vdi=True,
                 verbose_name=veil_domain.verbose_name,
-                pool_tag=pool.tag,
             )
+            await pool.tag_add_entity(tag=pool.tag, entity_id=restored_vm.id, verbose_name=restored_vm.verbose_name)
             await system_logger.info(
                 _("VM {} has been added to the pool {}.").format(
                     veil_domain.verbose_name, pool.verbose_name
