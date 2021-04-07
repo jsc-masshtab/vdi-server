@@ -450,7 +450,7 @@ class ThinClientWsHandler(BaseWsHandler):
                 "msg": str(ex),
             }
             await self._write_msg(json.dumps(response))
-            self.close()
+            self.close(code=4000)
 
         # start tasks
         loop = asyncio.get_event_loop()
@@ -571,10 +571,25 @@ class ThinClientWsHandler(BaseWsHandler):
                         redis_message_data_dict["command"]
                         == ThinClientCmd.DISCONNECT.name  # noqa: W503
                     ):
-                        conn_id = redis_message_data_dict["conn_id"]
+                        # Завершаем соедниение в зависимости от полученных параметров
+                        disconnect_current_tk = False
+                        conn_id = redis_message_data_dict.get("conn_id")
+                        user_id = redis_message_data_dict.get("user_id")
 
-                        # От админа приходит команда с id соединения, которое надо закрыть
-                        if self.conn_id and conn_id == str(self.conn_id):
+                        # Команда на закрытие всех соединений
+                        if conn_id is None and user_id is None:
+                            disconnect_current_tk = True
+                        # Команда закрыть конкретное соединение
+                        elif conn_id and self.conn_id and conn_id == str(self.conn_id):
+                            disconnect_current_tk = True
+                        # Команда закрыть соеднинения пользователя
+                        elif user_id and self.conn_id:
+                            tk_conn = await ActiveTkConnection.get(self.conn_id)
+                            current_user_id = tk_conn.user_id
+                            if user_id == str(current_user_id):
+                                disconnect_current_tk = True
+
+                        if disconnect_current_tk:
                             # Отсылаем клиенту команду. По ней он отключится от машины
                             response = {
                                 "msg_type": WsMessageType.CONTROL.value,

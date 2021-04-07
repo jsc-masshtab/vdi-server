@@ -10,6 +10,7 @@ from sqlalchemy.sql import desc
 
 from common.database import db
 from common.languages import lang_init
+from common.log.journal import system_logger
 from common.models.active_tk_connection import (
     ActiveTkConnection,
     TkConnectionStatistics,
@@ -21,8 +22,9 @@ from common.settings import REDIS_TEXT_MSG_CHANNEL, REDIS_THIN_CLIENT_CMD_CHANNE
 from common.subscription_sources import WsMessageDirection, WsMessageType
 from common.utils import extract_ordering_data
 from common.veil.veil_decorators import administrator_required
-from common.veil.veil_errors import SilentError
+from common.veil.veil_errors import SilentError, ValidationError
 from common.veil.veil_redis import REDIS_CLIENT, ThinClientCmd
+
 
 _ = lang_init()
 
@@ -237,20 +239,45 @@ class ThinClientQuery(graphene.ObjectType):
 
 
 class DisconnectThinClientMutation(graphene.Mutation):
-    """Команда клиенту отключиться.
+    """Команда клиентам отключиться.
 
     Просим клиента отключиться по ws и по удаленному протоколу, если клиент подключен к ВМ в данный момент.
+    Если указан conn_id, то завершаем конкретое соединение
+    Если указан user_id, то завершаем соединения соответствующего пользоватедя
+    Если ничего не указано, то массового завершаем все соединения
     """
 
     class Arguments:
-        conn_id = graphene.UUID(required=True)
+        conn_id = graphene.UUID(required=False)
+        user_id = graphene.UUID(required=False)
 
     ok = graphene.Boolean()
 
     @administrator_required
-    async def mutate(self, _info, conn_id, **kwargs):
-        cmd_dict = dict(command=ThinClientCmd.DISCONNECT.name, conn_id=str(conn_id))
+    async def mutate(self, _info, creator, **kwargs):
+        cmd_dict = dict(command=ThinClientCmd.DISCONNECT.name)
+
+        add_message = ""
+        conn_id = kwargs.get("conn_id")
+        user_id = kwargs.get("user_id")
+
+        if conn_id is None and user_id is None:
+            add_message = _("All connections.")
+        elif conn_id:
+            cmd_dict.update(conn_id=str(conn_id))
+            add_message = _("Connection id: {}.").format(conn_id)
+
+        elif user_id:
+            cmd_dict.update(user_id=str(user_id))
+            user = await User.get(user_id)
+            if not user:
+                raise ValidationError(_("No such user."))
+            add_message = _("Connections of user: {}.").format(user.username)
+
         REDIS_CLIENT.publish(REDIS_THIN_CLIENT_CMD_CHANNEL, json.dumps(cmd_dict))
+
+        base_message = _("Thin client disconnect requested.")
+        await system_logger.info(base_message + " " + add_message, user=creator)
 
         return DisconnectThinClientMutation(ok=True)
 
