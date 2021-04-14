@@ -1,11 +1,12 @@
+image: python:3.5.9-alpine
+
 stages:
-  - linter
+  - lint
   - security
   - tests
 
-linter_job:
-  image: python:3.5.9-alpine
-  stage: linter
+Python lint:
+  stage: lint
   tags:
     - docker
   before_script:
@@ -19,10 +20,9 @@ linter_job:
     refs:
       - merge_requests
 
-
-frontend_linter_job:
-  image: teracy/angular-cli
-  stage: linter
+NPM lint:
+  image: alexsuch/angular-cli:7.3
+  stage: lint
   tags:
     - docker
   before_script:
@@ -40,13 +40,12 @@ frontend_linter_job:
     refs:
       - merge_requests
 
-security_check:
-  image: python:3.5.9-alpine
+Security check:
   stage: security
   tags:
     - docker
   before_script:
-    - apk add build-base
+    - apk add --no-cache build-base
     - python -m pip install --upgrade pip
     - python -m pip install pipenv safety
     - pipenv install
@@ -59,13 +58,12 @@ security_check:
     refs:
       - merge_requests
 
-compilemessages_job:
-  image: python:3.5.9-alpine
-  stage: linter
+Compilemessages job:
+  stage: tests
   tags:
     - docker
   before_script:
-    - apk add gettext
+    - apk add --no-cache gettext
   script:
     - cd backend/common/
     - ash compilemessages.sh en
@@ -76,7 +74,7 @@ compilemessages_job:
     changes:
       - backend/**/*
 
-tests_job:
+Run tests:
   stage: tests
   tags:
     - shell
@@ -93,15 +91,14 @@ tests_job:
       - $CI_MERGE_REQUEST_TARGET_BRANCH_NAME =~ /^release.*$/ || $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "dev"
       - $BY_SCHEDULE == "true"
 
-kostyl_job:
-  image: python:3.5.9-alpine
-  stage: linter
+allow_merge:
+  variables:
+    GIT_STRATEGY: none
+  stage: lint
   tags:
-    - docker
+    - shell
   script:
     - exit 0
   only:
-    changes:
-      - devops/**/*
     refs:
       - merge_requests
