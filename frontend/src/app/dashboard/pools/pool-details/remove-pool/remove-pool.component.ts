@@ -30,7 +30,7 @@ export class RemovePoolComponent  {
     this.waitService.setWait(true);
     this.poolService.removePool(this.data.idPool, true).subscribe(() => {
       this.dialogRef.close();
-      this.router.navigate([`pools`]);
+      this.router.navigate(['pools']);
       this.waitService.setWait(false);
     });
   }
