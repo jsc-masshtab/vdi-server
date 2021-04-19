@@ -39,7 +39,7 @@
             <li (click)="routeTo('datapools')" [class.active]="menuActive === 'datapools'" title="Пулы данных"><fa-icon [icon]="['fas','folder-open']"></fa-icon><span class="name">Пулы данных</span></li>
             <li (click)="routeTo('vms')" [class.active]="menuActive === 'vms'" title="Виртуальные машины"><fa-icon [icon]="['fas','desktop']"></fa-icon><span class="name">Виртуальные машины</span></li>
             <li (click)="routeTo('templates')" [class.active]="menuActive === 'templates'" title="Шаблоны виртуальных машин"><fa-icon [icon]="['fas','tv']"></fa-icon><span class="name">Шаблоны ВМ</span></li>
-            <li (click)="routeTo('veil_events')" [class.active]="menuActive === 'veil_events'" title="События на ECP VeiL"><fa-icon [icon]="['fas','comment']"></fa-icon><span class="name">События на ECP VeiL</span></li>
+            <li (click)="routeTo('veil-events')" [class.active]="menuActive === 'veil-events'" title="События на ECP VeiL"><fa-icon [icon]="['fas','comment']"></fa-icon><span class="name">События на ECP VeiL</span></li>
         </ul>
 
         <div class="details-slide" *ngIf="host">
@@ -51,7 +51,7 @@
                 <ng-container *ngIf="menuActive === 'datapools'">Пулы данных на контроллере</ng-container>
                 <ng-container *ngIf="menuActive === 'templates'">Шаблоны ВМ на контроллере</ng-container>
                 <ng-container *ngIf="menuActive === 'vms'">ВМ на контроллере</ng-container>
-                <ng-container *ngIf="menuActive === 'veil_events'">События на ECP VeiL</ng-container>
+                <ng-container *ngIf="menuActive === 'veil-events'">События на ECP VeiL</ng-container>
             </div>
             <div class="details-slide-into">
                 <vdi-table-into *ngIf="menuActive === 'info'" [item]="controller" [collection]="collection" (edit)="edit($event)"></vdi-table-into>
@@ -61,6 +61,7 @@
                 <vdi-datapools [filter]="filter" *ngIf="menuActive === 'datapools'"></vdi-datapools>
                 <vdi-vms [filter]="filter" *ngIf="menuActive === 'vms'"></vdi-vms>
                 <vdi-templates [filter]="filter" *ngIf="menuActive === 'templates'"></vdi-templates>
+                <vdi-controller-events *ngIf="menuActive === 'veil-events'"></vdi-controller-events>
             </div>
         </div>
     </div>

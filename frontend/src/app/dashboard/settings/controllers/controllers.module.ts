@@ -19,13 +19,15 @@ import { VmsModule } from '../../resourses/vms/vms.module';
 import { TemplatesModule } from '../../resourses/templates/templates.module';
 import { ClustersModule } from '../../resourses/clusters/clusters.module';
 import { ResourcePoolsModule } from '../../resourses/resource_pools/resource_pools.module';
+import { ControllerEventsComponent } from './controller-details/controller-events/controller-events.component';
 
 @NgModule({
   declarations: [
     ControllersComponent,
     AddControllerComponent,
     RemoveControllerComponent,
-    ControllerDetailsComponent
+    ControllerDetailsComponent,
+    ControllerEventsComponent
   ],
   imports: [
     SharedModule,
