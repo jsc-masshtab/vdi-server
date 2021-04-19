@@ -62,9 +62,7 @@ export class WebsocketService {
 
       sub = this.event$
         .pipe(filter((ws: any) => ws.resource === listener))
-        .subscribe((message: any) => {
-          return observer.next(message);
-        });
+        .subscribe((message: any) => observer.next(message));
 
       return () => {
         this.disconnect(listener);

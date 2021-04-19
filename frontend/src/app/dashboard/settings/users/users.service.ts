@@ -101,9 +101,7 @@ export class UsersService  {
                     $is_superuser: Boolean
                 ){
                     createUser(
-                        ${Object.keys(props).map((key) => {
-                            return `${key} :$${key}`;
-                        })}
+                        ${Object.keys(props).map((key) => `${key} :$${key}`)}
                     ){
                         ok
                     }
