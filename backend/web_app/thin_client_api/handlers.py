@@ -17,7 +17,7 @@ from veil_api_client import DomainTcpUsb, VeilRetryConfiguration
 
 from common.languages import lang_init
 from common.log.journal import system_logger
-from common.models.active_tk_connection import ActiveTkConnection
+from common.models.active_tk_connection import ActiveTkConnection  # , TkConnectionStatistics
 from common.models.pool import AutomatedPool, Pool as PoolModel
 from common.models.task import PoolTaskType, Task, TaskStatus
 from common.settings import (
@@ -474,6 +474,9 @@ class ThinClientWsHandler(BaseWsHandler):
 
                     elif event_type == "user_gui":  # юзер нажал кнопку/кликнул
                         await tk_conn.update_last_interaction()
+
+                    elif event_type == "network_stats":
+                        await tk_conn.update_network_stats(**recv_data_dict)
 
         except (KeyError, ValueError, TypeError, JSONDecodeError) as ex:
             response = {

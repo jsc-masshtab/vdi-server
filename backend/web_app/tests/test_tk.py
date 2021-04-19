@@ -11,6 +11,8 @@ from web_app.tests.utils import VdiHttpTestCase
 
 from common.models.active_tk_connection import ActiveTkConnection
 from common.models.auth import User
+from common.models.pool import Pool
+
 from web_app.tests.utils import execute_scheme
 from web_app.thin_client_api.schema import thin_client_schema
 from common.settings import PAM_AUTH
@@ -62,7 +64,7 @@ class TestTk(VdiHttpTestCase):
         assert ws_client
 
         try:
-            # update
+            # update (Эмулировать подключение к ВМ)
             vm_id = "201d318f-d57e-4f1b-9097-93d69f8782dd"
             update_data_dict = {
                 "msg_type": WsMessageType.UPDATED.value,
@@ -111,8 +113,42 @@ class TestTk(VdiHttpTestCase):
             )
             assert len(executed["thin_clients"]) == 1
             assert executed["thin_clients"][0]["user_name"] == user_name
-
             conn_id = executed["thin_clients"][0]["conn_id"]
+
+            # update (Эмулировать отправку сетевой статистики с ТК)
+            update_data_dict = {
+                "msg_type": WsMessageType.UPDATED.value,
+                "event": "network_stats",
+                "connection_type": Pool.PoolConnectionTypes.RDP.name,
+                "read_speed": 1024,
+                "write_speed": 1024,
+                "min_rtt": 3,
+                "avg_rtt": 4,
+                "max_rtt": 5,
+                "loss_percentage": 0,
+            }
+            ws_client.write_message(json.dumps(update_data_dict))
+            await asyncio.sleep(1)  # Подождем так как на update ответов не присылается
+
+            # Запрос статистики от лица админа
+            qu = """
+            {  
+                network_stats(conn_id: "%s"){
+                    read_speed
+                    write_speed
+                    min_rtt
+                    avg_rtt
+                    max_rtt
+                    loss_percentage
+                }
+            }
+            """ % conn_id
+            executed = await execute_scheme(thin_client_schema, qu, context=auth_context)
+            assert len(executed["network_stats"]) == 1
+            assert executed["network_stats"][0]["read_speed"] == update_data_dict["read_speed"]
+            assert executed["network_stats"][0]["write_speed"] == update_data_dict["write_speed"]
+            assert executed["network_stats"][0]["avg_rtt"] == update_data_dict["avg_rtt"]
+            assert executed["network_stats"][0]["loss_percentage"] == update_data_dict["loss_percentage"]
 
             # disconnect request
             qu = (
@@ -124,33 +160,8 @@ class TestTk(VdiHttpTestCase):
                 }"""
                 % conn_id
             )
-            executed = await execute_scheme(
-                thin_client_schema, qu, context=auth_context
-            )
+            executed = await execute_scheme(thin_client_schema, qu, context=auth_context)
             assert executed["disconnectThinClient"]["ok"]
-
-            # check tk statistics
-            qu = (
-                """{
-                         thin_clients_statistics(limit:100, conn_id: "%s"){
-                           id
-                           conn_id
-                           message
-                           created
-                         }
-                    }"""
-                % conn_id
-            )
-            executed = await execute_scheme(
-                thin_client_schema, qu, context=auth_context
-            )
-            # Первое событие должно быть Login, второе - подключение к ВМ
-            assert executed["thin_clients_statistics"][0][
-                "message"
-            ] == "{} connected.".format(user_name)
-            assert executed["thin_clients_statistics"][1][
-                "message"
-            ] == "{} connected to VM .".format(user_name)
 
         except Exception:
             raise

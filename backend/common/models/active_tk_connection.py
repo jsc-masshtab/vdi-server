@@ -8,7 +8,6 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import and_, func
 
 from common.database import db
-from common.models.auth import User
 from common.models.pool import Pool
 from common.subscription_sources import THIN_CLIENTS_SUBSCRIPTION
 from common.veil.veil_gino import AbstractSortableStatusModel
@@ -44,6 +43,12 @@ class ActiveTkConnection(db.Model, AbstractSortableStatusModel):
     connection_type = db.Column(AlchemyEnum(Pool.PoolConnectionTypes), nullable=True)  # тип подключения к ВМ
     is_connection_secure = db.Column(db.Boolean(), default=False, nullable=False)  # используется ли TLS
 
+    # network stats overall (RDP/Spice). Текущие(последние) Характеристики взаимодействия ТК <-> ВМ
+    read_speed = db.Column(db.Integer(), default=0)  # Скорость получения байт с ВМ на ТК
+    write_speed = db.Column(db.Integer(), default=0)  # Отправка байт. Только для RDP. Спайс не дает эти данные
+    avg_rtt = db.Column(db.Float(), default=0)
+    loss_percentage = db.Column(db.Integer(), default=0)
+
     @classmethod
     async def soft_create(cls, conn_id, is_conn_init_by_user, **kwargs):
         """Создает/заменяет запись о соединении."""
@@ -62,10 +67,6 @@ class ActiveTkConnection(db.Model, AbstractSortableStatusModel):
         ):  # Флаг чтобы различить инициировано ли соединение ползователем или это авторекконкт
             await model.update_last_interaction()
 
-        user = await User.get(kwargs["user_id"])
-        await TkConnectionStatistics.create_tk_event(
-            conn_id=model.id, message="{} connected.".format(user.username)
-        )
         return model
 
     @staticmethod
@@ -102,22 +103,6 @@ class ActiveTkConnection(db.Model, AbstractSortableStatusModel):
 
     async def update_vm_data(self, vm_id, conn_type, is_conn_secure):
 
-        user = await User.get(self.user_id)
-
-        from common.models.vm import Vm
-
-        if vm_id:
-            vm = await Vm.get(vm_id)
-            vm_verbose_name = vm.verbose_name if vm else ""
-            message = "{} connected to VM {}.".format(user.username, vm_verbose_name)
-        else:
-            vm = await Vm.get(self.vm_id)
-            vm_verbose_name = vm.verbose_name if vm else ""
-            message = "{} disconnected from VM {}.".format(
-                user.username, vm_verbose_name
-            )
-        await TkConnectionStatistics.create_tk_event(conn_id=self.id, message=message)
-
         is_conn_secure = is_conn_secure if (is_conn_secure is not None) else False
         await self.update(vm_id=vm_id, connection_type=conn_type, is_connection_secure=is_conn_secure,
                           data_received=func.now()).apply()
@@ -128,23 +113,45 @@ class ActiveTkConnection(db.Model, AbstractSortableStatusModel):
     async def update_last_interaction(self):
         await self.update(last_interaction=func.now(), data_received=func.now()).apply()
 
+    async def update_network_stats(self, **kwarg):
+        conn_type = kwarg["connection_type"]
+
+        read_speed = 0
+        write_speed = 0
+        avg_rtt = kwarg["avg_rtt"]
+        min_rtt = kwarg["min_rtt"]
+        max_rtt = kwarg["max_rtt"]
+        loss_percentage = kwarg["loss_percentage"]
+
+        if conn_type == Pool.PoolConnectionTypes.SPICE.name:
+            read_speed = kwarg["total"]
+        elif conn_type == Pool.PoolConnectionTypes.RDP.name:
+            read_speed = kwarg["read_speed"]
+            write_speed = kwarg["write_speed"]
+
+        await self.update(read_speed=read_speed, write_speed=write_speed, avg_rtt=avg_rtt,
+                          loss_percentage=loss_percentage, data_received=func.now()).apply()
+
+        await TkConnectionStatistics.soft_create(conn_id=self.id,
+                                                 read_speed=read_speed,
+                                                 write_speed=write_speed,
+                                                 avg_rtt=avg_rtt,
+                                                 min_rtt=min_rtt,
+                                                 max_rtt=max_rtt,
+                                                 loss_percentage=loss_percentage
+                                                 )
+
     async def deactivate(self):
         """Соединение неативно, когда у него выставлено время дисконнекта."""
         await self.update(disconnected=func.now()).apply()
-        user = await User.get(self.user_id)
-        await TkConnectionStatistics.create_tk_event(
-            conn_id=self.id, message="{} disconnected.".format(user.username)
-        )
         # front ws notification
         await publish_data_in_internal_channel(THIN_CLIENTS_SUBSCRIPTION, "UPDATED", self)
+        # Удалить статистику, чтобы не захламлять таблицу
+        await TkConnectionStatistics.delete.where(TkConnectionStatistics.conn_id == self.id).gino.status()
 
 
 class TkConnectionStatistics(db.Model, AbstractSortableStatusModel):
-    """Накопленная статистика о соеднинении ТК.
-
-    В данный момент фиксируется факты подключения/отключения к ВМ за время соединения
-    Мб в будущем еще что-то добавим.
-    """
+    """Накопленная статистика о соеднинении ТК."""
 
     __tablename__ = "tk_connection_statistics"
 
@@ -155,15 +162,20 @@ class TkConnectionStatistics(db.Model, AbstractSortableStatusModel):
         nullable=False,
         index=True,
     )
-    message = db.Column(db.Unicode(length=128))
-    created = db.Column(
+
+    received = db.Column(
         db.DateTime(timezone=True), nullable=False, server_default=func.now()
-    )
+    )  # Время получения данных
 
-    @staticmethod
-    async def create_tk_event(conn_id, message):
-        """Фиксировать подключение/отключение клиента к вм."""
-        if not conn_id:
-            return
+    read_speed = db.Column(db.Integer(), default=0)
+    write_speed = db.Column(db.Integer(), default=0)
 
-        await TkConnectionStatistics.create(conn_id=conn_id, message=message)
+    avg_rtt = db.Column(db.Float(), default=0)
+    min_rtt = db.Column(db.Float(), default=0)
+    max_rtt = db.Column(db.Float(), default=0)
+    loss_percentage = db.Column(db.Integer(), default=0)
+
+    @classmethod
+    async def soft_create(cls, **kwargs):
+        model = await cls.create(**kwargs)
+        return model
