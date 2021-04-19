@@ -34,7 +34,7 @@
 <div class="components-info">
   <div class="component-list">
     <vdi-table-component cursor="true" class="table-with-pagination" [data]="events" [collection]="collection"
-      (sortListNow)="sortList($event)" entity="events"></vdi-table-component>
+      (sortListNow)="sortList($event)" (clickRowData)="clickRow($event)" entity="events"></vdi-table-component>
     <vdi-pagination [count]="count" [limit]="limit" [offset]="offset" (action)="toPage($event)"></vdi-pagination>
   </div>
 </div>
