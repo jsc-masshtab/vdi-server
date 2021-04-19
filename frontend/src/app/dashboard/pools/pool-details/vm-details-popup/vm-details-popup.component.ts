@@ -338,7 +338,7 @@ export class VmDetalsPopupComponent {
     {
       title: 'Размер (Байт)',
       property: 'size',
-      type: 'string'
+      type: 'bites'
     },
     {
       title: 'Статус',
