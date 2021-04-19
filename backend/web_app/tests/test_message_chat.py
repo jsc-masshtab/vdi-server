@@ -22,7 +22,7 @@ from common.subscription_sources import (
     WsMessageDirection,
 )
 
-from common.settings import PAM_AUTH
+from common.settings import AUTH_ENABLED, PAM_AUTH
 
 from web_app.tests.fixtures import (
     fixt_db,  # noqa: F401
@@ -115,7 +115,8 @@ class TestMessageChat(VdiHttpTestCase):
             # print('tk_received_msg_dict: ', tk_received_msg_dict, flush=True)
             assert tk_received_msg_dict["msg_type"] == WsMessageType.TEXT_MSG.value
             assert tk_received_msg_dict["message"] == test_text_message_to_tk
-            assert tk_received_msg_dict["sender_name"] == admin_name
+            if AUTH_ENABLED:
+                assert tk_received_msg_dict["sender_name"] == admin_name
             assert (
                 tk_received_msg_dict["direction"]
                 == WsMessageDirection.ADMIN_TO_USER.value

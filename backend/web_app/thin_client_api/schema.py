@@ -13,14 +13,14 @@ from common.languages import lang_init
 from common.log.journal import system_logger
 from common.models.active_tk_connection import (
     ActiveTkConnection,
-    TkConnectionStatistics,
+    TkConnectionStatistics
 )
 from common.models.auth import User
 from common.models.pool import Pool
 from common.models.vm import Vm
 from common.settings import REDIS_TEXT_MSG_CHANNEL, REDIS_THIN_CLIENT_CMD_CHANNEL
 from common.subscription_sources import WsMessageDirection, WsMessageType
-from common.utils import extract_ordering_data
+from common.utils import convert_gino_model_to_graphene_type, extract_ordering_data
 from common.veil.veil_decorators import administrator_required
 from common.veil.veil_errors import SilentError, ValidationError
 from common.veil.veil_redis import REDIS_CLIENT, ThinClientCmd
@@ -50,6 +50,11 @@ class ThinClientType(graphene.ObjectType):
     connection_type = ConnectionTypesGraphene()
     is_connection_secure = graphene.Boolean()
 
+    read_speed = graphene.Int()
+    write_speed = graphene.Int()
+    avg_rtt = graphene.Float()
+    loss_percentage = graphene.Int()
+
     async def resolve_is_afk(self, _info):
 
         if (
@@ -72,12 +77,19 @@ class ThinClientType(graphene.ObjectType):
         thin_client_type.vm_name = tk_db_data.verbose_name
         thin_client_type.tk_ip = tk_db_data.tk_ip
         thin_client_type.tk_os = tk_db_data.tk_os
+
         thin_client_type.connected = tk_db_data.connected
         thin_client_type.disconnected = tk_db_data.disconnected
         thin_client_type.data_received = tk_db_data.data_received
         thin_client_type.last_interaction = tk_db_data.last_interaction
+
         thin_client_type.connection_type = tk_db_data.connection_type
         thin_client_type.is_connection_secure = tk_db_data.is_connection_secure
+
+        thin_client_type.read_speed = tk_db_data.read_speed
+        thin_client_type.write_speed = tk_db_data.write_speed
+        thin_client_type.avg_rtt = tk_db_data.avg_rtt
+        thin_client_type.loss_percentage = tk_db_data.loss_percentage
 
         return thin_client_type
 
@@ -85,8 +97,15 @@ class ThinClientType(graphene.ObjectType):
 class ThinClientConnStatType(graphene.ObjectType):
     id = graphene.UUID()
     conn_id = graphene.UUID()
-    message = graphene.String()
-    created = graphene.DateTime()
+    received = graphene.DateTime()
+
+    read_speed = graphene.Int()
+    write_speed = graphene.Int()
+
+    avg_rtt = graphene.Float()
+    min_rtt = graphene.Float()
+    max_rtt = graphene.Float()
+    loss_percentage = graphene.Int()
 
     @staticmethod
     async def create_from_db_data(tk_db_data):
@@ -94,10 +113,15 @@ class ThinClientConnStatType(graphene.ObjectType):
         tk_conn_stat_type = ThinClientConnStatType()
         tk_conn_stat_type.id = tk_db_data.id
         tk_conn_stat_type.conn_id = tk_db_data.conn_id
-        tk_conn_stat_type.message = tk_db_data.message
-        tk_conn_stat_type.created = tk_db_data.created
 
         return tk_conn_stat_type
+
+
+class ThinClientConnStatOutdatedType(graphene.ObjectType):
+    id = graphene.UUID()
+    conn_id = graphene.UUID()
+    message = graphene.String()
+    created = graphene.DateTime()
 
 
 class ThinClientQuery(graphene.ObjectType):
@@ -115,13 +139,20 @@ class ThinClientQuery(graphene.ObjectType):
         user_id=graphene.UUID(default_value=None),
     )
 
-    thin_clients_statistics = graphene.List(
-        ThinClientConnStatType,
+    thin_clients_statistics = graphene.List(  # fixme: заглушка. удалить когда будет выпилено на фронте
+        ThinClientConnStatOutdatedType,
         limit=graphene.Int(default_value=100),
         offset=graphene.Int(default_value=0),
         ordering=graphene.String(default_value="created"),
         conn_id=graphene.UUID(default_value=None),
         user_id=graphene.UUID(default_value=None),
+    )
+
+    network_stats = graphene.List(
+        ThinClientConnStatType,
+        conn_id=graphene.UUID(required=True),
+        start_date=graphene.DateTime(),
+        end_date=graphene.DateTime()
     )
 
     @administrator_required
@@ -147,6 +178,10 @@ class ThinClientQuery(graphene.ObjectType):
                 ActiveTkConnection.last_interaction,
                 ActiveTkConnection.connection_type,
                 ActiveTkConnection.is_connection_secure,
+                ActiveTkConnection.read_speed,
+                ActiveTkConnection.write_speed,
+                ActiveTkConnection.avg_rtt,
+                ActiveTkConnection.loss_percentage,
                 User.id.label("user_id"),
                 User.username,
                 Vm.verbose_name,
@@ -192,48 +227,47 @@ class ThinClientQuery(graphene.ObjectType):
         return graphene_types
 
     @administrator_required
-    async def resolve_thin_clients_statistics(
-        self, _info, limit, offset, ordering, conn_id=None, user_id=None, **kwargs
-    ):
+    async def resolve_thin_clients_statistics(self, _info, limit, offset, ordering,
+                                              conn_id=None, user_id=None, **kwargs):
+        """Заглушка пока на фронте не выпилено."""
+        return []
 
-        query = db.select(
-            [
-                TkConnectionStatistics.id,
-                TkConnectionStatistics.conn_id,
-                TkConnectionStatistics.message,
-                TkConnectionStatistics.created,
-            ]
-        )
+    @administrator_required
+    async def resolve_network_stats(self, _info, conn_id, **kwargs):
+        """Получение данных для построения графика."""
+        cur_time = datetime.now(timezone.utc)
+        # Если start_date не указан, то берем время 1 минут с текущего момента
+        start_date = kwargs.get("start_date")
+        if not start_date:
+            start_date = (cur_time - timedelta(minutes=1))
 
-        query = query.select_from(
-            TkConnectionStatistics.join(ActiveTkConnection, isouter=True)
-        )
+        end_date = kwargs.get("end_date")
+        if not end_date:
+            end_date = cur_time
 
-        # ordering
-        query = TkConnectionStatistics.build_ordering(query, ordering)
+        filters = ThinClientQuery.build_network_stats_filters(conn_id, start_date, end_date)
 
-        # filtering
-        filters = ThinClientQuery.build_thin_clients_stats_filters(conn_id, user_id)
-        if filters:
-            query = query.where(and_(*filters))
-
-        tk_stat_db_data_container = await query.limit(limit).offset(offset).gino.all()
+        tk_stat_db_data = await TkConnectionStatistics.query.where(and_(*filters)).\
+            order_by(TkConnectionStatistics.received). \
+            gino.all()
 
         # conversion
         graphene_types = [
-            ThinClientConnStatType.create_from_db_data(tk_db_data)
-            for tk_db_data in tk_stat_db_data_container
+            convert_gino_model_to_graphene_type(tk_db_data, ThinClientConnStatType)
+            for tk_db_data in tk_stat_db_data
         ]
         return graphene_types
 
     @staticmethod
-    def build_thin_clients_stats_filters(conn_id, user_id):
-        """Получть статистику либо по определенному соединению, либо по соеднинениям определенного пользователя."""
+    def build_network_stats_filters(conn_id, start_date, end_date):
+
         filters = []
         if conn_id:
-            filters.append(ActiveTkConnection.id == conn_id)
-        if user_id:
-            filters.append(ActiveTkConnection.user_id == user_id)
+            filters.append((TkConnectionStatistics.conn_id == conn_id))
+        if start_date:
+            filters.append((TkConnectionStatistics.received >= start_date))
+        if end_date:
+            filters.append((TkConnectionStatistics.received <= end_date))
 
         return filters
 
