@@ -711,6 +711,21 @@ export class PoolDetailsService {
         });
     }
 
+    public changeTemplate(data) {
+        return this.service.mutate<any>({
+            mutation: gql` mutation pools($id: UUID!, $controller_id: UUID!) {
+                            changeTemplate(vm_id: $id, controller_id: $controller_id) {
+                                ok
+                            }
+                        }
+                    `,
+            variables: {
+                method: 'POST',
+                ...data
+            }
+        });
+    }
+
     public getVm(pool_id: string, vm_id: string, controller_address: string, offset = 0): QueryRef<any, any> {
         return  this.service.watchQuery({
             query: gql` query pools($pool_id: String, $vm_id: UUID, $controller_address: UUID, $offset: Int) {
@@ -731,6 +746,7 @@ export class PoolDetailsService {
                                       spice_stream
                                       user_power_state
                                       boot_type
+                                      thin
                                       start_on_boot
                                       address
                                       status
@@ -742,6 +758,10 @@ export class PoolDetailsService {
                                       }
                                       parent_name
                                       resource_pool {
+                                          id
+                                          verbose_name
+                                      }
+                                      controller {
                                           id
                                           verbose_name
                                       }

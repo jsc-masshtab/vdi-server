@@ -55,6 +55,11 @@
             <fa-icon [icon]="['fas','plus-circle']" size="xs"></fa-icon>
             <span class="name">Монтировать образ VeiL utils</span>
     </button>
+
+    <button *ngIf="data?.vm.thin" (click)="changeTemplate()" title="Обновление шаблона и его тонких клонов" class="btn-control">
+            <fa-icon [icon]="['fas','share-alt']" size="xs"></fa-icon>
+            <span class="name">Изменить шаблон</span>
+    </button>
   </div>
 
   <div class="details-row details-static">

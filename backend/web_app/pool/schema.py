@@ -1503,7 +1503,7 @@ class TemplateChange(graphene.Mutation):
         ok = response.success
         if not ok:
             for error in response.errors:
-                raise SilentError(error["detail"])
+                raise SilentError(_("VeiL ECP error: {}.").format(error["detail"]))
 
         await system_logger.info(
             _("The template {} change and distribute this changes to thin clones.").format(
