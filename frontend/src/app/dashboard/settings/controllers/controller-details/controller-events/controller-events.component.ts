@@ -4,7 +4,8 @@ import { MatDialog } from '@angular/material/dialog';
 import { Subscription } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { WaitService } from 'src/app/dashboard/common/components/single/wait/wait.service';
-import { EventsService } from 'src/app/dashboard/log/events/all-events/events.service';
+import { ControllerEventsService } from './controller-events.service';
+import { InfoEventComponent } from 'src/app/dashboard/log/events/info-event/info-event.component'
 
 @Component({
   selector: 'vdi-controller-events',
@@ -59,7 +60,7 @@ export class ControllerEventsComponent implements OnInit, OnDestroy {
   public queryset: any;
 
   constructor(
-    private service: EventsService,
+    private service: ControllerEventsService,
     private waitService: WaitService,
     public dialog: MatDialog
   ) { }
@@ -104,7 +105,6 @@ export class ControllerEventsComponent implements OnInit, OnDestroy {
 
   public refresh(): void {
     this.getEvents();
-    this.getAllUsers();
   }
 
   public toPage(message: any): void {
@@ -116,13 +116,6 @@ export class ControllerEventsComponent implements OnInit, OnDestroy {
     this.service.paramsForGetEvents.spin = param.spin;
     this.service.paramsForGetEvents.nameSort = param.nameSort;
     this.getEvents();
-  }
-
-  public getAllUsers(): void {
-    this.service.getAllUsers().valueChanges.pipe(map(data => data.data))
-      .subscribe((data) => {
-        this.users = [...data.users];
-      });
   }
 
   public getEvents(): void {
@@ -154,13 +147,27 @@ export class ControllerEventsComponent implements OnInit, OnDestroy {
     this.queryset = queryset;
 
     this.waitService.setWait(true);
+
     this.service.getAllEvents(queryset).valueChanges.pipe(map(data => data.data))
       .subscribe((data) => {
-        this.events = [...data.events];
-        this.entity_types = [...data.entity_types];
-        this.count = data.count;
+        this.events = [...data.veil_events];
+        this.count = data.veil_events_count;
         this.waitService.setWait(false);
       });
+  }
+
+  public clickRow(event): void {
+    this.openEventDetails(event);
+  }
+
+  public openEventDetails(event: Event): void {
+    this.dialog.open(InfoEventComponent, {
+      disableClose: true,
+      width: '700px',
+      data: {
+        event
+      }
+    });
   }
 
   private listenSockets() {
