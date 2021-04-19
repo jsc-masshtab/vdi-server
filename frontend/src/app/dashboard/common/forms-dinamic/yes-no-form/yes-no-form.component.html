@@ -9,10 +9,11 @@
 
   <div class="form-message">
     <p>{{ data?.form?.question }}</p>
-  
+
     <p *ngIf="data.form.description" class="description">{{ data?.form?.description }}</p>
+    <p *ngIf="data.form.error" class="error">{{ data?.form?.error }}</p>
   </div>
-  
+
   <div class="form-actions">
     <button (click)="send()" class="form-btn">
       <span class="action-name">{{ data?.form?.button }}</span>

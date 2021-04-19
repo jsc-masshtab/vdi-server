@@ -51,7 +51,7 @@
         font-size: 14px;
         margin-left: 20px;
     }
-    
+
     .form-fields {
         padding: 12px 7px;
         display: flex;
@@ -76,7 +76,20 @@
         justify-content: center;
         align-items: center;
         padding: 0 15px;
-        
+
+        >  p {
+            margin-bottom: 10px;
+        }
+    }
+
+    .form-error {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        padding: 0 15px;
+        color: #ce3131;
+
         >  p {
             margin-bottom: 10px;
         }
@@ -173,7 +186,7 @@
         .action-name {
             margin-left: 3px;
         }
-    
+
         &:hover {
             background-color: #759296;
             color: white;
@@ -187,7 +200,7 @@
         &.width-between {
             width: 49.9%;
         }
-                
+
     }
 }
 
@@ -233,7 +246,7 @@ label {
 
     & input:checked + .radio-text:after {
         display: block;
-    }    
+    }
 }
 
 .manager-progress {

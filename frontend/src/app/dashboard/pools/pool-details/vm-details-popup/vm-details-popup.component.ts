@@ -589,7 +589,6 @@ export class VmDetalsPopupComponent {
   }
 
   public attachVeilUtils() {
-    console.log(this.data)
     this.dialog.open(YesNoFormComponent, {
         disableClose: true,
         width: '500px',
@@ -604,7 +603,30 @@ export class VmDetalsPopupComponent {
             action: 'attachVeilUtils',
             body: {
               id: this.data.vm.id,
-              controller_id: this.data.vms.controller.id
+              controller_id: this.data.vm.controller.id
+            }
+          }
+        }
+      })
+  }
+
+  public changeTemplate() {
+    this.dialog.open(YesNoFormComponent, {
+        disableClose: true,
+        width: '500px',
+        data: {
+          form: {
+            header: 'Подтверждение действия',
+            question: `Перенести настройки тонкого клона ${this.data.vm.verbose_name} в шаблон ${this.data.vm.parent_name}?`,
+            error: `Внесенные в шаблон настройки применятся ко всем клонам`,
+            button: 'Выполнить'
+          },
+          request: {
+            service: this.service,
+            action: 'changeTemplate',
+            body: {
+              id: this.data.vm.id,
+              controller_id: this.data.vm.controller.id
             }
           }
         }
