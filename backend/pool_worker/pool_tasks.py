@@ -386,7 +386,7 @@ class PrepareVmTask(AbstractTask):
         pool = await Pool.get(vm.pool_id)
 
         pool_type = await pool.pool_type
-        if pool_type == Pool.PoolTypes.AUTOMATED:
+        if pool_type == Pool.PoolTypes.AUTOMATED or pool_type == Pool.PoolTypes.GUEST:
             auto_pool = await AutomatedPool.get(pool.id)
             active_directory_object = await AuthenticationDirectory.query.where(
                 AuthenticationDirectory.status == Status.ACTIVE

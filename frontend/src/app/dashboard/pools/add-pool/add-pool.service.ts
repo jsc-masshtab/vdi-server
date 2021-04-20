@@ -166,4 +166,53 @@ export class AddPoolService {
             }
         });
     }
+
+    addGuestPool(data) {
+        let query: string = ` mutation
+            pools(
+                $connection_types: [PoolConnectionTypes!]
+                $controller_id: UUID!
+                $resource_pool_id: UUID!
+                $verbose_name: String!
+                $template_id: UUID!
+
+                $vm_name_template: String!
+
+                $increase_step: Int
+                $reserve_size: Int
+                $total_size: Int
+                $initial_size: Int
+                $ad_cn_pattern: String
+            ) {
+                addDynamicPool(
+                    connection_types: $connection_types
+                    controller_id: $controller_id
+                    resource_pool_id: $resource_pool_id
+                    verbose_name: $verbose_name
+                    template_id: $template_id
+
+                    vm_name_template: $vm_name_template
+
+                    increase_step: $increase_step
+                    reserve_size: $reserve_size
+                    total_size: $total_size
+                    initial_size: $initial_size
+                    create_thin_clones: true
+                    prepare_vms: true
+                    ad_cn_pattern: $ad_cn_pattern
+                    is_guest: true
+                ) {
+                    ok
+                }
+            }
+        `;
+
+        return this.service.mutate<any>({
+            mutation: gql(query),
+            variables: {
+                method: 'POST',
+                ...data
+            }
+        });
+    }
 }

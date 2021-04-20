@@ -369,7 +369,7 @@ class Vm(VeilModel):
             await system_logger.error(message=str(err_msg))
 
     @staticmethod
-    async def remove_vms(vm_ids, creator, remove_vms_on_controller=False):
+    async def remove_vms(vm_ids, creator="system", remove_vms_on_controller=False):
         """Remove given vms."""
         if not vm_ids:
             return False
