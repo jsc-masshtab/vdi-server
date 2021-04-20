@@ -129,7 +129,6 @@ class Controller(AbstractSortableStatusModel, VeilModel):
             await self.activate()
         elif not self.stopped:
             await self.activate()
-            return True
         else:
             await self.deactivate()
         return connection_is_ok
