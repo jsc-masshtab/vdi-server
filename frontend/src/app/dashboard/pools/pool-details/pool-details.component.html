@@ -15,7 +15,7 @@
             <fa-icon [icon]="['fas','sync-alt']"></fa-icon>
         </button>
 
-        <button (click)="expandPool()" *ngIf="menuActive === 'info' && pool?.pool_type == 'AUTOMATED'" title="Расширить пул" class="btn-control">
+        <button (click)="expandPool()" *ngIf="menuActive === 'info' && (pool?.pool_type == 'AUTOMATED' || pool?.pool_type == 'GUEST')" title="Расширить пул" class="btn-control">
             <fa-icon [icon]="['fas','expand']" size="xs"></fa-icon>
             <span class="name">Расширить пул</span>
         </button>
@@ -36,17 +36,12 @@
                 <span class="name">Добавить ВМ</span>
             </button>
 
-<!--            <button *ngIf="typePool === 'automated'" (click)="prepareVM()" title="Подготовить ВМ" class="btn-control">-->
-<!--                <fa-icon [icon]="['fas','suitcase']" size="xs"></fa-icon>-->
-<!--                <span class="name">Подготовить ВМ</span>-->
-<!--            </button>-->
-
             <button (click)="removeVM()" title="Удалить ВМ из пула" class="btn-control">
                 <fa-icon [icon]="['fas','trash-alt']" size="xs"></fa-icon>
                 <span class="name">Удалить ВМ</span>
             </button>
 
-            <button (click)="backupVms()" *ngIf="menuActive === 'vms' && pool?.vms?.length" title="Создать резервные копии всех ВМ в пуле" class="btn-control">
+            <button (click)="backupVms()" *ngIf="menuActive === 'vms' && pool?.vms?.length && pool?.pool_type != 'GUEST'" title="Создать резервные копии всех ВМ в пуле" class="btn-control">
                 <fa-icon [icon]="['fas','clone']" size="xs"></fa-icon>
                 <span class="name">Резервное копирование</span>
             </button>
@@ -102,6 +97,11 @@
                 <ng-container *ngIf="typePool === 'static'">
                     <vdi-table-into *ngIf="menuActive === 'info'" [item]="pool" [collection]="collectionDetailsStatic" (action)="actionEdit($event)"></vdi-table-into>
                     <vdi-table-component *ngIf="menuActive === 'vms'" [data]="pool?.vms" [collection]="collectionVmsStatic" entity="vm" (clickRowData)="clickVm($event)" cursor="true"></vdi-table-component>
+                </ng-container>
+
+                <ng-container *ngIf="typePool === 'guest'">
+                    <vdi-table-into *ngIf="menuActive === 'info'" [item]="pool" [collection]="collectionDetailsGuest" (action)="actionEdit($event)"></vdi-table-into>
+                    <vdi-table-component *ngIf="menuActive === 'vms'" [data]="pool?.vms" [collection]="collectionVmsGuest" entity="vm" (clickRowData)="clickVm($event)" cursor="true"></vdi-table-component>
                 </ng-container>
 
                 <vdi-table-component *ngIf="menuActive === 'users'" [data]="pool?.users" [collection]="collectionUsers"></vdi-table-component>

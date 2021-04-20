@@ -39,7 +39,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
     {
       title: 'Тип',
       property: 'pool_type',
-      type: 'string'
+      type: 'pool_type'
     },
     {
       title: 'Тип подключения пула',
@@ -89,7 +89,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
     {
       title: 'Тип',
       property: 'pool_type',
-      type: 'string'
+      type: 'pool_type'
     },
     {
       title: 'Тип подключения пула',
@@ -198,6 +198,121 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
     }
   ];
 
+  public collectionDetailsGuest: any[] = [
+    {
+      title: 'Название',
+      property: 'verbose_name',
+      type: 'string',
+      edit: 'changeName'
+    },
+    {
+      title: 'Тип',
+      property: 'pool_type',
+      type: 'pool_type'
+    },
+    {
+      title: 'Тип подключения пула',
+      property: 'assigned_connection_types',
+      type: 'string',
+      edit: 'changeConnectionType'
+    },
+    {
+      title: 'Контроллер',
+      property: 'controller',
+      property_lv2: 'verbose_name'
+    },
+    {
+      title: 'Адрес контроллера',
+      property: 'controller',
+      property_lv2: 'address'
+    },
+    {
+      title: 'Тонкие клоны',
+      property: 'create_thin_clones',
+      type: {
+        typeDepend: 'boolean',
+        propertyDepend: ['Создаются', 'Не создаются']
+      },
+    },
+    {
+      title: 'Подготавливать ВМ',
+      property: 'prepare_vms',
+      type: {
+        typeDepend: 'boolean',
+        propertyDepend: ['Да', 'Нет']
+      },
+    },
+    {
+      title: 'Держать ВМ с пользователями включенными',
+      property: 'keep_vms_on',
+      type: {
+        typeDepend: 'boolean',
+        propertyDepend: ['Да', 'Нет']
+      },
+      edit: 'changeAutomatedPoolKeep_vms_on'
+    },
+    {
+      title: 'Пул ресурсов',
+      property: 'resource_pool',
+      property_lv2: 'verbose_name'
+    },
+    {
+      title: 'Начальное количество ВМ',
+      property: 'initial_size',
+      type: 'string'
+    },
+    {
+      title: 'Шаг расширения пула',
+      property: 'increase_step',
+      type: 'string',
+      edit: 'changeAutomatedPoolIncreaseStep'
+    },
+    {
+      title: 'Максимальное количество создаваемых ВМ',
+      property: 'total_size',
+      type: 'string',
+      edit: 'changeMaxAutomatedPool'
+    },
+    {
+      title: 'Пороговое количество свободных ВМ',
+      property: 'reserve_size',
+      type: 'string',
+      edit: 'changeAutomatedPoolReserveSize'
+    },
+    {
+      title: 'Количество доступных ВМ',
+      property: 'vms',
+      type: 'array-length'
+    },
+    {
+      title: 'Шаблон ВМ',
+      property: 'template',
+      property_lv2: 'verbose_name'
+    },
+    {
+      title: 'Шаблон для имени ВМ',
+      property: 'vm_name_template',
+      type: 'string',
+      edit: 'changeTemplateForVmAutomatedPool'
+    },
+    {
+      title: 'Наименование групп для добавления ВМ в AD',
+      property: 'ad_cn_pattern',
+      type: 'string',
+      edit: 'changeAdCnPatternForGroupAutomatedPool'
+    },
+    {
+      title: 'Пользователи',
+      property: 'users',
+      type: 'array-length'
+    },
+    {
+      title: 'Статус',
+      property: 'status',
+      type: 'string'
+    }
+  ];
+
   public collectionVmsAutomated: any[] = [
     {
       title: 'Название',
@@ -208,8 +323,8 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
     },
     {
       title: 'Шаблон',
-      property: 'template',
-      property_lv2: 'verbose_name'
+      property: 'parent_name',
+      type: 'string'
     },
     // {
     //   title: 'Принадлежность',
@@ -219,6 +334,35 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
     //     propertyDepend: ['В домене', 'Не в домене']
     //   }
     // },
+    {
+      title: 'Пользователь',
+      property: 'user',
+      property_lv2: 'username'
+    },
+    {
+      title: 'Статус',
+      property: 'status'
+    },
+    {
+      title: 'Гостевой агент',
+      property: 'qemu_state',
+      type: 'string'
+    }
+  ];
+
+  public collectionVmsGuest: any[] = [
+    {
+      title: 'Название',
+      property: 'verbose_name',
+      class: 'name-start',
+      icon: 'desktop',
+      type: 'string'
+    },
+    {
+      title: 'Шаблон',
+      property: 'parent_name',
+      type: 'string'
+    },
     {
       title: 'Пользователь',
       property: 'user',

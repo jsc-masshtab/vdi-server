@@ -125,8 +125,9 @@ class PoolGetVm(BaseHandler, ABC):
             return await self.log_finish(response)
 
         # Запрос на расширение пула
-        if await pool.pool_type == PoolModel.PoolTypes.AUTOMATED:
-            await self._send_cmd_to_expand_pool(pool)
+        pool_type = await pool.pool_type
+        if pool_type == PoolModel.PoolTypes.AUTOMATED or pool_type == PoolModel.PoolTypes.GUEST:
+            auto_pool = await AutomatedPool.get(pool.id)
             pool_extended = True
         vm = await pool.get_vm(user_id=user.id)
         if not vm:
@@ -135,9 +136,10 @@ class PoolGetVm(BaseHandler, ABC):
             # Если свободная VM найдена, нужно закрепить ее за пользователем.
             if vm:
                 await vm.add_user(user.id, creator="system")
-                if await pool.pool_type == PoolModel.PoolTypes.AUTOMATED:
+                pool_type = await pool.pool_type
+                if pool_type == PoolModel.PoolTypes.AUTOMATED or pool_type == PoolModel.PoolTypes.GUEST:
                     await self._send_cmd_to_expand_pool(pool)
-            elif pool_extended:
+            elif pool_extended and (auto_pool.total_size > await pool.get_vm_amount()):
                 response = {
                     "errors": [
                         {

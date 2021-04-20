@@ -36,6 +36,8 @@
 
             <span *ngIf="obj.type === 'array-length'">{{ item[obj.property]?.length }}</span>
 
+            <span *ngIf="obj.type === 'pool_type'">{{ item[obj.property] | poolType }}</span>
+
             <ul *ngIf="obj.type === 'array'">
               <li *ngFor="let item of item[obj.property]">{{item}}</li>
             </ul>

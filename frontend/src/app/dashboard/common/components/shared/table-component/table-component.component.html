@@ -87,6 +87,8 @@
 
                     <span *ngIf="obj.type === 'array-length'">{{ item[obj.property]?.length }}</span>
 
+                    <span *ngIf="obj.type === 'pool_type'">{{ item[obj.property] | poolType }}</span>
+
                     <ng-container *ngIf="obj.type.typeDepend === 'propertyInObjectsInArray'">
                       <ng-container *ngIf="item[obj.property]?.length; else nothing">
                         <span class="for-wrap">

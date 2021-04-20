@@ -44,7 +44,7 @@ export class PoolDetailsService {
     }
 
     public getPool(pool_id: string | number, type: string): QueryRef<any, any> {
-        if (type === 'automated') {
+        if (type === 'automated' || type === 'guest') {
             return this.service.watchQuery({
                 query: gql`  query pools($pool_id: String) {
                                 pool(pool_id: $pool_id) {
@@ -354,7 +354,7 @@ export class PoolDetailsService {
             });
         }
 
-        if (pool_type === 'automated') {
+        if (pool_type === 'automated' || pool_type === 'guest') {
             return this.service.mutate<any>({
                 mutation: gql`
                                 mutation pools($connection_types: [PoolConnectionTypes!], $pool_id: UUID!,$verbose_name: String,

@@ -58,7 +58,7 @@ export class PoolsComponent extends DetailsMove implements OnInit, OnDestroy {
     {
       title: 'Тип',
       property: 'pool_type',
-      type: 'string',
+      type: 'pool_type',
       sort: true
     },
     {

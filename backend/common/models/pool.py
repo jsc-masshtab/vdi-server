@@ -66,13 +66,14 @@ class Pool(VeilModel):
     """На данный момент отсутствует смысловая валидация на уровне таблиц (она в схемах)."""
 
     class PoolTypes:
-        """Доступные типы подключения служб каталогов."""
+        """Доступные типы пулов."""
 
         AUTOMATED = "AUTOMATED"
         STATIC = "STATIC"
+        GUEST = "GUEST"
 
     class PoolConnectionTypes(Enum):
-        """Типы подключений к VM доступные пулу."""
+        """Типы подключений к ВМ, доступные пулу."""
 
         SPICE = "SPICE"
         SPICE_DIRECT = "SPICE_DIRECT"
@@ -141,17 +142,25 @@ class Pool(VeilModel):
 
     @property
     async def is_automated_pool(self):
-        return await db.scalar(db.exists().where(AutomatedPool.id == self.id).select())
+        return await AutomatedPool.get(self.id)
 
     @property
     async def pool_type(self):
         """Возвращает тип пула виртуальных машин."""
         is_automated = await self.is_automated_pool
-        return Pool.PoolTypes.AUTOMATED if is_automated else Pool.PoolTypes.STATIC
+        if is_automated:
+            pool = await AutomatedPool.get(self.id)
+            if pool.is_guest:
+                pool_type = Pool.PoolTypes.GUEST
+            else:
+                pool_type = Pool.PoolTypes.AUTOMATED
+        else:
+            pool_type = Pool.PoolTypes.STATIC
+        return pool_type
 
     @property
     async def template_id(self):
-        """Возвращает template_id для автоматического пула, либо null."""
+        """Возвращает template_id для автоматического или гостевого пула, либо null."""
         template_id = (
             await AutomatedPool.select("template_id")
             .where(AutomatedPool.id == self.id)
@@ -236,9 +245,13 @@ class Pool(VeilModel):
         pool_type = case(
             [
                 (
-                    AutomatedPool.id.isnot(None),
+                    and_(AutomatedPool.id.isnot(None), AutomatedPool.is_guest.isnot(True)),
                     literal_column("'{}'".format(Pool.PoolTypes.AUTOMATED)),
-                )
+                ),
+                (
+                    and_(AutomatedPool.id.isnot(None), AutomatedPool.is_guest.isnot(False)),
+                    literal_column("'{}'".format(Pool.PoolTypes.GUEST)),
+                ),
             ],
             else_=literal_column("'{}'".format(Pool.PoolTypes.STATIC)),
         ).label(Pool.POOL_TYPE_LABEL)
@@ -737,9 +750,14 @@ class Pool(VeilModel):
             automated_pool = await AutomatedPool.get(self.id)
 
             if automated_pool:
-                await system_logger.debug(
-                    _("Delete VMs for AutomatedPool {}.").format(self.verbose_name)
-                )
+                if automated_pool.is_guest:
+                    await system_logger.debug(
+                        _("Delete VMs for GuestPool {}.").format(self.verbose_name)
+                    )
+                else:
+                    await system_logger.debug(
+                        _("Delete VMs for AutomatedPool {}.").format(self.verbose_name)
+                    )
                 vm_ids = await VmModel.get_vms_ids_in_pool(self.id)
                 for vm_id in vm_ids:
                     vm = await VmModel.get(vm_id)
@@ -953,7 +971,7 @@ class Pool(VeilModel):
             )
         return vms_info
 
-    async def remove_vms(self, vm_ids, creator):
+    async def remove_vms(self, vm_ids, creator="system"):
         """Перенесенный метод из схемы и модели ВМ."""
         if not vm_ids:
             entity = {"entity_type": EntityType.POOL, "entity_uuid": None}
@@ -1323,6 +1341,7 @@ class AutomatedPool(db.Model):
     prepare_vms = db.Column(db.Boolean(), nullable=False, default=True)
     # Группы/Контейнеры в Active Directory для назначения виртуальным машинам пула
     ad_cn_pattern = db.Column(db.Unicode(length=1000), nullable=True)
+    is_guest = db.Column(db.Boolean(), nullable=False, default=False)
 
     # ----- ----- ----- ----- ----- ----- -----
     # Properties:
@@ -1388,6 +1407,7 @@ class AutomatedPool(db.Model):
         connection_types,
         tag,
         ad_cn_pattern: str = None,
+        is_guest: bool = False,
     ):
         """Nested transactions are atomic."""
         async with db.transaction():
@@ -1412,17 +1432,26 @@ class AutomatedPool(db.Model):
                 create_thin_clones=create_thin_clones,
                 prepare_vms=prepare_vms,
                 ad_cn_pattern=ad_cn_pattern,
+                is_guest=is_guest,
             )
             # Записываем событие в журнал
             description = _(
                 "Initial_size: {}, total_size: {}, increase_step {}, reserve_size {}."
             ).format(initial_size, total_size, increase_step, reserve_size)
-            await system_logger.info(
-                _("AutomatedPool {} is created.").format(verbose_name),
-                user=creator,
-                entity=pool.entity,
-                description=description,
-            )
+            if automated_pool.is_guest:
+                await system_logger.info(
+                    _("GuestPool {} is created.").format(verbose_name),
+                    user=creator,
+                    entity=pool.entity,
+                    description=description,
+                )
+            else:
+                await system_logger.info(
+                    _("AutomatedPool {} is created.").format(verbose_name),
+                    user=creator,
+                    entity=pool.entity,
+                    description=description,
+                )
 
             return automated_pool
 
@@ -1460,7 +1489,7 @@ class AutomatedPool(db.Model):
 
             if pool_kwargs:
                 await system_logger.debug(
-                    _("Update Pool values for AutomatedPool {}.").format(
+                    _("Update Pool {} values.").format(
                         await self.verbose_name
                     )
                 )
@@ -1485,7 +1514,7 @@ class AutomatedPool(db.Model):
             if auto_pool_kwargs:
                 desc = str(auto_pool_kwargs)
                 await system_logger.debug(
-                    _("Update AutomatedPool values for {}.").format(
+                    _("Update Pool {} values.").format(
                         await self.verbose_name
                     ),
                     description=desc,
@@ -1657,7 +1686,7 @@ class AutomatedPool(db.Model):
         return veil_template.os_type
 
     async def add_initial_vms(self):
-        """Create required initial amount of VMs for auto pool."""
+        """Create required initial amount of VMs for pool."""
         # Fetching template info from controller.
         verbose_name = await self.verbose_name
         pool_os_type = await self.template_os_type

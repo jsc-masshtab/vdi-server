@@ -44,6 +44,7 @@ export class PoolAddComponent implements OnInit, OnDestroy {
   public sharedData: FormGroup;
   public staticPool: FormGroup;
   public dynamicPool: FormGroup;
+  public guestPool: FormGroup;
 
   public auth_dirs: any[] = []
 
@@ -105,6 +106,20 @@ export class PoolAddComponent implements OnInit, OnDestroy {
       ...this.auth_dirs.length ? { prepare_vms: true } : {},
     }, { validators: this.totalSizeValidator() });
 
+    this.guestPool = this.fb.group({
+      template_id: ['', Validators.required],
+      vm_name_template: ['', [Validators.required, Validators.pattern(/^([a-zA-Z]+[a-zA-Z0-9-]*){0,63}$/)]],
+      ...this.auth_dirs.length ? { ad_cn_pattern: [''] } : {},
+      increase_step: [1, [Validators.required, Validators.max(200), Validators.min(1)]],
+      reserve_size: [1, [Validators.required, Validators.max(200), Validators.min(1)]],
+      initial_size: [1, [Validators.required, Validators.max(200), Validators.min(1)]],
+      total_size: [1, [Validators.required, Validators.max(10000), Validators.min(1)]],
+
+      create_thin_clones: true,
+      is_guest: true,
+      ...this.auth_dirs.length ? { prepare_vms: true } : {},
+    }, { validators: this.totalSizeValidator() });
+
     this.toStep('type');
   }
 
@@ -116,6 +131,7 @@ export class PoolAddComponent implements OnInit, OnDestroy {
       this.data[type] = res;
       if (this.data.templates.length !== 0) {
         this.dynamicPool.get('template_id').setValue(this.data['templates'][0]['id']);
+        this.guestPool.get('template_id').setValue(this.data['templates'][0]['id']);
       }
     });
   }
@@ -154,6 +170,7 @@ export class PoolAddComponent implements OnInit, OnDestroy {
         this.sharedData.reset();
         this.staticPool.reset();
         this.dynamicPool.reset();
+        this.guestPool.reset();
 
       }
                    break;
@@ -197,6 +214,8 @@ export class PoolAddComponent implements OnInit, OnDestroy {
 
           this.dynamicPool.controls['template_id'].reset();
 
+          this.guestPool.controls['template_id'].reset();
+
           if (value) {
             this.getData('templates', {
               id_: this.sharedData.get('controller_id').value,
@@ -218,9 +237,12 @@ export class PoolAddComponent implements OnInit, OnDestroy {
             } else {
               this.toStep('done');
             }
-          } else {
+          } else if (this.type === 'dynamic') {
             this.checkValid = false;
             this.toStep('dynamic');
+          } else {
+            this.checkValid = false;
+            this.toStep('guest');
           }
         }
       }                    break;
@@ -243,6 +265,25 @@ export class PoolAddComponent implements OnInit, OnDestroy {
         }
       }                     break;
 
+      case 'guest': {
+        this.guestPool.get('increase_step').setValue(1);
+        this.guestPool.get('initial_size').setValue(1);
+        this.guestPool.get('total_size').setValue(1);
+        this.guestPool.get('reserve_size').setValue(1);
+        this.guestPool.get('create_thin_clones').setValue(true);
+        this.guestPool.get('is_guest').setValue(true);
+        if (this.auth_dirs.length) { this.guestPool.get('prepare_vms').setValue(true); }
+      }             break;
+
+      case 'check_guest': {
+        if (!this.guestPool.valid) {
+          this.checkValid = true;
+          this.toStep('guest');
+        } else {
+          this.toStep('done');
+        }
+      }                   break;
+
       case 'done': {
 
         /* сборка данных для отправки */
@@ -261,6 +302,13 @@ export class PoolAddComponent implements OnInit, OnDestroy {
 
           data = { ...data, ...this.dynamicPool.value };
           method = 'addDynamicPool';
+
+        }
+
+        if (this.type === 'guest') {
+
+          data = { ...data, ...this.guestPool.value };
+          method = 'addGuestPool';
 
         }
 

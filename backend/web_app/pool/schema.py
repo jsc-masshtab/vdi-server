@@ -625,8 +625,8 @@ class DeletePoolMutation(graphene.Mutation, PoolValidator):
 
         pool_type = await pool.pool_type
 
-        # Авто пул
-        if pool_type == Pool.PoolTypes.AUTOMATED:
+        # Авто пул или Гостевой пул
+        if pool_type == Pool.PoolTypes.AUTOMATED or pool_type == Pool.PoolTypes.GUEST:
             await execute_delete_pool_task(
                 str(pool.id), full=full, wait_for_result=False
             )
@@ -849,7 +849,7 @@ class UpdateStaticPoolMutation(graphene.Mutation, PoolValidator):
 
 
 # --- --- --- --- ---
-# Automated (Dynamic) pool mutations
+# Automated (Dynamic) and Guest pool mutations
 class ExpandPoolMutation(graphene.Mutation, PoolValidator):
     """Запускает задачу на расширение пула."""
 
@@ -929,6 +929,7 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator, ControllerFe
         ad_cn_pattern = graphene.String(
             description="Наименование групп для добавления ВМ в AD"
         )
+        is_guest = graphene.Boolean(default_value=False)
 
     pool = graphene.Field(lambda: PoolType)
     ok = graphene.Boolean()
@@ -953,6 +954,7 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator, ControllerFe
         prepare_vms,
         connection_types,
         ad_cn_pattern: str = None,
+        is_guest: bool = False,
     ):
         """Мутация создания Автоматического(Динамического) пула виртуальных машин."""
         controller = await cls.fetch_by_id(controller_id)
@@ -980,10 +982,11 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator, ControllerFe
                 connection_types=connection_types,
                 ad_cn_pattern=ad_cn_pattern,
                 tag=tag,
+                is_guest=is_guest,
             )
         except Exception as E:  # Возможные исключения: дубликат имени вм
             desc = str(E)
-            error_msg = _("Failed to create automated pool {}.").format(verbose_name)
+            error_msg = _("Failed to create pool {}.").format(verbose_name)
             entity = {"entity_type": EntityType.POOL, "entity_uuid": None}
             raise SimpleError(error_msg, description=desc, user=creator, entity=entity)
 
@@ -1072,7 +1075,7 @@ class UpdateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
                 )
             except UniqueViolationError:
                 error_msg = _(
-                    "Failed to update automated pool {}. Name must be unique."
+                    "Failed to update pool {}. Name must be unique."
                 ).format(kwargs["verbose_name"])
                 entity = {"entity_type": EntityType.POOL, "entity_uuid": None}
                 raise SimpleError(error_msg, user=creator, entity=entity)

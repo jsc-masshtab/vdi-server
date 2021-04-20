@@ -35,9 +35,9 @@ export class InfoBackupComponent {
       type: 'string'
     },
     {
-      title: 'Размер (Байт)',
+      title: 'Размер',
       property: 'size',
-      type: 'string'
+      type: 'bites'
     },
     {
       title: 'Статус',

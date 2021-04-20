@@ -10,7 +10,7 @@
     <button (click)="addUser()" title="Назначить пользователя" class="btn-control"><fa-icon [icon]="['fas','plus-circle']"></fa-icon><fa-icon [icon]="['fas','user']"></fa-icon></button>
     <button *ngIf="data?.username" (click)="removeUser()" title="Освободить от пользователя" class="btn-control"><fa-icon [icon]="['fas','trash-alt']"></fa-icon><fa-icon [icon]="['fas','user']"></fa-icon></button>
 
-    <button [mat-dialog-close]="true" *ngIf="data?.typePool === 'automated'" (click)="prepareVM()" title="Подготовить ВМ" class="btn-control">
+    <button [mat-dialog-close]="true" *ngIf="data?.typePool != 'static'" (click)="prepareVM()" title="Подготовить ВМ" class="btn-control">
       <fa-icon [icon]="['fas','suitcase']"></fa-icon><fa-icon [icon]="['fas','desktop']"></fa-icon>
     </button>
 
@@ -38,7 +38,7 @@
       <fa-icon [icon]="['fas','fire']"></fa-icon>
     </button>
 
-    <button (click)="action('backup')" class="btn-control" title="Создать резервную копию">
+    <button *ngIf="data?.typePool != 'guest'" (click)="action('backup')" class="btn-control" title="Создать резервную копию">
       <fa-icon [icon]="['fas','clone']"></fa-icon>
     </button>
 
@@ -65,7 +65,7 @@
   <div class="details-row details-static">
     <ul class="details-menu">
       <li (click)="routeTo('info')" [class.active]="menuActive === 'info'" title="Информация"> <fa-icon [icon]="['fas','chart-bar']"></fa-icon><span class="name">Информация</span></li>
-      <li (click)="routeTo('backups')" [class.active]="menuActive === 'backups'" title="Резервные копии"> <fa-icon [icon]="['fas','clone']"></fa-icon><span class="name">Резервные копии</span></li>
+      <li *ngIf="data?.typePool != 'guest'" (click)="routeTo('backups')" [class.active]="menuActive === 'backups'" title="Резервные копии"> <fa-icon [icon]="['fas','clone']"></fa-icon><span class="name">Резервные копии</span></li>
       <li (click)="routeTo('events')" [class.active]="menuActive === 'events'" title="События"> <fa-icon [icon]="['fas','comment']"></fa-icon><span class="name">События</span></li>
     </ul>
 
@@ -79,6 +79,7 @@
       <div class="details-slide-into">
         <ng-container *ngIf="menuActive === 'info'">
             <vdi-table-into *ngIf="data?.typePool === 'automated'" [item]="data?.vm" [collection]="collectionIntoVmAutomated"></vdi-table-into>
+            <vdi-table-into *ngIf="data?.typePool === 'guest'" [item]="data?.vm" [collection]="collectionIntoVmGuest"></vdi-table-into>
             <vdi-table-into *ngIf="data?.typePool === 'static'" [item]="data?.vm" [collection]="collectionIntoVmStatic"></vdi-table-into>
         </ng-container>
 
