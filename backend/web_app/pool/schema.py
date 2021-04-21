@@ -81,6 +81,14 @@ class VmBackupType(VeilResourceType):
     status = StatusGraphene()
 
 
+class VmConnectionType(VeilResourceType):
+    password = graphene.String()
+    host = graphene.String()
+    token = graphene.String()
+    connection_url = graphene.String()
+    connection_type = graphene.String()
+
+
 class VmType(VeilResourceType):
     id = graphene.UUID()
     verbose_name = graphene.String()
@@ -138,6 +146,8 @@ class VmType(VeilResourceType):
         offset=graphene.Int(default_value=0),
     )
     event = graphene.Field(EventType, event_id=graphene.UUID())
+    spice_connection = graphene.Field(VmConnectionType)
+    vnc_connection = graphene.Field(VmConnectionType)
 
     async def resolve_user(self, _info):
         vm = await Vm.get(self.id)
@@ -191,6 +201,38 @@ class VmType(VeilResourceType):
                 veil_backups_list.append(VmBackupType(**data))
 
             return veil_backups_list
+
+    async def resolve_spice_connection(self, _info, **kwargs):
+        vm_obj = await Vm.get(self.id)
+        domain_entity = await vm_obj.vm_client
+        await domain_entity.info()
+        if domain_entity.powered:
+            spice = await domain_entity.spice_conn()
+            if spice.valid:
+                return VmConnectionType(password=spice.password,
+                                        host=spice.host,
+                                        token=spice.token,
+                                        connection_url=spice.connection_url,
+                                        connection_type=spice.connection_type)
+            raise SimpleError(_("Missing connection spice data."))
+        raise SilentError(_("VM {} is shutdown. Please power this.").format(
+            vm_obj.verbose_name))
+
+    async def resolve_vnc_connection(self, _info, **kwargs):
+        vm_obj = await Vm.get(self.id)
+        domain_entity = await vm_obj.vm_client
+        await domain_entity.info()
+        if domain_entity.powered:
+            vnc = await domain_entity.vnc_conn()
+            if vnc.valid:
+                return VmConnectionType(password=vnc.password,
+                                        host=vnc.host,
+                                        token=vnc.token,
+                                        connection_url=vnc.connection_url,
+                                        connection_type=vnc.connection_type)
+            raise SimpleError(_("Missing connection vnc data."))
+        raise SilentError(_("VM {} is shutdown. Please power this.").format(
+            vm_obj.verbose_name))
 
 
 class VmInput(graphene.InputObjectType):
