@@ -1,0 +1,10 @@
+Package: veil-broker-docs
+Version: %%VER%%
+Architecture: amd64
+Maintainer: bazalt team <bazalt_dev@mashtab.org>
+Depends:
+Section: devel
+Priority: extra
+Homepage: http://veil.mashtab.org
+Description: VeiL Broker docs
+  (c) 2021 Mashtab
