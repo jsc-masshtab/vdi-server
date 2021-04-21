@@ -13,6 +13,7 @@ broker_system_packages_list:
 
 broker_packages_list:
   - veil-broker-frontend
+  - veil-broker-docs
   - veil-broker-backend
 
 broker_services_list:
