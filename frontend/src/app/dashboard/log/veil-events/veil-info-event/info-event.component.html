@@ -1,0 +1,9 @@
+<div class="form">
+  <div class="form-header">
+    <h1>Подробности события</h1>
+    <button [mat-dialog-close]="true" class="form-close">
+      <fa-icon [icon]="['fas','times-circle']"></fa-icon>
+    </button>
+  </div>
+  <vdi-table-into style="white-space:pre-wrap" [item]="event" [collection]="collection"></vdi-table-into>
+</div>
