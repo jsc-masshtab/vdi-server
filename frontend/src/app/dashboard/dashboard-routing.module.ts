@@ -34,6 +34,7 @@ import { ThinClientsComponent } from './thin-clients/thin-clients.component';
 import { ThinClientDetailsComponent } from './thin-clients/thin-client-details/thin-client-details.component';
 import { ThinClientStatisticComponent } from './thin-clients/thin-client-statistic/thin-client-statistic.component';
 import { LogSettingComponent } from './log/log-setting/log-setting.component';
+import { VeilEventsComponent } from './log/veil-events/veil-all-events/events.component';
 
 
 const routes: Routes = [
@@ -119,6 +120,10 @@ const routes: Routes = [
       {
         path: 'log/events',
         component: EventsComponent
+      },
+      {
+        path: 'log/veil-events',
+        component: VeilEventsComponent
       },
       {
         path: 'log/tasks',

@@ -44,6 +44,7 @@ import { LicenseModule } from './settings/license/license.module';
 import { throwError } from 'rxjs';
 import { ThinClientsModule } from './thin-clients/thin-clients.module';
 import { LogSettingModule } from './log/log-setting/log-setting.module';
+import { VeilEventsModule } from './log/veil-events/veil-events.module';
 
 
 @NgModule({
@@ -70,6 +71,7 @@ import { LogSettingModule } from './log/log-setting/log-setting.module';
     UsersModule,
     AuthenticationDirectoryModule,
     EventsModule,
+    VeilEventsModule,
     TasksModule,
     LogSettingModule,
     GroupsModule,

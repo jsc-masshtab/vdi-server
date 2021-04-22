@@ -119,6 +119,11 @@
     <span>События</span>
   </a>
 
+    <a class="top-menu-item item-tree" [@fadeInOut] *ngIf="toggleLog" (click)="routeTo('log/veil-events')" (keydown.enter)="routeTo('log/veil-events')" [class.clicked-link]="clickedManage =='veil-events'"  tabindex="0">
+    <fa-icon title="События" [icon]="['fas','comment']" size="s" [style.color]="'rgb(94, 185, 161)'"></fa-icon>
+    <span>События ECP VeiL</span>
+  </a>
+
   <a class="top-menu-item item-tree" [@fadeInOut] *ngIf="toggleLog" (click)="routeTo('log/tasks')" (keydown.enter)="routeTo('log/tasks')" [class.clicked-link]="clickedManage =='tasks'"  tabindex="0">
     <fa-icon title="События" [icon]="['fas','gavel']" size="s" [style.color]="'rgb(94, 185, 161)'"></fa-icon>
     <span>Задачи</span>
