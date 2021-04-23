@@ -37,7 +37,7 @@ export class TasksComponent implements OnInit, OnDestroy {
     {
       title: 'Тип',
       property: 'task_type',
-      type: 'string',
+      type: 'task_type',
       sort: true
     },
     {

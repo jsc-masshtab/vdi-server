@@ -7,8 +7,8 @@ import gql from 'graphql-tag';
 })
 export class ControllerEventsService {
 
-  
-  public paramsForGetEvents: any = { 
+
+  public paramsForGetEvents: any = {
     spin: true,
     nameSort: undefined
   };

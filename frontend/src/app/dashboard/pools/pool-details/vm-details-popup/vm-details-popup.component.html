@@ -88,7 +88,7 @@
         </ng-container>
 
         <ng-container *ngIf="menuActive === 'events'">
-          <vdi-table-component class="table-paginator" [height]="'calc(100% - 30px)'" [data]="data?.vm?.events" [collection]="collectionEvents"></vdi-table-component>
+          <vdi-table-component cursor="true" class="table-paginator" [height]="'calc(100% - 30px)'" [data]="data?.vm?.events" [collection]="collectionEvents" (clickRowData)="clickEvent($event)"></vdi-table-component>
           <vdi-pagination [count]="data?.vm?.count" [offset]="offset" (action)="toPage($event)"></vdi-pagination>
         </ng-container>
       </div>

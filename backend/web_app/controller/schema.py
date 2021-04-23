@@ -433,10 +433,15 @@ class ControllerType(graphene.ObjectType, ControllerFetcher):
     ):
         controller = await Controller.get(self.id)
         veil_user = await controller.get_veil_user
-        veil_events = await controller.veil_client.event().list(event_type=event_type, user=veil_user)
+        for type_ in VeilEventTypeEnum:
+            if event_type is type_.value:
+                event_type = type_.name
+        veil_events = await controller.veil_client.event().list(event_type=event_type,
+                                                                user=veil_user)
         return veil_events.paginator_count
 
-    async def resolve_veil_events(self, _info, limit, offset, event_type=None, ordering: str = None):
+    async def resolve_veil_events(self, _info, limit, offset, event_type=None,
+                                  ordering: str = None):
         controller = await Controller.get(self.id)
         veil_user = await controller.get_veil_user
         paginator = VeilRestPaginator(ordering=ordering, limit=limit, offset=offset)

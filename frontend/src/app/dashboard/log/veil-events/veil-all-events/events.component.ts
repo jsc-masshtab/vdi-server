@@ -50,14 +50,14 @@ export class VeilEventsComponent implements OnInit, OnDestroy {
       property: 'user',
       type: 'string',
       class: 'name-end',
-      sort: true
+      // sort: true
     },
     {
       title: 'Дата создания',
       property: 'created',
       type: 'time',
       class: 'name-end',
-      sort: true
+      // sort: true
     }
   ];
 

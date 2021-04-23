@@ -23,7 +23,7 @@ export class InfoTaskComponent {
     {
       title: 'Тип',
       property: 'task_type',
-      type: 'string',
+      type: 'task_type',
     },
     {
       title: 'Статус',

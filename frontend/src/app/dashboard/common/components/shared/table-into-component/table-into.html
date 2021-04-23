@@ -38,6 +38,8 @@
 
             <span *ngIf="obj.type === 'pool_type'">{{ item[obj.property] | poolType }}</span>
 
+            <span *ngIf="obj.type === 'task_type'">{{ item[obj.property] | taskType }}</span>
+
             <ul *ngIf="obj.type === 'array'">
               <li *ngFor="let item of item[obj.property]">{{item}}</li>
             </ul>

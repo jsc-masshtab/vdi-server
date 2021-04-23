@@ -30,7 +30,7 @@ export class StatusPipe implements PipeTransform {
             translateStatus = 'недоступно';
         } else if (status === 'HALTING') {
             translateStatus = 'сбой';
-        } else if (status === 'STARTING') {
+        } else if (status === 'STARTING' || status === 'INITIAL') {
             translateStatus = 'запускается';
         } else if (status === 'REJECTED') {
             translateStatus = 'отклонено';
@@ -46,6 +46,10 @@ export class StatusPipe implements PipeTransform {
             translateStatus = 'зарезервировано';
         } else if (status === 'UNDEFINED' || status === 'Unknown') {
             translateStatus = 'не найдено';
+        } else if (status === 'CANCELLED') {
+            translateStatus = 'отменено';
+        } else if (status === 'FINISHED') {
+            translateStatus = 'завершено';
         } else {
             translateStatus = status;
         }
