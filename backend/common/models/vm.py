@@ -15,7 +15,9 @@ from ldap3.core.exceptions import LDAPException
 from sqlalchemy import Enum as AlchemyEnum, desc
 from sqlalchemy.dialects.postgresql import UUID
 
-from veil_api_client import DomainBackupConfiguration, DomainConfiguration
+from veil_api_client import (DomainBackupConfiguration,
+                             DomainCloneConfiguration,
+                             DomainConfiguration)
 
 from common.database import db
 from common.languages import lang_init
@@ -298,22 +300,29 @@ class Vm(VeilModel):
                 )
             )
         # Получаем сущность Domain для запросов к VeiL ECP
-        vm_client = vm_controller.veil_client.domain()
+        vm_client = vm_controller.veil_client.domain(domain_id)
         # Параметры создания ВМ
-        vm_configuration = DomainConfiguration(
-            verbose_name=verbose_name,
-            resource_pool=resource_pool_id,
-            parent=domain_id,
-            thin=create_thin_clones,
-            count=count,
-        )
+        if create_thin_clones:
+            vm_configuration = DomainConfiguration(
+                verbose_name=verbose_name,
+                resource_pool=resource_pool_id,
+                parent=domain_id,
+                count=count,
+            )
+        else:
+            vm_configuration = DomainCloneConfiguration(
+                verbose_name=verbose_name,
+                resource_pool=resource_pool_id,
+                count=count
+            )
 
         inner_retry_count = 0
         while inner_retry_count < VEIL_MAX_VM_CREATE_ATTEMPTS:
             # Send request to create vm
-            create_response = await vm_client.create(
-                domain_configuration=vm_configuration
-            )
+            if create_thin_clones:
+                create_response = await vm_client.create(vm_configuration)
+            else:
+                create_response = await vm_client.clone(vm_configuration)
             # Если задача поставлена - досрочно прерываем попытки
             if create_response.success:
                 copy_result = dict(
