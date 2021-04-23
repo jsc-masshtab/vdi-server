@@ -45,7 +45,7 @@ typing-extensions==3.7.4.3 ; python_version < '3.7'
 ujson==3.0.0
 uvloop==0.14.0
 veil-aio-au==0.1.4
-veil-api-client==2.2.5
+veil-api-client==2.2.9
 werkzeug==0.12.2
 yarl==1.5.1
 zipp==1.2.0
