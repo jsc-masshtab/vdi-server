@@ -5,7 +5,7 @@
 Образ содержит пакеты для ОС Linux и Windows. Включает в себя *qemu_guest_agent*, *virtio драйвера* и 
 утилиты для *SPICE*.
 
-[Образ с драйверами](https://veil-update.mashtab.org/files/veil-guest-utils/)
+[Образ с драйверами](https://veil-update.mashtab.org/veil_agent/veil-guest-utils-latest.iso)
 
 #### Состав образа
 
