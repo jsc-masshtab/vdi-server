@@ -28,9 +28,6 @@
                 Ошибки
             </mat-option>
 
-            <mat-option [value]="3">
-                Отладка
-            </mat-option>
         </mat-select>
     </mat-form-field>
 
@@ -51,20 +48,20 @@
 
 <div class="components-info">
     <div class="component-list">
-        <vdi-table-component 
-            cursor="true" 
-            class="table-with-pagination" 
-            [data]="events" 
-            [collection]="collection" 
-            (sortListNow)="sortList($event)" 
-            (clickRowData)="clickRow($event)" 
+        <vdi-table-component
+            cursor="true"
+            class="table-with-pagination"
+            [data]="events"
+            [collection]="collection"
+            (sortListNow)="sortList($event)"
+            (clickRowData)="clickRow($event)"
             entity="events">
         </vdi-table-component>
 
-        <vdi-pagination 
-            [count]="count" 
-            [limit]="limit" 
-            [offset]="offset" 
+        <vdi-pagination
+            [count]="count"
+            [limit]="limit"
+            [offset]="offset"
             (action)="toPage($event)">
         </vdi-pagination>
     </div>

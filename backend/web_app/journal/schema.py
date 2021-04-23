@@ -123,7 +123,8 @@ class EventQuery(graphene.ObjectType):
         entity_type=graphene.String(),
     )
 
-    veil_events_count = graphene.Int(event_type=graphene.Int())
+    veil_events_count = graphene.Int(event_type=graphene.Int(),
+                                     controller=graphene.UUID())
     veil_events = graphene.List(
         lambda: VeilEventType,
         ordering=graphene.String(),
@@ -304,29 +305,40 @@ class EventQuery(graphene.ObjectType):
         self,
         _info,
         event_type=None,
+        controller=None,
         **kwargs
     ):
         controllers = await ControllerFetcher.fetch_all()
         count = 0
-        for controller in controllers:
-            veil_user = await controller.get_veil_user
-            veil_events = await controller.veil_client.event().list(event_type=event_type, user=veil_user)
+        for controller_obj in controllers:
+            if controller and (controller_obj.id != controller):
+                continue
+            veil_user = await controller_obj.get_veil_user
+            for type_ in VeilEventTypeEnum:
+                if event_type is type_.value:
+                    event_type = type_.name
+            veil_events = await controller_obj.veil_client.event().list(
+                event_type=event_type, user=veil_user)
             count += veil_events.paginator_count
         return count
 
     @administrator_required
-    async def resolve_veil_events(self, _info, limit, offset, event_type=None, ordering: str = None, **kwargs):
+    async def resolve_veil_events(self, _info, limit, offset, controller=None,
+                                  event_type=None,
+                                  ordering: str = None, **kwargs):
         controllers = await ControllerFetcher.fetch_all()
         veil_events = list()
-        for controller in controllers:
+        for controller_obj in controllers:
+            if controller and (controller_obj.id != controller):
+                continue
             paginator = VeilRestPaginator(ordering=ordering, limit=limit, offset=offset)
-            veil_user = await controller.get_veil_user
-            if not controller.veil_client:
+            veil_user = await controller_obj.get_veil_user
+            if not controller_obj.veil_client:
                 return
             for type_ in VeilEventTypeEnum:
                 if event_type is type_.value:
                     event_type = type_.name
-            veil_response = await controller.veil_client.event().list(
+            veil_response = await controller_obj.veil_client.event().list(
                 paginator=paginator, user=veil_user, event_type=event_type
             )
             for data in veil_response.response:

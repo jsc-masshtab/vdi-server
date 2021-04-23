@@ -24,9 +24,12 @@ export class VeilEventsService {
                     $offset: Int,
                     $controller: UUID,
                     $event_type: Int,
-                    $ordering:String
+                    $ordering: String
                 ){
-                    veil_events_count,
+                    veil_events_count(
+                    event_type: $event_type,
+                    controller: $controller
+                    ),
                     veil_events(
                         limit: $limit,
                         offset: $offset,

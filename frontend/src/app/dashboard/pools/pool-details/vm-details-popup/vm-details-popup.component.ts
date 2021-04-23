@@ -4,7 +4,8 @@ import { MAT_DIALOG_DATA, MatDialog } from '@angular/material/dialog';
 import { RemoveUserVmComponent } from './remove-user/remove-user.component';
 import { YesNoFormComponent } from 'src/app/dashboard/common/forms-dinamic/yes-no-form/yes-no-form.component';
 import { PoolDetailsService } from '../pool-details.service';
-import {InfoBackupComponent} from './info-backup/info-backup.component';
+import { InfoBackupComponent } from './info-backup/info-backup.component';
+import { InfoEventComponent } from '../../../log/events/info-event/info-event.component';
 
 interface Backup {
   backup: {
@@ -438,14 +439,14 @@ export class VmDetalsPopupComponent {
       property: 'user',
       type: 'string',
       class: 'name-end',
-      sort: true
+      // sort: true
     },
     {
       title: 'Дата создания',
       property: 'created',
       type: 'time',
       class: 'name-end',
-      sort: true
+      // sort: true
     }
   ];
 
@@ -505,6 +506,20 @@ export class VmDetalsPopupComponent {
 
   public clickRow(backup): void {
     this.openBackupDetails(backup);
+  }
+
+  public clickEvent(event): void {
+    this.openEventDetails(event);
+  }
+
+  public openEventDetails(event: Event): void {
+    this.dialog.open(InfoEventComponent, {
+      disableClose: true,
+      width: '700px',
+      data: {
+        event
+      }
+    });
   }
 
   public openBackupDetails(backup: Backup): void {
