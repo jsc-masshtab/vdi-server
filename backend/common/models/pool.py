@@ -1655,7 +1655,7 @@ class AutomatedPool(db.Model):
                         template_id=str(self.template_id),
                         created_by_vdi=True,
                         verbose_name=domain.verbose_name,
-                        status=vm_status,
+                        status=vm_status
                     )
                     vm_obj_list.append(vm_object)
 
