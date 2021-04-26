@@ -16,10 +16,10 @@
                 Все
             </mat-option>
             <mat-option [value]="'INITIAL'">
-                Создаются
+                Запускаются
             </mat-option>
             <mat-option [value]="'IN_PROGRESS'">
-                В процессе
+                Выполняются
             </mat-option>
             <mat-option [value]="'FAILED'">
                 Ошибка
@@ -40,19 +40,22 @@
                 Все
             </mat-option>
             <mat-option [value]="'POOL_CREATE'">
-                Создание автоматического пула
+                Создание пула
             </mat-option>
             <mat-option [value]="'POOL_EXPAND'">
-                Расширение автоматического пула
+                Расширение пула
             </mat-option>
             <mat-option [value]="'POOL_DELETE'">
-                Удаление автоматического пула
+                Удаление пула
             </mat-option>
             <mat-option [value]="'POOL_DECREASE'">
-                Уменьшение автоматического пула
+                Уменьшение пула
             </mat-option>
             <mat-option [value]="'VM_PREPARE'">
                 Подготовка ВМ
+            </mat-option>
+            <mat-option [value]="'VMS_BACKUP'">
+                Сздание резервной копии ВМ
             </mat-option>
         </mat-select>
     </mat-form-field>
