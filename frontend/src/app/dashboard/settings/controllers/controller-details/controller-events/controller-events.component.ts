@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, Input } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { Subscription } from 'rxjs';
@@ -7,6 +7,7 @@ import { WaitService } from 'src/app/dashboard/common/components/single/wait/wai
 import { ControllerEventsService } from './controller-events.service';
 import { InfoEventComponent } from 'src/app/dashboard/log/events/info-event/info-event.component'
 
+
 @Component({
   selector: 'vdi-controller-events',
   templateUrl: './controller-events.component.html',
@@ -14,22 +15,15 @@ import { InfoEventComponent } from 'src/app/dashboard/log/events/info-event/info
 })
 export class ControllerEventsComponent implements OnInit, OnDestroy {
 
+  @Input() controller: any
+
   private socketSub: Subscription;
 
   public limit = 100;
   public count = 0;
   public offset = 0;
 
-  start_date = new FormControl(new Date());
-  end_date = new FormControl(new Date());
   event_type = new FormControl('all');
-  entity_type = new FormControl('all');
-  user = new FormControl('all');
-  readed = new FormControl(false);
-
-  users = [];
-  entity_types = [];
-  selected_user: string = '';
 
   public collection: object[] = [
     {
@@ -69,36 +63,7 @@ export class ControllerEventsComponent implements OnInit, OnDestroy {
     this.refresh();
     this.listenSockets();
 
-    this.start_date.valueChanges.subscribe(() => {
-      this.getEvents();
-    });
-
-    this.end_date.valueChanges.subscribe(() => {
-      this.getEvents();
-    });
-
     this.event_type.valueChanges.subscribe(() => {
-      this.getEvents();
-    });
-
-    this.entity_type.valueChanges.subscribe(() => {
-      this.getEvents();
-    });
-
-    this.user.valueChanges.subscribe((user) => {
-
-      const id = this.users.findIndex(found => found.username ? found.username === user : false);
-
-      if (id !== -1) {
-        this.selected_user = this.users[id].id;
-      } else {
-        this.selected_user = '';
-      }
-
-      this.getEvents();
-    });
-
-    this.readed.valueChanges.subscribe(() => {
       this.getEvents();
     });
   }
@@ -124,31 +89,18 @@ export class ControllerEventsComponent implements OnInit, OnDestroy {
       offset: this.offset,
       limit: this.limit,
       event_type: this.event_type.value,
-      entity_type: this.entity_type.value,
-      user: this.user.value
+      controller: this.controller.id
     };
-
-    if (this.readed.value && this.selected_user) {
-      queryset['read_by'] = this.selected_user;
-    }
-
-    if (this.user.value === 'all') {
-      delete queryset['user'];
-    }
 
     if (this.event_type.value === 'all') {
       delete queryset['event_type'];
-    }
-
-    if (this.entity_type.value === 'all') {
-      delete queryset['entity_type'];
     }
 
     this.queryset = queryset;
 
     this.waitService.setWait(true);
 
-    this.service.getAllEvents(queryset).valueChanges.pipe(map(data => data.data))
+    this.service.getAllEvents(queryset).valueChanges.pipe(map(data => data.data.controller))
       .subscribe((data) => {
         this.events = [...data.veil_events];
         this.count = data.veil_events_count;
