@@ -1,11 +1,13 @@
 import { AddUserVmComponent } from './add-user/add-user.component';
-import { Component, Inject } from '@angular/core';
+import { Component, Inject, OnInit } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialog } from '@angular/material/dialog';
 import { RemoveUserVmComponent } from './remove-user/remove-user.component';
 import { YesNoFormComponent } from 'src/app/dashboard/common/forms-dinamic/yes-no-form/yes-no-form.component';
 import { PoolDetailsService } from '../pool-details.service';
 import { InfoBackupComponent } from './info-backup/info-backup.component';
 import { InfoEventComponent } from '../../../log/events/info-event/info-event.component';
+import { DomSanitizer } from '@angular/platform-browser';
+import { WaitService } from 'src/app/dashboard/common/components/single/wait/wait.service';
 
 interface Backup {
   backup: {
@@ -19,7 +21,7 @@ interface Backup {
   templateUrl: './vm-details-popup.component.html'
 })
 
-export class VmDetalsPopupComponent {
+export class VmDetalsPopupComponent implements OnInit {
 
   public offset = 0;
 
@@ -481,12 +483,32 @@ export class VmDetalsPopupComponent {
     },
   ];
 
+  public vnc: any;
+  public show: boolean = false;
+
   constructor(
     public dialog: MatDialog,
+    private sanitizer: DomSanitizer,
+    private waitService: WaitService,
     @Inject(MAT_DIALOG_DATA) public data: any,
     private service: PoolDetailsService
-  ) {}
+  ) {
+    this.waitService.setWait(true);
+  }
+  
+  ngOnInit() {
+    this.service.getVm(this.data.idPool, this.data.vmActive, this.data.controller_id).valueChanges.subscribe((res) => {
+      this.data = { ...this.data, vm: res.data.pool.vm }
+      this.show = true;
+      this.waitService.setWait(false);
+    })
+  }
 
+  public refresh() {
+    this.show = false;
+    this.waitService.setWait(true);
+    this.service.getVm(this.data.idPool, this.data.vmActive, this.data.controller_id).refetch();
+  }
 
   public addUser() {
     this.dialog.open(AddUserVmComponent, {
@@ -556,6 +578,13 @@ export class VmDetalsPopupComponent {
   }
 
   public routeTo(route: string): void {
+    if (route === 'vnc') {
+      if (this.data.vm.vnc_connection) {
+        const vnc = this.data.vm.vnc_connection;
+        this.vnc = this.sanitizer.bypassSecurityTrustResourceUrl(`novnc/vnc.html?host=${vnc.host}&port=80&password=${vnc.password}&path=websockify?token=${vnc.token}`);
+      }
+    }
+
     this.menuActive = route;
   }
 
@@ -766,7 +795,7 @@ export class VmDetalsPopupComponent {
           form: {
             header: 'Подтверждение действия',
             question: `Перенести настройки тонкого клона ${this.data.vm.verbose_name} в шаблон ${this.data.vm.parent_name}?`,
-            error: `Внесенные в шаблон настройки применятся ко всем клонам`,
+            error: 'Внесенные в шаблон настройки применятся ко всем клонам',
             button: 'Выполнить'
           },
           request: {

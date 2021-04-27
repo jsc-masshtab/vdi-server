@@ -11,7 +11,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { RemovePoolComponent } from './remove-pool/remove-pool.component';
 import { PoolDetailsService } from './pool-details.service';
 import { FormForEditComponent } from 'src/app/dashboard/common/forms-dinamic/change-form/form-edit.component';
-import { map, take } from 'rxjs/operators';
+import { map } from 'rxjs/operators';
 import { RemoveGroupComponent } from './remove-group/remove-group.component';
 import { AddGropComponent } from './add-group/add-group.component';
 import { YesNoFormComponent } from '../../common/forms-dinamic/yes-no-form/yes-no-form.component';
@@ -634,19 +634,18 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
   }
 
   public clickVm(vmActive: IPoolVms): void  {
-    this.poolService.getVm(this.idPool, vmActive.id, this.pool.controller.id).valueChanges.pipe(take(1)).subscribe((res) => {
-      this.dialog.open(VmDetalsPopupComponent, {
-        disableClose: true,
-        width: '1000px',
-        data: {
-          vm: res.data.pool.vm,
-          typePool: this.typePool,
-          usersPool: this.pool.users,
-          idPool: this.idPool,
-          username: vmActive.user.username,
-          vms: vmActive
-        }
-      });
+    this.dialog.open(VmDetalsPopupComponent, {
+      disableClose: true,
+      width: '1000px',
+      data: {
+        typePool: this.typePool,
+        usersPool: this.pool.users,
+        idPool: this.idPool,
+        username: vmActive.user.username,
+        controller_id: this.pool.controller.id,
+        vmActive: vmActive.id,
+        vms: vmActive
+      }
     });
   }
 

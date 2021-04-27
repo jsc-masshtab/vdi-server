@@ -28,6 +28,7 @@ import { AddGropComponent } from './pool-details/add-group/add-group.component';
 import { PrepareVmPoolComponent } from './pool-details/prepare-vm/prepare-vm.component';
 import { EventsModule } from '../log/events/events.module';
 import { InfoBackupComponent } from './pool-details/vm-details-popup/info-backup/info-backup.component';
+import { SpiceComponent } from './pool-details/vm-details-popup/spice/spice.component';
 
 @NgModule({
   declarations: [
@@ -46,6 +47,7 @@ import { InfoBackupComponent } from './pool-details/vm-details-popup/info-backup
     RemoveGroupComponent,
     AddGropComponent,
     InfoBackupComponent,
+    SpiceComponent
   ],
   imports: [
     SharedModule,
