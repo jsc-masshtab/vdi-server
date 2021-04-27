@@ -61,7 +61,7 @@
                 <vdi-datapools [filter]="filter" *ngIf="menuActive === 'datapools'"></vdi-datapools>
                 <vdi-vms [filter]="filter" *ngIf="menuActive === 'vms'"></vdi-vms>
                 <vdi-templates [filter]="filter" *ngIf="menuActive === 'templates'"></vdi-templates>
-                <vdi-controller-events *ngIf="menuActive === 'veil-events'"></vdi-controller-events>
+                <vdi-controller-events [controller]="controller" *ngIf="menuActive === 'veil-events'"></vdi-controller-events>
             </div>
         </div>
     </div>

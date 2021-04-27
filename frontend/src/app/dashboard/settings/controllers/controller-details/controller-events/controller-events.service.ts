@@ -18,28 +18,30 @@ export class ControllerEventsService {
   public getAllEvents(props): QueryRef<any, any> {
     return this.service.watchQuery({
       query: gql`
-        query events(
+        query controllers(
           $limit: Int,
           $offset: Int,
           $controller: UUID,
           $event_type: Int,
           $ordering: String
         ){
-          veil_events (
-            limit: $limit,
-            offset: $offset,
-            controller: $controller,
-            event_type: $event_type,
-            ordering: $ordering
-          ){
+          controller(id_:$controller) {
             id
-            message
-            event_type
-            user
-            created
-            description
+            veil_events (
+              limit: $limit,
+              offset: $offset,
+              event_type: $event_type,
+              ordering: $ordering
+            ){
+              id
+              message
+              event_type
+              user
+              created
+              description
+            }
+            veil_events_count(event_type: $event_type)
           }
-          veil_events_count
         }
       `,
       variables: {
