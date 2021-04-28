@@ -208,15 +208,13 @@ class VmType(VeilResourceType):
         await domain_entity.info()
         if domain_entity.powered:
             spice = await domain_entity.spice_conn()
-            if spice.valid:
+            if spice and spice.valid:
                 return VmConnectionType(password=spice.password,
                                         host=spice.host,
                                         token=spice.token,
                                         connection_url=spice.connection_url,
                                         connection_type=spice.connection_type)
             raise SimpleError(_("Missing connection spice data."))
-        raise SilentError(_("VM {} is shutdown. Please power this.").format(
-            vm_obj.verbose_name))
 
     async def resolve_vnc_connection(self, _info, **kwargs):
         vm_obj = await Vm.get(self.id)
@@ -224,15 +222,13 @@ class VmType(VeilResourceType):
         await domain_entity.info()
         if domain_entity.powered:
             vnc = await domain_entity.vnc_conn()
-            if vnc.valid:
+            if vnc and vnc.valid:
                 return VmConnectionType(password=vnc.password,
                                         host=vnc.host,
                                         token=vnc.token,
                                         connection_url=vnc.connection_url,
                                         connection_type=vnc.connection_type)
             raise SimpleError(_("Missing connection vnc data."))
-        raise SilentError(_("VM {} is shutdown. Please power this.").format(
-            vm_obj.verbose_name))
 
 
 class VmInput(graphene.InputObjectType):
@@ -528,7 +524,8 @@ class PoolType(graphene.ObjectType):
                 data["guest_agent"] = veil_domain.guest_agent.qemu_state
             if veil_domain.powered:
                 data["hostname"] = veil_domain.hostname
-                data["address"] = veil_domain.guest_agent.ipv4
+                if veil_domain.guest_agent:
+                    data["address"] = veil_domain.guest_agent.ipv4
             return VmType(**data)
         else:
             raise SilentError(_("VM is unreachable on ECP VeiL."))
