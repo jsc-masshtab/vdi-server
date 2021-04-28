@@ -484,6 +484,7 @@ export class VmDetalsPopupComponent implements OnInit {
   ];
 
   public vnc: any;
+  public spice: any;
   public show: boolean = false;
 
   constructor(
@@ -579,10 +580,29 @@ export class VmDetalsPopupComponent implements OnInit {
 
   public routeTo(route: string): void {
     if (route === 'vnc') {
-      if (this.data.vm.vnc_connection) {
-        const vnc = this.data.vm.vnc_connection;
+      this.show = false;
+      this.waitService.setWait(true)
+
+      this.service.getVnc(this.data.idPool, this.data.vmActive, this.data.controller_id).valueChanges.subscribe((res) => {
+        const vnc = res.data.pool.vm.vnc_connection
         this.vnc = this.sanitizer.bypassSecurityTrustResourceUrl(`novnc/vnc.html?host=${vnc.host}&port=80&password=${vnc.password}&path=websockify?token=${vnc.token}`);
-      }
+
+        this.show = true;
+        this.waitService.setWait(false)
+      });
+    }
+
+    if (route === 'spice') {
+      this.show = false;
+      this.waitService.setWait(true)
+
+      this.service.getSpice(this.data.idPool, this.data.vmActive, this.data.controller_id).valueChanges.subscribe((res) => {
+        const spice = res.data.pool.vm
+        this.spice = spice;
+
+        this.show = true;
+        this.waitService.setWait(false)
+      });
     }
 
     this.menuActive = route;
