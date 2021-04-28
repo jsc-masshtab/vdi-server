@@ -100,6 +100,7 @@ nav:
     - Пулы:
         - Автоматический пул: vdi/broker/pools/automated_pool_v2.md
         - Автоматический пул 3.0: vdi/broker/pools/automated_pool_v3.md
+        - Гостевой пул: vdi/broker/pools/guest_pool.md
     - Система авторизации:
         - Базовое описание: vdi/broker/auth/info.md
         - Роли: vdi/broker/auth/roles.md
