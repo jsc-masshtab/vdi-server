@@ -67,7 +67,7 @@ pipeline {
 
         stage('prepare build image') {
             steps {
-                sh "docker build -f devops/docker/Dockerfile.vdi . -t vdi-builder:${VERSION}"
+                sh "cd devops/docker/builder; docker build . -t vdi-builder:${VERSION}"
             }
         }
 
