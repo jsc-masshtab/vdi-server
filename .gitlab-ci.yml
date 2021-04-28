@@ -5,13 +5,18 @@ stages:
   - security
   - tests
 
+variables:
+  PIP_ARGS: "-i http://nexus.bazalt.team/repository/pypi-proxy/simple --trusted-host nexus.bazalt.team"
+  NPM_REGISTRY: "http://nexus.bazalt.team/repository/npm-proxy/"
+
 Python lint:
   stage: lint
   tags:
     - docker
   before_script:
     - cd backend/
-    - python -m pip install --upgrade pip && python -m pip install flake8 flake8-builtins flake8-bugbear flake8-import-order flake8-docstrings flake8-quotes
+    - python -m pip install $PIP_ARGS --upgrade pip
+    - python -m pip install $PIP_ARGS flake8 flake8-builtins flake8-bugbear flake8-import-order flake8-docstrings flake8-quotes
   script:
     - flake8
   only:
@@ -27,7 +32,7 @@ NPM lint:
     - docker
   before_script:
     - cd frontend
-    - npm install
+    - npm --registry $NPM_REGISTRY install
     - pwd
     - ls
   script:
@@ -46,8 +51,8 @@ Security check:
     - docker
   before_script:
     - apk add --no-cache build-base
-    - python -m pip install --upgrade pip
-    - python -m pip install pipenv safety
+    - python -m pip install $PIP_ARGS --upgrade pip
+    - python -m pip install $PIP_ARGS pipenv safety
     - pipenv install
     - pipenv lock --requirements > requirements.txt
   script:

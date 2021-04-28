@@ -1,5 +1,8 @@
 FROM debian:stretch-slim
 
+# add pip proxy config
+COPY pip.conf /root/.pip/
+
 # install build-deps
 RUN apt-get update && \
     apt-get install python3-dev python3-setuptools python-dev gcc python3-pip \

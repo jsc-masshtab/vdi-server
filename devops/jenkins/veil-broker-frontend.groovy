@@ -15,6 +15,7 @@ pipeline {
         DEB_ROOT = "${WORKSPACE}/devops/deb"
         DATE = "${currentDate}"
         VER = "${VERSION}-${BUILD_NUMBER}"
+        NPM_REGISTRY = "http://nexus.bazalt.team/repository/npm-proxy/"
     }
 
     post {
@@ -67,7 +68,7 @@ pipeline {
 
         stage('prepare build image') {
             steps {
-                sh "docker build -f devops/docker/Dockerfile.vdi . -t vdi-builder:${VERSION}"
+                sh "cd devops/docker/builder; docker build . -t vdi-builder:${VERSION}"
             }
         }
 
@@ -89,7 +90,7 @@ pipeline {
                     npm cache clean --force
 
                     cd ${WORKSPACE}/frontend
-                    npm install --no-cache --unsafe-perm
+                    npm --registry $NPM_REGISTRY install
                     npm run build -- --prod
 
                     # frontend compiled on ${WORKSPACE}/frontend/dist/frontend
