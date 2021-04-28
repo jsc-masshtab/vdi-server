@@ -145,11 +145,11 @@ export class SpiceComponent implements AfterViewInit, OnChanges, OnDestroy {
   }
 
   disconnect(): void {
-    /* if (this.sc) {
+    if (this.sc) {
       this.sc.stop();
     }
 
-    window.removeEventListener('resize', SpiceHtml5.handle_resize, false); */
+    window.removeEventListener('resize', SpiceHtml5.handle_resize, false);
   }
 
   agent_connected(e) {
@@ -162,7 +162,6 @@ export class SpiceComponent implements AfterViewInit, OnChanges, OnDestroy {
     if ((window as any).File && (window as any).FileReader && (window as any).FileList && (window as any).Blob) {
       const spice_xfer_area = document.createElement('div');
       spice_xfer_area.setAttribute('id', 'spice-xfer-area');
-      document.getElementById('loading').appendChild(spice_xfer_area);
       document.getElementById('spice-area-' + context.spice_area).addEventListener('dragover', SpiceHtml5.handle_file_dragover, false);
       document.getElementById('spice-area-' + context.spice_area).addEventListener('drop', SpiceHtml5.handle_file_drop, false);
     } else {
@@ -212,14 +211,7 @@ export class SpiceComponent implements AfterViewInit, OnChanges, OnDestroy {
     });
   }
 
-  newTabTerminal(): void {
-    window.open(window.location.origin + this.url);
-    localStorage.setItem('domain', this.domain.verbose_name);
-    localStorage.setItem('id', this.domain.id);
-  }
-
   fullScreen() {
     document.getElementById('spice-area-' + this.domain.id).requestFullscreen();
   }
-
 }

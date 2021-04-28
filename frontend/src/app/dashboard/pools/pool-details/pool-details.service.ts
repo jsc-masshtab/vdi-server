@@ -842,4 +842,58 @@ export class PoolDetailsService {
             }
         });
     }
+
+    public getSpice(pool_id: string, vm_id: string, controller_address: string): QueryRef<any, any> {
+        return this.service.watchQuery({
+            query: gql`
+                query pools($pool_id: String, $vm_id: UUID, $controller_address: UUID) {
+                    pool(pool_id: $pool_id) {
+                        vm(vm_id: $vm_id, controller_id: $controller_address) {
+                            id
+                            spice_connection {
+                                password
+                                host
+                                token
+                                connection_url
+                                connection_type
+                            }
+                        }
+                    }
+                }
+            `,
+            variables: {
+                method: 'GET',
+                pool_id,
+                vm_id,
+                controller_address
+            }
+        });
+    }
+
+    public getVnc(pool_id: string, vm_id: string, controller_address: string): QueryRef<any, any> {
+        return this.service.watchQuery({
+            query: gql`
+                query pools($pool_id: String, $vm_id: UUID, $controller_address: UUID) {
+                    pool(pool_id: $pool_id) {
+                        vm(vm_id: $vm_id, controller_id: $controller_address) {
+                            id
+                            vnc_connection {
+                                password
+                                host
+                                token
+                                connection_url
+                                connection_type
+                            }
+                        }
+                    }
+                }
+            `,
+            variables: {
+                method: 'GET',
+                pool_id,
+                vm_id,
+                controller_address
+            }
+        });
+    }
 }
