@@ -15,22 +15,6 @@ export class EventsService {
 
     constructor(private service: Apollo) { }
 
-    public getAllUsers(): QueryRef<any, any> {
-        return this.service.watchQuery({
-            query: gql` query users {
-                            users {
-                                username
-                                id
-                            }
-                        }
-                    `,
-            variables: {
-                method: 'GET'
-            }
-        });
-    }
-
-
     public getAllEvents(props): QueryRef<any, any> {
         return  this.service.watchQuery({
             query: gql` query events(   $limit: Int,
@@ -50,6 +34,10 @@ export class EventsService {
                                         user: $user,
                                         read_by: $read_by),
                                 entity_types,
+                                users{
+                                  username,
+                                  id
+                                },
                                 events( limit: $limit,
                                         offset: $offset,
                                         start_date: $start_date,
