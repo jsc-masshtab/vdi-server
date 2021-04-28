@@ -8,6 +8,10 @@
     <fa-icon [icon]="['fas','sync-alt']"></fa-icon>
   </button>
   
+  <mat-checkbox class="events-checkbox" [color]="'primary'" [formControl]="disconnected">
+    Завершенные
+  </mat-checkbox>
+  
   <div class="control-btns-end">
     <button *ngIf="pageRollup" class="bars-btn" (click)="toggleShow()">
       <fa-icon [icon]="['fas','bars']"></fa-icon>

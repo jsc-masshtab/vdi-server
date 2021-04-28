@@ -32,7 +32,6 @@ import { LicenseComponent } from './settings/license/license.component';
 import { TasksComponent } from './log/tasks/all-tasks/tasks.component';
 import { ThinClientsComponent } from './thin-clients/thin-clients.component';
 import { ThinClientDetailsComponent } from './thin-clients/thin-client-details/thin-client-details.component';
-import { ThinClientStatisticComponent } from './thin-clients/thin-client-statistic/thin-client-statistic.component';
 import { LogSettingComponent } from './log/log-setting/log-setting.component';
 import { VeilEventsComponent } from './log/veil-events/veil-all-events/events.component';
 
@@ -68,10 +67,6 @@ const routes: Routes = [
             component: ThinClientDetailsComponent
           }
         ]
-      },
-      {
-        path: 'clients/statistic',
-        component: ThinClientStatisticComponent
       },
       {
         path: 'controllers',
