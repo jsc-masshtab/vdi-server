@@ -20,13 +20,16 @@ export class ThinClientsService {
       query: gql`
         query thin_clients(
           $ordering: String
+          $get_disconnected: Boolean
         ){
           thin_clients_count
           thin_clients(
             ordering: $ordering
+            get_disconnected: $get_disconnected
           ){
             conn_id
             user_name
+            user_id
             veil_connect_version
             vm_name
             tk_ip
@@ -36,6 +39,13 @@ export class ThinClientsService {
             data_received
             last_interaction
             is_afk
+
+            connection_type
+            is_connection_secure
+            read_speed
+            write_speed
+            avg_rtt
+            loss_percentage
           }
         }
       `,
@@ -77,6 +87,25 @@ export class ThinClientsService {
         ...queryset
       }
     });
+  }
+
+  sendMessageToThinClient(recipient_id, message) {
+    return this.service.mutate<any>({
+      mutation: gql`
+        mutation thin_clients($recipient_id: UUID, $message: String!) {
+          sendMessageToThinClient(
+            recipient_id: $recipient_id,
+            message: $message,
+          ){
+            ok
+          }
+        }`,
+      variables: {
+        method: 'POST',
+        recipient_id,
+        message
+      }
+    })
   }
 
   disconnectThinClient(conn_id: string) {

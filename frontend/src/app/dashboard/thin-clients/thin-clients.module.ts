@@ -10,6 +10,7 @@ import { ThinClientStatisticComponent } from './thin-client-statistic/thin-clien
 import { DisconnectThinClientComponent } from './thin-client-details/disconnect-thin-client/disconnect-thin-client.component';
 import { MatDialogModule } from '@angular/material/dialog';
 import { ReactiveFormsModule } from '@angular/forms';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 
 @NgModule({
   imports: [
@@ -19,6 +20,7 @@ import { ReactiveFormsModule } from '@angular/forms';
     AppRoutingModule,
     MatDialogModule,
     ReactiveFormsModule,
+    MatCheckboxModule
   ],
   declarations: [
     ThinClientsComponent,

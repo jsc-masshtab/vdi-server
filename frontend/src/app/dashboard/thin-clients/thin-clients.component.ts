@@ -23,6 +23,7 @@ export class ThinClientsComponent extends DetailsMove implements OnInit, OnDestr
   public offset = 0;
 
   user = new FormControl('');
+  disconnected = new FormControl(false)
 
   public data: [];
 
@@ -86,6 +87,10 @@ export class ThinClientsComponent extends DetailsMove implements OnInit, OnDestr
       this.getAll();
     });
 
+
+    this.disconnected.valueChanges.subscribe(() => {
+      this.getAll();
+    });
   }
 
   public refresh(): void {
@@ -100,7 +105,8 @@ export class ThinClientsComponent extends DetailsMove implements OnInit, OnDestr
     }
 
     const queryset = {
-      user_id: this.user.value
+      user_id: this.user.value,
+      get_disconnected: this.disconnected.value
     };
 
     if (this.user.value === '') {
