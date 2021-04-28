@@ -5,15 +5,53 @@ from datetime import datetime, timedelta
 from web_app.tests.fixtures import fixt_db, fixt_auth_context, fixt_user  # noqa
 from web_app.tests.utils import execute_scheme
 from web_app.journal.schema import event_schema
-from common.models.auth import Group
+from common.models.auth import Group, Role
 from common.models.event import Event
 from common.settings import PAM_AUTH
+from web_app.auth.user_schema import user_schema
 
 pytestmark = [
     pytest.mark.asyncio,
     pytest.mark.creator,
     pytest.mark.skipif(PAM_AUTH, reason="not finished yet"),
 ]
+
+
+@pytest.mark.asyncio
+async def test_event_users(fixt_db, fixt_auth_context, fixt_user):
+    """Список пользователей в журнале доступен пользователю с ролью OPERATOR."""
+    try:
+
+        query = """mutation {
+                             addUserRole(id: "10913d5d-ba7a-4049-88c5-769267a6cbe4", roles: [%s]){
+                               user{
+                                 username,
+                                 assigned_roles,
+                                 possible_roles
+                               },
+                               ok
+                             }
+                           }""" % Role.OPERATOR.value
+        await execute_scheme(user_schema, query, context=fixt_auth_context)
+
+        query = """{
+                  users{
+                  username,
+                  id}
+                }"""
+
+        executed = await execute_scheme(event_schema, query, context=fixt_auth_context)
+    except:  # noqa
+        raise
+    returned_users = executed["users"]
+    assert returned_users
+
+    for user_rec in returned_users:
+        if user_rec['username'] == 'vdiadmin':
+            assert True
+            break
+    else:
+        raise AssertionError()
 
 
 @pytest.mark.asyncio

@@ -119,7 +119,6 @@ export class EventsComponent implements OnInit, OnDestroy {
 
   public refresh(): void {
     this.getEvents();
-    this.getAllUsers();
   }
 
   public clickRow(event): void {
@@ -135,13 +134,6 @@ export class EventsComponent implements OnInit, OnDestroy {
     this.service.paramsForGetEvents.spin = param.spin;
     this.service.paramsForGetEvents.nameSort = param.nameSort;
     this.getEvents();
-  }
-
-  public getAllUsers(): void {
-    this.service.getAllUsers().valueChanges.pipe(map(data => data.data))
-      .subscribe((data) => {
-        this.users = [...data.users];
-      });
   }
 
   public getEvents(): void {
@@ -184,6 +176,7 @@ export class EventsComponent implements OnInit, OnDestroy {
         this.entity_types = [...data.entity_types];
         this.count = data.count;
         this.waitService.setWait(false);
+        this.users = [...data.users];
       });
   }
 

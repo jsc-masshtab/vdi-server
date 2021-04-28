@@ -123,6 +123,12 @@ class EventQuery(graphene.ObjectType):
         entity_type=graphene.String(),
     )
 
+    users = graphene.List(
+        lambda: UserType,
+        username=graphene.String(),
+        id=graphene.UUID()
+    )
+
     veil_events_count = graphene.Int(event_type=graphene.Int(),
                                      controller=graphene.UUID())
     veil_events = graphene.List(
@@ -135,6 +141,14 @@ class EventQuery(graphene.ObjectType):
     )
 
     journal_settings = graphene.Field(JournalSettingsType)
+
+    @operator_required
+    async def resolve_users(self, _info, *args, **kwargs):
+        users = await User.get_objects(
+            include_inactive=True,
+        )
+        objects = [UserType.instance_to_type(user) for user in users]
+        return objects
 
     @administrator_required
     async def resolve_journal_settings(self, _info, **kwargs):
