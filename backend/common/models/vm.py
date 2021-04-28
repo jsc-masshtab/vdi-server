@@ -5,13 +5,6 @@ from enum import IntEnum
 
 from asyncpg.exceptions import UniqueViolationError
 
-from ldap3 import (
-    Connection as ActiveDirectoryConnection,
-    SAFE_SYNC,
-    Server as ActiveDirectoryServer,
-)
-from ldap3.core.exceptions import LDAPException
-
 from sqlalchemy import Enum as AlchemyEnum, desc
 from sqlalchemy.dialects.postgresql import UUID
 
@@ -803,71 +796,9 @@ class Vm(VeilModel):
         if hostname_is_success:
             await self.reboot()
 
-    async def include_in_ad_group(
-        self, active_directory_obj: AuthenticationDirectory, ad_cn_pattern: str
-    ):
-        """Domain group including via LDAP."""
-        if not active_directory_obj:
-            return False
-        # Проверим, есть ли данные для подключения к AD
-        if (
-            not active_directory_obj.service_username
-            or not active_directory_obj.service_password  # noqa: W503
-        ):
-            await system_logger.warning(
-                _(
-                    "Active directory object has no service username or password. Including skipped."
-                ),
-                entity=self.entity,
-            )
-            return False
-        # Выполним синхронизацию
-        try:
-            ad_connection = None
-            conn_str = (
-                active_directory_obj.directory_url.replace("ldap:", "")
-                .replace("\\", "")
-                .replace("/", "")
-            )
-            ad_server = ActiveDirectoryServer(conn_str)
-            ad_connection = ActiveDirectoryConnection(
-                server=ad_server,
-                user=active_directory_obj.connection_username,
-                password=active_directory_obj.password,
-                auto_bind=True,
-                client_strategy=SAFE_SYNC,
-                raise_exceptions=True,
-            )
-            ad_connection.extend.microsoft.add_members_to_groups(
-                "cn={host_name},cn=Computers,{dc}".format(
-                    host_name=self.verbose_name, dc=active_directory_obj.dc_str
-                ),
-                "{cn},{dc}".format(cn=ad_cn_pattern, dc=active_directory_obj.dc_str),
-            )
-
-        except LDAPException as err_msg:
-            err_msg = str(err_msg).replace("\x00", "")
-            await system_logger.error(
-                message=_("VM {} active directory group including error.").format(
-                    self.verbose_name
-                ),
-                description="{}: {}".format(conn_str, err_msg),
-                entity=self.entity,
-            )
-            return False
-        else:
-            await system_logger.info(
-                message=_("VM {} AD group including successful.").format(
-                    self.verbose_name
-                ),
-                entity=self.entity,
-            )
-            return True
-        finally:
-            if ad_connection:
-                ad_connection.unbind()
-
-    async def include_in_ad(self, active_directory_obj: AuthenticationDirectory):
+    async def include_in_ad(self,
+                            active_directory_obj: AuthenticationDirectory,
+                            ad_cn_pattern: str = None):
         """Вводит в домен.
 
         Т.к. гостевой агент некорректно показывает hostname ВМ, то одновременное назначение и заведение не отработает.
@@ -890,10 +821,15 @@ class Vm(VeilModel):
             await domain_entity.is_in_ad() if domain_entity.os_windows else True
         )
         if active_directory_obj and domain_entity.os_windows and not already_in_domain:
+            ad_params_dict = {"domain_name": active_directory_obj.domain_name,
+                              "login": active_directory_obj.service_username,
+                              "password": active_directory_obj.password}
+            # Если передан параметр группы AD - добавляем
+            if ad_cn_pattern and isinstance(ad_cn_pattern, str):
+                ad_params_dict["oupath"] = ad_cn_pattern
+            # Вызываем команду на ECP VeiL
             action_response = await domain_entity.add_to_ad(
-                domain_name=active_directory_obj.domain_name,
-                login=active_directory_obj.service_username,
-                password=active_directory_obj.password,
+                **ad_params_dict
             )
             await self.task_waiting(action_response.task)
             # Если задача выполнена с ошибкой - прерываем выполнение
@@ -923,10 +859,9 @@ class Vm(VeilModel):
         await self.set_hostname_and_reboot()
 
         if active_directory_obj:
-            await self.include_in_ad(active_directory_obj)
-        # Ввод в группу AD только, если она прописана
-        if active_directory_obj and ad_cn_pattern and isinstance(ad_cn_pattern, str):
-            await self.include_in_ad_group(active_directory_obj, ad_cn_pattern)
+            await self.include_in_ad(active_directory_obj,
+                                     ad_cn_pattern=ad_cn_pattern)
+
         # Протоколируем успех
         msg = _("VM {} has been prepared.").format(self.verbose_name)
         await system_logger.info(message=msg, entity=self.entity)
