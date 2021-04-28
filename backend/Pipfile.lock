@@ -522,7 +522,7 @@
                 "sha256:99d4073b617d30288f569d3f13d2bd7548c3a7e4c8de87db09a9d29bb3a4a60c",
                 "sha256:dafc7639cde7f1b6e1acc0f457842a83e722ccca8eef5270af2d74792619a89f"
             ],
-            "markers": "python_version < '3.8'",
+            "markers": "python_version < '3.7'",
             "version": "==3.7.4.3"
         },
         "ujson": {
@@ -572,11 +572,11 @@
         },
         "veil-api-client": {
             "hashes": [
-                "sha256:6c2473ec18817c0455fe9fdb4360560a2ad1ec5aef5705840ca988b3f012fff8",
-                "sha256:738c8afc4fd5877c02da551c1fb091f4fbc38de85363d0f37850c652a9ce1ba9"
+                "sha256:0c50b6d3ec62387c9623f770e8e18990f89e2ebdc87de6006f9fab95778cff1f",
+                "sha256:e04fcb2fcbb542b30f91809be388a51df10e567e74986517635f3bf27e6c75f9"
             ],
             "index": "pypi",
-            "version": "==2.2.9"
+            "version": "==2.2.10"
         },
         "werkzeug": {
             "hashes": [
