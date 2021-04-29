@@ -18,7 +18,7 @@ from veil_api_client import DomainTcpUsb, VeilRetryConfiguration
 from common.languages import lang_init
 from common.log.journal import system_logger
 from common.models.active_tk_connection import ActiveTkConnection  # , TkConnectionStatistics
-from common.models.pool import AutomatedPool, Pool as PoolModel
+from common.models.pool import AutomatedPool, Pool as PoolModel, RdsPool
 from common.models.task import PoolTaskType, Task, TaskStatus
 from common.settings import (
     REDIS_DB, REDIS_PASSWORD, REDIS_PORT, REDIS_TEXT_MSG_CHANNEL,
@@ -91,12 +91,8 @@ class PoolGetVm(BaseHandler, ABC):
         remote_protocol = self.args.get(
             "remote_protocol", PoolModel.PoolConnectionTypes.SPICE.name
         )
-        remote_protocol = (
-            remote_protocol.upper()
-        )  # ТК присылвет в нижнем регистре для совместимости со
-        # старыми версиями vdi сервера
 
-        # Проверяем лимит виртуальных машин
+        # Проверяем лимит клиентов
         if PoolModel.thin_client_limit_exceeded():
             response = {
                 "errors": [{"message": _("Thin client limit exceeded."), "code": "001"}]
@@ -124,15 +120,21 @@ class PoolGetVm(BaseHandler, ABC):
             }
             return await self.log_finish(response)
 
-        # Запрос на расширение пула
         pool_type = await pool.pool_type
         if pool_type == PoolModel.PoolTypes.AUTOMATED or pool_type == PoolModel.PoolTypes.GUEST:
+            # Запрос на расширение пула
             auto_pool = await AutomatedPool.get(pool.id)
             pool_extended = True
+
         vm = await pool.get_vm(user_id=user.id)
         if not vm:
-            # Если у пользователя нет VM в пуле, то нужно попытаться назначить ему свободную VM.
-            vm = await pool.get_free_vm_v2()
+            # В случае RDS пула выдаем общий для всех RDS Сервер
+            if pool_type == PoolModel.PoolTypes.RDS:
+                vms = await pool.vms
+                vm = vms[0]
+            else:
+                # Если у пользователя нет VM в пуле, то нужно попытаться назначить ему свободную VM.
+                vm = await pool.get_free_vm_v2()
             # Если свободная VM найдена, нужно закрепить ее за пользователем.
             if vm:
                 await vm.add_user(user.id, creator="system")
@@ -241,6 +243,12 @@ class PoolGetVm(BaseHandler, ABC):
             vm_port = veil_domain.remote_access_port
 
         permissions = await user.get_permissions()
+        try:
+            applications = await RdsPool.get_apps(pool.id, user.username) \
+                if pool_type == PoolModel.PoolTypes.RDS else []
+        except (KeyError, JSONDecodeError) as ex:
+            response = {"errors": [{"message": _("Unable to get list of published applications. {}").format(str(ex))}]}
+            return await self.log_finish(response)
         response = {
             "data": dict(
                 host=vm_address,
@@ -250,6 +258,7 @@ class PoolGetVm(BaseHandler, ABC):
                 vm_controller_address=vm_controller.address,
                 vm_id=str(vm.id),
                 permissions=[permission.value for permission in permissions],
+                applications=applications
             )
         }
         return await self.log_finish(response)

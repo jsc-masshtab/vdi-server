@@ -245,6 +245,52 @@ async def fixt_create_static_pool(fixt_controller):
 
 @pytest.fixture
 @async_generator
+async def fixt_create_rds_pool(fixt_controller):
+    """Создается пул, пул удаляется."""
+    pool_main_resources = await get_resources_for_pool_test()
+    controller_id = pool_main_resources["controller_id"]
+    resource_pool_id = pool_main_resources["resource_pool_id"]
+    vm_id = uuid.uuid4()  # random
+
+    # --- create pool ---
+    qu = """
+    mutation {
+              addRdsPool(verbose_name: "%s",
+              controller_id: "%s",
+              resource_pool_id:"%s",  
+              rds_vm:{id: "%s", verbose_name: "rds_server"},
+              connection_types:[NATIVE_RDP, RDP]){
+         ok
+         pool{pool_id}
+     }
+     }""" % (
+        get_test_pool_name(),
+        controller_id,
+        resource_pool_id,
+        vm_id,
+    )
+
+    context = await get_auth_context()
+    pool_create_res = await execute_scheme(pool_schema, qu, context=context)
+    pool_id = pool_create_res["addRdsPool"]["pool"]["pool_id"]
+    await yield_({"ok": pool_create_res["addRdsPool"]["ok"], "id": pool_id})
+
+    # --- remove pool ---
+    qu = (
+        """
+    mutation {
+      removePool(pool_id: "%s", full: true) {
+        ok
+      }
+    }
+    """
+        % pool_id
+    )
+    await execute_scheme(pool_schema, qu, context=context)
+
+
+@pytest.fixture
+@async_generator
 async def fixt_veil_client():
 
     get_veil_client()

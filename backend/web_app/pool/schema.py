@@ -11,7 +11,7 @@ from common.languages import lang_init
 from common.log.journal import system_logger
 from common.models.auth import Entity, User
 from common.models.controller import Controller
-from common.models.pool import AutomatedPool, Pool, StaticPool
+from common.models.pool import AutomatedPool, Pool, RdsPool, StaticPool
 from common.models.task import PoolTaskType, Task, TaskStatus
 from common.models.vm import Vm
 from common.settings import POOL_MAX_SIZE, POOL_MIN_SIZE
@@ -132,6 +132,12 @@ class VmType(VeilResourceType):
     address = graphene.List(graphene.String)
     domain_tags = graphene.List(VeilTagsType)
     user = graphene.Field(UserType)
+    assigned_users = graphene.List(
+        UserType,
+        limit=graphene.Int(default_value=100),
+        offset=graphene.Int(default_value=0),
+    )
+    assigned_users_count = graphene.Int()
     # controller = graphene.Field(ControllerType)
     # qemu_state = graphene.Boolean(description='Состояние гостевого агента')
     qemu_state = VmState(description="Состояние гостевого агента")
@@ -153,6 +159,20 @@ class VmType(VeilResourceType):
         vm = await Vm.get(self.id)
         username = await vm.username if vm else None
         return UserType(username=username)
+
+    async def resolve_assigned_users(self, _info, limit, offset):
+        """Получить список пользователей ВМ."""
+        vm = await Vm.get(self.id)
+        users_query = await vm.get_users_query()
+        users = await users_query.limit(limit).offset(offset).gino.all()
+        objects = [UserType.instance_to_type(user) for user in users]
+        return objects
+
+    async def resolve_assigned_users_count(self, _info):
+        vm = await Vm.get(self.id)
+        users_query = await vm.get_users_query()
+        count = await db.select([db.func.count()]).select_from(users_query.alias()).gino.scalar()
+        return count
 
     async def resolve_count(self, _info, **kwargs):
         vm_obj = await Vm.get(self.id)
@@ -783,6 +803,53 @@ class CreateStaticPoolMutation(graphene.Mutation, ControllerFetcher):
         }
 
 
+class CreateRdsPoolMutation(graphene.Mutation, PoolValidator, ControllerFetcher):
+    """Создание RDS пула. Пул состоит из одной машины - Сервера RDS.
+
+    Конкретные права определяются уже внутри RDS
+    """
+
+    class Arguments:
+        controller_id = graphene.UUID(required=True)
+        resource_pool_id = graphene.UUID(required=True)
+        rds_vm = VmInput(required=True)
+        verbose_name = graphene.String(required=True)
+        connection_types = graphene.List(
+            graphene.NonNull(ConnectionTypesGraphene),
+            default_value=[Pool.PoolConnectionTypes.RDP.value],
+        )
+
+    pool = graphene.Field(lambda: PoolType)
+    ok = graphene.Boolean()
+
+    @classmethod
+    @administrator_required
+    async def mutate(cls, root, info, creator, controller_id, resource_pool_id, rds_vm, verbose_name,
+                     connection_types):
+
+        RdsPool.validate_conn_types(connection_types)
+
+        await cls.validate(verbose_name=verbose_name)
+
+        controller = await cls.fetch_by_id(controller_id)
+
+        # Create pool
+        pool = await RdsPool.soft_create(
+            controller_address=controller.address,
+            rds_id=rds_vm.id,
+            rds_verbose_name=rds_vm.verbose_name,
+            verbose_name=verbose_name,
+            resource_pool_id=resource_pool_id,
+            connection_types=set(connection_types),
+            creator=creator,
+        )
+
+        return {
+            "pool": PoolType(pool_id=pool.id, verbose_name=verbose_name),
+            "ok": True,
+        }
+
+
 class AddVmsToStaticPoolMutation(graphene.Mutation):
     class Arguments:
         pool_id = graphene.ID(required=True)
@@ -885,6 +952,40 @@ class UpdateStaticPoolMutation(graphene.Mutation, PoolValidator):
             entity = {"entity_type": EntityType.POOL, "entity_uuid": None}
             raise SimpleError(error_msg, user=creator, entity=entity)
         return UpdateStaticPoolMutation(ok=ok)
+
+
+class UpdateRdsPoolMutation(graphene.Mutation, PoolValidator):
+    class Arguments:
+        pool_id = graphene.UUID(required=True)
+        verbose_name = graphene.String()
+        keep_vms_on = graphene.Boolean()
+        connection_types = graphene.List(graphene.NonNull(ConnectionTypesGraphene))
+
+    ok = graphene.Boolean()
+
+    @classmethod
+    @administrator_required
+    async def mutate(cls, _root, _info, creator, **kwargs):
+
+        pool_id = kwargs["pool_id"]
+        connection_types = kwargs.get("connection_types")
+        RdsPool.validate_conn_types(connection_types)
+        await cls.validate(**kwargs)
+        try:
+            ok = await RdsPool.soft_update(
+                pool_id,
+                kwargs.get("verbose_name"),
+                kwargs.get("keep_vms_on"),
+                connection_types,
+                creator,
+            )
+        except UniqueViolationError:
+            error_msg = _(
+                "Failed to update RDS pool {}. Name must be unique."
+            ).format(pool_id)
+            entity = {"entity_type": EntityType.POOL, "entity_uuid": pool_id}
+            raise SimpleError(error_msg, user=creator, entity=entity)
+        return UpdateRdsPoolMutation(ok=ok)
 
 
 # --- --- --- --- ---
@@ -1159,6 +1260,7 @@ class PoolUserAddPermissionsMutation(graphene.Mutation):
 
         await pool.add_users(users, creator=creator)
         pool_record = await Pool.get_pool(pool.id)
+
         return PoolUserAddPermissionsMutation(
             ok=True, pool=pool_obj_to_type(pool_record)
         )
@@ -1254,13 +1356,13 @@ class AssignVmToUser(graphene.Mutation):
         pool_id = vm.pool_id
         # TODO: заменить на user_id
         user_id = await User.get_id(username)
-        # if not pool_id:
-        #     # Requested vm doesnt belong to any pool
-        #     raise GraphQLError('VM don\'t belongs to any Pool.')
 
         # check if the user is entitled to pool(pool_id) the vm belongs to
+        pool_type = None
         if pool_id:
             pool = await Pool.get(pool_id)
+            pool_type = await pool.pool_type
+
             assigned_users = await pool.assigned_users
             assigned_users_list = [user.id for user in assigned_users]
 
@@ -1273,8 +1375,9 @@ class AssignVmToUser(graphene.Mutation):
             # another vm in the pool may have this user as owner. Remove assignment
             await pool.free_user_vms(user_id)
 
-        # Сейчас за VM может быть только 1 пользователь. Освобождаем от других.
-        await vm.remove_users(creator=creator, users_list=None)
+        # Освобождаем от других пользователей если пул не RDS
+        if pool_type != Pool.PoolTypes.RDS:
+            await vm.remove_users(creator=creator, users_list=None)
         await vm.add_user(user_id, creator)
         return AssignVmToUser(ok=True, vm=vm)
 
@@ -1289,7 +1392,6 @@ class FreeVmFromUser(graphene.Mutation):
     async def mutate(self, _info, vm_id, creator):
         vm = await Vm.get(vm_id)
         if vm:
-            # await vm.free_vm()
             await vm.remove_users(creator=creator, users_list=None)
             return FreeVmFromUser(ok=True)
         return FreeVmFromUser(ok=False)
@@ -1559,12 +1661,14 @@ class TemplateChange(graphene.Mutation):
 class PoolMutations(graphene.ObjectType):
     addDynamicPool = CreateAutomatedPoolMutation.Field()
     addStaticPool = CreateStaticPoolMutation.Field()
+    addRdsPool = CreateRdsPoolMutation.Field()
     addVmsToStaticPool = AddVmsToStaticPoolMutation.Field()
     removeVmsFromStaticPool = RemoveVmsFromStaticPoolMutation.Field()
     removeVmsFromDynamicPool = RemoveVmsFromAutomatedPoolMutation.Field()
     removePool = DeletePoolMutation.Field()
     updateDynamicPool = UpdateAutomatedPoolMutation.Field()
     updateStaticPool = UpdateStaticPoolMutation.Field()
+    updateRdsPool = UpdateRdsPoolMutation.Field()
     expandPool = ExpandPoolMutation.Field()
     clearPool = ClearPoolMutation.Field()
 
