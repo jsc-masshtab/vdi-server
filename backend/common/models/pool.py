@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import asyncio
+import json
 import random
 import uuid
 from enum import Enum
@@ -48,16 +49,17 @@ from common.subscription_sources import POOLS_SUBSCRIPTION
 from common.utils import extract_ordering_data
 from common.veil.veil_errors import (
     PoolCreationError,
+    SilentError,
     SimpleError,
     ValidationError,
-    VmCreationError,
+    VmCreationError
 )
 from common.veil.veil_gino import EntityType, Status, VeilModel
 from common.veil.veil_graphene import VmState
-from common.veil.veil_redis import get_thin_clients_count, publish_data_in_internal_channel
+from common.veil.veil_redis import get_thin_clients_count, \
+    publish_data_in_internal_channel
 
 from web_app.auth.license.utils import License
-
 
 _ = lang_init()
 
@@ -71,6 +73,7 @@ class Pool(VeilModel):
         AUTOMATED = "AUTOMATED"
         STATIC = "STATIC"
         GUEST = "GUEST"
+        RDS = "RDS"
 
     class PoolConnectionTypes(Enum):
         """Типы подключений к ВМ, доступные пулу."""
@@ -147,16 +150,18 @@ class Pool(VeilModel):
     @property
     async def pool_type(self):
         """Возвращает тип пула виртуальных машин."""
-        is_automated = await self.is_automated_pool
-        if is_automated:
-            pool = await AutomatedPool.get(self.id)
+        pool = await AutomatedPool.get(self.id)
+        if pool:
             if pool.is_guest:
-                pool_type = Pool.PoolTypes.GUEST
+                return Pool.PoolTypes.GUEST
             else:
-                pool_type = Pool.PoolTypes.AUTOMATED
-        else:
-            pool_type = Pool.PoolTypes.STATIC
-        return pool_type
+                return Pool.PoolTypes.AUTOMATED
+
+        pool = await StaticPool.get(self.id)
+        if pool:
+            return Pool.PoolTypes.STATIC
+
+        return Pool.PoolTypes.RDS
 
     @property
     async def template_id(self):
@@ -245,11 +250,13 @@ class Pool(VeilModel):
         pool_type = case(
             [
                 (
-                    and_(AutomatedPool.id.isnot(None), AutomatedPool.is_guest.isnot(True)),
+                    and_(AutomatedPool.id.isnot(None),
+                         AutomatedPool.is_guest.isnot(True)),
                     literal_column("'{}'".format(Pool.PoolTypes.AUTOMATED)),
                 ),
                 (
-                    and_(AutomatedPool.id.isnot(None), AutomatedPool.is_guest.isnot(False)),
+                    and_(AutomatedPool.id.isnot(None),
+                         AutomatedPool.is_guest.isnot(False)),
                     literal_column("'{}'".format(Pool.PoolTypes.GUEST)),
                 ),
             ],
@@ -302,9 +309,9 @@ class Pool(VeilModel):
 
             query = query.select_from(
                 Pool.join(AutomatedPool, isouter=True)
-                .join(Controller, isouter=True)
-                .join(VmModel, isouter=True)
-                .join(
+                    .join(Controller, isouter=True)
+                    .join(VmModel, isouter=True)
+                    .join(
                     permissions_query.alias(),
                     (Pool.id == text("entity_entity_uuid")),
                     isouter=permission_outer,
@@ -338,6 +345,32 @@ class Pool(VeilModel):
             query = query.select_from(Pool.join(AutomatedPool, isouter=True))
 
         return query
+
+    @staticmethod
+    async def soft_update_base_params(
+        id, verbose_name, keep_vms_on, connection_types, creator
+    ):
+        old_pool_obj = await Pool.get(id)
+        async with db.transaction():
+            update_type, update_dict = await Pool.soft_update(
+                id,
+                verbose_name=verbose_name,
+                keep_vms_on=keep_vms_on,
+                connection_types=connection_types,
+                creator=creator,
+            )
+
+            msg = _("Pool {} has been updated.").format(old_pool_obj.verbose_name)
+            creator = update_dict.pop("creator")
+            desc = str(update_dict)
+            await system_logger.info(
+                msg, description=desc, user=creator, entity=update_type.entity
+            )
+
+            if old_pool_obj.tag and verbose_name:
+                await update_type.tag_update(
+                    tag=old_pool_obj.tag, verbose_name=verbose_name, creator=creator
+                )
 
     @staticmethod
     async def get_pool(pool_id, ordering=None):
@@ -559,8 +592,8 @@ class Pool(VeilModel):
                 isouter=True,
             )
             .join(
-                group_users_ids,  # noqa
-                (UserModel.id == text("anon_6.user_id")),  # noqa
+            group_users_ids,  # noqa
+            (UserModel.id == text("anon_6.user_id")),  # noqa
                 isouter=True,
             )
             .select()
@@ -737,7 +770,8 @@ class Pool(VeilModel):
 
         # Оповещаем о создании пула
         additional_data = await pool.additional_model_to_json_data()
-        await publish_data_in_internal_channel(pool.get_resource_type(), "CREATED", pool, additional_data)
+        await publish_data_in_internal_channel(pool.get_resource_type(), "CREATED",
+                                               pool, additional_data)
 
         return pool
 
@@ -788,7 +822,8 @@ class Pool(VeilModel):
 
         # Оповещаем об удалении пула
         additional_data = await self.additional_model_to_json_data()
-        await publish_data_in_internal_channel(self.get_resource_type(), "DELETED", self, additional_data)
+        await publish_data_in_internal_channel(self.get_resource_type(), "DELETED",
+                                               self, additional_data)
         return True
 
     @staticmethod
@@ -1190,6 +1225,117 @@ class Pool(VeilModel):
         return True
 
 
+class RdsPool(db.Model):
+    __tablename__ = "rds_pool"
+    id = db.Column(
+        UUID(),
+        db.ForeignKey("pool.id", ondelete="CASCADE"),
+        primary_key=True,
+        unique=True,
+    )
+
+    @property
+    def entity_type(self):
+        return EntityType.POOL
+
+    @property
+    def entity(self):
+        return {"entity_type": self.entity_type, "entity_uuid": self.id}
+
+    @classmethod
+    async def soft_update(
+        cls, id, verbose_name, keep_vms_on, connection_types, creator
+    ):
+        await Pool.soft_update_base_params(id, verbose_name, keep_vms_on, connection_types, creator)
+        return True
+
+    @classmethod
+    async def soft_create(cls, creator, controller_address, resource_pool_id, rds_id,
+                          rds_verbose_name, connection_types, verbose_name):
+
+        async with db.transaction():
+            # Создаем пул
+            base_pool = await Pool.create(
+                verbose_name=verbose_name,
+                resource_pool_id=resource_pool_id,
+                tag=None,
+                controller_ip=controller_address,
+                connection_types=connection_types
+            )
+            pool = await super().create(id=base_pool.id)
+
+            await VmModel.create(
+                id=rds_id,
+                verbose_name=rds_verbose_name,
+                pool_id=pool.id,
+                template_id=None,
+                created_by_vdi=False,
+            )
+
+            # log
+            await system_logger.info(
+                _("RDS pool {} created.").format(verbose_name),
+                user=creator,
+                entity=pool.entity,
+            )
+
+            await pool.activate()
+        return pool
+
+    @staticmethod
+    def validate_conn_types(connection_types):
+        if not connection_types:
+            return
+
+        for conn_type in connection_types:
+            if conn_type not in RdsPool.get_supported_conn_types():
+                raise SilentError(_("Connection type {} is not supported.").format(conn_type))
+
+    @staticmethod
+    def get_supported_conn_types():
+        return [Pool.PoolConnectionTypes.RDP.name, Pool.PoolConnectionTypes.NATIVE_RDP.name]
+
+    @staticmethod
+    async def get_apps(pool_id, user_name):
+        """Получить с RDS Сервера список приложений, которые доступны пользователю.
+
+        Приложение доступно, если оно опубликовано на ферме и у юзера есть право на пользование фермой.
+        Запускаемый скрипт проходится по всем фермам, смотрит доступны ли они указанному юзеру,
+        забирает списки приложений
+        """
+        pool = await Pool.get(pool_id)
+        controller = await pool.controller_obj
+        controller_client = controller.veil_client
+
+        vms = await pool.vms
+        domain_veil_api = controller_client.domain(
+            domain_id=str(vms[0].id))  # В пуле только одна ВМ - RDS
+
+        # Execute script to get published apps
+        qemu_guest_command = {"path": "cscript.exe",
+                              "arg": [
+                                  "C:\\Program Files\\Qemu-ga\\get_published_apps.vbs",
+                                  "//Nologo", user_name],
+                              "capture-output": True}
+        response = await domain_veil_api.guest_command(qemu_cmd="guest-exec",
+                                                       f_args=qemu_guest_command)
+
+        json_farms_data = response.data["guest-exec"]["out-data"]
+        farm_data_dict = json.loads(json_farms_data)
+        farm_list = farm_data_dict["farmlist"]
+
+        # form app list
+        app_list = []
+        if farm_list:
+            for farm in farm_list:
+                app_list.extend(farm["app_array"])
+
+        return app_list
+
+    async def activate(self):
+        return await Pool.activate(self.id)
+
+
 class StaticPool(db.Model):
     """На данный момент отсутствует смысловая валидация на уровне таблиц (она в схемах)."""
 
@@ -1280,28 +1426,7 @@ class StaticPool(db.Model):
     async def soft_update(
         cls, id, verbose_name, keep_vms_on, connection_types, creator
     ):
-        old_pool_obj = await Pool.get(id)
-        async with db.transaction():
-            update_type, update_dict = await Pool.soft_update(
-                id,
-                verbose_name=verbose_name,
-                keep_vms_on=keep_vms_on,
-                connection_types=connection_types,
-                creator=creator,
-            )
-
-            msg = _("Pool {} has been updated.").format(old_pool_obj.verbose_name)
-            creator = update_dict.pop("creator")
-            desc = str(update_dict)
-            await system_logger.info(
-                msg, description=desc, user=creator, entity=update_type.entity
-            )
-
-            if old_pool_obj.tag and verbose_name:
-                await update_type.tag_update(
-                    tag=old_pool_obj.tag, verbose_name=verbose_name, creator=creator
-                )
-
+        await Pool.soft_update_base_params(id, verbose_name, keep_vms_on, connection_types, creator)
         return True
 
     async def activate(self):

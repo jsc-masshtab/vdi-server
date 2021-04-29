@@ -159,8 +159,8 @@ class ActiveTkConnection(db.Model, AbstractSortableStatusModel):
         read_speed = 0
         write_speed = 0
         avg_rtt = kwarg["avg_rtt"]
-        min_rtt = kwarg["min_rtt"]
-        max_rtt = kwarg["max_rtt"]
+        # min_rtt = kwarg["min_rtt"]
+        # max_rtt = kwarg["max_rtt"]
         loss_percentage = kwarg["loss_percentage"]
 
         if conn_type == Pool.PoolConnectionTypes.SPICE.name:
@@ -171,56 +171,17 @@ class ActiveTkConnection(db.Model, AbstractSortableStatusModel):
 
         await self.update(read_speed=read_speed, write_speed=write_speed, avg_rtt=avg_rtt,
                           loss_percentage=loss_percentage, data_received=func.now()).apply()
-
-        await TkConnectionStatistics.soft_create(conn_id=self.id,
-                                                 read_speed=read_speed,
-                                                 write_speed=write_speed,
-                                                 avg_rtt=avg_rtt,
-                                                 min_rtt=min_rtt,
-                                                 max_rtt=max_rtt,
-                                                 loss_percentage=loss_percentage
-                                                 )
+        # front ws notification
+        await publish_data_in_internal_channel(THIN_CLIENTS_SUBSCRIPTION, "UPDATED", self)
 
     async def deactivate(self):
         """Соединение неативно, когда у него выставлено время дисконнекта."""
         await self.update(disconnected=func.now()).apply()
         # front ws notification
         await publish_data_in_internal_channel(THIN_CLIENTS_SUBSCRIPTION, "UPDATED", self)
-        # Удалить статистику, чтобы не захламлять таблицу
-        await TkConnectionStatistics.delete.where(TkConnectionStatistics.conn_id == self.id).gino.status()
+
         try:
             if self.vm_id:
                 await self.remove_vm_for_guest_pool()
         except Exception as e:
             await system_logger.debug("GUEST POOL EXPAND EXCEPTION: ", e)
-
-
-class TkConnectionStatistics(db.Model, AbstractSortableStatusModel):
-    """Накопленная статистика о соеднинении ТК."""
-
-    __tablename__ = "tk_connection_statistics"
-
-    id = db.Column(UUID(), primary_key=True, default=uuid.uuid4)
-    conn_id = db.Column(
-        UUID(),
-        db.ForeignKey("active_tk_connection.id", ondelete="CASCADE"),
-        nullable=False,
-        index=True,
-    )
-
-    received = db.Column(
-        db.DateTime(timezone=True), nullable=False, server_default=func.now()
-    )  # Время получения данных
-
-    read_speed = db.Column(db.Integer(), default=0)
-    write_speed = db.Column(db.Integer(), default=0)
-
-    avg_rtt = db.Column(db.Float(), default=0)
-    min_rtt = db.Column(db.Float(), default=0)
-    max_rtt = db.Column(db.Float(), default=0)
-    loss_percentage = db.Column(db.Integer(), default=0)
-
-    @classmethod
-    async def soft_create(cls, **kwargs):
-        model = await cls.create(**kwargs)
-        return model

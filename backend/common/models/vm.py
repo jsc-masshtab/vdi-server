@@ -260,6 +260,20 @@ class Vm(VeilModel):
             & (EntityOwnerModel.entity_id == entity)  # noqa: W503
         ).gino.status()
 
+    async def get_users_query(self):
+        """Получить пользователей. Для случаев когда ожидается больше одного пользователя."""
+        entity_query = EntityModel.select("id").where(
+            (EntityModel.entity_type == EntityType.VM)
+            & (EntityModel.entity_uuid == self.id)  # noqa: W503
+        )
+
+        query = (
+            db.select(UserModel)
+            .select_from(UserModel.outerjoin(EntityOwnerModel))
+            .where(EntityOwnerModel.entity_id == entity_query)
+        )
+        return query
+
     @staticmethod
     async def get_all_vms_ids():
         # TODO: какой-то бесполезный метод

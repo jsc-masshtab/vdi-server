@@ -12,15 +12,14 @@ from common.database import db
 from common.languages import lang_init
 from common.log.journal import system_logger
 from common.models.active_tk_connection import (
-    ActiveTkConnection,
-    TkConnectionStatistics
+    ActiveTkConnection
 )
 from common.models.auth import User
 from common.models.pool import Pool
 from common.models.vm import Vm
 from common.settings import REDIS_TEXT_MSG_CHANNEL, REDIS_THIN_CLIENT_CMD_CHANNEL
 from common.subscription_sources import WsMessageDirection, WsMessageType
-from common.utils import convert_gino_model_to_graphene_type, extract_ordering_data
+from common.utils import extract_ordering_data
 from common.veil.veil_decorators import administrator_required
 from common.veil.veil_errors import SilentError, ValidationError
 from common.veil.veil_redis import REDIS_CLIENT, ThinClientCmd
@@ -134,25 +133,9 @@ class ThinClientQuery(graphene.ObjectType):
         ThinClientType,
         limit=graphene.Int(default_value=100),
         offset=graphene.Int(default_value=0),
-        ordering=graphene.String(default_value="connected"),
+        ordering=graphene.String(default_value="-connected"),
         get_disconnected=graphene.Boolean(default_value=False),
         user_id=graphene.UUID(default_value=None),
-    )
-
-    thin_clients_statistics = graphene.List(  # fixme: заглушка. удалить когда будет выпилено на фронте
-        ThinClientConnStatOutdatedType,
-        limit=graphene.Int(default_value=100),
-        offset=graphene.Int(default_value=0),
-        ordering=graphene.String(default_value="created"),
-        conn_id=graphene.UUID(default_value=None),
-        user_id=graphene.UUID(default_value=None),
-    )
-
-    network_stats = graphene.List(
-        ThinClientConnStatType,
-        conn_id=graphene.UUID(required=True),
-        start_date=graphene.DateTime(),
-        end_date=graphene.DateTime()
     )
 
     @administrator_required
@@ -225,51 +208,6 @@ class ThinClientQuery(graphene.ObjectType):
             for tk_db_data in tk_db_data_container
         ]
         return graphene_types
-
-    @administrator_required
-    async def resolve_thin_clients_statistics(self, _info, limit, offset, ordering,
-                                              conn_id=None, user_id=None, **kwargs):
-        """Заглушка пока на фронте не выпилено."""
-        return []
-
-    @administrator_required
-    async def resolve_network_stats(self, _info, conn_id, **kwargs):
-        """Получение данных для построения графика."""
-        cur_time = datetime.now(timezone.utc)
-        # Если start_date не указан, то берем время 1 минут с текущего момента
-        start_date = kwargs.get("start_date")
-        if not start_date:
-            start_date = (cur_time - timedelta(minutes=1))
-
-        end_date = kwargs.get("end_date")
-        if not end_date:
-            end_date = cur_time
-
-        filters = ThinClientQuery.build_network_stats_filters(conn_id, start_date, end_date)
-
-        tk_stat_db_data = await TkConnectionStatistics.query.where(and_(*filters)).\
-            order_by(TkConnectionStatistics.received). \
-            gino.all()
-
-        # conversion
-        graphene_types = [
-            convert_gino_model_to_graphene_type(tk_db_data, ThinClientConnStatType)
-            for tk_db_data in tk_stat_db_data
-        ]
-        return graphene_types
-
-    @staticmethod
-    def build_network_stats_filters(conn_id, start_date, end_date):
-
-        filters = []
-        if conn_id:
-            filters.append((TkConnectionStatistics.conn_id == conn_id))
-        if start_date:
-            filters.append((TkConnectionStatistics.received >= start_date))
-        if end_date:
-            filters.append((TkConnectionStatistics.received <= end_date))
-
-        return filters
 
 
 class DisconnectThinClientMutation(graphene.Mutation):

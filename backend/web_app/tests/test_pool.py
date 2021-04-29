@@ -22,6 +22,7 @@ from web_app.tests.fixtures import (
     fixt_controller,
     fixt_create_automated_pool,  # noqa
     fixt_create_static_pool,
+    fixt_create_rds_pool,
     fixt_auth_context,
     fixt_group,  # noqa
     fixt_user,
@@ -445,3 +446,24 @@ async def test_pools_ordering(
         )
 
         await execute_scheme(pool_schema, qu, context=fixt_auth_context)
+
+
+@pytest.mark.asyncio
+async def test_create_update_remove_rds_pool(fixt_db, fixt_create_rds_pool, fixt_auth_context):  # noqa
+    """Create update remove RDS pool"""
+
+    assert fixt_create_rds_pool["ok"]
+    pool_id = fixt_create_rds_pool["id"]
+
+    new_pool_name = "test_pool_{}".format(str(uuid.uuid4())[:7])
+    qu = """
+    mutation {
+        updateRdsPool(pool_id: "%s", verbose_name: "%s", keep_vms_on: true){
+         ok
+    }
+    }""" % (
+        pool_id,
+        new_pool_name,
+    )
+    executed = await execute_scheme(pool_schema, qu, context=fixt_auth_context)
+    assert executed["updateRdsPool"]["ok"]

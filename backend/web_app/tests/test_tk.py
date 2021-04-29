@@ -130,26 +130,6 @@ class TestTk(VdiHttpTestCase):
             ws_client.write_message(json.dumps(update_data_dict))
             await asyncio.sleep(1)  # Подождем так как на update ответов не присылается
 
-            # Запрос статистики от лица админа
-            qu = """
-            {  
-                network_stats(conn_id: "%s"){
-                    read_speed
-                    write_speed
-                    min_rtt
-                    avg_rtt
-                    max_rtt
-                    loss_percentage
-                }
-            }
-            """ % conn_id
-            executed = await execute_scheme(thin_client_schema, qu, context=auth_context)
-            assert len(executed["network_stats"]) == 1
-            assert executed["network_stats"][0]["read_speed"] == update_data_dict["read_speed"]
-            assert executed["network_stats"][0]["write_speed"] == update_data_dict["write_speed"]
-            assert executed["network_stats"][0]["avg_rtt"] == update_data_dict["avg_rtt"]
-            assert executed["network_stats"][0]["loss_percentage"] == update_data_dict["loss_percentage"]
-
             # disconnect request
             qu = (
                 """

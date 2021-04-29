@@ -243,7 +243,7 @@ class Controller(AbstractSortableStatusModel, VeilModel):
             ).gino.status()
             updated_controller = await Controller.get(self.id)
         controller_is_ok = await updated_controller.check_controller()
-        # На случай смены токена
+        # На случай смены токена или адреса
         send_cmd_to_ws_monitor(self.id, WsMonitorCmd.RESTART_MONITOR)
         if controller_is_ok:
             await updated_controller.activate()
