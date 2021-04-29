@@ -696,6 +696,11 @@ class User(AbstractSortableStatusModel, VeilModel):
             return False
 
         await user.update(last_login=func.now()).apply()
+
+        # Удаляем ранее выданный токен
+        await UserJwtInfo.delete.where(UserJwtInfo.user_id == user.id).gino.status()
+
+        # Записываем новый токен
         await UserJwtInfo.soft_create(user_id=user.id, token=token)
 
         # Login event
@@ -703,7 +708,8 @@ class User(AbstractSortableStatusModel, VeilModel):
         info_message = _("User {username} has been logged in.").format(
             username=username
         )
-        description = _("Auth type: {}, IP: {}.").format(auth_type, ip)
+        description = _("Auth type: {}, IP: {}, Client type: {}.").format(auth_type, ip,
+                                                                          client_type)
         await system_logger.info(
             info_message, entity=user.entity, description=description
         )
