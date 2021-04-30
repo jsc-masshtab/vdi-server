@@ -1036,6 +1036,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
             tag: 'input',
             type: 'text',
             fieldName: 'ad_cn_pattern',
+            unrequired: true,
             fieldValue: this.pool.ad_cn_pattern,
           }]
         },
