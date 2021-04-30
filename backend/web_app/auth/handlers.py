@@ -97,8 +97,7 @@ class VersionHandler(BaseHandler, ABC):
             "version": "3.1.0",
             "year": "2019-2021",
             "url": "https://mashtab.org",
-            "copyright": "©mashtab.org",
-            "comment": _("Demo version."),
+            "copyright": "© mashtab.org",
         }
         response = {"data": info_dict}
         return self.finish(response)

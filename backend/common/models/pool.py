@@ -1592,7 +1592,7 @@ class AutomatedPool(db.Model):
         create_thin_clones: bool,
         prepare_vms: bool,
         connection_types,
-        ad_cn_pattern,
+        ad_cn_pattern: str,
     ):
         pool_kwargs = dict()
         auto_pool_kwargs = dict()
@@ -1630,7 +1630,9 @@ class AutomatedPool(db.Model):
                 auto_pool_kwargs["increase_step"] = increase_step
             if vm_name_template:
                 auto_pool_kwargs["vm_name_template"] = vm_name_template
-            if ad_cn_pattern:
+            if not ad_cn_pattern and isinstance(ad_cn_pattern, str):
+                auto_pool_kwargs["ad_cn_pattern"] = None
+            elif ad_cn_pattern:
                 auto_pool_kwargs["ad_cn_pattern"] = ad_cn_pattern
             if isinstance(create_thin_clones, bool):
                 auto_pool_kwargs["create_thin_clones"] = create_thin_clones
