@@ -65,13 +65,6 @@ export class PoolDetailsService {
                                         qemu_state
                                         status
                                         parent_name
-                                        spice_connection {
-                                            password
-                                            host
-                                            token
-                                            connection_url
-                                            connection_type
-                                        }
                                     }
                                     controller {
                                         id
@@ -135,13 +128,6 @@ export class PoolDetailsService {
                                         qemu_state
                                         status
                                         parent_name
-                                        spice_connection {
-                                            password
-                                            host
-                                            token
-                                            connection_url
-                                            connection_type
-                                        }
                                         controller {
                                             id
                                         }

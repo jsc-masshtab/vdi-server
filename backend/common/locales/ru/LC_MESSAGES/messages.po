@@ -591,7 +591,7 @@ msgstr "Задача удаления ВМ {} завершилась с ошиб
 
 #: ../common/models/vm.py:236
 msgid "User {} has been included to VM {}."
-msgstr "ВМ {} закреплена за пользователем {}."
+msgstr "За пользователем {} закреплена ВМ {}."
 
 #: ../common/models/vm.py:257 ../common/models/vm.py:697
 msgid "VM {} is clear from users."
