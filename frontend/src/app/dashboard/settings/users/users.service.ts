@@ -23,7 +23,7 @@ export class UsersService  {
                     $ordering:String,
                     $is_superuser: Boolean
                 ){
-                    count,
+                    count(is_superuser: $is_superuser),
                     users(
                         ordering: $ordering
                         limit: $limit,
