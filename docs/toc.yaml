@@ -77,65 +77,65 @@ markdown_extensions:
 nav:
   - VeiL Broker:
     - Cписок изменений:
-      - 2.1.4: vdi/broker/changelog/2.1.4.md
-      - 3.0.0: vdi/broker/changelog/3.0.0.md
+      - 2.1.4: broker/changelog/2.1.4.md
+      - 3.0.0: broker/changelog/3.0.0.md
     - Приложения:
-        - Установка: vdi/broker/how_to/install.md
-        - Установка 3.0: vdi/broker/how_to/install_v3.md
-        - Обновление: vdi/broker/how_to/update.md
-        - Обновление 3.0: vdi/broker/how_to/update_v3.md
-        - Cоздание локального репозитория: vdi/broker/how_to/repo_without_inet.md
-        - Резервные копии: vdi/broker/how_to/backup.md
-        - Подготовка эталонного образа на основе Windows 8.1/10: vdi/broker/how_to/rdp/example_template_win.md
-        - Работа по RDP с пулами ВРС: vdi/broker/how_to/rdp/example_rdp.md
-        - Настройка GPO через RDP для ВМ в домене MS AD: vdi/broker/how_to/rdp/example_rdp_domain.md
-        - nVidia Grid: vdi/broker/how_to/vm/nvidia.md
-        - Порты и протоколы задействованные при обмене с ECP VeiL: vdi/broker/how_to/ports_info.md
-    - Гостевой агент: vdi/broker/vm/guest_agent.md
+        - Установка: broker/how_to/install.md
+        - Установка 3.0: broker/how_to/install_v3.md
+        - Обновление: broker/how_to/update.md
+        - Обновление 3.0: broker/how_to/update_v3.md
+        - Cоздание локального репозитория: broker/how_to/repo_without_inet.md
+        - Резервные копии: broker/how_to/backup.md
+        - Подготовка эталонного образа на основе Windows 8.1/10: broker/how_to/rdp/example_template_win.md
+        - Работа по RDP с пулами ВРС: broker/how_to/rdp/example_rdp.md
+        - Настройка GPO через RDP для ВМ в домене MS AD: broker/how_to/rdp/example_rdp_domain.md
+        - nVidia Grid: broker/how_to/vm/nvidia.md
+        - Порты и протоколы задействованные при обмене с ECP VeiL: broker/how_to/ports_info.md
+    - Гостевой агент: broker/vm/guest_agent.md
     - Службы каталогов:
-        - Интеграция службы каталогов: vdi/broker/active_directory/info.md
-        - Базовая интеграция службы каталогов: vdi/broker/active_directory/ad_base.md
-        - Расширенная интеграция службы каталогов: vdi/broker/active_directory/ad_extend.md
-        - Заведение ВРС в Active Directory: vdi/broker/active_directory/ad_vm_prepare.md
+        - Интеграция службы каталогов: broker/active_directory/info.md
+        - Базовая интеграция службы каталогов: broker/active_directory/ad_base.md
+        - Расширенная интеграция службы каталогов: broker/active_directory/ad_extend.md
+        - Заведение ВРС в Active Directory: broker/active_directory/ad_vm_prepare.md
     - Пулы:
-        - Автоматический пул: vdi/broker/pools/automated_pool_v2.md
-        - Автоматический пул 3.0: vdi/broker/pools/automated_pool_v3.md
-        - Гостевой пул: vdi/broker/pools/guest_pool.md
+        - Автоматический пул: broker/pools/automated_pool_v2.md
+        - Автоматический пул 3.0: broker/pools/automated_pool_v3.md
+        - Гостевой пул: broker/pools/guest_pool.md
     - Система авторизации:
-        - Базовое описание: vdi/broker/auth/info.md
-        - Роли: vdi/broker/auth/roles.md
-        - Пользователи: vdi/broker/auth/users.md
-        - Группы: vdi/broker/auth/groups.md
+        - Базовое описание: broker/auth/info.md
+        - Роли: broker/auth/roles.md
+        - Пользователи: broker/auth/users.md
+        - Группы: broker/auth/groups.md
     - Система управления доступом 3.0:
-        - Базовое описание: vdi/broker/auth_v3/info.md
-        - Роли: vdi/broker/auth_v3/roles.md
-        - Пользователи: vdi/broker/auth_v3/users.md
-        - Группы: vdi/broker/auth_v3/groups.md
-    - Разрешения: vdi/broker/permissions.md
+        - Базовое описание: broker/auth_v3/info.md
+        - Роли: broker/auth_v3/roles.md
+        - Пользователи: broker/auth_v3/users.md
+        - Группы: broker/auth_v3/groups.md
+    - Разрешения: broker/permissions.md
   - VeiL Connect:
     - Cписок изменений:
-      - 1.3.6: vdi/connect/changelog/1.3.6.md
-      - 1.3.7: vdi/connect/changelog/1.3.7.md
-      - 1.3.8: vdi/connect/changelog/1.3.8.md
-      - 1.4.0: vdi/connect/changelog/1.4.0.md
-      - 1.4.1: vdi/connect/changelog/1.4.1.md
-      - 1.4.2: vdi/connect/changelog/1.4.2.md
-      - 1.5.0: vdi/connect/changelog/1.5.0.md
-      - 1.5.1: vdi/connect/changelog/1.5.1.md
-      - 1.5.2: vdi/connect/changelog/1.5.2.md
-    - Руководство оператора: vdi/connect/veil_connect.md
-    - Установка: vdi/connect/install.md
-    - Обновление: vdi/connect/update.md
-    - Cоздание локального репозитория: vdi/connect/repo_without_inet.md
-    - Удаление: vdi/connect/delete.md
+      - 1.3.6: connect/changelog/1.3.6.md
+      - 1.3.7: connect/changelog/1.3.7.md
+      - 1.3.8: connect/changelog/1.3.8.md
+      - 1.4.0: connect/changelog/1.4.0.md
+      - 1.4.1: connect/changelog/1.4.1.md
+      - 1.4.2: connect/changelog/1.4.2.md
+      - 1.5.0: connect/changelog/1.5.0.md
+      - 1.5.1: connect/changelog/1.5.1.md
+      - 1.5.2: connect/changelog/1.5.2.md
+    - Руководство оператора: connect/veil_connect.md
+    - Установка: connect/install.md
+    - Обновление: connect/update.md
+    - Cоздание локального репозитория: connect/repo_without_inet.md
+    - Удаление: connect/delete.md
     - Настройки:
-      - Общие настройки: vdi/connect/settings/main_settings.md
-      - Настройки Spice: vdi/connect/settings/spice_settings.md
-      - Настройки RDP: vdi/connect/settings/rdp_settings.md
-      - Служебные настройки: vdi/connect/settings/service_settings.md
-    - Запуск в режиме доступа одного приложения: vdi/connect/one_app_mode.md
+      - Общие настройки: connect/settings/main_settings.md
+      - Настройки Spice: connect/settings/spice_settings.md
+      - Настройки RDP: connect/settings/rdp_settings.md
+      - Служебные настройки: connect/settings/service_settings.md
+    - Запуск в режиме доступа одного приложения: connect/one_app_mode.md
     - Возможные ошибки:
-      - Общие ошибки: vdi/connect/possible_errors/common.md
-      - Ошибки RDP: vdi/connect/possible_errors/rdp.md
-      - Ошибки Spice: vdi/connect/possible_errors/spice.md
-    - Тонкие клиенты: vdi/connect/thin_clients.md
+      - Общие ошибки: connect/possible_errors/common.md
+      - Ошибки RDP: connect/possible_errors/rdp.md
+      - Ошибки Spice: connect/possible_errors/spice.md
+    - Тонкие клиенты: connect/thin_clients.md
