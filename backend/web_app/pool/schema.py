@@ -502,7 +502,9 @@ class PoolType(graphene.ObjectType):
     async def resolve_users(self, _info, entitled=True):
         # TODO: добавить пагинацию
         pool = await Pool.get(self.pool_id)
-        return await pool.assigned_users if entitled else await pool.possible_users
+        if entitled:
+            return await pool.assigned_users
+        return await pool.possible_users
 
     async def resolve_vms(self, _info):
         # TODO: добавить пагинацию

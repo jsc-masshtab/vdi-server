@@ -200,6 +200,23 @@ class User(AbstractSortableStatusModel, VeilModel):
     async def get_id(username):
         return await User.select("id").where(User.username == username).gino.scalar()
 
+    @classmethod
+    async def get_superuser_ids_subquery(cls):
+        """Возвращает подзапрос формирующий id суперпользователей системы."""
+        admins_query = cls.query.where(cls.is_superuser)
+        # Если включена PAM, необходимо проверить наличие пользователей в системной группе
+        if PAM_AUTH:
+            superusers = await admins_query.gino.all()
+            superuser_ids = set()
+            for user in superusers:
+                system_superuser = await user.superuser()
+                if system_superuser:
+                    superuser_ids.add(user.id)
+            system_superuser_filter = cls.query.where(cls.id.in_(superuser_ids))
+            return db.select([text("id")]).select_from(system_superuser_filter.alias())
+
+        return db.select([text("id")]).select_from(admins_query.alias())
+
     # ----- ----- ----- ----- ----- ----- -----
     # Setters & etc.
 
@@ -567,6 +584,9 @@ class User(AbstractSortableStatusModel, VeilModel):
                     pam_result = await user_obj.pam_create_user(
                         raw_password=password, superuser=is_superuser
                     )
+                    # снимаем флаг суперпользователя, если создание с ошибкой
+                    if not pam_result.success:
+                        await user_obj.update(is_superuser=False).apply()
                     if not pam_result.success and pam_result.return_code != 969:
                         raise PamError(pam_result)
                     elif pam_result.return_code == 969:

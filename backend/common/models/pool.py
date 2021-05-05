@@ -521,8 +521,7 @@ class Pool(VeilModel):
         ).alias()
 
         # Список администраторов системы
-        admins_query = UserModel.query.where(UserModel.is_superuser)
-        admins_query_ids = db.select([text("id")]).select_from(admins_query).alias()
+        admins_query_ids = await UserModel.get_superuser_ids_subquery()
 
         # Список явных пользователей
         users_query = EntityOwnerModel.join(query)
@@ -547,6 +546,8 @@ class Pool(VeilModel):
             .select()
             .group_by(UserModel.id)
         )
+        # 5.05.2021 добавлено исключение "не активных" пользователей из итогового списка
+        finish_query = finish_query.where(UserModel.is_active)
         return await finish_query.gino.all()
 
     @property
@@ -556,7 +557,6 @@ class Pool(VeilModel):
             (EntityModel.entity_type == EntityType.POOL)
             & (EntityModel.entity_uuid == self.id)  # noqa: W503
         ).alias()
-
         # Список пользователей состоящих в группах
         group_users_query = (
             UserGroupModel.join(GroupModel)
@@ -575,12 +575,10 @@ class Pool(VeilModel):
         )
 
         # Список администраторов системы
-        admins_query = UserModel.query.where(UserModel.is_superuser).alias()
-        admins_query_ids = (
-            db.select([text("anon_2.id")]).select_from(admins_query).alias()
-        )
+        admins_query_ids = await UserModel.get_superuser_ids_subquery()
+        admins_query_ids = admins_query_ids.alias()
 
-        # Обьединяем все три запроса и фильтруем активных пользователей
+        # Объединяем все три запроса и фильтруем активных пользователей
         # Outer join, потому что union_all что-то не взлетел
         union_query = (
             UserModel.join(
