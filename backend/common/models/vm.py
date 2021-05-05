@@ -492,7 +492,8 @@ class Vm(VeilModel):
         domain_action = getattr(veil_domain, action_name)
         action_response = await domain_action(force=force)
         # Была установлена задача. Необходимо дождаться ее выполнения.
-        await self.task_waiting(action_response.task)
+        if action_response.task:
+            await self.task_waiting(action_response.task)
         # Если задача выполнена с ошибкой - прерываем выполнение
         task_success = await action_response.task.is_success()
         if not task_success:
@@ -730,7 +731,7 @@ class Vm(VeilModel):
         # Удаленный доступ выключен, нужно включить и ждать
         action_response = await domain_entity.enable_remote_access()
         # Ожидаем выполнения задачи на VeiL
-        if action_response.status_code == 202:
+        if action_response.status_code == 202 and action_response.task:
             # Была установлена задача. Необходимо дождаться ее выполнения.
             await self.task_waiting(action_response.task)
             # Если задача выполнена с ошибкой - прерываем выполнение
@@ -789,7 +790,7 @@ class Vm(VeilModel):
                 hostname=self.verbose_name
             )
             # Ожидаем выполнения задачи на VeiL
-            if action_response.status_code == 202:
+            if action_response.status_code == 202 and action_response.task:
                 await self.task_waiting(action_response.task)
             # Если задача выполнена с ошибкой - логируем
             task_success = await action_response.task.is_success()
@@ -845,7 +846,8 @@ class Vm(VeilModel):
             action_response = await domain_entity.add_to_ad(
                 **ad_params_dict
             )
-            await self.task_waiting(action_response.task)
+            if action_response.task:
+                await self.task_waiting(action_response.task)
             # Если задача выполнена с ошибкой - прерываем выполнение
             task_success = await action_response.task.is_success()
             if not task_success:
