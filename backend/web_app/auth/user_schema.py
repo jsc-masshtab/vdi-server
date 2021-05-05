@@ -215,7 +215,11 @@ class UserQuery(graphene.ObjectType):
         return all_existing_permissions
 
     async def resolve_count(self, info, is_superuser=None, is_active=None, **kwargs):
-        filters = UserQuery.build_filters(is_superuser, is_active)
+        if is_superuser:
+            superuser_subquery = await User.get_superuser_ids_subquery()
+        else:
+            superuser_subquery = None
+        filters = UserQuery.build_filters(superuser_subquery, is_active)
         query = User.select("id").where(and_(*filters))
         users_count = (
             await db.select([db.func.count()]).select_from(query.alias()).gino.scalar()
@@ -223,10 +227,10 @@ class UserQuery(graphene.ObjectType):
         return users_count
 
     @staticmethod
-    def build_filters(is_superuser, is_active):
+    def build_filters(superuser_subquery, is_active):
         filters = []
-        if is_superuser is not None:
-            filters.append((User.is_superuser == is_superuser))
+        if superuser_subquery is not None:
+            filters.append((User.id.in_(superuser_subquery)))
         if is_active is not None:
             filters.append((User.is_active == is_active))
 
@@ -254,7 +258,12 @@ class UserQuery(graphene.ObjectType):
         ordering=None,
         **kwargs
     ):
-        filters = UserQuery.build_filters(is_superuser, is_active)
+        if is_superuser:
+            superuser_subquery = await User.get_superuser_ids_subquery()
+        else:
+            superuser_subquery = None
+
+        filters = UserQuery.build_filters(superuser_subquery, is_active)
 
         users = await User.get_objects(
             limit,
