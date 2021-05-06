@@ -54,18 +54,6 @@ class ThinClientType(graphene.ObjectType):
     avg_rtt = graphene.Float()
     loss_percentage = graphene.Int()
 
-    async def resolve_is_afk(self, _info):
-
-        if (
-            self.last_interaction is None
-        ):  # Если от клиента не было активности вообще, то считаем afk
-            return True
-        else:
-            afk_timeout = 300  # как в WoW
-            time_delta = timedelta(seconds=afk_timeout)
-            cur_time = datetime.now(timezone.utc)
-            return bool((cur_time - self.last_interaction) > time_delta)
-
     @staticmethod
     async def create_from_db_data(tk_db_data):
         thin_client_type = ThinClientType()
@@ -89,6 +77,18 @@ class ThinClientType(graphene.ObjectType):
         thin_client_type.write_speed = tk_db_data.write_speed
         thin_client_type.avg_rtt = tk_db_data.avg_rtt
         thin_client_type.loss_percentage = tk_db_data.loss_percentage
+
+        # AFK
+        if tk_db_data.disconnected:
+            thin_client_type.is_afk = None
+        else:
+            if tk_db_data.last_interaction is None:
+                thin_client_type.is_afk = True
+            else:
+                afk_timeout = 300  # как в WoW
+                time_delta = timedelta(seconds=afk_timeout)
+                cur_time = datetime.now(timezone.utc)
+                thin_client_type.is_afk = bool((cur_time - tk_db_data.last_interaction) > time_delta)
 
         return thin_client_type
 

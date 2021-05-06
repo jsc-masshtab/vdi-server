@@ -1294,7 +1294,7 @@ class RdsPool(db.Model):
         return [Pool.PoolConnectionTypes.RDP.name, Pool.PoolConnectionTypes.NATIVE_RDP.name]
 
     @staticmethod
-    async def get_apps(pool_id, user_name):
+    async def get_farm_list(pool_id, user_name):
         """Получить с RDS Сервера список приложений, которые доступны пользователю.
 
         Приложение доступно, если оно опубликовано на ферме и у юзера есть право на пользование фермой.
@@ -1310,10 +1310,10 @@ class RdsPool(db.Model):
             domain_id=str(vms[0].id))  # В пуле только одна ВМ - RDS
 
         # Execute script to get published apps
-        qemu_guest_command = {"path": "cscript.exe",
+        qemu_guest_command = {"path": "powershell.exe",
                               "arg": [
-                                  "C:\\Program Files\\Qemu-ga\\get_published_apps.vbs",
-                                  "//Nologo", user_name],
+                                  ".\'C:\\Program Files\\Qemu-ga\\get_published_apps.ps1'",
+                                  user_name],
                               "capture-output": True}
         response = await domain_veil_api.guest_command(qemu_cmd="guest-exec",
                                                        f_args=qemu_guest_command)
@@ -1322,13 +1322,7 @@ class RdsPool(db.Model):
         farm_data_dict = json.loads(json_farms_data)
         farm_list = farm_data_dict["farmlist"]
 
-        # form app list
-        app_list = []
-        if farm_list:
-            for farm in farm_list:
-                app_list.extend(farm["app_array"])
-
-        return app_list
+        return farm_list
 
     async def activate(self):
         return await Pool.activate(self.id)
@@ -1717,17 +1711,22 @@ class AutomatedPool(db.Model):
 
             task_completed = False
             task_client = pool_controller.veil_client.task(task_id=vm_multi_task_id)
-            while not task_completed:
+            while task_client and not task_completed:
                 await asyncio.sleep(VEIL_OPERATION_WAITING)
                 task_completed = await task_client.is_finished()
 
             # Если задача выполнена с ошибкой - получаем успешные ВМ для дальнейшего создания
-            task_success = await task_client.is_success()
+            if task_client:
+                task_success = await task_client.is_success()
+                api_object_id = task_client.api_object_id
+            else:
+                task_success = False
+                api_object_id = ""
             if not task_success:
                 success_vm_ids = await self.process_failed_multitask(vm_multi_task_id)
                 await system_logger.warning(
                     message=_("VM creation task {} finished with error.").format(
-                        task_client.api_object_id
+                        api_object_id
                     )
                 )
                 await self.deactivate(status=Status.PARTIAL)

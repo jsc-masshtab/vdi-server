@@ -420,16 +420,22 @@ class PrepareVmTask(AbstractTask):
                 # TODO: метод ожидания задачи
                 action_task = action_response.task
                 task_completed = False
-                while not task_completed:
+                while action_task and not task_completed:
                     await asyncio.sleep(5)  # VEIL_OPERATION_WAITING
                     task_completed = await action_task.is_finished()
 
                 # Если задача выполнена с ошибкой - прерываем выполнение
-                task_success = await action_task.success
+                if action_task:
+                    task_success = await action_task.success
+                    api_object_id = action_task.api_object_id
+                else:
+                    task_success = False
+                    api_object_id = ""
+
                 if not task_success:
                     raise ValueError(
-                        _("VM remote access task {} finished with error.").format(
-                            action_task.api_object_id
+                        _("VM remote access task {} for VM {} finished with error.").format(
+                            api_object_id, vm.verbose_name
                         )
                     )
 

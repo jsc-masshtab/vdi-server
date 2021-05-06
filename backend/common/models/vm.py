@@ -178,15 +178,20 @@ class Vm(VeilModel):
                 delete_response = await domain_entity.remove(full=True)
                 delete_task = delete_response.task
                 task_completed = False
-                while not task_completed:
+                while delete_task and not task_completed:
                     await asyncio.sleep(VEIL_OPERATION_WAITING)
                     task_completed = await delete_task.is_finished()
                 # Если задача выполнена с ошибкой прокидываем исключение выше
-                task_success = await delete_task.is_success()
+                if delete_task:
+                    task_success = await delete_task.is_success()
+                    api_object_id = delete_task.api_object_id
+                else:
+                    task_success = False
+                    api_object_id = ""
                 if not task_success:
                     raise AssertionError(
                         _("VM deletion task {} finished with error.").format(
-                            delete_task.api_object_id
+                            api_object_id
                         )
                     )
                 await system_logger.debug(
@@ -495,7 +500,10 @@ class Vm(VeilModel):
         if action_response.task:
             await self.task_waiting(action_response.task)
         # Если задача выполнена с ошибкой - прерываем выполнение
-        task_success = await action_response.task.is_success()
+        if action_response.task:
+            task_success = await action_response.task.is_success()
+        else:
+            task_success = False
         if not task_success:
             raise ValueError("Remote task finished with error.")
         return task_success
@@ -507,7 +515,8 @@ class Vm(VeilModel):
             # При старте ВМ если есть по какой-либо причине tcp usb каналы в режиме connect, то вм не запуститься, если
             # нет соответствующего сервера раздающего usb (а его не будет с большей вероятностью). Так что detach all
             await domain_entity.detach_usb(
-                action_type="tcp_usb_device", remove_all=True
+                action_type="tcp_usb_device", remove_all=True,
+                no_task=True
             )
             task_success = await self.action("start")
             await system_logger.info(
@@ -735,7 +744,10 @@ class Vm(VeilModel):
             # Была установлена задача. Необходимо дождаться ее выполнения.
             await self.task_waiting(action_response.task)
             # Если задача выполнена с ошибкой - прерываем выполнение
-            task_success = await action_response.task.is_success()
+            if action_response.task:
+                task_success = await action_response.task.is_success()
+            else:
+                task_success = False
             if not task_success:
                 raise ValueError("Remote access enabling task finished with error.")
         await system_logger.info(
@@ -793,7 +805,10 @@ class Vm(VeilModel):
             if action_response.status_code == 202 and action_response.task:
                 await self.task_waiting(action_response.task)
             # Если задача выполнена с ошибкой - логируем
-            task_success = await action_response.task.is_success()
+            if action_response.task:
+                task_success = await action_response.task.is_success()
+            else:
+                task_success = False
             if not task_success:
                 await system_logger.warning(
                     _("VM {} hostname setting task failed.").format(self.verbose_name),
@@ -849,7 +864,10 @@ class Vm(VeilModel):
             if action_response.task:
                 await self.task_waiting(action_response.task)
             # Если задача выполнена с ошибкой - прерываем выполнение
-            task_success = await action_response.task.is_success()
+            if action_response.task:
+                task_success = await action_response.task.is_success()
+            else:
+                task_success = False
             if not task_success:
                 raise ValueError(
                     _("VM {} domain including task failed.").format(self.verbose_name)
