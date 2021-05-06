@@ -268,7 +268,7 @@ class VeilModel(db.Model):
     async def task_waiting(task_instance):
         """Дожидается завершения выполнения задачи."""
         task_completed = False
-        while not task_completed:
+        while task_instance and not task_completed:
             await asyncio.sleep(VEIL_OPERATION_WAITING)
             task_completed = await task_instance.is_finished()
         return True

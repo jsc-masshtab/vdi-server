@@ -244,7 +244,7 @@ class PoolGetVm(BaseHandler, ABC):
 
         permissions = await user.get_permissions()
         try:
-            applications = await RdsPool.get_apps(pool.id, user.username) \
+            farm_list = await RdsPool.get_farm_list(pool.id, user.username) \
                 if pool_type == PoolModel.PoolTypes.RDS else []
         except (KeyError, JSONDecodeError) as ex:
             response = {"errors": [{"message": _("Unable to get list of published applications. {}").format(str(ex))}]}
@@ -258,7 +258,7 @@ class PoolGetVm(BaseHandler, ABC):
                 vm_controller_address=vm_controller.address,
                 vm_id=str(vm.id),
                 permissions=[permission.value for permission in permissions],
-                applications=applications
+                farm_list=farm_list
             )
         }
         return await self.log_finish(response)
