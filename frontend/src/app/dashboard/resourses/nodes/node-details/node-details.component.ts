@@ -46,7 +46,7 @@ export class NodeDetailsComponent implements OnInit, OnDestroy {
       type: 'string'
     },
     {
-      title: 'IP-адрес',
+      title: 'IP адрес',
       property: 'management_ip',
       type: 'string'
     },

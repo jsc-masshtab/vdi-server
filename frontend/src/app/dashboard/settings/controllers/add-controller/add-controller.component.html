@@ -11,7 +11,7 @@
 
   <div class="form-fields" [formGroup]="createForm">
     <label class="field">
-      <p class="field-name">IP-адрес</p>
+      <p class="field-name">IP адрес</p>
       <input type="text" formControlName="address" [focusMe]="true">
       <ng-container *ngIf="createForm.hasError('required', 'address') && checkValid"><ng-container *ngTemplateOutlet="errorTemp"></ng-container></ng-container>
     </label>

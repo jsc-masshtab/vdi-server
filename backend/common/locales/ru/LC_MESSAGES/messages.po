@@ -713,7 +713,7 @@ msgstr "ВМ {} успешно заведена в контейнер/групп
 
 #: ../common/models/vm.py:884
 msgid "VM {} failed to receive DHCP ip address ({})."
-msgstr "VM {} не удалось получить IP-адрес по DHCP ({})."
+msgstr "VM {} не удалось получить IP адрес по DHCP ({})."
 
 #: ../common/models/vm.py:903
 msgid "VM {} domain including task failed."

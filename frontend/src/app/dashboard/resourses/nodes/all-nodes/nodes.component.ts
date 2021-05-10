@@ -36,7 +36,7 @@ export class NodesComponent extends DetailsMove implements OnInit, OnDestroy {
       sort: true
     },
     {
-      title: 'IP-адрес',
+      title: 'IP адрес',
       property: 'management_ip',
       type: 'string',
       sort: true
