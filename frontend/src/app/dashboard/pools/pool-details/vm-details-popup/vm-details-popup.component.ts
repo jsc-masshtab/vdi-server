@@ -496,7 +496,7 @@ export class VmDetalsPopupComponent implements OnInit {
   ) {
     this.waitService.setWait(true);
   }
-  
+
   ngOnInit() {
     this.service.getVm(this.data.idPool, this.data.vmActive, this.data.controller_id).valueChanges.subscribe((res) => {
       this.data = { ...this.data, vm: res.data.pool.vm }

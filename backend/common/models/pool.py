@@ -1031,6 +1031,7 @@ class Pool(VeilModel):
                     entity=entity,
                 )
             vm = await VmModel.get(vm_id)
+            await vm.update(status=Status.SERVICE).apply()
             if vm:
                 vms_list.append(vm)
 
