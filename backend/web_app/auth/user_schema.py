@@ -33,6 +33,8 @@ class UserValidator(MutationValidation):
 
     @staticmethod
     async def validate_username(obj_dict, value):
+        if not value:
+            raise AssertError(_("username can`t be empty."))
         user_name_re = re.compile("^[a-zA-Z0-9.-_+]{3,128}$")
         template_name = re.match(user_name_re, value.strip())
         if template_name:
@@ -293,7 +295,10 @@ class CreateUserMutation(graphene.Mutation, UserValidator):
     @security_administrator_required
     async def mutate(cls, root, info, creator, **kwargs):
         await cls.validate(**kwargs)
-        kwargs["username"] = kwargs["username"].strip()
+        username = kwargs["username"]
+        kwargs["username"] = username.strip() if username else None
+        if not kwargs["username"]:
+            return CreateUserMutation(ok=False)
         user = await User.soft_create(creator=creator, **kwargs)
         return CreateUserMutation(user=UserType(**user.__values__), ok=True)
 
