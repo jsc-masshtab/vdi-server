@@ -141,7 +141,9 @@ class Pool(VeilModel):
     @property
     async def vms(self):
         """Возвращаем виртуальные машины привязанные к пулу."""
-        return await VmModel.query.where(VmModel.pool_id == self.id).gino.all()
+        query = VmModel.query.where(VmModel.pool_id == self.id).order_by(
+            VmModel.verbose_name)
+        return await query.gino.all()
 
     @property
     async def is_automated_pool(self):
@@ -966,8 +968,8 @@ class Pool(VeilModel):
             vms_dict[vm_info["id"]] = vm_info
 
         vms_info = list()
-        guest_utils = None
         qemu_state = None
+
         for vm in vms:
             # TODO: Добавить принадлежность к домену + на фронте
             user_power_state = VmState.UNDEFINED
