@@ -460,19 +460,10 @@ class Pool(VeilModel):
     async def get_vm(self, user_id):
         """Возвращает ВМ пользователя с учетом его прав.
 
-        Сочитание pool id и username уникальное, т.к. пользователь не может иметь больше одной машины в пуле.
+        Сочетание pool id и username уникальное, т.к. пользователь не может иметь больше одной машины в пуле.
         """
         await system_logger.debug("Возвращаем ВМ пользователя")
         return await self.get_user_vms_query(user_id).gino.first()
-
-    # @property
-    # async def roles(self):
-    #     """Уникальные роли назначенные пулу (без учета групп и пользователей)."""
-    #     query = EntityModel.query.where(
-    #         (EntityModel.entity_type == EntityType.POOL) & (EntityModel.entity_uuid == self.id)).alias()
-    #     filtered_query = EntityOwnerModel.join(query).select().alias()
-    #     result_query = db.select([text('anon_1.role')]).select_from(filtered_query).group_by('role')
-    #     return await result_query.gino.all()
 
     @property
     def assigned_groups_query(self):

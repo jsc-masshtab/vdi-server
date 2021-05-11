@@ -36,7 +36,7 @@ snapshots["TestAuthenticationDirectoryQuery.test_auth_dir_get_by_id 1"] = {
         "description": None,
         "directory_type": "ActiveDirectory",
         "directory_url": "ldap://192.168.14.167",
-        "domain_name": "bazalt",
+        "domain_name": "BAZALT",
         "mappings": [],
         "verbose_name": "test_auth_dir",
     }

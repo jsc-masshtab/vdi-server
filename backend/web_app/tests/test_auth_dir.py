@@ -43,7 +43,7 @@ class TestAuthenticationDirectoryCreate:
     async def test_auth_dir_no_pass_create(self, snapshot, fixt_auth_context):  # noqa
         """Проверка создания Authentication Directory без auth."""
         query = """mutation {createAuthDir(
-                      domain_name: "bazalt"
+                      domain_name: "BAZALT"
                       dc_str: "bazalt.local"
                       verbose_name: "test"
                       directory_url: "ldap://192.168.14.167"
@@ -66,7 +66,7 @@ class TestAuthenticationDirectoryCreate:
         """Допонительно проверяет шифрование пароля Authentication Directory."""
         test_password = "Bazalt1!"
         query = """mutation {createAuthDir(
-                      domain_name: "bazalt"
+                      domain_name: "BAZALT"
                       dc_str: "dc=bazalt,dc=team"
                       verbose_name: "test"
                       directory_url: "ldap://192.168.14.167"
@@ -92,7 +92,7 @@ class TestAuthenticationDirectoryCreate:
         """При создании с неправильным паролем статус должен быть BAD_AUTH."""
         test_password = "bad"
         query = """mutation {createAuthDir(
-                             domain_name: "bazalt"
+                             domain_name: "BAZALT"
                              dc_str: "dc=bazalt,dc=team"
                              verbose_name: "test"
                              directory_url: "ldap://192.168.14.167"
@@ -119,7 +119,7 @@ class TestAuthenticationDirectoryCreate:
     ):  # noqa
         """При создании с неправильным паролем статус должен быть FAILED."""
         query = """mutation {createAuthDir(
-                              domain_name: "bazalt"
+                              domain_name: "BAZALT"
                               dc_str: "dc=bazalt,dc=team"
                               verbose_name: "test"
                               directory_url: "ldap://127.0.0.1"
@@ -139,7 +139,7 @@ class TestAuthenticationDirectoryCreate:
     async def test_auth_dir_create_bad(self, fixt_auth_context, fixt_auth_dir):  # noqa
         """Проверяет, что нельзя создать больше 1 записи Authentication Directory."""
         query = """mutation {createAuthDir(
-                      domain_name: "bazalt"
+                      domain_name: "BAZALT"
                       dc_str: "bazalt.local"
                       verbose_name: "Bazalt"
                       directory_url: "ldap://192.168.14.167"
