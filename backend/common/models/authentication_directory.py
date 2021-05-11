@@ -146,9 +146,9 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
         cls,
         verbose_name,
         directory_url,
-        domain_name,
+        domain_name: str,
         creator,
-        dc_str,
+        dc_str: str,
         service_username=None,
         service_password=None,
         description=None,
@@ -181,7 +181,7 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
             "directory_url": directory_url,
             "connection_type": connection_type,
             "directory_type": directory_type,
-            "domain_name": domain_name,
+            "domain_name": domain_name.upper(),
             "service_username": service_username,
             "service_password": service_password,
             "status": Status.CREATING,
@@ -219,6 +219,10 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
                 kwargs["service_password"] = encrypt(kwargs["service_password"])
             if kwargs.get("dc_str"):
                 kwargs["dc_str"] = cls.convert_dc_str(kwargs["dc_str"])
+            # Переводим имя домена в верхний регистр
+            domain_name = kwargs.get("domain_name")
+            if domain_name and isinstance(domain_name, str):
+                kwargs["domain_name"] = domain_name.upper()
 
         update_type, update_dict = await super().soft_update(id, **kwargs)
 

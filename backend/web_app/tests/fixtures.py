@@ -457,7 +457,7 @@ def fixt_auth_dir(request, event_loop):
     id = "10913d5d-ba7a-4049-88c5-769267a6cbe4"
     verbose_name = "test_auth_dir"
     directory_url = "ldap://192.168.14.167"
-    domain_name = "bazalt"
+    domain_name = "BAZALT"
     creator = "system"
     dc_str = "bazalt.local"
 
@@ -492,7 +492,7 @@ def fixt_auth_dir_with_pass(request, event_loop):
     id = "10913d5d-ba7a-4049-88c5-769267a6cbe5"
     verbose_name = "test_auth_dir"
     directory_url = "ldap://192.168.14.167"
-    domain_name = "bazalt"
+    domain_name = "BAZALT"
     dc_str = "bazalt.local"
     encoded_service_password = "Bazalt1!"
 
@@ -529,7 +529,7 @@ def fixt_auth_dir_with_pass_bad(request, event_loop):
     id = "10913d5d-ba7a-4049-88c5-769267a6cbe6"
     verbose_name = "test_auth_dir"
     directory_url = "ldap://192.168.14.167"
-    domain_name = "bazalt"
+    domain_name = "BAZALT"
     dc_str = "bazalt.local"
     encoded_service_password = "bad"
 

@@ -166,7 +166,7 @@ class PoolGetVm(BaseHandler, ABC):
                 return await self.log_finish(response)
 
         # TODO: обработка новых исключений
-        # Подготовка ВМ теперь происходит при создании и расширении пула. Тут только влючение ВМ.
+        # Только включение ВМ.
         try:
             # Дальше запросы начинают уходить на veil
             veil_domain = await vm.vm_client
