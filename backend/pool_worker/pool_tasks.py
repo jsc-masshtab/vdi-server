@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import asyncio
+import traceback
 from abc import ABC, abstractmethod
 
 from aiohttp import client_exceptions
@@ -95,9 +96,15 @@ class AbstractTask(ABC):
             await self.do_on_cancel()
 
         except Exception as ex:  # noqa
+
             message = _("Task '{}' failed.").format(friendly_task_name)
+
             await self.task_model.set_status(TaskStatus.FAILED, message + " " + str(ex))
-            await system_logger.warning(message, description=str(ex))
+
+            # event
+            tb = traceback.format_exc()
+            description = str(ex) + " " + tb
+            await system_logger.warning(message=message, description=description)
             await self.do_on_fail()
 
         finally:
@@ -191,7 +198,7 @@ class InitPoolTask(AbstractTask):
 
 
 class ExpandPoolTask(AbstractTask):
-    def __init__(self, pool_locks, ignore_reserve_size=False, wait_for_lock=False):
+    def __init__(self, pool_locks, ignore_reserve_size=False, wait_for_lock=True):
         super().__init__()
 
         self._pool_locks = pool_locks
@@ -464,3 +471,32 @@ class BackupVmsTask(AbstractTask):
 
         if not ok:
             raise RuntimeError(_("Creating backup finished with error."))
+
+
+class RemoveVmsTask(AbstractTask):
+    """Реализация задачи удаления ВМ из пула."""
+
+    def __init__(self, pool_locks, vm_ids, creator):
+        super().__init__()
+
+        self._pool_locks = pool_locks  # для сихранизации задач над динамическим пулом
+        self._vm_ids = vm_ids
+        self._creator = creator
+
+    async def do_task(self):
+        pool = await Pool.get(self.task_model.entity_id)
+        pool_type = await pool.pool_type
+
+        if pool_type == Pool.PoolTypes.AUTOMATED or pool_type == Pool.PoolTypes.GUEST:
+            pool_lock = self._pool_locks.get_pool_lock(str(pool.id))
+            async with pool_lock:
+                await self.remove_vms(pool, remove_vms_on_controller=True)
+        elif pool_type == Pool.PoolTypes.STATIC:
+            await self.remove_vms(pool)
+        else:
+            raise RuntimeError(_("Unsupported pool type."))
+
+    async def remove_vms(self, pool, remove_vms_on_controller=False):
+        await pool.remove_vms(self._vm_ids, self._creator)
+        # remove vms from db
+        await Vm.remove_vms(self._vm_ids, self._creator, remove_vms_on_controller)

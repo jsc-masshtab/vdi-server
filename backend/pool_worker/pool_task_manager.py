@@ -24,6 +24,7 @@ from pool_worker.pool_tasks import (
     ExpandPoolTask,
     InitPoolTask,
     PrepareVmTask,
+    RemoveVmsTask
 )
 
 
@@ -34,7 +35,8 @@ class PoolTaskManager:
     """Реализует управление задачами."""
 
     def __init__(self):
-        self.pool_locks = PoolLocks()
+        self.pool_locks = PoolLocks()  # примитивы для синхронизации задач над пулами. В данный момент
+        # применимо только к динамическим (гостевым) пулам
 
     async def start(self):
         """Действия при старте менеджера."""
@@ -227,11 +229,12 @@ class PoolTaskManager:
             task.execute_in_async_task(task_id)
 
         elif pool_task == PoolTaskType.VMS_BACKUP.name:
+            task = BackupVmsTask(entity_type=task_data_dict["entity_type"], creator=task_data_dict["creator"])
+            task.execute_in_async_task(task_id)
 
-            task = BackupVmsTask(
-                entity_type=task_data_dict["entity_type"],
-                creator=task_data_dict["creator"],
-            )
+        elif pool_task == PoolTaskType.VMS_REMOVE.name:
+            task = RemoveVmsTask(pool_locks=self.pool_locks, vm_ids=task_data_dict["vm_ids"],
+                                 creator=task_data_dict["creator"])
             task.execute_in_async_task(task_id)
 
     async def cancel_tasks(self, task_ids, cancel_all=False):

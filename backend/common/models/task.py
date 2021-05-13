@@ -25,6 +25,7 @@ class PoolTaskType(Enum):
     POOL_DECREASE = "POOL_DECREASE"
     VM_PREPARE = "VM_PREPARE"
     VMS_BACKUP = "VMS_BACKUP"
+    VMS_REMOVE = "VMS_REMOVE"
 
 
 class TaskStatus(Enum):
@@ -82,6 +83,8 @@ class Task(db.Model, AbstractSortableStatusModel):
             task_message = _("Preparation of vm {}.").format(entity_name)
         elif self.task_type == PoolTaskType.VMS_BACKUP:
             task_message = _("Backup of {}.").format(entity_name)
+        elif self.task_type == PoolTaskType.VMS_REMOVE:
+            task_message = _("Removal of VMs from pool {}.").format(entity_name)
         else:
             task_message = ""
         if task_message and isinstance(task_message, str):
@@ -117,7 +120,7 @@ class Task(db.Model, AbstractSortableStatusModel):
         if status == TaskStatus.FINISHED or status == TaskStatus.FAILED:
             await self.update(resumable=False).apply()
 
-        shorten_msg = textwrap.shorten(message, width=356)
+        shorten_msg = textwrap.shorten(message, width=256)
         await self.update(message=shorten_msg).apply()
 
         # publish task event
