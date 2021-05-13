@@ -265,8 +265,44 @@ class Vm(VeilModel):
             & (EntityOwnerModel.entity_id == entity)  # noqa: W503
         ).gino.status()
 
+    @classmethod
+    def get_free_vms_ids_query(cls, pool_id: uuid.UUID, status=Status.ACTIVE):
+        """Формирует запрос свободных ВМ.
+
+        Свободная == не занятая за кем-то конкретным.
+        """
+        occupied_vms_query = EntityOwnerModel.get_occupied_vms()
+        query = cls.select("id").where(cls.pool_id == pool_id).where(
+            (cls.status == status)  # noqa" W503
+            & (cls.id.notin_(occupied_vms_query))  # noqa: W503
+        ).order_by(cls.verbose_name)
+        return query
+
+    @classmethod
+    async def get_free_vms_ids(cls, pool_id: uuid.UUID, status=Status.ACTIVE) -> list:
+        """Список id свободных ВМ."""
+        query = cls.get_free_vms_ids_query(pool_id=pool_id, status=status)
+        ids_qs = await query.gino.all()
+        return [str(vm_id) for (vm_id,) in ids_qs]
+
+    @classmethod
+    async def get_vms_ids_in_pool(cls, pool_id):
+        """Get all vm_ids as list of strings."""
+        query = cls.select("id").where(cls.pool_id == pool_id)
+        vm_ids_data = await query.gino.all()
+        vm_ids = [str(vm_id) for (vm_id,) in vm_ids_data]
+        return vm_ids
+
+    @staticmethod
+    async def get_all_vms_ids():
+        # TODO: какой-то бесполезный метод
+        return await get_list_of_values_from_db(Vm, Vm.id)
+
     async def get_users_query(self):
-        """Получить пользователей. Для случаев когда ожидается больше одного пользователя."""
+        """Формирует запрос пользователей ВМ.
+
+        Для случаев когда ожидается больше одного пользователя.
+        """
         entity_query = EntityModel.select("id").where(
             (EntityModel.entity_type == EntityType.VM)
             & (EntityModel.entity_uuid == self.id)  # noqa: W503
@@ -278,18 +314,6 @@ class Vm(VeilModel):
             .where(EntityOwnerModel.entity_id == entity_query)
         )
         return query
-
-    @staticmethod
-    async def get_all_vms_ids():
-        # TODO: какой-то бесполезный метод
-        return await get_list_of_values_from_db(Vm, Vm.id)
-
-    @staticmethod
-    async def get_vms_ids_in_pool(pool_id):
-        """Get all vm_ids as list of strings."""
-        vm_ids_data = await Vm.select("id").where((Vm.pool_id == pool_id)).gino.all()
-        vm_ids = [str(vm_id) for (vm_id,) in vm_ids_data]
-        return vm_ids
 
     @staticmethod
     async def copy(
@@ -394,7 +418,7 @@ class Vm(VeilModel):
         """Remove given vms."""
         if not vm_ids:
             return False
-        # Ради логгирования и вывода из домена удаление делается по 1 ВМ.
+        # Ради логирования и вывода из домена удаление делается по 1 ВМ.
         await asyncio.gather(
             *[
                 Vm.remove_vm_with_timeout(vm_id, creator, remove_vms_on_controller)

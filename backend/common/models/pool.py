@@ -864,54 +864,64 @@ class Pool(VeilModel):
         return False
 
     async def get_free_vm_v2(self):
-        """Возвращает случайную свободную ВМ.
+        """Возвращает `ближайшую` свободную ВМ.
 
-        Свободная == не занятая за кем-то конкретном.
-        Приоритетной будет та, что включена.
+        Поиск ближайшей:
+        1. Формируем список ВСЕХ `АКТИВНЫХ` и `СВОБОДНЫХ` ВМ пула
+        2. Получить от ECP VeiL список ВСЕХ `ВКЛЮЧЕННЫХ` ВМ на данном пуле ресурсов
+        3. Отфильтровать полученный список оставив ВМ с п. 1
+        4. Поиск ВМ среди п.3 у которой доступен гостевой агент
+        5. Если гостевой агент нигде не отвечает - из списка с пункта 3 беру первую включенную
         """
-        # Формируем список ВМ
-        entity_query = EntityModel.select("entity_uuid").where(
-            (EntityModel.entity_type == EntityType.VM)
-            & (EntityModel.id.in_(EntityOwnerModel.select("entity_id")))  # noqa: W503
-        )
-        vm_query = VmModel.select("id").where(
-            (VmModel.pool_id == self.id)
-            & (VmModel.status == Status.ACTIVE)  # noqa" W503
-            & (VmModel.id.notin_(entity_query))  # noqa: W503
-        )
-
-        vm_ids_data = await vm_query.gino.all()
-        if not vm_ids_data:
+        # Список свободных ВМ (п.1)
+        await system_logger.debug("Список свободных ВМ (п.1)")
+        vm_ids = await VmModel.get_free_vms_ids(pool_id=self.id)
+        if not vm_ids:
             return
-        # Получаем набор уникальных ids ВМ
-        vm_ids = set(str(vm_id) for (vm_id,) in vm_ids_data)
-        # Исключительно для удобства дебага
-        vm_id = None
-        # Запрашиваем на ECP VeiL включенные ВМ из списка
-        ids_str = ",".join(vm_ids)
-        pool_controller = await self.controller_obj
-        # Полученный список может оказаться больше, чем кол-во параметров принимаемых VeiL, поэтому делим его на блоки
-        # Т.к. список формируется выше, мы предполагаем, что 157 id и запятая уложится в 5809 символов
-        ids_str_list = wrap(ids_str, width=VEIL_MAX_IDS_LEN)
-        # теперь получаем данные для каждого блока id
-        for ids_str_section in ids_str_list:
-            controller_client = pool_controller.veil_client
-            if not controller_client:
-                break
-            domains_list_response = await controller_client.domain().list(
-                fields=["id"], params={"user_power_state": "ON", "ids": ids_str_section}
-            )
-            if (
-                domains_list_response.success
-                and domains_list_response.paginator_results  # noqa: W503
-            ):
-                # Берем первый идентификатор
-                vm_id = domains_list_response.paginator_results[0].get("id")
-                break
-        if not vm_id:
-            vm_id = vm_ids_data[0][0]
 
-        return await VmModel.get(vm_id)
+        # Получаем список ВМ от ECP VeiL (п.2)
+        await system_logger.debug("Получаем список ВМ от ECP VeiL (п.2)")
+        pool_controller = await self.controller_obj
+        controller_client = pool_controller.veil_client
+        if not controller_client:
+            return await VmModel.get(vm_ids[0])
+
+        domain_client = controller_client.domain(resource_pool=self.resource_pool_id)
+        domains_response = await domain_client.list(fields=["id"],
+                                                    params={"power_state": "ON"})
+        if not domains_response.success:
+            # TODO: raise error of disabled controller?
+            return await VmModel.get(vm_ids[0])
+
+        # Фильтруем ВМ пула (п.3)
+        await system_logger.debug("Фильтруем ВМ пула (п.3)")
+        veil_domains_list = domains_response.response
+        filtered_domains = list()
+        for domain in veil_domains_list:
+            if domain.api_object_id in vm_ids:
+                filtered_domains.append(domain)
+        if not filtered_domains:
+            return await VmModel.get(vm_ids[0])
+
+        # Ищем среди ВМ ту, у которой доступен гостевой агент (п.4)
+        await system_logger.debug("Ищем среди ВМ ту, у которой доступен гостевой агент (п.4)")
+        domain_enabled_qemu_id = await self.get_vm_with_enabled_qemu(domains=filtered_domains)
+        await system_logger.debug("ENABLED GUEST AGENT ID:{}".format(domain_enabled_qemu_id))
+        if domain_enabled_qemu_id:
+            return await VmModel.get(domain_enabled_qemu_id)
+
+        # Берем первую включенную ВМ (п.5)
+        await system_logger.debug("Берем первую включенную ВМ (п.5)")
+        first_powered_domain = filtered_domains[0]
+        return await VmModel.get(first_powered_domain.api_object_id)
+
+    @staticmethod
+    async def get_vm_with_enabled_qemu(domains: list):
+        """Попытка найти включенную ВМ с активным гостевым агентом."""
+        for domain in domains:
+            await domain.info()
+            if domain.qemu_state and domain.api_object_id:
+                return domain.api_object_id
 
     async def get_vms_info(self):
         """Возвращает информацию для всех ВМ в пуле."""

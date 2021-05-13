@@ -78,6 +78,15 @@ class EntityOwner(db.Model):
         UUID(), db.ForeignKey("group.id", ondelete="CASCADE"), nullable=True
     )
 
+    @classmethod
+    def get_occupied_vms(cls):
+        """Формирует запрос возвращающий UUID занятых ВМ."""
+        entity_query = Entity.select("entity_uuid").where(
+            (Entity.entity_type == EntityType.VM)
+            & (Entity.id.in_(cls.select("entity_id")))  # noqa: W503
+        )
+        return entity_query
+
 
 class User(AbstractSortableStatusModel, VeilModel):
     __tablename__ = "user"
