@@ -298,6 +298,7 @@ async def test_remove_and_add_vm_in_static_pool(
       mutation {
         removeVmsFromStaticPool(pool_id: "%s", vm_ids: ["%s"]){
           ok
+          task_id
         }
       }""" % (
         pool_id,
@@ -305,7 +306,13 @@ async def test_remove_and_add_vm_in_static_pool(
     )
     executed = await execute_scheme(pool_schema, qu, context=fixt_auth_context)
 
+    # Проверить успешно ли стартовала задача
     assert executed["removeVmsFromStaticPool"]["ok"]
+
+    # Дожидаемся завершения задачи
+    task_id = executed["removeVmsFromStaticPool"]["task_id"]
+    status = await wait_for_task_result(task_id, 15)
+    assert (status is not None) and (status == TaskStatus.FINISHED.name)
 
     # add removed machine back to pool
     qu = """

@@ -906,24 +906,6 @@ class AddVmsToStaticPoolMutation(graphene.Mutation):
         return {"ok": True}
 
 
-class RemoveVmsFromStaticPoolMutation(graphene.Mutation):
-    class Arguments:
-        pool_id = graphene.ID(required=True)
-        vm_ids = graphene.List(graphene.UUID, required=True)
-
-    ok = graphene.Boolean()
-
-    @administrator_required
-    async def mutate(self, _info, pool_id, vm_ids, creator):
-        pool = await Pool.get(pool_id)
-        await pool.remove_vms(vm_ids, creator)
-
-        # remove vms from db
-        await Vm.remove_vms(vm_ids, creator)
-
-        return {"ok": True}
-
-
 class UpdateStaticPoolMutation(graphene.Mutation, PoolValidator):
     """ """
 
@@ -1226,22 +1208,21 @@ class UpdateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
         return UpdateAutomatedPoolMutation(ok=False)
 
 
-class RemoveVmsFromAutomatedPoolMutation(graphene.Mutation):
+class RemoveVmsFromPoolMutation(graphene.Mutation):
     class Arguments:
         pool_id = graphene.ID(required=True)
         vm_ids = graphene.List(graphene.UUID, required=True)
 
     ok = graphene.Boolean()
+    task_id = graphene.ID()
 
     @administrator_required
     async def mutate(self, _info, pool_id, vm_ids, creator):
-        pool = await Pool.get(pool_id)
-        await pool.remove_vms(vm_ids, creator)
+        vm_str_ids = [str(vm_id) for vm_id in vm_ids]
+        task_id = await request_to_execute_pool_task(str(pool_id), PoolTaskType.VMS_REMOVE,
+                                                     vm_ids=vm_str_ids, creator=creator)
 
-        # remove vms from db
-        await Vm.remove_vms(vm_ids, creator, True)
-
-        return {"ok": True}
+        return RemoveVmsFromPoolMutation(ok=True, task_id=task_id)
 
 
 # --- --- --- --- ---
@@ -1505,17 +1486,18 @@ class VmBackup(graphene.Mutation):
         vm_id = graphene.UUID(required=True)
 
     ok = graphene.Boolean()
+    task_id = graphene.ID()
 
     @administrator_required
     async def mutate(self, _info, vm_id, creator, **kwargs):
 
-        await request_to_execute_pool_task(
+        task_id = await request_to_execute_pool_task(
             vm_id,
             PoolTaskType.VMS_BACKUP,
             entity_type=EntityType.VM.name,
             creator=creator,
         )
-        return VmBackup(ok=True)
+        return VmBackup(ok=True, task_id=task_id)
 
 
 class PoolVmsBackup(graphene.Mutation):
@@ -1524,30 +1506,34 @@ class PoolVmsBackup(graphene.Mutation):
         multiple_tasks = graphene.Boolean(default_value=True)
 
     ok = graphene.Boolean()
+    task_ids = graphene.List(graphene.UUID)
 
     @administrator_required
     async def mutate(self, _info, pool_id, multiple_tasks, creator, **kwargs):
 
+        task_ids = []
         # Launch task for every vm
         if multiple_tasks:
             pool = await Pool.get(pool_id)
             vms = await pool.vms
             for vm in vms:
-                await request_to_execute_pool_task(
+                task_id = await request_to_execute_pool_task(
                     vm.id,
                     PoolTaskType.VMS_BACKUP,
                     entity_type=EntityType.VM.name,
                     creator=creator,
                 )
+                task_ids.append(task_id)
         # one task
         else:
-            await request_to_execute_pool_task(
+            task_id = await request_to_execute_pool_task(
                 pool_id,
                 PoolTaskType.VMS_BACKUP,
                 entity_type=EntityType.POOL.name,
                 creator=creator,
             )
-        return PoolVmsBackup(ok=True)
+            task_ids.append(task_id)
+        return PoolVmsBackup(ok=True, task_ids=task_ids)
 
 
 class VmTestDomain(graphene.Mutation):
@@ -1665,8 +1651,8 @@ class PoolMutations(graphene.ObjectType):
     addStaticPool = CreateStaticPoolMutation.Field()
     addRdsPool = CreateRdsPoolMutation.Field()
     addVmsToStaticPool = AddVmsToStaticPoolMutation.Field()
-    removeVmsFromStaticPool = RemoveVmsFromStaticPoolMutation.Field()
-    removeVmsFromDynamicPool = RemoveVmsFromAutomatedPoolMutation.Field()
+    removeVmsFromStaticPool = RemoveVmsFromPoolMutation.Field()
+    removeVmsFromDynamicPool = RemoveVmsFromPoolMutation.Field()
     removePool = DeletePoolMutation.Field()
     updateDynamicPool = UpdateAutomatedPoolMutation.Field()
     updateStaticPool = UpdateStaticPoolMutation.Field()

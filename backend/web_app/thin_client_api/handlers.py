@@ -258,7 +258,8 @@ class PoolGetVm(BaseHandler, ABC):
                 vm_controller_address=vm_controller.address,
                 vm_id=str(vm.id),
                 permissions=[permission.value for permission in permissions],
-                farm_list=farm_list
+                farm_list=farm_list,
+                pool_type=pool_type
             )
         }
         return await self.log_finish(response)
