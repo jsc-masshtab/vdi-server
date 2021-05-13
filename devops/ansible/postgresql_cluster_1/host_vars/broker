@@ -1,3 +1,0 @@
-#COMMON_VARS
-local_ip: "{{ ansible_default_ipv4.address }}"
-pg_enabled: yes

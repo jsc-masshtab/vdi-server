@@ -1,8 +1,0 @@
----
-
-- name: Postgres | add key
-  apt_key: url="{{ pg_apt_key }}" state=present
-
-- name: Postgres | Add repo
-  apt_repository:
-    repo: "{{ pg_apt_repo }}"

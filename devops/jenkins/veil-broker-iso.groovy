@@ -86,7 +86,7 @@ pipeline {
                     mv veil-broker-${REPO}/ iso/repo
 
                     # copy files
-                    cp -r devops/ansible/postgresql_cluster_2 iso/ansible
+                    cp -r devops/ansible iso/ansible
                     rm -f iso/ansible/*.png iso/ansible/*.md iso/ansible/LICENSE
                     cp devops/installer/install.sh iso
 
