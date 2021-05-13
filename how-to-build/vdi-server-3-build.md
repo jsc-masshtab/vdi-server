@@ -132,7 +132,7 @@ mkdir -p $WORKSPACE/iso/repo
 rsync -aq  ~/.aptly/public/pool $WORKSPACE/iso/repo/
 rsync -aq  ~/.aptly/public/dists $WORKSPACE/iso/repo/
 
-cp -r devops/ansible/postgresql_cluster_2 iso/ansible
+cp -r devops/ansible iso/ansible
 rm -f iso/ansible/*.png iso/ansible/*.md iso/ansible/LICENSE
 cp devops/installer/install.sh iso
 

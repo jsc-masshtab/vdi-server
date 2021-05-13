@@ -1,9 +1,0 @@
-local replication repmgr md5
-host replication repmgr 127.0.0.1/32 md5
-host replication repmgr {{ local_ip }}/32 md5
-host replication repmgr {{ hostvars[second_db_host].local_ip }}/32 md5
-
-local repmgr repmgr md5
-host repmgr repmgr 127.0.0.1/32 md5
-host repmgr repmgr {{ local_ip }}/32 md5
-host repmgr repmgr {{ hostvars[second_db_host].local_ip }}/32 md5

@@ -1,2 +1,0 @@
-- name: save repmgr log
-  copy: content="{{ repmgr_log }}" dest={{ repmgr_init_log }}
