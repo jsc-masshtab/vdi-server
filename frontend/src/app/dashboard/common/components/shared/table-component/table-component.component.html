@@ -36,7 +36,7 @@
                 </ng-container>
 
                 <ng-container *ngIf="entity === 'thin'">
-                  <fa-icon [icon]="['fas', 'circle']" *ngIf="!item.is_afk" class="extra-icon on"></fa-icon>
+                  <fa-icon [icon]="['fas', 'circle']" *ngIf="item.is_afk === false" class="extra-icon on"></fa-icon>
                   <fa-icon [icon]="['fas', 'circle']" *ngIf="item.is_afk" class="extra-icon mid"></fa-icon>
                 </ng-container>
 
