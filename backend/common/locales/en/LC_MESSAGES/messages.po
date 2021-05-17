@@ -1173,8 +1173,8 @@ msgid "No such pool."
 msgstr "No such pool."
 
 #: ../web_app/pool/schema.py:266
-msgid "Pool name must contain only characters, digits, _, -."
-msgstr "Pool name must contain only characters, digits, _, -."
+msgid "Pool name must contain only characters, digits and -."
+msgstr "Pool name must contain only characters, digits and -."
 
 #: ../web_app/pool/schema.py:282
 msgid "Template name of VM must contain only characters, digits, -. Template name length must be in [{} {}] interval."

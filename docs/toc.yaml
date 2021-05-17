@@ -21,8 +21,12 @@ theme:
     code: 'Roboto Mono'
   logo: '_assets/common/veil-32x32.png'
   favicon: '_assets/common/veil-32x32.ico'
-  feature:
-    tabs: false
+#  feature:
+#    tabs: false
+  features:
+    - navigation.top
+    - navigation.tabs
+    - toc.integrate
 
 # Plugins
 plugins:
@@ -79,18 +83,20 @@ nav:
     - Cписок изменений:
       - 2.1.4: broker/changelog/2.1.4.md
       - 3.0.0: broker/changelog/3.0.0.md
-    - Приложения:
-        - Установка: broker/how_to/install.md
-        - Установка 3.0: broker/how_to/install_v3.md
-        - Обновление: broker/how_to/update.md
-        - Обновление 3.0: broker/how_to/update_v3.md
-        - Cоздание локального репозитория: broker/how_to/repo_without_inet.md
-        - Резервные копии: broker/how_to/backup.md
-        - Подготовка эталонного образа на основе Windows 8.1/10: broker/how_to/rdp/example_template_win.md
-        - Работа по RDP с пулами ВРС: broker/how_to/rdp/example_rdp.md
-        - Настройка GPO через RDP для ВМ в домене MS AD: broker/how_to/rdp/example_rdp_domain.md
-        - nVidia Grid: broker/how_to/vm/nvidia.md
-        - Порты и протоколы задействованные при обмене с ECP VeiL: broker/how_to/ports_info.md
+      - 3.1.0: broker/changelog/3.1.0.md
+    - Спецификация:
+        - Требования к хост-системе брокера: broker/spec/domain-req.md
+        - Порты и протоколы задействованные при обмене с ECP VeiL: broker/spec/ports_info.md
+    - FAQ:
+        - Установка: broker/faq/install_v3.md
+        - Обновление: broker/faq/update_v3.md
+        - Cоздание локального репозитория: broker/faq/repo_without_inet.md
+        - Резервные копии: broker/faq/backup.md
+        - Подготовка эталонного образа на основе Windows 8.1/10: broker/faq/rdp/example_template_win.md
+        - Работа по RDP с пулами ВРС: broker/faq/rdp/example_rdp.md
+        - Настройка GPO через RDP для ВМ в домене MS AD: broker/faq/rdp/example_rdp_domain.md
+        - nVidia Grid: broker/faq/vm/nvidia.md
+        - Подбор свободной ВМ: broker/pools/get-user-vm.md
     - Гостевой агент: broker/vm/guest_agent.md
     - Службы каталогов:
         - Интеграция службы каталогов: broker/active_directory/info.md
@@ -98,20 +104,16 @@ nav:
         - Расширенная интеграция службы каталогов: broker/active_directory/ad_extend.md
         - Заведение ВРС в Active Directory: broker/active_directory/ad_vm_prepare.md
     - Пулы:
-        - Автоматический пул: broker/pools/automated_pool_v2.md
         - Автоматический пул 3.0: broker/pools/automated_pool_v3.md
         - Гостевой пул: broker/pools/guest_pool.md
-    - Система авторизации:
-        - Базовое описание: broker/auth/info.md
-        - Роли: broker/auth/roles.md
-        - Пользователи: broker/auth/users.md
-        - Группы: broker/auth/groups.md
+        - Пулы приложений: broker/pools/apps-pool.md
+        - Подбор свободной ВМ: broker/pools/get-user-vm.md
     - Система управления доступом 3.0:
         - Базовое описание: broker/auth_v3/info.md
         - Роли: broker/auth_v3/roles.md
         - Пользователи: broker/auth_v3/users.md
         - Группы: broker/auth_v3/groups.md
-    - Разрешения: broker/permissions.md
+        - Разрешения ТК: broker/auth_v3/client-permissions.md
   - VeiL Connect:
     - Cписок изменений:
       - 1.3.6: connect/changelog/1.3.6.md

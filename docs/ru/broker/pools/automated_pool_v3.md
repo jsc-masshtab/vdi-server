@@ -22,7 +22,8 @@
 Описание полей формы "волшебника" создания автоматического пула.
 
 ##### Имя пула
-Будет использовано как [тег](https://veil.mashtab.org/docs/base/operator_guide/domains/tags) на ECP VeiL для всех созданных ВМ
+Будет использовано как [тег](https://veil.mashtab.org/docs/base/operator_guide/domains/tags) на ECP VeiL 
+для всех созданных ВМ
 
 ##### Типы подключения
 Типы подключения к ВМ в пуле которые будут доступны тонкому клиенту:
@@ -37,14 +38,16 @@
 пользователю роли **Администратор**.
 
 ##### Пул ресурсов
-Предварительно созданный [пул ресурсов](https://veil.mashtab.org/docs/base/operator_guide/resource_pools) на выбранном выше контроллере.
+Предварительно созданный [пул ресурсов](https://veil.mashtab.org/docs/base/operator_guide/resource_pools) 
+на выбранном выше контроллере.
 
 ##### Пример формы
-![image](../../../_assets/vdi/pool/autopool_v3_1.png)
+![image](../../_assets/vdi/pool/autopool_v3_1.png)
 
 #### Параметры создания ВМ в пуле
 ##### Шаблон ВМ 
-Предварительно созданный [шаблон](https://veil.mashtab.org/docs/base/operator_guide/domains/templates) для создания ВМ в пуле.
+Предварительно созданный [шаблон](https://veil.mashtab.org/docs/base/operator_guide/domains/templates) для 
+создания ВМ в пуле.
 
 !!! info "Шаблон есть на ECP VeiL, но не отображается на брокере"
     При создании автоматического пула брокер отображает только шаблоны с виртуальными дисками.
@@ -100,4 +103,4 @@
     Если пул или ВМ были удалены — не забудьте вывести ВМ из MS AD.    
 
 ##### Пример формы
-![image](../../../_assets/vdi/pool/autopool_v3_2.png)
+![image](../../_assets/vdi/pool/autopool_v3_2.png)

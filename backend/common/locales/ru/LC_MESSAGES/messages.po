@@ -1174,7 +1174,7 @@ msgstr "Нет такого пула."
 
 #: ../web_app/pool/schema.py:266
 msgid "Pool name must contain only characters, digits, _, -."
-msgstr "Имя пула должно содержать только буквы, цифры, _, -."
+msgstr "Имя пула должно содержать только буквы, цифры и -."
 
 #: ../web_app/pool/schema.py:282
 msgid "Template name of VM must contain only characters, digits, -. Template name length must be in [{} {}] interval."
