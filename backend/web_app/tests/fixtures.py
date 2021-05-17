@@ -49,7 +49,7 @@ async def get_resources_for_pool_test():
 
 def get_test_pool_name():
     """Generate a test pool name."""
-    return "test_pool_{}".format(str(uuid.uuid4())[:7])
+    return "test-pool-{}".format(str(uuid.uuid4())[:7])
 
 
 @pytest.fixture

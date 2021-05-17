@@ -274,12 +274,12 @@ class PoolValidator(MutationValidation):
     async def validate_verbose_name(obj_dict, value):
         if not value:
             return
-        name_re = re.compile("^[а-яА-ЯёЁa-zA-Z0-9]+[а-яА-ЯёЁa-zA-Z0-9.-_+ ]*$")
+        name_re = re.compile("^[а-яА-ЯёЁa-zA-Z0-9\\-]*$")
         template_name = re.match(name_re, value)
         if template_name:
             return value
         raise ValidationError(
-            _("Pool name must contain only characters, digits, _, -.")
+            _("Pool name must contain only characters, digits and -.")
         )
 
     @staticmethod

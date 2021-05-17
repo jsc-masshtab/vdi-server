@@ -59,7 +59,7 @@
 Предварительно созданный [пул ресурсов](https://veil.mashtab.org/docs/base/operator_guide/resource_pools) на выбранном выше контроллере.
 
 #### Пример формы
-![image](../../../_assets/vdi/pool/autopool_v3_1.png)
+![image](../../_assets/vdi/pool/autopool_v3_1.png)
 
 ### Параметры создания ВМ в пуле
 
@@ -98,7 +98,7 @@
 Значение при достижении которого будет запущено автоматическое расширение (создание новых ВМ из шаблона с шагом выше) пула. 
 
 #### Пример формы
-![image](../../../_assets/vdi/pool/guestpool.png)
+![image](../../_assets/vdi/pool/guestpool.png)
 
 !!! warning "Удаление ВМ"
     Если пул был удален — не забудьте вывести все ранее создаваемые ВМ из MS AD.   

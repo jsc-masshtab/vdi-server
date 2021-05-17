@@ -11,7 +11,7 @@
 и нажимаем **ОК** 
 
 !!! example "Пример"
-    ![image](../../../../_assets/vdi/how_to/exml_ms_ad_group.png)
+    ![image](../../../_assets/vdi/how_to/exml_ms_ad_group.png)
 
 ## Создание групповой политики
 Открываем оснастку управления групповыми политиками: 
@@ -31,7 +31,7 @@
 **Пользователи удалённого рабочего стола** и добавляем. Нажимаем **ОК**.
 
 !!! example "Пример"
-    ![image](../../../../_assets/vdi/how_to/exml_ms_ad_members.png)
+    ![image](../../../_assets/vdi/how_to/exml_ms_ad_members.png)
 
 Теперь активируем галочку разрешить подключение к удалённому рабочему столу в свойства системы ВМ. 
 Для этого внесём изменения в групповую политику **Enable RDP**.
@@ -51,7 +51,7 @@
 рабочие станции в организационном контейнере **VDI** они должны быть перезагружены.
 
 !!! example "Пример"
-    ![image](../../../../_assets/vdi/how_to/exml_ms_ad_registry.png)
+    ![image](../../../_assets/vdi/how_to/exml_ms_ad_registry.png)
 
 ## Проверка применения групповой политики
 Что бы проверить применилась ли групповая политика **Enable RDP**, необходимо зайти на ВМ в оснастку 
@@ -59,4 +59,4 @@
 В свойствах группы должна быть указана группа **VDI_RDP**
 
 !!! example "Пример"
-    ![image](../../../../_assets/vdi/how_to/exml_ms_ad_policy_check.png)
+    ![image](../../../_assets/vdi/how_to/exml_ms_ad_policy_check.png)

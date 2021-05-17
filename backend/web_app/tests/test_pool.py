@@ -85,7 +85,7 @@ async def test_update_automated_pool(
     pool_id = fixt_create_automated_pool["id"]
 
     # update some params
-    new_pool_name = "test_pool_{}".format(str(uuid.uuid4())[:7])
+    new_pool_name = "test-pool-{}".format(str(uuid.uuid4())[:7])
     qu = """
     mutation {
         updateDynamicPool(
@@ -247,7 +247,7 @@ async def test_update_static_pool(
     """Create static pool, update this pool, remove this pool"""
     pool_id = fixt_create_static_pool["id"]
 
-    new_pool_name = "test_pool_{}".format(str(uuid.uuid4())[:7])
+    new_pool_name = "test-pool-{}".format(str(uuid.uuid4())[:7])
     qu = """
     mutation {
         updateStaticPool(pool_id: "%s", verbose_name: "%s", keep_vms_on: true){
@@ -462,7 +462,7 @@ async def test_create_update_remove_rds_pool(fixt_db, fixt_create_rds_pool, fixt
     assert fixt_create_rds_pool["ok"]
     pool_id = fixt_create_rds_pool["id"]
 
-    new_pool_name = "test_pool_{}".format(str(uuid.uuid4())[:7])
+    new_pool_name = "test-pool-{}".format(str(uuid.uuid4())[:7])
     qu = """
     mutation {
         updateRdsPool(pool_id: "%s", verbose_name: "%s", keep_vms_on: true){

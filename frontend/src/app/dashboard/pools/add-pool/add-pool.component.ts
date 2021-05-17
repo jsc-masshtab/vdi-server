@@ -82,7 +82,7 @@ export class PoolAddComponent implements OnInit, OnDestroy {
   initForms() {
 
     this.sharedData = this.fb.group({
-      verbose_name: ['', [Validators.required, Validators.pattern(/^[а-яА-ЯёЁa-zA-Z0-9]+[а-яА-ЯёЁa-zA-Z0-9.-_+ ]*$/)]],
+      verbose_name: ['', [Validators.required, Validators.pattern(/^[а-яА-ЯёЁa-zA-Z0-9.\-]*$/)]],
       connection_types: [[], Validators.required],
 
       controller_id: ['', Validators.required],

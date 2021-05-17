@@ -18,7 +18,7 @@
 - Описание (необязательное поле)
 
 !!! example "Пример формы создания"
-    ![image](../../../_assets/vdi/auth/group.png)
+    ![image](../../_assets/vdi/auth/group.png)
 
 ## Информация о группе
 
@@ -28,7 +28,7 @@
 ранее созданной группы.
 
 !!! example "Пример включения пользователя в группу"
-    ![image](../../../_assets/vdi/auth/group_user_ad.png)
+    ![image](../../_assets/vdi/auth/group_user_ad.png)
 
 !!! note ""
     Пользователь может быть включен в группу в результате синхронизации со службой каталогов. Подробности описаны в 
@@ -42,4 +42,4 @@
 **Группы** нажать кнопку **Добавить роль**.
 
 !!! example "Пример закрепления пула за группой"
-    ![image](../../../_assets/vdi/auth/pool_group.png)
+    ![image](../../_assets/vdi/auth/pool_group.png)
