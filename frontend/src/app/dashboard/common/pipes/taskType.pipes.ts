@@ -20,6 +20,10 @@ export class TaskTypePipe implements PipeTransform {
             translateTaskTypePipe = 'Подготовка ВМ';
         } else if (taskType === 'VMS_BACKUP') {
             translateTaskTypePipe = 'Создание резервной копии ВМ';
+        } else if (taskType === 'VMS_REMOVE') {
+          translateTaskTypePipe = 'Удаление ВМ';
+        } else if (taskType === 'VM_GUEST_RECREATION') {
+            translateTaskTypePipe = 'Пересоздание ВМ';
         } else {
             translateTaskTypePipe = taskType;
         }

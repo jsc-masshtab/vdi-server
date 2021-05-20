@@ -108,6 +108,18 @@ class Vm(VeilModel):
         return user.username if user else None
 
     @property
+    async def user_id(self):
+        entity_query = EntityModel.select("id").where(
+            (EntityModel.entity_type == EntityType.VM)
+            & (EntityModel.entity_uuid == self.id)  # noqa: W503
+        )
+        ero_query = EntityOwnerModel.select("user_id").where(
+            EntityOwnerModel.entity_id == entity_query
+        )
+        user_id = await ero_query.gino.scalar()
+        return user_id if user_id else None
+
+    @property
     async def pool(self):
         """Возвращает объект модели пула."""
         from common.models.pool import Pool as PoolModel

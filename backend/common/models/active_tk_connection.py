@@ -11,11 +11,10 @@ from common.database import db
 from common.languages import lang_init
 from common.log.journal import system_logger
 from common.models.pool import AutomatedPool, Pool
-from common.models.task import PoolTaskType, Task, TaskStatus
+from common.models.task import PoolTaskType
 from common.models.vm import Vm
 from common.subscription_sources import THIN_CLIENTS_SUBSCRIPTION
-from common.veil.veil_errors import SilentError
-from common.veil.veil_gino import AbstractSortableStatusModel
+from common.veil.veil_gino import AbstractSortableStatusModel, Status
 from common.veil.veil_redis import publish_data_in_internal_channel, request_to_execute_pool_task
 
 _ = lang_init()
@@ -108,47 +107,41 @@ class ActiveTkConnection(db.Model, AbstractSortableStatusModel):
 
         return filters
 
-    async def remove_vm_for_guest_pool(self):
+    async def recreation_guest_vm(self):
         vm = await Vm.get(self.vm_id)
-        pool = await Pool.get(vm.pool_id)
         auto_pool = await AutomatedPool.get(vm.pool_id)
 
         if auto_pool.is_guest:
-            vm_ids = list()
-            vm_ids.append(vm.id)
-            await pool.remove_vms(vm_ids)
-            await Vm.remove_vms(vm_ids, remove_vms_on_controller=True)
-            # Check if another task works on this pool
-            tasks = await Task.get_tasks_associated_with_entity(
-                pool.id, TaskStatus.IN_PROGRESS
-            )
-            if tasks:
-                raise SilentError(
-                    _("Another task works on pool {} before creating new blank VM.").format(
-                        pool.verbose_name))
+            vm = await Vm.get(self.vm_id)
 
+            # Открепляем пользователя и устанавливаем статус "Удаляется"
+            users = list()
+            users.append(vm.user_id)
+            await vm.remove_users(creator="system", users_list=users)
+            await vm.update(status=Status.DELETING).apply()
+
+            # Создаем таску пересоздания ВМ
             await request_to_execute_pool_task(
-                pool.id, PoolTaskType.POOL_EXPAND, ignore_reserve_size=True
-            )
-
-            await system_logger.info(
-                _("Expansion of guest pool {} requested.").format(pool.verbose_name),
-                entity=auto_pool.entity
+                auto_pool.id, PoolTaskType.VM_GUEST_RECREATION,
+                ignore_reserve_size=True,
+                vm_id=str(vm.id)
             )
 
     async def update_vm_data(self, vm_id, conn_type, is_conn_secure):
         try:
             if not vm_id:
-                await self.remove_vm_for_guest_pool()
+                await self.recreation_guest_vm()
         except Exception as e:
-            await system_logger.debug("GUEST POOL EXPAND EXCEPTION: ", e)
+            await system_logger.debug("GUEST POOL EXPAND EXCEPTION: {}.".format(e))
 
         is_conn_secure = is_conn_secure if (is_conn_secure is not None) else False
-        await self.update(vm_id=vm_id, connection_type=conn_type, is_connection_secure=is_conn_secure,
+        await self.update(vm_id=vm_id, connection_type=conn_type,
+                          is_connection_secure=is_conn_secure,
                           data_received=func.now()).apply()
 
         # front ws notification
-        await publish_data_in_internal_channel(THIN_CLIENTS_SUBSCRIPTION, "UPDATED", self)
+        await publish_data_in_internal_channel(THIN_CLIENTS_SUBSCRIPTION, "UPDATED",
+                                               self)
 
     async def update_last_interaction(self):
         await self.update(last_interaction=func.now(), data_received=func.now()).apply()
@@ -182,6 +175,6 @@ class ActiveTkConnection(db.Model, AbstractSortableStatusModel):
 
         try:
             if self.vm_id:
-                await self.remove_vm_for_guest_pool()
+                await self.recreation_guest_vm()
         except Exception as e:
             await system_logger.debug("GUEST POOL EXPAND EXCEPTION: ", e)

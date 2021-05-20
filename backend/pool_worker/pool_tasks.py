@@ -285,6 +285,90 @@ class ExpandPoolTask(AbstractTask):
                 )
 
 
+class RecreationGuestVmTask(AbstractTask):
+    def __init__(self, pool_locks, vm_id=None, ignore_reserve_size=True,
+                 wait_for_lock=True):
+        super().__init__()
+
+        self._pool_locks = pool_locks
+        self.vm_id = vm_id
+        self.ignore_reserve_size = (
+            ignore_reserve_size
+        )  # форсированное добавление ВМ вместо удаляемой, игнорируя резерв
+        self.wait_for_lock = (
+            wait_for_lock
+        )  # Если true-ждем освобождения локов. Если false, то исключение-локи заняты
+
+    async def do_task(self):
+
+        automated_pool = await AutomatedPool.get(self.task_model.entity_id)
+        if not automated_pool and not automated_pool.is_guest:
+            raise RuntimeError("RecreationGuestVmTask: GuestPool doesnt exist")
+
+        pool_lock = self._pool_locks.get_pool_lock(str(automated_pool.id))
+        template_lock = self._pool_locks.get_template_lock(
+            str(automated_pool.template_id)
+        )
+
+        # Если залочены локи, то вызывается исключение.
+        if not self.wait_for_lock and (pool_lock.locked() or template_lock.locked()):
+            raise RuntimeError(
+                "RecreationGuestVmTask: Another task works on this pool or vm template is busy"
+            )
+
+        vm_list = list()
+
+        async with pool_lock:
+            async with template_lock:
+                # Проверяем, что максимальное значение ВМ в пуле не достигнуто
+                pool = await Pool.get(automated_pool.id)
+                # vm_amount_in_pool = await pool.get_vm_amount()
+                #
+                # # Если достигнуто максимальное значение ВМ в пуле, ничего не делать
+                # if vm_amount_in_pool >= automated_pool.total_size:
+                #     return
+                #
+                # # Если подогретых машин слишком мало, то пробуем добавить еще
+                # #  Если self.ignore_reserve_size то пытаемся добавить ВМ безусловно
+                # is_not_enough_free_vms = (
+                #     await automated_pool.check_if_not_enough_free_vms()
+                # )
+                if self.ignore_reserve_size:
+                    # Удаление и добавление 1 ВМ.
+                    try:
+                        vm_ids = list()
+                        vm_ids.append(self.vm_id)
+                        await pool.remove_vms(vm_ids)
+                        await Vm.remove_vms(vm_ids, remove_vms_on_controller=True)
+                        vm_list = await automated_pool.add_vm(count=1)
+                    except VmCreationError as vm_error:
+                        await system_logger.error(
+                            _("VM creating error."), description=vm_error
+                        )
+
+            # Подготовка ВМ для подключения к ТК (под async with pool_lock)
+            try:
+                active_directory_object = await AuthenticationDirectory.query.where(
+                    AuthenticationDirectory.status == Status.ACTIVE
+                ).gino.first()
+                if vm_list and automated_pool.prepare_vms:
+                    await asyncio.gather(
+                        *[
+                            vm_object.prepare_with_timeout(
+                                active_directory_object, automated_pool.ad_cn_pattern
+                            )
+                            for vm_object in vm_list
+                        ],
+                        return_exceptions=True
+                    )
+            except asyncio.CancelledError:
+                raise
+            except Exception as E:
+                await system_logger.error(
+                    message=_("VM preparation error."), description=str(E)
+                )
+
+
 class DecreasePoolTask(AbstractTask):
     def __init__(self, pool_locks, new_total_size):
         super().__init__()
