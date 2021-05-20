@@ -15,7 +15,7 @@
         <mat-label *ngIf="!data.permissions?.length && !pending">- нет разрешений -</mat-label>
         <mat-select (selectionChange)="select($event)" multiple="true">
           <mat-option *ngFor="let permission of data.permissions" [value]="permission">
-            {{ permission }}
+            {{ permission | rename }}
           </mat-option>
         </mat-select>
       </mat-form-field>
