@@ -128,6 +128,7 @@ nav:
       - 1.5.3: connect/changelog/1.5.3.md
       - 1.5.4: connect/changelog/1.5.4.md
       - 1.6.0: connect/changelog/1.6.0.md
+      - 1.6.1: connect/changelog/1.6.1.md
     - Руководство оператора: connect/veil_connect.md
     - Установка: connect/install.md
     - Обновление: connect/update.md

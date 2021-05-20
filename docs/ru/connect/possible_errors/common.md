@@ -3,7 +3,7 @@
 ### Ошибка авторизации
 
 !!! example "RDP"
-    ![image](../../../_assets/vdi/thin_client/tk_auth_error.png)
+    ![image](../../_assets/vdi/thin_client/tk_auth_error.png)
 !!! note ""
 
 Решение:
@@ -17,7 +17,7 @@
 ### В пуле нет свободных машин
 
 !!! example ""
-    ![image](../../../_assets/vdi/thin_client/no_free_vms.png)
+    ![image](../../_assets/vdi/thin_client/no_free_vms.png)
 !!! note ""
 
 Решение:
@@ -31,7 +31,7 @@
 ### Превышен лимит тонких клиентов
 
 !!! example ""
-    ![image](../../../_assets/vdi/thin_client/tk_limit_exceeded.png)
+    ![image](../../_assets/vdi/thin_client/tk_limit_exceeded.png)
 
 Решение:
 
@@ -41,7 +41,7 @@
 ### Не удалось получить ВМ из пула
 
 !!! example ""
-    ![image](../../../_assets/vdi/thin_client/get_vm_from_pool_error.png)
+    ![image](../../_assets/vdi/thin_client/get_vm_from_pool_error.png)
 
 Данное сообщение указывает на проблемы, связанные с ВМ, либо ECP VeiL.
 

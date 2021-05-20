@@ -3,7 +3,7 @@
 ### Ошибка The connected VM is not configured for USB redirection
 
 !!! example ""
-    ![image](../../../_assets/vdi/thin_client/spice_usb_error.png)
+    ![image](../../_assets/vdi/thin_client/spice_usb_error.png)
 
 Решение:
 
