@@ -1,7 +1,7 @@
 # Основные настройки
 
 !!! example ""
-    ![image](../../../_assets/vdi/thin_client/connect_settings_basic.png)
+    ![image](../../_assets/vdi/thin_client/connect_settings_basic.png)
 
 1. В поле **Адрес сервера** задается сетевой адрес VeiL Broker.
 

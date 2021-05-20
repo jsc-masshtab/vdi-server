@@ -1,7 +1,7 @@
 # Служебные настройки
 
 !!! example ""
-    ![image](../../../_assets/vdi/thin_client/service_settings.png)
+    ![image](../../_assets/vdi/thin_client/service_settings.png)
     
 1. При нажатии на кнопку **Архивировать логи** будет создан архив с логами приложения (log.tar.gz) и показан 
 путь-расположение архива. Реализовано для ОС Windows 10 и Linux.
