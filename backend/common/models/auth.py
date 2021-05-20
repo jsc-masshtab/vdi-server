@@ -567,6 +567,7 @@ class User(AbstractSortableStatusModel, VeilModel):
         first_name=None,
         is_superuser=False,
         id=None,
+        groups=None,
         is_active=True,
     ):
         """Если password будет None, то make_password вернет unusable password."""
@@ -623,6 +624,11 @@ class User(AbstractSortableStatusModel, VeilModel):
         user_role = _("Superuser.") if is_superuser else _("User.")
         info_message = _("{} {} created.").format(user_role[:-1], username)
         await system_logger.info(info_message, entity=user_obj.entity, user=creator)
+
+        if groups:
+            for group in groups:
+                group = await Group.get(group.id)
+                await group.add_user(user_id=user_obj.id, creator=creator)
 
         # По дефолту пользователь получает все права на работу с тк
         for permission in TkPermission:

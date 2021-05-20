@@ -26,7 +26,7 @@ export class UsersComponent extends DetailsMove implements OnInit, OnDestroy {
   public offset = 0;
 
   username = new FormControl('');
-  is_active = new FormControl(false);
+  is_active = new FormControl(true);
   is_superuser = new FormControl(false);
 
   queryset: any = {}
@@ -120,16 +120,17 @@ export class UsersComponent extends DetailsMove implements OnInit, OnDestroy {
       offset: this.offset,
       limit: this.limit,
       username: this.username.value,
-      is_superuser: this.is_superuser.value
+      is_superuser: this.is_superuser.value,
+      is_active: this.is_active.value
     };
 
     if (this.username.value === '') {
       delete queryset['username'];
     }
 
-    /* if (this.is_active.value == false) {
+    if (this.is_active.value === false) {
       delete queryset['is_active'];
-    } */
+    }
 
     if (this.is_superuser.value === false) {
       delete queryset['is_superuser'];

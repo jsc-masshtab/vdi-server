@@ -69,9 +69,10 @@ class TestUserSchema:
                 createUser(
                 username: "devyatkin",  # !обязательное поле
                 password: "qwQ123$%",  # !обязательное поле
-                email: "a.devyatkin@mashtab.org",  # !обязательное поле
-                last_name: "Devyatkin",  # !обязательное поле
-                first_name: "Aleksey",  # !обязательное поле
+                groups: [],  # !обязательное поле
+                email: "a.devyatkin@mashtab.org",  # необязательное поле
+                last_name: "Devyatkin",  # необязательное поле
+                first_name: "Aleksey",  # необязательное поле
                 is_superuser: false  # Признак администратора
                 )
                 {
@@ -92,6 +93,7 @@ class TestUserSchema:
                 createUser(
                 username: "devyatkin",
                 password: "qwQ123$%",
+                groups: [],
                 email: "a.devyatkin@mashtab.org",
                 last_name: "Devyatkin",
                 first_name: "Aleksey",

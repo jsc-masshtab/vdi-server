@@ -21,15 +21,20 @@ export class UsersService  {
                     $offset: Int,
                     $username: String,
                     $ordering:String,
-                    $is_superuser: Boolean
+                    $is_superuser: Boolean,
+                    $is_active: Boolean
                 ){
-                    count(is_superuser: $is_superuser),
+                    count(
+                        is_superuser: $is_superuser,
+                        is_active: $is_active
+                    ),
                     users(
                         ordering: $ordering
                         limit: $limit,
                         username: $username,
                         offset: $offset,
-                        is_superuser: $is_superuser
+                        is_superuser: $is_superuser,
+                        is_active: $is_active
                     ){
                         id,
                         username,
@@ -98,6 +103,7 @@ export class UsersService  {
                     $email: String!,
                     $last_name: String!,
                     $first_name: String!,
+                    $groups: [GroupInput!]!,
                     $is_superuser: Boolean
                 ){
                     createUser(
@@ -280,6 +286,30 @@ export class UsersService  {
                 method: 'POST',
                 permissions,
                 id
+            }
+        });
+    }
+
+    public getGroups(queryset: any = {}): QueryRef<any, any> {
+       return  this.service.watchQuery({
+            query:  gql`
+                query groups(
+                    $ordering: String,
+                    $verbose_name: String
+                ){
+                    groups(
+                        verbose_name: $verbose_name,
+                        ordering: $ordering
+                    ){
+                        id
+                        verbose_name
+                    }
+                }
+            `,
+            variables: {
+                method: 'GET',
+                ordering: this.paramsForGetUsers.nameSort,
+                ...queryset
             }
         });
     }

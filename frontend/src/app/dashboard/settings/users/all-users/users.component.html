@@ -24,6 +24,10 @@
         Администраторы
     </mat-checkbox>
 
+    <mat-checkbox class="events-checkbox" [color]="'primary'" [formControl]="is_active">
+        Активные пользователи
+    </mat-checkbox>
+
     <div class="control-btns-end">
         <button *ngIf="pageRollup" class="bars-btn" (click)="toggleShow()">
             <fa-icon [icon]="['fas','bars']"></fa-icon>

@@ -108,6 +108,13 @@ class UserGroupType(graphene.ObjectType):
         )
 
 
+class GroupInput(graphene.InputObjectType):
+    """Инпут ввода групп для пользователя."""
+
+    id = graphene.UUID()
+    verbose_name = graphene.String()
+
+
 class UserType(graphene.ObjectType):
     id = graphene.UUID()
     username = graphene.String()
@@ -286,6 +293,7 @@ class CreateUserMutation(graphene.Mutation, UserValidator):
         email = graphene.String(required=False)
         last_name = graphene.String(required=False)
         first_name = graphene.String(required=False)
+        groups = graphene.NonNull(graphene.List(GroupInput))
         is_superuser = graphene.Boolean(default_value=False)
 
     user = graphene.Field(lambda: UserType)
