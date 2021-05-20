@@ -87,6 +87,36 @@ export class AddPoolService {
         });
     }
 
+    addRdsPool(data) {
+        let query: string = ` mutation
+            pools(
+                $connection_types: [PoolConnectionTypes!]
+                $rds_vm: VmInput!
+                $controller_id: UUID!
+                $resource_pool_id: UUID!
+                $verbose_name: String!
+            ) {
+                addRdsPool(
+                    connection_types: $connection_types
+                    rds_vm: $rds_vm
+                    controller_id: $controller_id
+                    resource_pool_id: $resource_pool_id
+                    verbose_name: $verbose_name
+                ) {
+                    ok
+                }
+            }
+        `;
+
+        return this.service.mutate<any>({
+            mutation: gql(query),
+            variables: {
+                method: 'POST',
+                ...data
+            }
+        });
+    }
+
     addStaticPool(data) {
         let query: string = ` mutation
             pools(

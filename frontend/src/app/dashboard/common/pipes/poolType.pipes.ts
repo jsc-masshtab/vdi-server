@@ -14,6 +14,8 @@ export class PoolTypePipe implements PipeTransform {
             translatePoolTypePipe = 'Гостевой';
         } else if (poolType === 'STATIC') {
             translatePoolTypePipe = 'Статический';
+        } else if (poolType === 'RDS') {
+            translatePoolTypePipe = 'RDS';
         } else {
             translatePoolTypePipe = poolType;
         }

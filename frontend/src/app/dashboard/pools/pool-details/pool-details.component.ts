@@ -411,6 +411,25 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
     }
   ];
 
+  public collectionVmsRds: any[] = [
+    {
+      title: 'Название',
+      property: 'verbose_name',
+      class: 'name-start',
+      icon: 'desktop',
+      type: 'string'
+    },
+    {
+      title: 'Статус',
+      property: 'status'
+    },
+    {
+      title: 'Гостевой агент',
+      property: 'qemu_state',
+      type: 'string'
+    }
+  ];
+
   public collectionUsers: any[] = [
     {
       title: 'Имя пользователя',

@@ -11,7 +11,7 @@
       <fa-icon [icon]="['fas','sync-alt']"></fa-icon>
     </button>
 
-    <button (click)="addUser()" title="Назначить пользователя" class="btn-control"><fa-icon [icon]="['fas','plus-circle']"></fa-icon><fa-icon [icon]="['fas','user']"></fa-icon></button>
+    <button *ngIf="data?.typePool !== 'rds'" (click)="addUser()" title="Назначить пользователя" class="btn-control"><fa-icon [icon]="['fas','plus-circle']"></fa-icon><fa-icon [icon]="['fas','user']"></fa-icon></button>
     <button *ngIf="data?.username" (click)="removeUser()" title="Освободить от пользователя" class="btn-control"><fa-icon [icon]="['fas','trash-alt']"></fa-icon><fa-icon [icon]="['fas','user']"></fa-icon></button>
 
     <button [mat-dialog-close]="true" *ngIf="data?.typePool != 'static'" (click)="prepareVM()" title="Подготовить ВМ" class="btn-control">

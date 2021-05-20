@@ -36,7 +36,7 @@
                 <span class="name">Добавить ВМ</span>
             </button>
 
-            <button (click)="removeVM()" title="Удалить ВМ из пула" class="btn-control">
+            <button *ngIf="typePool !== 'rds'" (click)="removeVM()" title="Удалить ВМ из пула" class="btn-control">
                 <fa-icon [icon]="['fas','trash-alt']" size="xs"></fa-icon>
                 <span class="name">Удалить ВМ</span>
             </button>
@@ -97,6 +97,11 @@
                 <ng-container *ngIf="typePool === 'static'">
                     <vdi-table-into *ngIf="menuActive === 'info'" [item]="pool" [collection]="collectionDetailsStatic" (action)="actionEdit($event)"></vdi-table-into>
                     <vdi-table-component *ngIf="menuActive === 'vms'" [data]="pool?.vms" [collection]="collectionVmsStatic" entity="vm" (clickRowData)="clickVm($event)" cursor="true"></vdi-table-component>
+                </ng-container>
+
+                <ng-container *ngIf="typePool === 'rds'">
+                    <vdi-table-into *ngIf="menuActive === 'info'" [item]="pool" [collection]="collectionDetailsStatic" (action)="actionEdit($event)"></vdi-table-into>
+                    <vdi-table-component *ngIf="menuActive === 'vms'" [data]="pool?.vms" [collection]="collectionVmsRds" entity="vm" (clickRowData)="clickVm($event)" cursor="true"></vdi-table-component>
                 </ng-container>
 
                 <ng-container *ngIf="typePool === 'guest'">
