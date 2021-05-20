@@ -95,7 +95,7 @@ export class GroupsDetailsComponent implements OnInit, OnDestroy {
   public collection_permissions: object[] = [
     {
       title: 'Разрешения',
-      type: 'array-type',
+      type: 'array-type-rename',
       property: 'index-array',
       class: 'name-start',
       icon: 'cog'
@@ -133,7 +133,7 @@ export class GroupsDetailsComponent implements OnInit, OnDestroy {
   private openEditForm(activeObj: IEditFormObj): void  {
     activeObj['formEdit'][0]['fieldValue'] = this.entity[activeObj['property']];
     this.dialog.open(FormForEditComponent, {
-      disableClose: true, 
+      disableClose: true,
       width: '500px',
       data: {
         post: {
@@ -160,7 +160,7 @@ export class GroupsDetailsComponent implements OnInit, OnDestroy {
 
   public addRole() {
     this.dialog.open(AddRoleComponent, {
-      disableClose: true, 
+      disableClose: true,
       width: '500px',
       data: {
         id: this.id,
@@ -172,7 +172,7 @@ export class GroupsDetailsComponent implements OnInit, OnDestroy {
 
   public removeRole() {
     this.dialog.open(RemoveRoleComponent, {
-      disableClose: true, 
+      disableClose: true,
       width: '500px',
       data: {
         id: this.id,
@@ -184,7 +184,7 @@ export class GroupsDetailsComponent implements OnInit, OnDestroy {
 
   public addUser() {
     this.dialog.open(AddUserGroupComponent, {
-      disableClose: true, 
+      disableClose: true,
       width: '500px',
       data: {
         id: this.id,
@@ -196,7 +196,7 @@ export class GroupsDetailsComponent implements OnInit, OnDestroy {
 
   public removeUser() {
     this.dialog.open(RemoveUserGroupComponent, {
-      disableClose: true, 
+      disableClose: true,
       width: '500px',
       data: {
         id: this.id,
@@ -208,7 +208,7 @@ export class GroupsDetailsComponent implements OnInit, OnDestroy {
 
   public removeGroup() {
     this.dialog.open(RemoveGroupComponent, {
-      disableClose: true, 
+      disableClose: true,
       width: '500px',
       data: {
         id: this.id,
