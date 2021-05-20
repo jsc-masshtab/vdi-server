@@ -1,4 +1,4 @@
-<div class="form">
+<div class="form" *ngIf="step == 'type' || step == 'static' || step == 'dynamic' || step == 'guest'">
 
   <div class="form-header">
     <p>Создание пула виртуальных машин</p>
@@ -20,6 +20,11 @@
       <label class="field-inline">
         <input type="radio" value="guest" [(ngModel)]="type">
         <p class="radio-text">Гостевой</p>
+      </label>
+
+      <label class="field-inline">
+        <input type="radio" value="rds" [(ngModel)]="type">
+        <p class="radio-text">RDS</p>
       </label>
     </div>
 
@@ -93,8 +98,8 @@
       </label>
     </div>
 
-    <div class="form-fields" [formGroup]="staticPool">
-      <label class="field" *ngIf="type == 'static'" title="Отображаются только ВМ, имеющие виртуальный диск">
+    <div class="form-fields" *ngIf="type == 'static'" [formGroup]="staticPool">
+      <label class="field">
         <mat-form-field>
           <mat-label *ngIf="data.vms?.length">Выберите свободные ВМ</mat-label>
           <mat-label *ngIf="!data.vms?.length">- нет виртуальных машин -</mat-label>
@@ -122,6 +127,25 @@
       </label>
     </div>
 
+    <div class="form-fields" *ngIf="type == 'rds'" [formGroup]="rdsPool">
+      <label class="field" title="Отображаются только ВМ, имеющие виртуальный диск">
+        <mat-form-field>
+          <mat-label *ngIf="data.vms?.length">Выберите ВМ</mat-label>
+          <mat-label *ngIf="!data.vms?.length">- нет виртуальных машин -</mat-label>
+    
+          <mat-select formControlName="rds_vm">
+            <mat-option *ngFor="let vm of data.vms" [value]="vm">
+              {{vm.verbose_name}}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+    
+        <ng-container *ngIf="rdsPool.hasError('required', 'rds_vm') && checkValid">
+          <ng-container *ngTemplateOutlet="errorTemp"></ng-container>
+        </ng-container>
+      </label>
+    </div>
+
     <div class="form-actions">
       <button type="button" class="form-btn" (click)="toStep('type')">
         <span class="action-name">Назад</span>
@@ -129,6 +153,7 @@
 
       <button type="button" class="form-btn" (click)="toStep('check_static')">
         <span *ngIf="type == 'static'" class="action-name">Создать</span>
+        <span *ngIf="type == 'rds'" class="action-name">Создать</span>
         <span *ngIf="type == 'dynamic'" class="action-name">Далее</span>
         <span *ngIf="type == 'guest'" class="action-name">Далее</span>
       </button>

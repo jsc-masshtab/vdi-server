@@ -17,7 +17,6 @@ export class AuthInterceptor implements HttpInterceptor {
             tap(event => {
                 if (event instanceof HttpResponse) { return; }
             }, err => {
-                    console.log(err);
                     if (err instanceof HttpErrorResponse) {
                     if (err.status === 401) { this.authStorageService.logout(); }
                 }

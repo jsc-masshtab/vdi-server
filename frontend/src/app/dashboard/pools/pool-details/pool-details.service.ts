@@ -354,6 +354,27 @@ export class PoolDetailsService {
             });
         }
 
+        if (pool_type === 'rds') {
+            return this.service.mutate<any>({
+                mutation: gql`
+                                mutation pools($connection_types: [PoolConnectionTypes!], $pool_id: UUID!,$verbose_name: String
+                                     $keep_vms_on: Boolean) {
+                                    updateRdsPool(connection_types: $connection_types, pool_id: $pool_id, verbose_name: $verbose_name,
+                                     keep_vms_on: $keep_vms_on ) {
+                                        ok
+                                    }
+                                }
+                `,
+                variables: {
+                    method: 'POST',
+                    pool_id,
+                    verbose_name,
+                    keep_vms_on,
+                    connection_types
+                }
+            });
+        }
+
         if (pool_type === 'automated' || pool_type === 'guest') {
             return this.service.mutate<any>({
                 mutation: gql`
