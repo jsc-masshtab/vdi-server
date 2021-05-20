@@ -24,6 +24,7 @@ from pool_worker.pool_tasks import (
     ExpandPoolTask,
     InitPoolTask,
     PrepareVmTask,
+    RecreationGuestVmTask,
     RemoveVmsTask
 )
 
@@ -235,6 +236,17 @@ class PoolTaskManager:
         elif pool_task == PoolTaskType.VMS_REMOVE.name:
             task = RemoveVmsTask(pool_locks=self.pool_locks, vm_ids=task_data_dict["vm_ids"],
                                  creator=task_data_dict["creator"])
+            task.execute_in_async_task(task_id)
+
+        elif pool_task == PoolTaskType.VM_GUEST_RECREATION.name:
+            try:
+                ignore_reserve_size = task_data_dict["ignore_reserve_size"]
+            except KeyError:
+                ignore_reserve_size = True
+            task = RecreationGuestVmTask(
+                self.pool_locks, ignore_reserve_size=ignore_reserve_size,
+                vm_id=task_data_dict["vm_id"]
+            )
             task.execute_in_async_task(task_id)
 
     async def cancel_tasks(self, task_ids, cancel_all=False):

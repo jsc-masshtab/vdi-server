@@ -26,6 +26,7 @@ class PoolTaskType(Enum):
     VM_PREPARE = "VM_PREPARE"
     VMS_BACKUP = "VMS_BACKUP"
     VMS_REMOVE = "VMS_REMOVE"
+    VM_GUEST_RECREATION = "VM_GUEST_RECREATION"
 
 
 class TaskStatus(Enum):
@@ -85,6 +86,8 @@ class Task(db.Model, AbstractSortableStatusModel):
             task_message = _("Backup of {}.").format(entity_name)
         elif self.task_type == PoolTaskType.VMS_REMOVE:
             task_message = _("Removal of VMs from pool {}.").format(entity_name)
+        elif self.task_type == PoolTaskType.VM_GUEST_RECREATION:
+            task_message = _("Automatic recreation of VM in the guest pool {}.").format(entity_name)
         else:
             task_message = ""
         if task_message and isinstance(task_message, str):

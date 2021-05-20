@@ -991,7 +991,9 @@ class Pool(VeilModel):
                     )
 
             # update status
-            if (vm.status != Status.RESERVED) and (vm.status != Status.SERVICE):
+            if (vm.status != Status.RESERVED) and \
+               (vm.status != Status.SERVICE) and \
+               (vm.status != Status.DELETING):
                 await vm.update(status=vm_status).apply()
 
             # Формируем список с информацией по каждой вм в пуле
@@ -1034,7 +1036,7 @@ class Pool(VeilModel):
                     entity=entity,
                 )
             vm = await VmModel.get(vm_id)
-            await vm.update(status=Status.SERVICE).apply()
+            await vm.update(status=Status.DELETING).apply()
             if vm:
                 vms_list.append(vm)
 

@@ -247,7 +247,7 @@ class PoolGetVm(BaseHandler, ABC):
             farm_list = await RdsPool.get_farm_list(pool.id, user.username) \
                 if pool_type == PoolModel.PoolTypes.RDS else []
         except (KeyError, JSONDecodeError) as ex:
-            response = {"errors": [{"message": _("Unable to get list of published applications. {}").format(str(ex))}]}
+            response = {"errors": [{"message": _("Unable to get list of published applications. {}.").format(str(ex))}]}
             return await self.log_finish(response)
         response = {
             "data": dict(
