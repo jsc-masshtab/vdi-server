@@ -90,6 +90,7 @@
             <vdi-table-into *ngIf="data?.typePool === 'automated'" [item]="data?.vm" [collection]="collectionIntoVmAutomated"></vdi-table-into>
             <vdi-table-into *ngIf="data?.typePool === 'guest'" [item]="data?.vm" [collection]="collectionIntoVmGuest"></vdi-table-into>
             <vdi-table-into *ngIf="data?.typePool === 'static'" [item]="data?.vm" [collection]="collectionIntoVmStatic"></vdi-table-into>
+            <vdi-table-into *ngIf="data?.typePool === 'rds'" [item]="data?.vm" [collection]="collectionIntoVmRds"></vdi-table-into>
         </ng-container>
 
          <ng-container *ngIf="menuActive === 'backups'">
