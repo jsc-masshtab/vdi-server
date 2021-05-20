@@ -252,6 +252,10 @@ class Pool(VeilModel):
         pool_type = case(
             [
                 (
+                    RdsPool.id.isnot(None),
+                    literal_column("'{}'".format(Pool.PoolTypes.RDS)),
+                ),
+                (
                     and_(AutomatedPool.id.isnot(None),
                          AutomatedPool.is_guest.isnot(True)),
                     literal_column("'{}'".format(Pool.PoolTypes.AUTOMATED)),
@@ -311,6 +315,7 @@ class Pool(VeilModel):
 
             query = query.select_from(
                 Pool.join(AutomatedPool, isouter=True)
+                    .join(RdsPool, isouter=True)
                     .join(Controller, isouter=True)
                     .join(VmModel, isouter=True)
                     .join(
@@ -337,6 +342,7 @@ class Pool(VeilModel):
                 AutomatedPool.create_thin_clones,
                 AutomatedPool.prepare_vms,
                 AutomatedPool.ad_cn_pattern,
+                RdsPool.id,
                 Controller.address,
             )
 
@@ -344,7 +350,7 @@ class Pool(VeilModel):
             query = Pool.build_ordering(query, ordering)
         else:
             # Делаем пересечение только с основными таблицами
-            query = query.select_from(Pool.join(AutomatedPool, isouter=True))
+            query = query.select_from(Pool.join(AutomatedPool, isouter=True).join(RdsPool, isouter=True))
 
         return query
 
