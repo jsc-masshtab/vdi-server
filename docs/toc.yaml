@@ -92,7 +92,7 @@ nav:
         - Обновление: broker/faq/update_v3.md
         - Cоздание локального репозитория: broker/faq/repo_without_inet.md
         - Резервные копии: broker/faq/backup.md
-        - Службы системы: broker/fat/services.md
+        - Службы системы: broker/faq/services.md
         - Подготовка эталонного образа на основе Windows 8.1/10: broker/faq/rdp/example_template_win.md
         - Работа по RDP с пулами ВРС: broker/faq/rdp/example_rdp.md
         - Настройка GPO через RDP для ВМ в домене MS AD: broker/faq/rdp/example_rdp_domain.md
@@ -129,7 +129,6 @@ nav:
       - 1.5.3: connect/changelog/1.5.3.md
       - 1.5.4: connect/changelog/1.5.4.md
       - 1.6.0: connect/changelog/1.6.0.md
-      - 1.6.1: connect/changelog/1.6.1.md
     - Руководство оператора: connect/veil_connect.md
     - Установка: connect/install.md
     - Обновление: connect/update.md
