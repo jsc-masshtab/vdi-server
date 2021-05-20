@@ -45,6 +45,29 @@
       <div class="error" *ngIf="form.hasError('pattern', 'last_name') && checkValid">Фамилия содержит недопустимые символы</div>
     </label>
 
+    <label class="field">
+        <mat-form-field>
+          <mat-label *ngIf="this.groups?.length">Выберите группу</mat-label>
+          <mat-label *ngIf="!this.groups?.length">- нет групп -</mat-label>
+
+          <mat-select formControlName="groups" multiple="true">
+            <mat-option *ngIf="this.groups?.length" disabled="disabled" class="mat-filter-option">
+              <button type="button" class="mat-form-btn" (click)="selectAllGroups()">
+                Выбрать все
+              </button>
+
+              <button type="button" class="mat-form-btn" (click)="deselectAllGroups()">
+                Очистить выбор
+              </button>
+            </mat-option>
+
+            <mat-option *ngFor="let group of this.groups" [value]="group">
+              {{group.verbose_name}}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+    </label>
+
     <label class="field-inline">
       <mat-checkbox [color]="'primary'" formControlName="is_superuser">Администратор</mat-checkbox>
     </label>

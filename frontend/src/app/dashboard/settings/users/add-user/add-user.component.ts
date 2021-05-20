@@ -1,6 +1,6 @@
 import { WaitService } from '../../../common/components/single/wait/wait.service';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { Component, Inject } from '@angular/core';
+import { Component, Inject, OnInit } from '@angular/core';
 import { UsersService } from '../users.service';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 
@@ -10,10 +10,11 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
   templateUrl: './add-user.component.html'
 })
 
-export class AddUserComponent {
+export class AddUserComponent implements OnInit {
 
   public form: FormGroup;
   public checkValid: boolean = false;
+  public groups: [] = [];
 
   private initForm(): void {
     this.form = this.fb.group({
@@ -22,6 +23,7 @@ export class AddUserComponent {
       email: ['', [Validators.pattern(/^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/)]],
       first_name: ['', [Validators.pattern(/^[a-zA-Zа-яА-ЯёЁ-]{1,32}$/)]],
       last_name: ['', [Validators.pattern(/^[a-zA-Zа-яА-ЯёЁ-]{1,128}$/)]],
+      groups: [[]],
       is_superuser: false
     });
   }
@@ -36,6 +38,10 @@ export class AddUserComponent {
     this.initForm();
   }
 
+  ngOnInit() {
+    this.getGroups();
+  }
+
   public send() {
     this.checkValid = true;
     if (this.form.status === 'VALID') {
@@ -46,5 +52,19 @@ export class AddUserComponent {
         this.waitService.setWait(false);
       });
     }
+  }
+
+  private getGroups(): void  {
+    this.service.getGroups().valueChanges.pipe().subscribe( (data) => {
+      this.groups = data.data.groups;
+    });
+  }
+
+  selectAllGroups() {
+    this.form.get('groups').setValue(this.groups)
+  }
+
+  deselectAllGroups() {
+    this.form.get('groups').setValue([])
   }
 }
