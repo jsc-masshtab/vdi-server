@@ -80,6 +80,18 @@ markdown_extensions:
 # Navigation
 nav:
   - VeiL Broker:
+    - FAQ:
+      - Установка: broker/faq/install_v3.md
+      - Обновление: broker/faq/update_v3.md
+      - Cоздание локального репозитория: broker/faq/repo_without_inet.md
+      - Резервные копии: broker/faq/backup.md
+      - Службы системы: broker/faq/services.md
+      - Фоновые задачи VeiL Broker: broker/worker/tasks.md
+      - Подготовка эталонного образа на основе Windows 8.1/10: broker/faq/rdp/example_template_win.md
+      - Работа по RDP с пулами ВРС: broker/faq/rdp/example_rdp.md
+      - Настройка GPO через RDP для ВМ в домене MS AD: broker/faq/rdp/example_rdp_domain.md
+      - nVidia Grid: broker/faq/vm/nvidia.md
+      - Подбор свободной ВМ: broker/pools/get-user-vm.md
     - Cписок изменений:
       - 2.1.4: broker/changelog/2.1.4.md
       - 3.0.0: broker/changelog/3.0.0.md
@@ -87,18 +99,6 @@ nav:
     - Спецификация:
         - Требования к хост-системе брокера: broker/spec/domain-req.md
         - Порты и протоколы задействованные при обмене с ECP VeiL: broker/spec/ports_info.md
-    - FAQ:
-        - Установка: broker/faq/install_v3.md
-        - Обновление: broker/faq/update_v3.md
-        - Cоздание локального репозитория: broker/faq/repo_without_inet.md
-        - Резервные копии: broker/faq/backup.md
-        - Службы системы: broker/faq/services.md
-        - Фоновые задачи VeiL Broker: broker/worker/tasks.md
-        - Подготовка эталонного образа на основе Windows 8.1/10: broker/faq/rdp/example_template_win.md
-        - Работа по RDP с пулами ВРС: broker/faq/rdp/example_rdp.md
-        - Настройка GPO через RDP для ВМ в домене MS AD: broker/faq/rdp/example_rdp_domain.md
-        - nVidia Grid: broker/faq/vm/nvidia.md
-        - Подбор свободной ВМ: broker/pools/get-user-vm.md
     - Гостевой агент: broker/vm/guest_agent.md
     - Службы каталогов:
         - Интеграция службы каталогов: broker/active_directory/info.md
