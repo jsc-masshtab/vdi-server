@@ -21,7 +21,7 @@
 | POOL_EXPAND         | Расширение пула                                       |
 | POOL_DELETE         | Удаление пула                                         |
 | POOL_DECREASE       | Уменьшение пула                                       |
-| VM_PREPARE          | [Подготовка ВМ](../active_directory/ad_vm_prepare.md) |
+| VM_PREPARE          | [Подготовка ВМ](tasks.md#_6)                          |
 | VMS_BACKUP          | Создание резервной копии ВМ                           |
 | VMS_REMOVE          | Удаление ВМ                                           |
 | VM_GUEST_RECREATION | Пересоздание ВМ                                       |
