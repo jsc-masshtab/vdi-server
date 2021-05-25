@@ -300,8 +300,8 @@ class RecreationGuestVmTask(AbstractTask):
         )  # Если true-ждем освобождения локов. Если false, то исключение-локи заняты
 
     async def do_task(self):
-
-        automated_pool = await AutomatedPool.get(self.task_model.entity_id)
+        vm = await Vm.get(self.task_model.entity_id)
+        automated_pool = await AutomatedPool.get(vm.pool_id)
         if not automated_pool and not automated_pool.is_guest:
             raise RuntimeError("RecreationGuestVmTask: GuestPool doesnt exist")
 
@@ -337,9 +337,10 @@ class RecreationGuestVmTask(AbstractTask):
                     # Удаление и добавление 1 ВМ.
                     try:
                         vm_ids = list()
-                        vm_ids.append(self.vm_id)
+                        vm_ids.append(self.task_model.entity_id)
                         await pool.remove_vms(vm_ids)
-                        await Vm.remove_vms(vm_ids, remove_vms_on_controller=True)
+                        await vm.soft_delete(creator="system",
+                                             remove_on_controller=True)
                         vm_list = await automated_pool.add_vm(count=1)
                     except VmCreationError as vm_error:
                         await system_logger.error(

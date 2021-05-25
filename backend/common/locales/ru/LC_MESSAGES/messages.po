@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-05-18 15:48+0300\n"
+"POT-Creation-Date: 2021-05-25 13:03+0300\n"
 "PO-Revision-Date: 2020-07-30 11:25+0300\n"
 "Last-Translator: Emil <emil@emil-pc>\n"
 "Language-Team: Russian\n"
@@ -99,107 +99,107 @@ msgstr "Пароль пользователя {username} изменен."
 msgid "Password of user {username} has`t been changed."
 msgstr "Пароль пользователя {username} не был изменен."
 
-#: ../common/models/auth.py:602
+#: ../common/models/auth.py:603
 msgid "User {} password setting error."
 msgstr "Ошибка задания пароля пользователя {}."
 
-#: ../common/models/auth.py:614
+#: ../common/models/auth.py:615
 msgid "User {} creation error."
 msgstr "Ошибка создания пользователя {}."
 
-#: ../common/models/auth.py:623
+#: ../common/models/auth.py:624
 msgid "Superuser."
 msgstr "Администратор."
 
-#: ../common/models/auth.py:623
+#: ../common/models/auth.py:624
 msgid "User."
 msgstr "Пользователь."
 
-#: ../common/models/auth.py:624
+#: ../common/models/auth.py:625
 msgid "{} {} created."
 msgstr "{} {} создан."
 
-#: ../common/models/auth.py:675
+#: ../common/models/auth.py:681
 msgid "User {} update error."
 msgstr "Ошибка обновления пользователя {}."
 
-#: ../common/models/auth.py:687
+#: ../common/models/auth.py:693
 msgid "Values of user {} is changed."
 msgstr "Параметры пользователя {} изменены."
 
-#: ../common/models/auth.py:694 ../common/models/auth.py:705
+#: ../common/models/auth.py:700 ../common/models/auth.py:711
 msgid "Roles: {}."
 msgstr "Роли: {}."
 
-#: ../common/models/auth.py:695
+#: ../common/models/auth.py:701
 #, python-brace-format
 msgid "User {username} has become a superuser."
 msgstr "Пользователь {username} стал администратором."
 
-#: ../common/models/auth.py:706
+#: ../common/models/auth.py:712
 #, python-brace-format
 msgid "User {username} is no longer a superuser."
 msgstr "Пользователь {username} перестал быть администратором."
 
-#: ../common/models/auth.py:737
+#: ../common/models/auth.py:743
 #, python-brace-format
 msgid "User {username} has been logged in."
 msgstr "Пользователь {username} вошел в систему."
 
-#: ../common/models/auth.py:740
+#: ../common/models/auth.py:746
 msgid "Auth type: {}, IP: {}, Client type: {}."
 msgstr "Тип авторизации: {}, IP: {}, тип клиента: {}."
 
-#: ../common/models/auth.py:762
+#: ../common/models/auth.py:768
 #, python-brace-format
 msgid "User {username} has been logged out."
 msgstr "Пользователь {username} вышел из системы."
 
-#: ../common/models/auth.py:888
+#: ../common/models/auth.py:894
 msgid "Group {} is created."
 msgstr "Группа {} создана."
 
-#: ../common/models/auth.py:915
+#: ../common/models/auth.py:921
 msgid "Group {} already has permission {}."
 msgstr "Группа {} уже имеет разрешение {}."
 
-#: ../common/models/auth.py:923
+#: ../common/models/auth.py:929
 msgid "Permission(s) {} added to group {}."
 msgstr "Разрешения: {} добавлены группе {}."
 
-#: ../common/models/auth.py:946
+#: ../common/models/auth.py:952
 msgid "Permission(s) {} removed from group {}."
 msgstr "Разрешения {} удалены у группы {}."
 
-#: ../common/models/auth.py:955
+#: ../common/models/auth.py:961
 msgid "Group {} permission(s): {}."
 msgstr "Разрешения группы {}: {}."
 
-#: ../common/models/auth.py:973
+#: ../common/models/auth.py:979
 msgid "Values of group {} is updated."
 msgstr "Параметры группы {} обновлены."
 
-#: ../common/models/auth.py:995
+#: ../common/models/auth.py:1001
 msgid "User {} has been included to group {}."
 msgstr "Пользователь {} был включен в группу {}."
 
-#: ../common/models/auth.py:1002
+#: ../common/models/auth.py:1008
 msgid "User {} is already in group {}."
 msgstr "Пользователь {} уже находится в группе {}."
 
-#: ../common/models/auth.py:1014
+#: ../common/models/auth.py:1020
 msgid "Removing user {} from group {}."
 msgstr "Удаление пользователя {} из группы {}."
 
-#: ../common/models/auth.py:1027
+#: ../common/models/auth.py:1033
 msgid "Role {} has been set to group {}."
 msgstr "Роль {} добавлена в группу {}."
 
-#: ../common/models/auth.py:1034
+#: ../common/models/auth.py:1040
 msgid "Group {} has already role {}."
 msgstr "Группе {} уже назначена роль {}."
 
-#: ../common/models/auth.py:1046
+#: ../common/models/auth.py:1052
 msgid "Roles: {} was deleted to group {}."
 msgstr "Роли: {} удалены из группы {}."
 
@@ -380,167 +380,167 @@ msgstr "Настройки журнала изменены."
 msgid "Incorrect sorting option {}."
 msgstr "Неверный параметр сортировки {}."
 
-#: ../common/models/pool.py:365 ../common/models/pool.py:1652
+#: ../common/models/pool.py:371 ../common/models/pool.py:1658
 msgid "Pool {} has been updated."
 msgstr "Пул {} обновлен."
 
-#: ../common/models/pool.py:618
+#: ../common/models/pool.py:624
 msgid "User {} has been included to pool {}."
 msgstr "Пользователь {} был включен в пул {}."
 
-#: ../common/models/pool.py:626 ../common/models/vm.py:254
+#: ../common/models/pool.py:632 ../common/models/vm.py:254
 msgid "{} already has permission."
 msgstr "{} уже имеет разрешение."
 
-#: ../common/models/pool.py:647
+#: ../common/models/pool.py:653
 msgid "Removing user {} from pool {}."
 msgstr "Удаление пользователя {} из пула {}."
 
-#: ../common/models/pool.py:655
+#: ../common/models/pool.py:661
 msgid "User {} has no direct right to pool {}."
 msgstr "У пользователя {} нет прямых прав на пул {}. Пропускаем."
 
-#: ../common/models/pool.py:683
+#: ../common/models/pool.py:689
 msgid "Group {} has been included to pool {}."
 msgstr "Группа {} включена в пул {}."
 
-#: ../common/models/pool.py:691
+#: ../common/models/pool.py:697
 msgid "Pool already has permission."
 msgstr "Пул уже имеет разрешение."
 
-#: ../common/models/pool.py:704
+#: ../common/models/pool.py:710
 msgid "Removing group {} from pool {}."
 msgstr "Удаление группы {} из пула {}."
 
-#: ../common/models/pool.py:751
+#: ../common/models/pool.py:757
 msgid "Controller {} not found."
 msgstr "Контроллер {} не найден."
 
-#: ../common/models/pool.py:780
+#: ../common/models/pool.py:786
 msgid "Delete VMs for GuestPool {}."
 msgstr "Удаление виртуальных машин для гостевого пула {}."
 
-#: ../common/models/pool.py:784
+#: ../common/models/pool.py:790
 msgid "Delete VMs for AutomatedPool {}."
 msgstr "Удаление виртуальных машин для автоматического пула {}."
 
-#: ../common/models/pool.py:790
+#: ../common/models/pool.py:796
 msgid "VM {} has been removed from ECP VeiL."
 msgstr "ВМ {} удалена  из ECP VeiL."
 
-#: ../common/models/pool.py:804
+#: ../common/models/pool.py:810
 #, python-brace-format
 msgid "Complete removal pool of desktops {verbose_name} is done."
 msgstr "Выполнено полное удаление пула рабочих столов {verbose_name}."
 
-#: ../common/models/pool.py:836
+#: ../common/models/pool.py:842
 msgid "Pool {} has been activated."
 msgstr "Пул {} активирован."
 
-#: ../common/models/pool.py:852
+#: ../common/models/pool.py:858
 msgid "Pool {} status changed to {}."
 msgstr "Статус пула {} изменен на {}."
 
-#: ../common/models/pool.py:1016
+#: ../common/models/pool.py:1022
 msgid "List of VM should not be empty."
 msgstr "Список виртуальных машин не должен быть пустым."
 
-#: ../common/models/pool.py:1034
+#: ../common/models/pool.py:1040
 msgid "VM doesn't belong to specified pool."
 msgstr "Виртуальная машина не принадлежит заданному пулу."
 
-#: ../common/models/pool.py:1044
+#: ../common/models/pool.py:1050
 msgid "VM {} has been removed from the pool {} and ECP VeiL."
 msgstr "ВМ {} удалена из пула {} и из ECP VeiL."
 
-#: ../common/models/pool.py:1048
+#: ../common/models/pool.py:1054
 msgid "VM {} has been removed from the pool {}."
 msgstr "ВМ {} удалена из пула {}."
 
-#: ../common/models/pool.py:1120
+#: ../common/models/pool.py:1126
 #, python-brace-format
 msgid "Tag {name} created for pool {name}."
 msgstr "Тэг {name} добавлен к пулу {name}."
 
-#: ../common/models/pool.py:1139
+#: ../common/models/pool.py:1145
 msgid "Tag {} removed from ECP VeiL."
 msgstr "Тэг {} удален из ECP VeiL."
 
-#: ../common/models/pool.py:1150
+#: ../common/models/pool.py:1156
 #, python-brace-format
 msgid "Tag {name} updated for pool {name} and all vms in pool."
 msgstr "Тэг {name} обновлен для пула {name} и всех ВМ в пуле."
 
-#: ../common/models/pool.py:1177
+#: ../common/models/pool.py:1183
 msgid "Tag {} removed from VM {}."
 msgstr "Тэг {} удален для ВМ {}."
 
-#: ../common/models/pool.py:1192 ../common/models/pool.py:1209
+#: ../common/models/pool.py:1198 ../common/models/pool.py:1215
 msgid "Tag {} added to VM {}."
 msgstr "Тэг {} назначен ВМ {}."
 
-#: ../common/models/pool.py:1281
+#: ../common/models/pool.py:1287
 msgid "RDS pool {} created."
 msgstr "Пул приложений {} создан."
 
-#: ../common/models/pool.py:1296
+#: ../common/models/pool.py:1302
 msgid "Connection type {} is not supported."
 msgstr "Тип подключения {} не поддерживается."
 
-#: ../common/models/pool.py:1400 ../common/models/pool.py:1403
-#: ../common/models/pool.py:1792
+#: ../common/models/pool.py:1406 ../common/models/pool.py:1409
+#: ../common/models/pool.py:1798
 msgid "VM {} created."
 msgstr "ВМ {} создана."
 
-#: ../common/models/pool.py:1404 ../common/models/pool.py:1793
+#: ../common/models/pool.py:1410 ../common/models/pool.py:1799
 msgid "VM {} created and added to the pool {}."
 msgstr "ВМ {} создана и добавлена в пул {}."
 
-#: ../common/models/pool.py:1415
+#: ../common/models/pool.py:1421
 msgid "Static pool {} created."
 msgstr "Статический пул {} создан."
 
-#: ../common/models/pool.py:1562
+#: ../common/models/pool.py:1568
 msgid "Initial_size: {}, total_size: {}, increase_step {}, reserve_size {}."
 msgstr "Начальный размер: {}, Максимальный размер: {}, Шаг расширения: {}, Резервный размер: {}."
 
-#: ../common/models/pool.py:1566
+#: ../common/models/pool.py:1572
 msgid "GuestPool {} is created."
 msgstr "Создан гостевой пул {}."
 
-#: ../common/models/pool.py:1573
+#: ../common/models/pool.py:1579
 msgid "AutomatedPool {} is created."
 msgstr "Создан автоматический пул {}."
 
-#: ../common/models/pool.py:1615 ../common/models/pool.py:1642
+#: ../common/models/pool.py:1621 ../common/models/pool.py:1648
 msgid "Update Pool {} values."
 msgstr "Обновление значений пула {}."
 
-#: ../common/models/pool.py:1697
+#: ../common/models/pool.py:1703
 msgid "There is no client for pool {}."
 msgstr "Пул {} не имеет подключения к ECP VeiL. Проверьте контроллер."
 
-#: ../common/models/pool.py:1734
+#: ../common/models/pool.py:1740
 msgid "VM creation task {} finished with error."
 msgstr "Задача {} создания ВМ завершилась с ошибкой."
 
-#: ../common/models/pool.py:1754
+#: ../common/models/pool.py:1760
 msgid "Fail to cancel VM creation task."
 msgstr "Ошибка отмены задачи создания ВМ."
 
-#: ../common/models/pool.py:1836
+#: ../common/models/pool.py:1842
 msgid "VM creation error."
 msgstr "Ошибка создания ВМ."
 
-#: ../common/models/pool.py:1841
+#: ../common/models/pool.py:1847
 msgid "{} vm(s) are successfully added in the {} pool."
 msgstr "{} ВМ успешно добавлены в пул {}."
 
-#: ../common/models/pool.py:1846
+#: ../common/models/pool.py:1852
 msgid "Adding VM to the pool {} finished with errors."
 msgstr "Добавление ВМ в пул {} закончилось с ошибками."
 
-#: ../common/models/pool.py:1849
+#: ../common/models/pool.py:1855
 msgid "Required: {}, created: {}."
 msgstr "Необходимо: {}, создано: {}."
 
@@ -572,9 +572,9 @@ msgstr "Бэкап {}."
 msgid "Removal of VMs from pool {}."
 msgstr "Удаление ВМ из пула {}."
 
-#: ../common/models/task.py:90
-msgid "Automatic recreation of VM in the guest pool {}."
-msgstr "Автоматическое пересоздание ВМ в гостевом пуле {}."
+#: ../common/models/task.py:91
+msgid "Automatic recreation of VM {} in the guest pool."
+msgstr "Автоматическое пересоздание ВМ {} в гостевом пуле."
 
 #: ../common/models/vm.py:157
 msgid "Create VM {} on VDI DB."
@@ -666,7 +666,7 @@ msgstr "ВМ {} приостановлена."
 msgid "Forbid create backup from a thin clone: {}."
 msgstr "Запрещено создание резервной копии от тонкого клона: {}."
 
-#: ../common/models/vm.py:662 ../pool_worker/pool_tasks.py:557
+#: ../common/models/vm.py:662 ../pool_worker/pool_tasks.py:558
 msgid "Creating backup finished with error."
 msgstr "Создание резервной копии завершилось с ошибкой."
 
@@ -864,35 +864,35 @@ msgstr "Ошибка инициализации пула."
 msgid "Pool initialization VM(s) preparation error."
 msgstr "В момент инициализации пула подготовка виртуальных машин завершилась с ошибкой."
 
-#: ../pool_worker/pool_tasks.py:262 ../pool_worker/pool_tasks.py:346
+#: ../pool_worker/pool_tasks.py:262 ../pool_worker/pool_tasks.py:347
 msgid "VM creating error."
 msgstr "Ошибка создания ВМ."
 
-#: ../pool_worker/pool_tasks.py:284 ../pool_worker/pool_tasks.py:368
+#: ../pool_worker/pool_tasks.py:284 ../pool_worker/pool_tasks.py:369
 msgid "VM preparation error."
 msgstr "Ошибка подготовки ВМ."
 
-#: ../pool_worker/pool_tasks.py:462
+#: ../pool_worker/pool_tasks.py:463
 msgid "Another task works on this VM."
 msgstr "ВМ заблокирована выполнением другой задачи."
 
-#: ../pool_worker/pool_tasks.py:505
+#: ../pool_worker/pool_tasks.py:506
 msgid "ECP VeiL domain request error."
 msgstr "Ошибка запроса ECP VeiL ВМ."
 
-#: ../pool_worker/pool_tasks.py:508
+#: ../pool_worker/pool_tasks.py:509
 msgid "Task has`t been created."
 msgstr "Задача не была создана."
 
-#: ../pool_worker/pool_tasks.py:528
+#: ../pool_worker/pool_tasks.py:529
 msgid "VM remote access task {} for VM {} finished with error."
 msgstr "Задача {} удаленного доступа к ВМ {} завершилась с ошибкой."
 
-#: ../pool_worker/pool_tasks.py:554
+#: ../pool_worker/pool_tasks.py:555
 msgid "Wrong entity type."
 msgstr "Неверный тип сущности."
 
-#: ../pool_worker/pool_tasks.py:581
+#: ../pool_worker/pool_tasks.py:582
 msgid "Unsupported pool type."
 msgstr "Неподдерживаемый тип пула."
 
@@ -1049,7 +1049,7 @@ msgstr "Неудачная попытка загрузить лицензион�
 msgid "Valid license key is uploaded."
 msgstr "Лицензионный ключ загружен."
 
-#: ../web_app/auth/user_schema.py:32 ../web_app/auth/user_schema.py:248
+#: ../web_app/auth/user_schema.py:32 ../web_app/auth/user_schema.py:255
 #: ../web_app/thin_client_api/schema.py:246
 msgid "No such user."
 msgstr "Нет такого пользователя."
@@ -1078,11 +1078,11 @@ msgstr "Имя должно быть <= 32 символов."
 msgid "Last name length must be <= 128 characters."
 msgstr "Фамилия должна быть <= 128 символам."
 
-#: ../web_app/auth/user_schema.py:244
+#: ../web_app/auth/user_schema.py:251
 msgid "Specify id or username."
 msgstr "Укажите ID или имя пользователя."
 
-#: ../web_app/auth/user_schema.py:471
+#: ../web_app/auth/user_schema.py:479
 msgid "Can`t remove permission(s) {} because they are granted to groups of user {}."
 msgstr "Невозможно удалить разрешения {}, так как они выданы группам, в которых состоит пользователь."
 
@@ -1414,80 +1414,80 @@ msgstr "{cls}: Контроллер {name} уже отслеживается."
 msgid "{cls}: resource monitor for controller {name} connected."
 msgstr "{cls}: монитор ресурсов для контроллера {name} подключен."
 
-#~ msgid "StaticPool: Create Pool."
-#~ msgstr "Статический пул: создание пула."
-
-#~ msgid "StaticPool: Create StaticPool."
-#~ msgstr "Статический пул: создание статического пула."
-
-#~ msgid "StaticPool: Create VMs."
-#~ msgstr "Статический пул: создание виртуальных машин."
-
-#~ msgid "Can`t connect to {}."
-#~ msgstr "Не удается подключиться к {}."
-
-#~ msgid "Pool {} has been deactivated."
-#~ msgstr "Пул {} деактивирован."
-
-#~ msgid "Controller has not free space for creating new VM."
-#~ msgstr "На контроллере отсутствует место для создания новой виртуальной машины."
-
-#~ msgid "Something went wrong. Interrupt while."
-#~ msgstr "Что-то пошло не так. Прерываем while."
-
-#~ msgid "User {} created with role {}."
-#~ msgstr "Пользователь {} создан с ролью {}."
-
-#~ msgid "  Duration: {}."
-#~ msgstr "  Продолжительность: {}."
-
-#~ msgid "Attempts to create VM {} have been exhausted."
-#~ msgstr "Превышен лимит попыток создания ВМ {}."
-
-#~ msgid "Unknown node {}."
-#~ msgstr "Неизвестный узел {}."
-
-#~ msgid "Controller can`t create VM. Unknown node."
-#~ msgstr "Контроллер не может создать ВМ. Неизвестный узел."
-
-#~ msgid "Roles: {} was deleted to pool {}."
-#~ msgstr "Роли: {} удалены в пуле {}."
-
-#~ msgid "Pool already has role."
-#~ msgstr "Пул уже имеет роль."
-
-#~ msgid "Role {} has been set to pool {}."
-#~ msgstr "Роль {} добавлена в пул {}."
-
-#~ msgid "Critical controller error."
-#~ msgstr "Критическая ошибка контроллера."
-
-#~ msgid "ECP VeiL controller {} error."
-#~ msgstr "Ошибка контроллера ECP VeiL {}."
-
-#~ msgid "Failed to update automated pool {}. Name must be unique."
-#~ msgstr "Ошибка редактирования автоматического пула {}. Имя должно быть уникальным."
-
-#~ msgid "Failed to create automated pool {}."
-#~ msgstr "Ошибка создания автоматического пула {}."
-
-#~ msgid "Update Pool values for AutomatedPool {}."
-#~ msgstr "Обновление значений пула для автоматического пула {}."
-
-#~ msgid "Demo version."
-#~ msgstr "Демонстрационная версия."
-
-#~ msgid "VM {} AD group including successful."
-#~ msgstr "ВМ {} успешно заведена в контейнер/группу AD."
-
-#~ msgid "VM {} active directory group including error."
-#~ msgstr "Ошибка ввода ВМ {} в группу AD."
-
-#~ msgid "Active directory object has no service username or password. Including skipped."
-#~ msgstr "У службы каталогов не указаны имя пользователя и пароль. Пропускаем."
+#~ msgid "Another task works on pool {} before creating new blank VM."
+#~ msgstr "Другая задача выполняется над пулом {} перед созданием новой пустой ВМ."
 
 #~ msgid "Expansion of guest pool {} requested."
 #~ msgstr "Запрошено расширение гостевого пула {}."
 
-#~ msgid "Another task works on pool {} before creating new blank VM."
-#~ msgstr "Другая задача выполняется над пулом {} перед созданием новой пустой ВМ."
+#~ msgid "Active directory object has no service username or password. Including skipped."
+#~ msgstr "У службы каталогов не указаны имя пользователя и пароль. Пропускаем."
+
+#~ msgid "VM {} active directory group including error."
+#~ msgstr "Ошибка ввода ВМ {} в группу AD."
+
+#~ msgid "VM {} AD group including successful."
+#~ msgstr "ВМ {} успешно заведена в контейнер/группу AD."
+
+#~ msgid "Demo version."
+#~ msgstr "Демонстрационная версия."
+
+#~ msgid "Update Pool values for AutomatedPool {}."
+#~ msgstr "Обновление значений пула для автоматического пула {}."
+
+#~ msgid "Failed to create automated pool {}."
+#~ msgstr "Ошибка создания автоматического пула {}."
+
+#~ msgid "Failed to update automated pool {}. Name must be unique."
+#~ msgstr "Ошибка редактирования автоматического пула {}. Имя должно быть уникальным."
+
+#~ msgid "ECP VeiL controller {} error."
+#~ msgstr "Ошибка контроллера ECP VeiL {}."
+
+#~ msgid "Critical controller error."
+#~ msgstr "Критическая ошибка контроллера."
+
+#~ msgid "Role {} has been set to pool {}."
+#~ msgstr "Роль {} добавлена в пул {}."
+
+#~ msgid "Pool already has role."
+#~ msgstr "Пул уже имеет роль."
+
+#~ msgid "Roles: {} was deleted to pool {}."
+#~ msgstr "Роли: {} удалены в пуле {}."
+
+#~ msgid "Controller can`t create VM. Unknown node."
+#~ msgstr "Контроллер не может создать ВМ. Неизвестный узел."
+
+#~ msgid "Unknown node {}."
+#~ msgstr "Неизвестный узел {}."
+
+#~ msgid "Attempts to create VM {} have been exhausted."
+#~ msgstr "Превышен лимит попыток создания ВМ {}."
+
+#~ msgid "  Duration: {}."
+#~ msgstr "  Продолжительность: {}."
+
+#~ msgid "User {} created with role {}."
+#~ msgstr "Пользователь {} создан с ролью {}."
+
+#~ msgid "Something went wrong. Interrupt while."
+#~ msgstr "Что-то пошло не так. Прерываем while."
+
+#~ msgid "Controller has not free space for creating new VM."
+#~ msgstr "На контроллере отсутствует место для создания новой виртуальной машины."
+
+#~ msgid "Pool {} has been deactivated."
+#~ msgstr "Пул {} деактивирован."
+
+#~ msgid "Can`t connect to {}."
+#~ msgstr "Не удается подключиться к {}."
+
+#~ msgid "StaticPool: Create VMs."
+#~ msgstr "Статический пул: создание виртуальных машин."
+
+#~ msgid "StaticPool: Create StaticPool."
+#~ msgstr "Статический пул: создание статического пула."
+
+#~ msgid "StaticPool: Create Pool."
+#~ msgstr "Статический пул: создание пула."

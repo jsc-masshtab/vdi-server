@@ -87,7 +87,9 @@ class Task(db.Model, AbstractSortableStatusModel):
         elif self.task_type == PoolTaskType.VMS_REMOVE:
             task_message = _("Removal of VMs from pool {}.").format(entity_name)
         elif self.task_type == PoolTaskType.VM_GUEST_RECREATION:
-            task_message = _("Automatic recreation of VM in the guest pool {}.").format(entity_name)
+            task_message = _(
+                "Automatic recreation of VM {} in the guest pool.").format(
+                entity_name)
         else:
             task_message = ""
         if task_message and isinstance(task_message, str):
