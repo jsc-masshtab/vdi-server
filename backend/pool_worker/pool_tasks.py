@@ -95,16 +95,16 @@ class AbstractTask(ABC):
 
             await self.do_on_cancel()
 
-        except Exception as ex:  # noqa
-
+        except (asyncio.TimeoutError, Exception) as ex:
+            # Условие намеренно задублировано, чтобы подчеркнуть идею 2 основных случаев
             message = _("Task '{}' failed.").format(friendly_task_name)
 
             await self.task_model.set_status(TaskStatus.FAILED, message + " " + str(ex))
-
-            # event
-            tb = traceback.format_exc()
-            description = str(ex) + " " + tb
-            await system_logger.warning(message=message, description=description)
+            # Сейчас сообщение для ошибок TimeoutError пишутся в вызывающих их методах
+            if not isinstance(ex, asyncio.TimeoutError):
+                tb = traceback.format_exc()
+                description = str(ex) + " " + tb
+                await system_logger.warning(message=message, description=description)
             await self.do_on_fail()
 
         finally:

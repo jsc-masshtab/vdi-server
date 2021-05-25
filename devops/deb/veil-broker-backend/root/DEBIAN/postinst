@@ -84,6 +84,7 @@ configure_apache2()
 
     apachectl configtest
 
+    systemctl enable apache2
 	systemctl restart apache2
 }
 
