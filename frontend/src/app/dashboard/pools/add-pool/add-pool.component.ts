@@ -170,7 +170,7 @@ export class PoolAddComponent implements OnInit, OnDestroy {
 
         /* Установка начальных значений */
         this.resetData();
-        
+
         this.checkValid = false;
         this.sharedData.reset();
         this.staticPool.reset();
@@ -260,7 +260,7 @@ export class PoolAddComponent implements OnInit, OnDestroy {
           }
         }
       }                    break;
-      
+
       case 'check_rds': {
         if (!this.sharedData.valid) {
           this.checkValid = true;
@@ -357,7 +357,7 @@ export class PoolAddComponent implements OnInit, OnDestroy {
           this.dialogRef.close();
           this.waitService.setWait(false);
         }, () => {
-         
+
           let use_step = this.last.split('_');
           if (use_step.length > 1) {
             if (use_step[1] === 'rds') {
@@ -365,7 +365,7 @@ export class PoolAddComponent implements OnInit, OnDestroy {
             } else {
               this.toStep(use_step[1]);
             }
-            
+
           } else {
             this.toStep('static');
           }
