@@ -80,6 +80,26 @@ markdown_extensions:
 # Navigation
 nav:
   - VeiL Broker:
+    - Руководство системного программиста:
+      - Аннотация: broker/engineer_guide/annotate.md
+      - Назначение программы: broker/engineer_guide/general_info.md
+      - Требования к техническим средствам: broker/engineer_guide/hardware_requirements.md
+      - Требования к программному обеспечению: broker/engineer_guide/software_requirements.md
+      - Требования к квалификации специалистов: broker/engineer_guide/skill_requirements.md
+      - Структура программы: broker/engineer_guide/structure.md
+      - Настройка программы:
+      - Проверка целостности: broker/engineer_guide/integrity_check.md
+      - Общие сведения: broker/engineer_guide/general_settings.md
+      - Подготовка к работе: broker/engineer_guide/prepare.md
+      - Создание ВМ в среде ECP VeiL: broker/engineer_guide/create_domains.md
+      - Установка и настройка ОС: broker/engineer_guide/install_os.md
+      - Установка VeiL Broker: broker/engineer_guide/install.md
+      - Установка антивирусного средства: broker/engineer_guide/install_kasper.md
+      - Запуск и первоначальная настройка программы: broker/engineer_guide/first_steps.md
+      - Регистрация лицензионного ключа через Web-интерфейс: broker/engineer_guide/registr_key.md
+      - Сообщения системному программисту: broker/engineer_guide/messages.md
+      - Приложение. Установка ОС «ASTRA LINUX SPECIAL EDITION»: broker/engineer_guide/application.md
+      - Перечень принятых сокращений: broker/engineer_guide/reductions.md  
     - FAQ:
       - Установка: broker/faq/install_v3.md
       - Обновление: broker/faq/update_v3.md
