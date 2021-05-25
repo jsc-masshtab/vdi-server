@@ -86,6 +86,8 @@ configure_apache2()
 
     systemctl enable apache2
 	systemctl restart apache2
+
+	chown www-data:adm /var/log/apache2
 }
 
 db_migrations()
