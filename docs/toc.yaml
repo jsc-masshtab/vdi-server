@@ -87,7 +87,6 @@ nav:
       - Требования к программному обеспечению: broker/engineer_guide/software_requirements.md
       - Требования к квалификации специалистов: broker/engineer_guide/skill_requirements.md
       - Структура программы: broker/engineer_guide/structure.md
-      - Настройка программы:
       - Проверка целостности: broker/engineer_guide/integrity_check.md
       - Общие сведения: broker/engineer_guide/general_settings.md
       - Подготовка к работе: broker/engineer_guide/prepare.md
