@@ -102,5 +102,7 @@
 ![image](../../_assets/vdi/worker/task_error.png)
 
 и `Подробностями события` в журнале задач системы.
+
 ![image](../../_assets/vdi/events/events_list.png)
+
 ![image](../../_assets/vdi/events/event_info.png)
