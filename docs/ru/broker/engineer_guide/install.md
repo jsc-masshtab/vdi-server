@@ -2,6 +2,7 @@
 **Виртуальные машины** - <имя ВМ> - **CD-ROM**.
  
 В списке приводов нажать на название привода и в открывшемся диалоговом окне выполнить следующие действия:
+
    - размонтировать iso-образ диска со средствами разработки, нажав кнопку **Извлечь**;
    - примонтировать iso-образ установочного диска VeiL Broker, нажав кнопку **Монтировать образ**;
    - откроется окно *Монтирование iso-образа*, в котором необходимо выбрать тип хранилища, 
@@ -12,49 +13,50 @@
 
 После авторизации, перейти в окно приложения для ввода командной строки *Терминал Fly* 
 и выполнить следующие действия:
+
    - если необходимо, получить привилегии *root* с помощью команды
 
-   `sudo su`
+     `sudo su`
 
    - подключить iso-образ диска с VeiL Broker, выполнив последовательно команды:
 
-   `mount /media/cdrom`
+     `mount /media/cdrom`
 
-   `cd /media/cdrom`
+     `cd /media/cdrom`
 
    - установить программу VeiL Broker с помощью команды
 
-   `bash /media/cdrom/install.sh` 
+     `bash /media/cdrom/install.sh` 
 
    - дождаться окончания установки VeiL Broker. Установка программы выполняется около 5 мин;
 
    - после завершения установки размонтировать диск c помощью команды
 
-   `umount /media/cdrom`
+     `umount /media/cdrom`
 
    - создать файл конфигурации фаервола c помощью команды
 
-   `vim /etc/ufw/aplications.d/vdi-broker`
+     `vim /etc/ufw/aplications.d/vdi-broker`
 
    - ввести следующую конфигурацию
 
-   `[veil-broker]`
+     `[veil-broker]`
 
-   `title=VeiL-broker`
+     `title=VeiL-broker`
 
-   `description=Ports for VeiL-Broker`
+     `description=Ports for VeiL-Broker`
 
-   `ports=443, 80, 6379/tcp`
+     `ports=443, 80, 6379/tcp`
 
    - перезапустить фаервол c помощью команды
 
-   `ufw reload`
+     `ufw reload`
 
    - обновить конфигурацию и открыть порты, выполнив последовательно команды:
 
-   `ufw reload`
+     `ufw reload`
 
-   `ufw allow veil-broker`.
+     `ufw allow veil-broker`.
 
 Перезагрузить ВМ.
 
