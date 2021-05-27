@@ -165,3 +165,4 @@ nav:
       - Ошибки RDP: connect/possible_errors/rdp.md
       - Ошибки Spice: connect/possible_errors/spice.md
     - Тонкие клиенты: connect/thin_clients.md
+  - ECP VeiL: https://veil.mashtab.org/docs/
