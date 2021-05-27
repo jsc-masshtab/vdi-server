@@ -98,7 +98,33 @@ nav:
       - Регистрация лицензионного ключа через Web-интерфейс: broker/engineer_guide/registr_key.md
       - Сообщения системному программисту: broker/engineer_guide/messages.md
       - Приложение. Установка ОС «ASTRA LINUX SPECIAL EDITION»: broker/engineer_guide/application.md
-      - Перечень принятых сокращений: broker/engineer_guide/reductions.md  
+      - Перечень принятых сокращений: broker/engineer_guide/reductions.md
+    - Руководство оператора:
+      - Подготовка к работе: broker/operator_guide/prepare.md
+      - Общие правила: broker/operator_guide/rules.md
+      - Включение программы: broker/operator_guide/start.md
+      - Окно интерфейса: broker/operator_guide/interface.md
+      - Контроллеры: broker/operator_guide/controllers.md
+      - Пулы ВРС: broker/operator_guide/pools.md
+      - Тонкие клиенты: broker/operator_guide/thin_client.md
+      - Ресурсы:
+      - Кластеры: broker/operator_guide/clusters.md
+      - Пулы ресурсов: broker/operator_guide/resource_pools.md
+      - Серверы: broker/operator_guide/nodes.md
+      - Пулы данных: broker/operator_guide/datapools.md
+      - Шаблоны: broker/operator_guide/templates.md
+      - Виртуальные машины: broker/operator_guide/domains.md
+      - Настройки: 
+      - Лицензирование: broker/operator_guide/license.md
+      - Группы: broker/operator_guide/groups.md
+      - Пользователи: broker/operator_guide/users.md
+      - Службы каталогов: broker/operator_guide/ad.md
+      - Журнал: 
+      - События: broker/operator_guide/events.md
+      - Задачи: broker/operator_guide/tasks.md
+      - Настройка: broker/operator_guide/web_setting.md
+      - Сообщения оператору: broker/operator_guide/messages.md
+      - Перечень принятых сокращений: broker/operator_guide/reductions.md
     - FAQ:
       - Установка: broker/faq/install_v3.md
       - Обновление: broker/faq/update_v3.md
