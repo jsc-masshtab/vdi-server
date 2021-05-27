@@ -41,11 +41,6 @@ plugins:
        toc_title: 'Содержимое'
        add_print_site_banner: true
        print_site_banner_template: "ru/_assets/common/custom_banner.tpl"
-#  - mk2pdf-export:
-#      combined: true
-#  - mkpdfs
-#  - pdf-export
-#  - mkdocs-nav-enhancements
 
 # Customization
 extra:
@@ -58,16 +53,11 @@ extra:
 # Extensions
 markdown_extensions:
   - admonition
-#  - toc:
-#      permalink: true
-#  - pymdownx.arithmatex
   - pymdownx.betterem:
       smart_enable: all
   - pymdownx.caret
   - pymdownx.critic
   - pymdownx.details
-#  - pymdownx.emoji:
-#      emoji_generator: !!python/name:pymdownx.emoji.to_svg
   - pymdownx.inlinehilite
   - pymdownx.magiclink
   - pymdownx.mark
@@ -108,23 +98,23 @@ nav:
       - Пулы ВРС: broker/operator_guide/pools.md
       - Тонкие клиенты: broker/operator_guide/thin_client.md
       - Ресурсы:
-      - Кластеры: broker/operator_guide/clusters.md
-      - Пулы ресурсов: broker/operator_guide/resource_pools.md
-      - Серверы: broker/operator_guide/nodes.md
-      - Пулы данных: broker/operator_guide/datapools.md
-      - Шаблоны: broker/operator_guide/templates.md
-      - Виртуальные машины: broker/operator_guide/domains.md
+        - Кластеры: broker/operator_guide/clusters.md
+        - Пулы ресурсов: broker/operator_guide/resource_pools.md
+        - Серверы: broker/operator_guide/nodes.md
+        - Пулы данных: broker/operator_guide/datapools.md
+        - Шаблоны: broker/operator_guide/templates.md
+        - Виртуальные машины: broker/operator_guide/domains.md
       - Настройки: 
-      - Лицензирование: broker/operator_guide/license.md
-      - Группы: broker/operator_guide/groups.md
-      - Пользователи: broker/operator_guide/users.md
-      - Службы каталогов: broker/operator_guide/ad.md
+        - Лицензирование: broker/operator_guide/license.md
+        - Группы: broker/operator_guide/groups.md
+        - Пользователи: broker/operator_guide/users.md
+        - Службы каталогов: broker/operator_guide/ad.md
       - Журнал: 
-      - События: broker/operator_guide/events.md
-      - Задачи: broker/operator_guide/tasks.md
-      - Настройка: broker/operator_guide/web_setting.md
-      - Сообщения оператору: broker/operator_guide/messages.md
-      - Перечень принятых сокращений: broker/operator_guide/reductions.md
+        - События: broker/operator_guide/events.md
+        - Задачи: broker/operator_guide/tasks.md
+        - Настройка: broker/operator_guide/web_setting.md
+        - Сообщения оператору: broker/operator_guide/messages.md
+        - Перечень принятых сокращений: broker/operator_guide/reductions.md
     - FAQ:
       - Установка: broker/faq/install_v3.md
       - Обновление: broker/faq/update_v3.md
@@ -138,9 +128,9 @@ nav:
       - nVidia Grid: broker/faq/vm/nvidia.md
       - Подбор свободной ВМ: broker/pools/get-user-vm.md
     - Cписок изменений:
-      - 2.1.4: broker/changelog/2.1.4.md
-      - 3.0.0: broker/changelog/3.0.0.md
       - 3.1.0: broker/changelog/3.1.0.md
+      - 3.0.0: broker/changelog/3.0.0.md
+      - 2.1.4: broker/changelog/2.1.4.md
     - Спецификация:
         - Требования к хост-системе брокера: broker/spec/domain-req.md
         - Порты и протоколы задействованные при обмене с ECP VeiL: broker/spec/ports_info.md
@@ -163,18 +153,18 @@ nav:
         - Разрешения ТК: broker/auth_v3/client-permissions.md
   - VeiL Connect:
     - Cписок изменений:
-      - 1.3.6: connect/changelog/1.3.6.md
-      - 1.3.7: connect/changelog/1.3.7.md
-      - 1.3.8: connect/changelog/1.3.8.md
-      - 1.4.0: connect/changelog/1.4.0.md
-      - 1.4.1: connect/changelog/1.4.1.md
-      - 1.4.2: connect/changelog/1.4.2.md
-      - 1.5.0: connect/changelog/1.5.0.md
-      - 1.5.1: connect/changelog/1.5.1.md
-      - 1.5.2: connect/changelog/1.5.2.md
-      - 1.5.3: connect/changelog/1.5.3.md
-      - 1.5.4: connect/changelog/1.5.4.md
       - 1.6.0: connect/changelog/1.6.0.md
+      - 1.5.4: connect/changelog/1.5.4.md
+      - 1.5.3: connect/changelog/1.5.3.md
+      - 1.5.2: connect/changelog/1.5.2.md
+      - 1.5.1: connect/changelog/1.5.1.md
+      - 1.5.0: connect/changelog/1.5.0.md
+      - 1.4.2: connect/changelog/1.4.2.md
+      - 1.4.1: connect/changelog/1.4.1.md
+      - 1.4.0: connect/changelog/1.4.0.md
+      - 1.3.8: connect/changelog/1.3.8.md
+      - 1.3.7: connect/changelog/1.3.7.md
+      - 1.3.6: connect/changelog/1.3.6.md
     - Руководство оператора: connect/veil_connect.md
     - Установка: connect/install.md
     - Обновление: connect/update.md
