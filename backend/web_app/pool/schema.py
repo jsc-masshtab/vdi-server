@@ -450,13 +450,15 @@ class PoolType(graphene.ObjectType):
     os_type = graphene.String()
     ad_cn_pattern = graphene.String()
 
-    users = graphene.List(UserType, entitled=graphene.Boolean())
+    users = graphene.List(UserType, entitled=graphene.Boolean(),
+                          ordering=graphene.String())
     assigned_roles = graphene.List(RoleTypeGraphene)
     possible_roles = graphene.List(RoleTypeGraphene)
     assigned_groups = graphene.List(
         PoolGroupType,
         limit=graphene.Int(default_value=100),
         offset=graphene.Int(default_value=0),
+        ordering=graphene.String()
     )
     possible_groups = graphene.List(PoolGroupType)
 
@@ -469,7 +471,7 @@ class PoolType(graphene.ObjectType):
     # Затрагивает запрос ресурсов на VeiL ECP.
     template = graphene.Field(VeilShortEntityType)
     resource_pool = graphene.Field(VeilShortEntityType)
-    vms = graphene.List(VmType)
+    vms = graphene.List(VmType, ordering=graphene.String())
     vm = graphene.Field(VmType, vm_id=graphene.UUID(), controller_id=graphene.UUID())
 
     async def resolve_controller(self, info):
@@ -491,25 +493,26 @@ class PoolType(graphene.ObjectType):
         possible_roles = [role for role in all_roles if role not in assigned_roles]
         return possible_roles
 
-    async def resolve_assigned_groups(self, info, limit, offset):
+    async def resolve_assigned_groups(self, info, limit, offset, ordering=None):
         pool = await Pool.get(self.pool_id)
-        return await pool.assigned_groups_paginator(limit=limit, offset=offset)
+        return await pool.assigned_groups_paginator(limit=limit, offset=offset,
+                                                    ordering=ordering)
 
     async def resolve_possible_groups(self, _info):
         pool = await Pool.get(self.pool_id)
         return await pool.possible_groups
 
-    async def resolve_users(self, _info, entitled=True):
+    async def resolve_users(self, _info, entitled=True, ordering=None):
         # TODO: добавить пагинацию
         pool = await Pool.get(self.pool_id)
         if entitled:
-            return await pool.assigned_users
+            return await pool.assigned_users(ordering=ordering)
         return await pool.possible_users
 
-    async def resolve_vms(self, _info):
+    async def resolve_vms(self, _info, ordering=None):
         # TODO: добавить пагинацию
         pool = await Pool.get(self.pool_id)
-        vms_info = await pool.get_vms_info()
+        vms_info = await pool.get_vms_info(ordering=ordering)
 
         # TODO: получить список ВМ и статусов
         return vms_info
@@ -1346,7 +1349,7 @@ class AssignVmToUser(graphene.Mutation):
             pool = await Pool.get(pool_id)
             pool_type = await pool.pool_type
 
-            assigned_users = await pool.assigned_users
+            assigned_users = await pool.assigned_users()
             assigned_users_list = [user.id for user in assigned_users]
 
             if user_id not in assigned_users_list:

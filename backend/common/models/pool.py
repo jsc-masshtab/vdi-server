@@ -41,6 +41,7 @@ from common.models.authentication_directory import AuthenticationDirectory
 from common.models.task import Task
 from common.models.vm import Vm as VmModel
 from common.settings import (
+    DEFAULT_NAME,
     POOL_MAX_CREATE_ATTEMPTS,
     VEIL_MAX_IDS_LEN,
     VEIL_OPERATION_WAITING,
@@ -484,13 +485,16 @@ class Pool(VeilModel):
     async def assigned_groups(self):
         return await self.assigned_groups_query.gino.load(GroupModel).all()
 
-    async def assigned_groups_paginator(self, limit, offset):
-        return (
-            await self.assigned_groups_query.limit(limit)
-            .offset(offset)
-            .gino.load(GroupModel)
-            .all()
-        )
+    async def assigned_groups_paginator(self, limit, offset, ordering):
+        query = self.assigned_groups_query
+        if ordering:
+            (ordering, reverse) = extract_ordering_data(ordering)
+            query = (
+                query.order_by(desc(ordering))
+                if reverse
+                else query.order_by(ordering)
+            )
+        return await query.limit(limit).offset(offset).gino.load(GroupModel).all()
 
     @property
     async def possible_groups(self):
@@ -509,8 +513,7 @@ class Pool(VeilModel):
             .all()
         )
 
-    @property
-    async def assigned_users(self):
+    async def assigned_users(self, ordering=None):
         """Пользователи назначенные пулу (с учетом групп)."""
         # TODO: возможно нужно добавить группы и пользователей обладающих Ролью
 
@@ -547,6 +550,14 @@ class Pool(VeilModel):
         )
         # 5.05.2021 добавлено исключение "не активных" пользователей из итогового списка
         finish_query = finish_query.where(UserModel.is_active)
+
+        if ordering:
+            (ordering, reverse) = extract_ordering_data(ordering)
+            finish_query = (
+                finish_query.order_by(desc(ordering))
+                if reverse
+                else finish_query.order_by(ordering)
+            )
         return await finish_query.gino.all()
 
     @property
@@ -929,7 +940,7 @@ class Pool(VeilModel):
             if domain.qemu_state and domain.api_object_id:
                 return domain.api_object_id
 
-    async def get_vms_info(self):
+    async def get_vms_info(self, ordering=None):
         """Возвращает информацию для всех ВМ в пуле."""
         from web_app.pool.schema import VmType
 
@@ -976,6 +987,7 @@ class Pool(VeilModel):
 
         vms_info = list()
         qemu_state = None
+        vms_list = list()
 
         for vm in vms:
             # TODO: Добавить принадлежность к домену + на фронте
@@ -1003,16 +1015,39 @@ class Pool(VeilModel):
                 await vm.update(status=vm_status).apply()
 
             # Формируем список с информацией по каждой вм в пуле
-            vms_info.append(
-                VmType(
-                    user_power_state=user_power_state,
-                    parent_name=parent_name,
-                    qemu_state=3 if qemu_state else 1,
-                    node=node,
-                    controller={"id": pool_controller.id},
-                    **vm.__values__
-                )
-            )
+            vm_dict = vm.__values__
+            vm_dict["user_power_state"] = user_power_state
+            vm_dict["parent_name"] = parent_name
+            vm_dict["qemu_state"] = 3 if qemu_state else 1
+            vm_dict["node"] = node
+            vm_dict["controller"] = {"id": pool_controller.id}
+            vm_dict["username"] = await vm.username
+            vms_list.append(vm_dict)
+
+        if ordering:
+            (ordering, reverse) = extract_ordering_data(ordering)
+
+            if ordering == "verbose_name":
+                def sort_lam(vm):
+                    return vm["verbose_name"] if vm["verbose_name"] else DEFAULT_NAME
+            elif ordering == "user":
+                def sort_lam(vm):
+                    return vm["username"] if vm["username"] else DEFAULT_NAME
+            elif ordering == "status":
+                def sort_lam(vm):
+                    return vm["status"].value if vm["status"] else Status.FAILED
+            elif ordering == "qemu_state":
+                def sort_lam(vm):
+                    return vm["qemu_state"] if vm["qemu_state"] else 1
+            elif ordering == "parent_name":
+                def sort_lam(vm):
+                    return vm["parent_name"] if vm["parent_name"] else DEFAULT_NAME
+            else:
+                raise SimpleError(_("The sort parameter is incorrect."))
+            vms_list = sorted(vms_list, key=sort_lam, reverse=reverse)
+
+        for vm_info in vms_list:
+            vms_info.append(VmType(**vm_info))
         return vms_info
 
     async def remove_vms(self, vm_ids, creator="system"):
