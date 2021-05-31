@@ -718,7 +718,19 @@ export class VmDetalsPopupComponent implements OnInit {
 
       this.service.getVnc(this.data.idPool, this.data.vmActive, this.data.controller_id).valueChanges.subscribe((res) => {
         const vnc = res.data.pool.vm.vnc_connection
-        this.vnc = this.sanitizer.bypassSecurityTrustResourceUrl(`novnc/vnc.html?host=${vnc.host}&port=80&password=${vnc.password}&path=websockify?token=${vnc.token}`);
+        const prot = window.location.protocol;
+
+        let port = 80;
+
+        if (prot === 'https:') {
+          port = 443;
+        }
+
+        if (vnc.port) {
+          port = vnc.port;
+        }
+        
+        this.vnc = this.sanitizer.bypassSecurityTrustResourceUrl(`novnc/vnc.html?host=${vnc.host}&port=${port}&password=${vnc.password}&path=websockify?token=${vnc.token}`);
 
         this.show = true;
         this.waitService.setWait(false)
