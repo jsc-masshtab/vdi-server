@@ -165,11 +165,26 @@ nav:
       - 1.3.8: connect/changelog/1.3.8.md
       - 1.3.7: connect/changelog/1.3.7.md
       - 1.3.6: connect/changelog/1.3.6.md
-    - Руководство оператора: connect/veil_connect.md
-    - Установка: connect/install.md
+    - Руководство оператора:
+      - Аннотация: connect/operator_guide/annotate.md
+      - Назначение программы: connect/operator_guide/general_info.md
+      - Условия выполнения программы: connect/operator_guide/program_condition.md
+      - Установка и удаление программы: 
+        - Проверка целостности программы: connect/operator_guide/integrity_check.md
+        - Установка с физического носителя: connect/operator_guide/install.md
+        - Процедура установки VeiL Connect: connect/operator_guide/process_install.md
+        - Процедура удаления VeiL Connect: connect/operator_guide/delete.md
+      - Выполнение программы:  
+        - Подготовка к работе: connect/operator_guide/prepare.md
+        - Общие правила при работе с программой: connect/operator_guide/rules.md
+        - Включение программы: connect/operator_guide/start.md
+        - Окно авторизации пользователя и настройка соединения: connect/operator_guide/interface.md
+        - Окно доступных пулов ВМ: connect/operator_guide/pools.md
+        - Окно ВМ: connect/operator_guide/domains.md
+      - Сообщения оператору: connect/operator_guide/messages.md
+      - Перечень принятых сокращений: connect/operator_guide/reductions.md
     - Обновление: connect/update.md
     - Cоздание локального репозитория: connect/repo_without_inet.md
-    - Удаление: connect/delete.md
     - Настройки:
       - Общие настройки: connect/settings/main_settings.md
       - Настройки Spice: connect/settings/spice_settings.md
