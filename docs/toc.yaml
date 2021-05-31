@@ -113,8 +113,8 @@ nav:
         - События: broker/operator_guide/events.md
         - Задачи: broker/operator_guide/tasks.md
         - Настройка: broker/operator_guide/web_setting.md
-        - Сообщения оператору: broker/operator_guide/messages.md
-        - Перечень принятых сокращений: broker/operator_guide/reductions.md
+      - Сообщения оператору: broker/operator_guide/messages.md
+      - Перечень принятых сокращений: broker/operator_guide/reductions.md
     - FAQ:
       - Установка: broker/faq/install_v3.md
       - Обновление: broker/faq/update_v3.md
