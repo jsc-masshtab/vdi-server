@@ -36,6 +36,27 @@
     </label>
 
     <label class="field">
+      <p class="field-name">Тип</p>
+
+      <mat-form-field>
+        <mat-label>Выберите тип службы</mat-label>
+        
+        <mat-select formControlName="directory_type">
+          <mat-option [value]="'ActiveDirectory'">
+            ActiveDirectory
+          </mat-option>
+
+          <mat-option [value]="'FreeIPA'">
+            FreeIPA
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <ng-container *ngIf="form.hasError('required', 'directory_type') && checkValid"><ng-container *ngTemplateOutlet="errorTemp"></ng-container></ng-container>
+      <div class="error" *ngIf="form.hasError('pattern', 'directory_type') && checkValid">Поле введено некорректно</div>
+    </label>
+
+    <label class="field">
       <p class="field-name">Пользователь</p>
       <input type="text" placeholder="..." formControlName="service_username">
       <ng-container *ngIf="form.hasError('required', 'service_username') && checkValid">

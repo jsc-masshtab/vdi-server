@@ -24,6 +24,7 @@ export class AddAuthenticationDirectoryComponent implements OnDestroy {
       dc_str: ['', Validators.required],
       verbose_name: ['', Validators.required],
       directory_url: ['', [Validators.required, Validators.pattern(/^ldap[s]?:\/\/[a-zA-Z0-9.-_+ ]+$/)]],
+      directory_type: 'ActiveDirectory',
       description: '',
       service_username: '',
       service_password: '',

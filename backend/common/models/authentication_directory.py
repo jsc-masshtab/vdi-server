@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import uuid
+from collections.abc import Iterable
 from enum import Enum
 from typing import Optional, Tuple
 
@@ -15,14 +16,19 @@ from common.database import db
 from common.languages import lang_init
 from common.log.journal import system_logger
 from common.models.auth import Group as GroupModel, User as UserModel
-from common.settings import LDAP_TIMEOUT
+from common.settings import (LDAP_LOGIN_PATTERN,
+                             LDAP_NETWORK_TIMEOUT,
+                             LDAP_OPT_REFERRALS,
+                             LDAP_TIMEOUT)
 from common.veil.auth.auth_dir_utils import (
     extract_domain_from_username,
-    get_ad_user_groups,
     get_ad_user_ou,
+    get_free_ipa_user_groups,
+    get_free_ipa_user_ou,
+    get_ms_ad_user_groups,
     pack_guid,
     unpack_ad_info,
-    unpack_guid,
+    unpack_guid
 )
 from common.veil.auth.fernet_crypto import decrypt, encrypt
 from common.veil.veil_errors import SilentError, ValidationError
@@ -63,10 +69,15 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
         """Доступные типы служб каталогов."""
 
         ActiveDirectory = "ActiveDirectory"
+        FreeIPA = "FreeIPA"
+        OpenLDAP = "OpenLDAP"
+        ALD = "ALD"
 
     AD_GROUP_ID = "objectGUID"
+    IPA_GROUP_ID = "ipaUniqueID"
     AD_GROUP_NAME = "cn"
     AD_USERNAME = "sAMAccountName"
+    IPA_USERNAME = "uid"
     AD_EMAIL = "mail"
     AD_FULLNAME = "displayName"
     AD_FIRST_NAME = "givenName"
@@ -127,6 +138,9 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
     @property
     def connection_username(self):
         """Логин с доменом."""
+        if self.directory_type == AuthenticationDirectory.DirectoryTypes.FreeIPA:
+            return LDAP_LOGIN_PATTERN.format(
+                username=self.service_username, dc=self.dc_str)
         return (
             "\\".join([self.domain_name, self.service_username])
             if self.service_username and self.domain_name
@@ -321,21 +335,24 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
         try:
             ldap_server = ldap.initialize(self.directory_url)
             ldap_server.set_option(ldap.OPT_TIMEOUT, LDAP_TIMEOUT)
+            ldap_server.set_option(ldap.OPT_NETWORK_TIMEOUT, LDAP_NETWORK_TIMEOUT)
+            # additional connection options
+            ldap_server.set_option(ldap.OPT_REFERRALS, LDAP_OPT_REFERRALS)
+            ldap.set_option(ldap.OPT_X_TLS_REQUIRE_CERT, ldap.OPT_X_TLS_NEVER)
+
             # Если у записи есть данные auth - проверяем их
             if self.service_password and self.service_username:
-                # username = '@'.join([self.service_username, self.domain_name])
-                # await system_logger.debug('username: {}, password: {}'.format(username, password))
                 ldap_server.simple_bind_s(self.connection_username, self.password)
             else:
                 ldap_server.simple_bind_s()
         except (ldap.INVALID_CREDENTIALS, TypeError):
             await self.update(status=Status.BAD_AUTH).apply()
             return False
-        except ldap.SERVER_DOWN:
+        except ldap.SERVER_DOWN as ex_error:
             msg = _("Authentication directory server {} is down.").format(
                 self.directory_url
             )
-            await system_logger.warning(msg, entity=self.entity)
+            await system_logger.warning(msg, entity=self.entity, description=ex_error)
             await self.update(status=Status.FAILED).apply()
             return False
         else:
@@ -360,11 +377,19 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
         :param ldap_server: объект сервера службы каталогов
         :return: атрибуты пользователя службы каталогов
         """
-        user_info_filter = "(&(objectClass=user)(sAMAccountName={}))".format(
-            account_name
-        )
+        # Расширено 31.05.2021
+        # формируем запрос для AD
+        if self.directory_type == self.DirectoryTypes.FreeIPA:
+            base = LDAP_LOGIN_PATTERN.format(username=account_name, dc=self.dc_str)
+            user_info_filter = "(objectClass=person)"
+        else:
+            base = self.dc_str
+            user_info_filter = "(&(objectClass=user)(sAMAccountName={}))".format(
+                account_name
+            )
+        # получаем данные пользователя из AD
         user_info, user_groups = ldap_server.search_s(
-            self.dc_str, ldap.SCOPE_SUBTREE, user_info_filter, ["memberOf"]
+            base, ldap.SCOPE_SUBTREE, user_info_filter, ["memberOf"]
         )[0]
 
         return user_info, user_groups
@@ -420,16 +445,21 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
             return True
 
         user_veil_groups = False
-        ad_ou, ad_groups = (
-            get_ad_user_ou(user_info),
-            get_ad_user_groups(user_groups.get("memberOf", [])),
-        )
+        # Расширено 31.05.2021
+        if self.directory_type == self.DirectoryTypes.FreeIPA:
+            ad_ou = get_free_ipa_user_ou(user_info)
+            ad_groups = get_free_ipa_user_groups(user_groups.get("memberOf", []))
+        else:
+            ad_ou = get_ad_user_ou(user_info)
+            ad_groups = get_ms_ad_user_groups(user_groups.get("memberOf", []))
 
         # Производим проверку в порядке уменьшения приоритета.
         # В случае, если совпадение найдено,
         # проверка отображений более низкого приоритета не производится.
 
-        # Если есть мэппинги, значит в системе есть группы. Поэтому тут производим пользователю назначение групп.
+        # Если есть сопоставления, значит в системе есть группы.
+        # Поэтому тут производим пользователю назначение групп.
+
         for role_mapping in mappings:
             escaped_values = list(map(ldap.dn.escape_dn_chars, role_mapping.values))
             await system_logger.debug(_("escaped values: {}.").format(escaped_values))
@@ -490,9 +520,14 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
 
         account_name, domain_name = extract_domain_from_username(username)
         user, created = await cls._get_user(account_name)
-        if not domain_name:
-            domain_name = authentication_directory.domain_name
-            username = "\\".join([domain_name, account_name])
+        # Добавлено 31.05.2021
+        if authentication_directory.directory_type == AuthenticationDirectory.DirectoryTypes.FreeIPA:
+            username = LDAP_LOGIN_PATTERN.format(
+                username=username, dc=authentication_directory.dc_str)
+        elif authentication_directory.directory_type == AuthenticationDirectory.DirectoryTypes.ActiveDirectory:
+            if not domain_name:
+                domain_name = authentication_directory.domain_name
+                username = "\\".join([domain_name, account_name])
         try:
             ldap.set_option(ldap.OPT_X_TLS_REQUIRE_CERT, ldap.OPT_X_TLS_NEVER)
             ldap_server = ldap.initialize(authentication_directory.directory_url)
@@ -505,17 +540,16 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
             )
             success = True
         except ldap.INVALID_CREDENTIALS as ldap_error:
-            # Если пользователь не проходит аутентификацию в службе каталогов с предоставленными
-            # данными, то аутентификация в системе считается неуспешной и создается событие с
-            # сообщением о провале.
+            # Если пользователь не проходит ауф в службе с предоставленными
+            # данными, то ауф в системе считается неуспешной и создается событие
+            # о провале.
             success = False
             raise ValidationError(
                 _("Invalid credentials (ldap): {}.").format(ldap_error)
             )
         except ldap.SERVER_DOWN:
-            # Если нет связи с сервером службы каталогов, то возвращаем ошибку о недоступности
-            # сервера, так как не можем сделать вывод о правильности предоставленных данных.
-            # self.server_down = True
+            # Если нет связи с сервером службы каталогов,
+            # то возвращаем ошибку о недоступности сервера
             success = False
             raise ValidationError(_("Server down (ldap)."))
         except Exception as E:
@@ -568,58 +602,110 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
 
     async def build_group_filter(self):
         """Строим фильтр для поиска групп в Authentication Directory."""
-        base_filter = "(&(objectCategory=GROUP)(groupType=-2147483646)(!(isCriticalSystemObject=TRUE))"
         # Список групп у которых есть признак синхронизации
         assigned_groups = await self.assigned_ad_groups
+
+        # Фильтр для поиска групп
+        if self.directory_type == self.DirectoryTypes.ActiveDirectory:
+            system_groups = "(groupType=-2147483646)(!(isCriticalSystemObject=TRUE))"
+            base_filter = "(&(objectCategory=GROUP){}".format(system_groups)
+            groups_filter = [
+                "(!(objectGUID={}))".format(pack_guid(group.ad_guid))
+                for group in assigned_groups
+            ]
+        elif self.directory_type == self.DirectoryTypes.FreeIPA:
+            base_filter = "(&(objectclass=ipausergroup)(!(nsaccountlock=TRUE))"
+            groups_filter = [
+                "(!(ipaUniqueID={}))".format(group.ad_guid)
+                for group in assigned_groups
+            ]
+        else:
+            raise NotImplementedError(
+                "{} not implemented yet.".format(self.directory_type))
+
         # Строим фильтр исключающий группы по Guid
-        groups_filter = [
-            "(!(objectGUID={}))".format(pack_guid(group.ad_guid))
-            for group in assigned_groups
-        ]
+
         # Добавляем фильтр к существующему
         groups_filter.insert(0, base_filter)
         # Строим итоговый фильтр
         final_filter = "".join(groups_filter) + ")"
         return final_filter
 
-    async def get_possible_ad_groups(self):
-        """Список групп хранящихся в AuthenticationDirectory за вычетом синхронизированных."""
+    def extract_groups(self, ldap_response: Iterable) -> list:
+        if self.directory_type == self.DirectoryTypes.ActiveDirectory:
+            return self.extract_ms_ad_group(ldap_response)
+        elif self.directory_type == self.DirectoryTypes.FreeIPA:
+            return self.extract_free_ipa_group(ldap_response)
+        raise NotImplementedError(
+            "{} not implemented yet.".format(self.directory_type))
+
+    def extract_ms_ad_group(self, ldap_response: Iterable) -> list:
+        """Извлечь группы с идентификаторами из ответа MS AD."""
+        groups = list()
+        for group in ldap_response:
+            ad_search_cn = group[0]
+            # Если не указан ad_search_cn - не получится найти членов группы
+            if not ad_search_cn:
+                continue
+            # Получаем dict с информацией о группе
+            ad_group_info = group[1]
+            # Наименование группы AuthenticationDirectory
+            cn = unpack_ad_info(ad_group_info, self.AD_GROUP_NAME)
+            # Уникальный идентификатор объекта AuthenticationDirectory
+            object_guid = unpack_ad_info(ad_group_info, self.AD_GROUP_ID)
+            # cn это обычная bytes-строка
+            if cn:
+                cn = cn.decode("utf-8")
+            # GUID используется из-за проблем конвертации Sid и минимальной версии 2012+
+            if object_guid:
+                object_guid = unpack_guid(object_guid)
+            # Нужно оба параметра
+            if object_guid and cn:
+                groups.append(
+                    {
+                        "ad_guid": object_guid,
+                        "verbose_name": cn,
+                        "ad_search_cn": ad_search_cn,
+                    }
+                )
+        return groups
+
+    def extract_free_ipa_group(self, ldap_response: Iterable) -> list:
+        """Извлечь группы с идентификаторами из ответа Free IPA."""
+        groups = list()
+        for group in ldap_response:
+            ad_search_cn = group[0]
+            # Если не указан ad_search_cn - не получится найти членов группы
+            if not ad_search_cn:
+                continue
+            for attr in group:
+                if isinstance(attr, dict):
+                    cn = attr.get("cn", [""])[0]
+                    ad_guid = attr.get(self.IPA_GROUP_ID, [""])[0]
+                    cn = cn.decode("utf-8") if isinstance(cn, bytes) else cn
+                    ad_guid = ad_guid.decode("utf-8") if isinstance(ad_guid,
+                                                                    bytes) else ad_guid
+                    if cn and ad_guid:
+                        groups.append(
+                            {
+                                "ad_guid": ad_guid,
+                                "verbose_name": cn,
+                                "ad_search_cn": ad_search_cn,
+                            }
+                        )
+                        break
+        return groups
+
+    async def get_possible_ad_groups(self) -> list:
+        """Список групп за вычетом уже синхронизированных."""
         connection = await self.get_connection()
         if not connection:
             return list()
         try:
-            # dc_filter = ','.join(['dc={}'.format(dc) for dc in self.domain_name.split('.')])
             groups_filter = await self.build_group_filter()
-            # groups: [('CN=Users, DC=team', {'objectGUID': [b'~\xecIO\xa3\x88vE\xbb0\x86\xfe\xa0\x0fA+']}), ]
-            groups = connection.search_s(self.dc_str, ldap.SCOPE_SUBTREE, groups_filter)
-
-            groups_list = list()
-            for group in groups:
-                ad_search_cn = group[0]
-                # Если не указан ad_search_cn - не получится найти членов группы
-                if not ad_search_cn:
-                    continue
-                # Получаем dict с информацией о группе
-                ad_group_info = group[1]
-                # Наименование группы AuthenticationDirectory
-                cn = unpack_ad_info(ad_group_info, self.AD_GROUP_NAME)
-                # Уникальный идентификатор объекта AuthenticationDirectory
-                object_guid = unpack_ad_info(ad_group_info, self.AD_GROUP_ID)
-                # cn это обычная bytes-строка
-                if cn:
-                    cn = cn.decode("utf-8")
-                # GUID используется из-за проблем конвертации Sid и минимальной версии 2012+
-                if object_guid:
-                    object_guid = unpack_guid(object_guid)
-                # Нужно оба параметра
-                if object_guid and cn:
-                    groups_list.append(
-                        {
-                            "ad_guid": object_guid,
-                            "verbose_name": cn,
-                            "ad_search_cn": ad_search_cn,
-                        }
-                    )
+            ldap_groups = connection.search_s(self.dc_str, ldap.SCOPE_SUBTREE,
+                                              groups_filter)
+            groups_list = self.extract_groups(ldap_groups)
         except ldap.LDAPError as err_msg:
             # На случай ошибочности запроса к AD
             msg = _(
@@ -632,30 +718,124 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
         return groups_list
 
     @staticmethod
-    def build_group_user_filter(groups_cn: list):
-        """Строим фильтр для поиска пользователей членов групп в Authentication Directory."""
+    def build_ms_ad_group_user_filter(groups_cn: list) -> str:
         base_filter = "(&(sAMAccountName=*)"
         locked_account_filter = "(!(userAccountControl:1.2.840.113556.1.4.803:=2))"
         persons_filter = (
             "(|(objectCategory=USER)(objectCategory=PERSON))(objectClass=USER)"
         )
         member_of_filter = "(memberOf={})".format(groups_cn)
-
-        # На случай если захотят много групп
-        # member_of_pattern = '(memberOf={})'
-        #
-        # # Добавляем через ИЛИ группы для вхождения
-        # member_filter_list = [member_of_pattern.replace('{}', group_cn) for group_cn in groups_cn]
-        # if member_filter_list and isinstance(member_filter_list, list):
-        #     member_filter_list.insert(0, '(!')
-        #     member_filter_list.append(')')
-        # member_of_filter = ''.join(member_filter_list)
-
         # Строим итоговый фильтр
         final_filter = "".join(
             [base_filter, locked_account_filter, persons_filter, member_of_filter, ")"]
         )
         return final_filter
+
+    @staticmethod
+    def build_free_ipa_group_user_filter(groups_cn: list) -> str:
+        persons_filter = "(&(objectclass=posixAccount)(objectclass=person)(!(nsaccountlock=TRUE))"
+        extra_filter = "(memberOf={}))".format(groups_cn)
+        return persons_filter + extra_filter
+
+    def build_group_user_filter(self, groups_cn: list):
+        """Строим фильтр для поиска пользователей членов групп AD."""
+        if self.directory_type == self.DirectoryTypes.ActiveDirectory:
+            return self.build_ms_ad_group_user_filter(groups_cn)
+        elif self.directory_type == self.DirectoryTypes.FreeIPA:
+            return self.build_free_ipa_group_user_filter(groups_cn)
+        raise NotImplementedError(
+            "{} not implemented yet.".format(self.directory_type))
+
+    def extract_ms_ad_group_members(self, ldap_response: Iterable) -> list:
+        users_list = list()
+        for user in ldap_response:
+            ad_search_cn = user[0]
+            # Если не указан ad_search_cn - не получится
+            if not ad_search_cn:
+                continue
+            # Получаем dict с информацией о пользователе
+            ad_user_info = user[1]
+            # Наименование группы AuthenticationDirectory
+            username = unpack_ad_info(ad_user_info, self.AD_USERNAME)
+            email = unpack_ad_info(ad_user_info, self.AD_EMAIL)
+            fullname = unpack_ad_info(ad_user_info, self.AD_FULLNAME)
+            first_name = unpack_ad_info(ad_user_info, self.AD_FIRST_NAME)
+            last_name = unpack_ad_info(ad_user_info, self.AD_SURNAME)
+
+            # Преобразуем bytes-строки
+            username = username.decode("utf-8") if username else None
+            email = email.decode("utf-8") if email else None
+            fullname = fullname.decode("utf-8") if fullname else None
+            first_name = first_name.decode("utf-8") if first_name else None
+            last_name = last_name.decode("utf-8") if last_name else None
+
+            # Если не указано имя и фамилия - пытаемся разобрать fullname
+            if (not first_name or not last_name) and fullname:
+                first_name, *last_name = fullname.split()
+                if isinstance(last_name, list):
+                    last_name = " ".join(last_name)
+
+            # Перепроверяем чтобы при пустой строке был None
+            last_name = last_name if last_name else None
+            first_name = first_name if first_name else None
+
+            # Нужен как минимум username
+            if username:
+                users_list.append(
+                    {
+                        "username": username,
+                        "email": email,
+                        "first_name": first_name,
+                        "last_name": last_name,
+                    }
+                )
+        return users_list
+
+    def extract_free_ipa_group_members(self, ldap_response: Iterable) -> list:
+        users_list = list()
+        for user in ldap_response:
+            ad_search_cn = user[0]
+            # Если не указан ad_search_cn - не получится
+            if not ad_search_cn:
+                continue
+            for attr in user:
+                if isinstance(attr, dict):
+                    # Наименование группы AuthenticationDirectory
+                    username = unpack_ad_info(attr, self.IPA_USERNAME)
+                    email = unpack_ad_info(attr, self.AD_EMAIL)
+                    fullname = unpack_ad_info(attr, self.AD_FULLNAME)
+                    first_name = unpack_ad_info(attr, self.AD_FIRST_NAME)
+                    last_name = unpack_ad_info(attr, self.AD_SURNAME)
+
+                    # Преобразуем bytes-строки
+                    username = username.decode("utf-8") if username else None
+                    email = email.decode("utf-8") if email else None
+                    fullname = fullname.decode("utf-8") if fullname else None
+                    first_name = first_name.decode("utf-8") if first_name else None
+                    last_name = last_name.decode("utf-8") if last_name else None
+
+                    # Если не указано имя и фамилия - пытаемся разобрать fullname
+                    if (not first_name or not last_name) and fullname:
+                        first_name, *last_name = fullname.split()
+                        if isinstance(last_name, list):
+                            last_name = " ".join(last_name)
+
+                    # Перепроверяем чтобы при пустой строке был None
+                    last_name = last_name if last_name else None
+                    first_name = first_name if first_name else None
+
+                    # Нужен как минимум username
+                    if username:
+                        users_list.append(
+                            {
+                                "username": username,
+                                "email": email,
+                                "first_name": first_name,
+                                "last_name": last_name,
+                            }
+                        )
+                        break
+        return users_list
 
     async def get_members_of_ad_group(self, group_cn: str):
         """Пользователи члены группы в Authentication Directory."""
@@ -663,53 +843,14 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
         if not connection:
             return list()
         try:
-            # dc_filter = ','.join(['dc={}'.format(dc) for dc in self.domain_name.split('.')])
             users_filter = self.build_group_user_filter(group_cn)
-            users = connection.search_s(self.dc_str, ldap.SCOPE_SUBTREE, users_filter)
-
-            # Парсим ответ от Authentication Directory
-            users_list = list()
-            for user in users:
-                ad_search_cn = user[0]
-                # Если не указан ad_search_cn - не получится получить информацию о пользователе
-                if not ad_search_cn:
-                    continue
-                # Получаем dict с информацией о пользователе
-                ad_user_info = user[1]
-                # Наименование группы AuthenticationDirectory
-                username = unpack_ad_info(ad_user_info, self.AD_USERNAME)
-                email = unpack_ad_info(ad_user_info, self.AD_EMAIL)
-                fullname = unpack_ad_info(ad_user_info, self.AD_FULLNAME)
-                first_name = unpack_ad_info(ad_user_info, self.AD_FIRST_NAME)
-                last_name = unpack_ad_info(ad_user_info, self.AD_SURNAME)
-
-                # Преобразуем bytes-строки
-                username = username.decode("utf-8") if username else None
-                email = email.decode("utf-8") if email else None
-                fullname = fullname.decode("utf-8") if fullname else None
-                first_name = first_name.decode("utf-8") if first_name else None
-                last_name = last_name.decode("utf-8") if last_name else None
-
-                # Если не указано имя и фамилия - пытаемся разобрать fullname
-                if (not first_name or not last_name) and fullname:
-                    first_name, *last_name = fullname.split()
-                    if isinstance(last_name, list):
-                        last_name = " ".join(last_name)
-
-                # Перепроверяем чтобы при пустой строке был None
-                last_name = last_name if last_name else None
-                first_name = first_name if first_name else None
-
-                # Нужен как минимум username
-                if username:
-                    users_list.append(
-                        {
-                            "username": username,
-                            "email": email,
-                            "first_name": first_name,
-                            "last_name": last_name,
-                        }
-                    )
+            ldap_response = connection.search_s(self.dc_str, ldap.SCOPE_SUBTREE,
+                                                users_filter)
+            # Разбираем ответ от Authentication Directory
+            if self.directory_type == self.DirectoryTypes.ActiveDirectory:
+                users_list = self.extract_ms_ad_group_members(ldap_response)
+            elif self.directory_type == self.DirectoryTypes.FreeIPA:
+                users_list = self.extract_free_ipa_group_members(ldap_response)
         except ldap.LDAPError:
             msg = _(
                 "Fail to connect to Authentication Directory. Check service information."
@@ -732,7 +873,7 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
         try:
             group = await GroupModel.soft_create(creator="system", **group_info)
         except UniqueViolationError:
-            # Если срабатывает этот сценарий - что-то пошло не поплану
+            # Если срабатывает этот сценарий - что-то пошло не по плану
             return await GroupModel.query.where(
                 GroupModel.ad_guid == str(group_info["ad_guid"])
             ).gino.first()
@@ -777,7 +918,7 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
         return users_list
 
     async def synchronize_group(self, group_id, creator="system"):
-        """Синхронизирует ранее синхронизированную группу и пользователей из Authentication Directory на VDI."""
+        """Синхронизирует пользователей группы из AD на VDI."""
         group = await GroupModel.get(group_id)
         if not group:
             raise SilentError(_("No such Group."))
@@ -809,7 +950,7 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
         return True
 
     async def synchronize(self, data):
-        """Синхронизирует переданные группы и пользователи из Authentication Directory на VDI."""
+        """Синхронизирует переданные группы на VDI."""
         # Создаем группу
         group_info = {
             "ad_guid": data["group_ad_guid"],

@@ -69,6 +69,16 @@ markdown_extensions:
 
 # Navigation
 nav:
+  - FAQ:
+    - Установка: broker/faq/install_v3.md
+    - Обновление: broker/faq/update_v3.md
+    - Cоздание локального репозитория: broker/faq/repo_without_inet.md
+    - Резервные копии: broker/faq/backup.md
+    - Подготовка эталонного образа на основе Windows 8.1/10: broker/faq/rdp/example_template_win.md
+    - Работа по RDP с пулами ВРС: broker/faq/rdp/example_rdp.md
+    - Настройка GPO через RDP для ВМ в домене MS AD: broker/faq/rdp/example_rdp_domain.md
+    - nVidia Grid: broker/faq/vm/nvidia.md
+    - Подбор свободной ВМ: broker/pools/get-user-vm.md
   - VeiL Broker:
     - Руководство системного программиста:
       - Аннотация: broker/engineer_guide/annotate.md

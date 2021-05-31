@@ -94,7 +94,10 @@ LANGUAGE = "ru"
 # Others
 # -----------------------------
 DEFAULT_NAME = "-"
-LDAP_TIMEOUT = 5
+LDAP_TIMEOUT = 15
+LDAP_NETWORK_TIMEOUT = 10
+LDAP_OPT_REFERRALS = 0
+LDAP_LOGIN_PATTERN = "uid={username},cn=users,cn=accounts,{dc}"
 
 # File system paths
 # -----------------------------

@@ -53,7 +53,7 @@ export class EventsComponent implements OnInit, OnDestroy {
       icon: 'comment'
     },
     {
-      title: 'Cоздатель',
+      title: 'Создатель',
       property: 'user',
       type: 'string',
       class: 'name-end',

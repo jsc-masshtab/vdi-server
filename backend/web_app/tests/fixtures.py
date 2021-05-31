@@ -525,6 +525,44 @@ def fixt_auth_dir_with_pass(request, event_loop):
 
 
 @pytest.fixture
+def fixt_ipa_with_pass(request, event_loop):
+    id = "10923d5d-ba7a-4049-88c5-769267a6cbe5"
+    verbose_name = "test_ipa"
+    directory_url = "ldap://192.168.14.83"
+    domain_name = "BAZALT"
+    dc_str = "bazalt.auth"
+    encoded_service_password = "Bazalt1!"
+
+    async def setup():
+        await AuthenticationDirectory.soft_create(
+            id=id,
+            verbose_name=verbose_name,
+            directory_url=directory_url,
+            directory_type='FreeIPA',
+            domain_name=domain_name,
+            service_password=encoded_service_password,
+            service_username="admin",
+            dc_str=dc_str,
+            creator="system",
+        )
+
+    event_loop.run_until_complete(setup())
+
+    def teardown():
+        async def a_teardown():
+            await AuthenticationDirectory.delete.where(
+                AuthenticationDirectory.id == id
+            ).gino.status()
+            # TODO: опасное место
+            await User.delete.where(User.username == "admin").gino.status()
+
+        event_loop.run_until_complete(a_teardown())
+
+    request.addfinalizer(teardown)
+    return True
+
+
+@pytest.fixture
 def fixt_auth_dir_with_pass_bad(request, event_loop):
     id = "10913d5d-ba7a-4049-88c5-769267a6cbe6"
     verbose_name = "test_auth_dir"

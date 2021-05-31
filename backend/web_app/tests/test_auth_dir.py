@@ -14,6 +14,7 @@ from web_app.tests.fixtures import (
     fixt_auth_dir_with_pass,  # noqa
     fixt_auth_dir_with_pass_bad,  # noqa
     fixt_mapping,
+    fixt_ipa_with_pass,  # noqa
 )  # noqa
 
 from web_app.tests.utils import execute_scheme, ExecError
@@ -62,8 +63,30 @@ class TestAuthenticationDirectoryCreate:
         assert ad
         await ad.delete()
 
+    async def test_free_ipa_no_pass_create(self, snapshot, fixt_auth_context):  # noqa
+        """Проверка создания Free IPA без auth."""
+        query = """mutation {createAuthDir(
+                      domain_name: "BAZALT"
+                      dc_str: "bazalt.auth"
+                      verbose_name: "ipa"
+                      directory_url: "ldap://192.168.14.83"
+                      connection_type: LDAP
+                      directory_type: FreeIPA
+                    ) {
+                      ok
+                    }}"""
+        executed = await execute_scheme(
+            auth_dir_schema, query, context=fixt_auth_context
+        )
+        snapshot.assert_match(executed)
+        ad = await AuthenticationDirectory.query.where(
+            AuthenticationDirectory.verbose_name == "ipa"
+        ).gino.first()
+        assert ad
+        await ad.delete()
+
     async def test_auth_dir_create_no_pass(self, snapshot, fixt_auth_context):  # noqa
-        """Допонительно проверяет шифрование пароля Authentication Directory."""
+        """Дополнительно проверяет шифрование пароля Authentication Directory."""
         test_password = "Bazalt1!"
         query = """mutation {createAuthDir(
                       domain_name: "BAZALT"
@@ -473,6 +496,27 @@ class TestAuthenticationDirectoryUtils:
         assert group
         await group.delete()
 
+    async def test_ipa_sync_new_only_group(
+        self, snapshot, fixt_auth_context, fixt_ipa_with_pass
+    ):  # noqa
+        """Должна создаться новая группа без пользователей."""
+        query = """mutation{syncAuthDirGroupUsers(
+                    auth_dir_id: "10923d5d-ba7a-4049-88c5-769267a6cbe5",
+                    sync_data:
+                        {group_ad_guid: "66e4c554-652a-11eb-aee9-02fff06b60b5",
+                         group_verbose_name: "ipausers",
+                         group_ad_cn: "cn=ipausers,cn=groups,cn=accounts,dc=bazalt,dc=auth"})
+                    {ok}}"""
+        executed = await execute_scheme(
+            auth_dir_schema, query, context=fixt_auth_context
+        )
+        snapshot.assert_match(executed)
+        group = await Group.query.where(
+            Group.ad_guid == "66e4c554-652a-11eb-aee9-02fff06b60b5"
+        ).gino.first()
+        assert group
+        await group.delete()
+
     async def test_auth_dir_sync_new_only_group(
         self, snapshot, fixt_auth_context, fixt_auth_dir_with_pass, fixt_local_group
     ):  # noqa
@@ -513,6 +557,38 @@ class TestAuthenticationDirectoryUtils:
         assert group
         # Проверяем что пользователь создался
         user = await User.query.where(User.username == "ad180").gino.first()
+        assert user
+        # Проверяем что пользователь в группе
+        user_groups = await user.assigned_groups
+        assert user_groups
+        assert isinstance(user_groups, list)
+        assert group.id == user_groups[0].id
+        # Чистим
+        await User.delete.where(User.username != "vdiadmin").gino.status()
+        await group.delete()
+
+    async def test_ipa_sync_group_and_users(
+        self, snapshot, fixt_auth_context, fixt_ipa_with_pass
+    ):  # noqa
+        """Должна создаться новая группа и пользователи из AD."""
+        query = """mutation{syncAuthDirGroupUsers(
+                           auth_dir_id: "10923d5d-ba7a-4049-88c5-769267a6cbe5",
+                           sync_data:
+                               {group_ad_guid: "66e4c554-652a-11eb-aee9-02fff06b60b5",
+                                group_verbose_name: "ipausers",
+                                group_ad_cn: "cn=ipausers,cn=groups,cn=accounts,dc=bazalt,dc=auth"})
+                           {ok}}"""
+        executed = await execute_scheme(
+            auth_dir_schema, query, context=fixt_auth_context
+        )
+        snapshot.assert_match(executed)
+        # Проверяем что группа создалась
+        group = await Group.query.where(
+            Group.ad_guid == "66e4c554-652a-11eb-aee9-02fff06b60b5"
+        ).gino.first()
+        assert group
+        # Проверяем что пользователь создался
+        user = await User.query.where(User.username == "ad120").gino.first()
         assert user
         # Проверяем что пользователь в группе
         user_groups = await user.assigned_groups
