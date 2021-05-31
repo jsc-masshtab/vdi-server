@@ -38,6 +38,8 @@ services:
       dockerfile: ./devops/docker/python/Dockerfile
     container_name: vdi-test-tornado
     network_mode: "host"
+    extra_hosts:
+      - "ipa.bazalt.auth:192.168.14.83"
     environment:
       - PYTHONPATH=/opt/veil-vdi/app
       - ASYNC_TEST_TIMEOUT=20
@@ -47,7 +49,6 @@ services:
     volumes:
       - ../../backend:/opt/veil-vdi/app
     command: sh -c "sleep 10 && pip install -U veil_api_client veil_aio_au && cd /opt/veil-vdi/app/common/migrations && alembic upgrade head && cd /opt/veil-vdi/app/web_app/tests && pytest -m 'smoke_test' && pytest --cov=web_app -vv -m 'not broken_runner'"
-#    command: sh -c "sleep 10 && pip install -U veil_api_client veil_aio_au && cd /opt/veil-vdi/app/common/migrations && alembic upgrade head && cd /opt/veil-vdi/app/web_app/tests && pytest -m 'smoke_test' && pytest --cov=web_app -vv -m 'not broken_runner' --cov-report=html"
     depends_on:
       - vdi-test-postgres
       - vdi-test-redis

@@ -130,6 +130,7 @@ export class AuthenticationDirectoryService {
                             $dc_str: String!,
                             $verbose_name: String!,
                             $directory_url: String!,
+                            $directory_type: DirectoryTypes,
                             $description: String,
                             $service_username: String,
                             $service_password: String
@@ -139,6 +140,7 @@ export class AuthenticationDirectoryService {
                                 dc_str: $dc_str,
                                 verbose_name: $verbose_name,
                                 directory_url :$directory_url,
+                                directory_type: $directory_type,
                                 description :$description,
                                 service_username: $service_username,
                                 service_password: $service_password,

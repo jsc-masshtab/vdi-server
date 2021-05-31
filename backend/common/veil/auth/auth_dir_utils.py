@@ -108,7 +108,18 @@ def get_ad_user_ou(user_info: str) -> Optional[str]:
                 return chunk[3:]
 
 
-def get_ad_user_groups(user_groups: List[bytes]) -> List[str]:
+def get_free_ipa_user_ou(user_info: str) -> Optional[str]:
+    if not user_info:
+        return
+    if isinstance(user_info, bytes):
+        user_info = user_info.decode()
+    user_info = user_info.split(",")
+    for attr in user_info:
+        if attr.startswith("OU=") or attr.startswith("ou="):
+            return attr[3:]
+
+
+def get_ms_ad_user_groups(user_groups: List[bytes]) -> List[str]:
     """Метод получения имен групп пользователя службы каталогов.
 
     :param user_groups: список строк, содержащих имена (CN) групп пользователя службы каталогов.
@@ -120,4 +131,15 @@ def get_ad_user_groups(user_groups: List[bytes]) -> List[str]:
         for attr in group_attrs:
             if attr.startswith("CN="):
                 groups_names.append(attr[3:])
+    return groups_names
+
+
+def get_free_ipa_user_groups(user_groups: List[bytes]) -> List[str]:
+    groups_names = []
+    for group in user_groups:
+        group_attr = group.decode().split(",")
+        for attr in group_attr:
+            if attr.startswith("CN=") or attr.startswith("cn="):
+                groups_names.append(attr[3:])
+                break
     return groups_names
