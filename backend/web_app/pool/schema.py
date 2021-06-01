@@ -14,7 +14,7 @@ from common.models.controller import Controller
 from common.models.pool import AutomatedPool, Pool, RdsPool, StaticPool
 from common.models.task import PoolTaskType, Task, TaskStatus
 from common.models.vm import Vm
-from common.settings import POOL_MAX_SIZE, POOL_MIN_SIZE
+from common.settings import DOMAIN_CREATION_MAX_STEP, POOL_MAX_SIZE, POOL_MIN_SIZE
 from common.veil.veil_decorators import administrator_required
 from common.veil.veil_errors import SilentError, SimpleError, ValidationError
 from common.veil.veil_gino import (
@@ -395,6 +395,11 @@ class PoolValidator(MutationValidation):
         if value < 1 or value > total_size:
             raise ValidationError(
                 _("Increase step must be positive and less or equal to total_size.")
+            )
+        if value > DOMAIN_CREATION_MAX_STEP:
+            raise ValidationError(
+                _("Increase step must be less than {}.").format(
+                    DOMAIN_CREATION_MAX_STEP)
             )
         return value
 
