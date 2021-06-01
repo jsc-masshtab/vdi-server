@@ -241,7 +241,7 @@ class ExpandPoolTask(AbstractTask):
                     return
 
                 # Если подогретых машин слишком мало, то пробуем добавить еще
-                #  Если self.ignore_reserve_size==True то пытаемся расширится безусловно
+                # self.ignore_reserve_size == True -> пытаемся расшириться
                 is_not_enough_free_vms = (
                     await automated_pool.check_if_not_enough_free_vms()
                 )
@@ -322,17 +322,7 @@ class RecreationGuestVmTask(AbstractTask):
             async with template_lock:
                 # Проверяем, что максимальное значение ВМ в пуле не достигнуто
                 pool = await Pool.get(automated_pool.id)
-                # vm_amount_in_pool = await pool.get_vm_amount()
-                #
-                # # Если достигнуто максимальное значение ВМ в пуле, ничего не делать
-                # if vm_amount_in_pool >= automated_pool.total_size:
-                #     return
-                #
-                # # Если подогретых машин слишком мало, то пробуем добавить еще
-                # #  Если self.ignore_reserve_size то пытаемся добавить ВМ безусловно
-                # is_not_enough_free_vms = (
-                #     await automated_pool.check_if_not_enough_free_vms()
-                # )
+
                 if self.ignore_reserve_size:
                     # Удаление и добавление 1 ВМ.
                     try:

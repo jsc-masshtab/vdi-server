@@ -363,7 +363,7 @@ class Vm(VeilModel):
                 resource_pool=resource_pool_id,
                 count=count
             )
-
+        # попытка создать ВМ
         inner_retry_count = 0
         while inner_retry_count < VEIL_MAX_VM_CREATE_ATTEMPTS:
             # Send request to create vm

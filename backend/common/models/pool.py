@@ -42,6 +42,7 @@ from common.models.task import Task
 from common.models.vm import Vm as VmModel
 from common.settings import (
     DEFAULT_NAME,
+    DOMAIN_CREATION_MAX_STEP,
     POOL_MAX_CREATE_ATTEMPTS,
     VEIL_MAX_IDS_LEN,
     VEIL_OPERATION_WAITING,
@@ -66,7 +67,7 @@ _ = lang_init()
 
 
 class Pool(VeilModel):
-    """На данный момент отсутствует смысловая валидация на уровне таблиц (она в схемах)."""
+    """Сейчас отсутствует смысловая валидация на уровне таблиц (она в схемах)."""
 
     class PoolTypes:
         """Доступные типы пулов."""
@@ -1727,6 +1728,47 @@ class AutomatedPool(db.Model):
             success_ids.pop()
         return success_ids
 
+    async def step_by_step_adding(self, count: int = 1) -> dict:
+        """Блочное копирование ВМ на основе шаблона."""
+        # Ответ содержит 2 ключа, для возможности частичного создания блока ВМ
+        result = dict(vms_list=None, error=None)
+        copied_vms_list = list()
+        remaining_count = count
+
+        # Для выставления процентов выполнения задачи
+        approximate_steps_amount = count // DOMAIN_CREATION_MAX_STEP + 1
+        percent_by_step = round(100 / approximate_steps_amount)
+        current_percent = 0
+
+        # Попытки создать ВМ c шагом DOMAIN_CREATION_MAX_STEP
+        while remaining_count > 0:
+            # Количество ВМ создаваемых за 1 раз
+            if abs(remaining_count) > DOMAIN_CREATION_MAX_STEP:
+                step_count = DOMAIN_CREATION_MAX_STEP
+            else:
+                step_count = abs(remaining_count)
+
+            try:
+                # Вызываем копирование ВМ
+                copied_vms = await self.add_vm(count=step_count)
+                copied_vms_list.extend(copied_vms)
+            except (AssertionError, VmCreationError, asyncio.CancelledError) as add_err:
+                # прерываем выполнение при первом же Exception
+                result["error"] = add_err
+                return result
+            finally:
+                result["vms_list"] = copied_vms_list
+            # Уменьшаем оставшееся количество ВМ
+            remaining_count = remaining_count - DOMAIN_CREATION_MAX_STEP
+
+            # Обновляем прогресс выполнения задачи
+            current_percent += percent_by_step
+            await Task.set_progress_to_task_associated_with_entity(self.id,
+                                                                   current_percent)
+
+        # Выполнение успешно
+        return result
+
     async def add_vm(self, count: int = 1):
         """Try to add VM to pool."""
         pool_verbose_name = await self.verbose_name
@@ -1740,6 +1782,7 @@ class AutomatedPool(db.Model):
         # Подбор имени выполняет VeiL ECP, но, если ВМ 1 - не будет присвоен индекс.
         if count == 1:
             verbose_name = "{name}-1".format(name=verbose_name)
+
         params = {
             "verbose_name": verbose_name,
             "domain_id": str(self.template_id),
@@ -1864,18 +1907,57 @@ class AutomatedPool(db.Model):
         await self.update(os_type=pool_os_type).apply()
 
         pool = await Pool.get(self.id)
-        # В пуле уже могут быть машины, например, если инициализация пула была прервана из-за завершения приложения.
+
+        # если инициализация пула была прервана -> в пуле уже могут быть ВМ
+
         num_of_vms_in_pool = await pool.get_vm_amount()
-        try:
-            created_vms = await self.add_vm(count=self.initial_size)
-            num_of_vms_in_pool += len(created_vms)
-            # update progress of associated task
-            await Task.set_progress_to_task_associated_with_entity(self.id, 100)
-        except VmCreationError as vm_error:
+
+        # Отключено 1.06.2021
+        # try:
+        #     created_vms = await self.add_vm(count=self.initial_size)
+        #     num_of_vms_in_pool += len(created_vms)
+        #     # update progress of associated task
+        #     await Task.set_progress_to_task_associated_with_entity(self.id, 100)
+        # except VmCreationError as vm_error:
+        #     # log that we can`t create required initial amount of VMs
+        #     await system_logger.error(
+        #         _("VM creation error."), entity=self.entity, description=str(vm_error)
+        #     )
+
+        # Добавлено 1.06.2021
+        # Создание ВМ происходит блоками и неизвестно в какой момент произойдет ошибка
+        # новый механизм не прокидывает исключение явно, но возвращает их в поле `error`
+        creation_result = await self.step_by_step_adding(count=self.initial_size)
+        creation_error = creation_result["error"]
+        # Если создание было выполнено с ошибкой отличной от
+        # VmCreationError -> прерываем выполнение
+
+        # TODO: ситуация, когда часть вм уже создана
+
+        # По логике должно быть так, но ниже идет принудительная обработка ошибок.
+        # Пробую упростить
+        # if creation_error and isinstance(creation_error, VmCreationError):
+        #     # log that we can`t create required initial amount of VMs
+        #     await system_logger.error(
+        #         _("VM creation error."),
+        #         entity=self.entity,
+        #         description=str(creation_error)
+        #     )
+        # elif creation_error:
+        #     raise creation_error
+
+        if creation_error:
             # log that we can`t create required initial amount of VMs
             await system_logger.error(
-                _("VM creation error."), entity=self.entity, description=str(vm_error)
+                _("VM creation error."),
+                entity=self.entity,
+                description=str(creation_error)
             )
+
+        # Непредусмотренные ошибки пройдены -> завершаем выполнение
+        created_vms = creation_result["vms_list"]
+        num_of_vms_in_pool += len(created_vms)
+        await Task.set_progress_to_task_associated_with_entity(self.id, 100)
 
         creation_successful = self.initial_size <= num_of_vms_in_pool
         if creation_successful:
@@ -1893,8 +1975,7 @@ class AutomatedPool(db.Model):
             await system_logger.error(
                 message=msg, entity=self.entity, description=description
             )
-            # исключение не лишнее, без него таска завершится с FINISHED а не FAILED Перехватится в InitPoolTask
-            # но сообщение лишнее
+            # без исключения таска завершится с FINISHED а не FAILED
             raise PoolCreationError(msg)
 
     async def prepare_initial_vms(self):
