@@ -23,6 +23,7 @@ DB_PASS = "postgres"
 POOL_MIN_SIZE = 1
 POOL_MAX_SIZE = 10000
 POOL_MAX_CREATE_ATTEMPTS = 15
+DOMAIN_CREATION_MAX_STEP = 100
 
 # Journal settings
 DEBUG = False
@@ -94,6 +95,9 @@ LANGUAGE = "ru"
 # Others
 # -----------------------------
 DEFAULT_NAME = "-"
+
+# LDAP
+# -----------------------------
 LDAP_TIMEOUT = 15
 LDAP_NETWORK_TIMEOUT = 10
 LDAP_OPT_REFERRALS = 0

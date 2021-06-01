@@ -132,14 +132,14 @@
         <mat-form-field>
           <mat-label *ngIf="data.vms?.length">Выберите ВМ</mat-label>
           <mat-label *ngIf="!data.vms?.length">- нет виртуальных машин -</mat-label>
-    
+
           <mat-select formControlName="rds_vm">
             <mat-option *ngFor="let vm of data.vms" [value]="vm">
               {{vm.verbose_name}}
             </mat-option>
           </mat-select>
         </mat-form-field>
-    
+
         <ng-container *ngIf="rdsPool.hasError('required', 'rds_vm') && checkValid">
           <ng-container *ngTemplateOutlet="errorTemp"></ng-container>
         </ng-container>
@@ -235,7 +235,7 @@
 
       <label class="field">
         <p class="field-name">Шаг расширения пула</p>
-        <input type="number" formControlName="increase_step" min="1" max="200">
+        <input type="number" formControlName="increase_step" min="1" max="100">
 
         <ng-container *ngIf="dynamicPool.hasError('required', 'increase_step') && checkValid">
           <ng-container *ngTemplateOutlet="errorTemp"></ng-container>
@@ -244,7 +244,7 @@
         <ng-container
           *ngIf="dynamicPool.get('increase_step').touched && dynamicPool.get('increase_step').dirty">
           <div class="error" [@animForm]="error" *ngIf="dynamicPool.hasError('min', 'increase_step') || dynamicPool.hasError('max', 'increase_step')">
-            Шаг расширения пула должен быть в интервале 1-200</div>
+            Шаг расширения пула должен быть в интервале 1-100</div>
           <div class="error" [@animForm]="error" *ngIf="dynamicPool?.errors?.IncreaseLessMax">
             Шаг расширения пула не может быть больше максимального количества ВМ</div>
         </ng-container>
@@ -365,7 +365,7 @@
 
       <label class="field">
         <p class="field-name">Шаг расширения пула</p>
-        <input type="number" formControlName="increase_step" min="1" max="200">
+        <input type="number" formControlName="increase_step" min="1" max="100">
 
         <ng-container *ngIf="guestPool.hasError('required', 'increase_step') && checkValid">
           <ng-container *ngTemplateOutlet="errorTemp"></ng-container>
@@ -374,7 +374,7 @@
         <ng-container
           *ngIf="guestPool.get('increase_step').touched && guestPool.get('increase_step').dirty">
           <div class="error" [@animForm]="error" *ngIf="guestPool.hasError('min', 'increase_step') || guestPool.hasError('max', 'increase_step')">
-            Шаг расширения пула должен быть в интервале 1-200</div>
+            Шаг расширения пула должен быть в интервале 1-100</div>
           <div class="error" [@animForm]="error" *ngIf="guestPool?.errors?.IncreaseLessMax">
             Шаг расширения пула не может быть больше максимального количества ВМ</div>
         </ng-container>
