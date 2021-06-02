@@ -1,12 +1,12 @@
 # Обновление VeiL Broker 3.0.X
 
-## Обновление из Astra linux
+## Обновление 3.0
 
 !!! info ""
     Проверить текущую версию VeiL Broker и его компонентов можно командой `dpkg -l | grep veil`
 
 !!! warning ""
-    Во время обновления сервис будет недоступен. Выберите допустимое время, выполните резервное копирование ВМ.
+    Во время обновления сервис будет недоступен. Выберите допустимое время и выполните резервное копирование ВМ.
 
 1. Войдите в систему указав значение **Integrity level** равное **63** или **Уровень целостности**
    равное **Высокий** (для графического режима).
@@ -16,12 +16,17 @@
 
 1. Подключите свежий iso-образ **VeiL Broker** и выполните 
    команды для обновления
+
+```bash
+# Очистка старого репозитория. Актуальна для 3.0
+sudo mv /etc/apt/sources.list.d/media_cdrom_repo.list /etc/apt/sources.list.d/media_cdrom_repo.back
+sudo apt-get update
 ```
-sudo umount /media/cdrom
-sudo mount /media/cdrom
+
+```bash
+sudo mount /media/cdrom0
 cd ~
-sudo bash /media/cdrom/install.sh
-sudo umount /media/cdrom
+sudo bash /media/cdrom0/install.sh > vdi_update.log
 ```
 
 ## Миграция данных VeiL Broker 2.0 на версию 3.0.0

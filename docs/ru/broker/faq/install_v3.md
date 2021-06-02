@@ -17,7 +17,7 @@
 
     ```bash
     sudo mount /media/cdrom && cd ~
-    sudo bash /media/cdrom/install.sh 2>&1 | tee echo "$(date +'%Y-%m-%d-%H%M')_vdi.log"
+    sudo bash /media/cdrom/install.sh > vdi_install.log
     sudo umount /media/cdrom
     ```
     
