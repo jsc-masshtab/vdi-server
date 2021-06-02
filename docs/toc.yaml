@@ -142,25 +142,25 @@ nav:
       - 3.0.0: broker/changelog/3.0.0.md
       - 2.1.4: broker/changelog/2.1.4.md
     - Спецификация:
-        - Требования к хост-системе брокера: broker/spec/domain-req.md
-        - Порты и протоколы задействованные при обмене с ECP VeiL: broker/spec/ports_info.md
+      - Требования к хост-системе брокера: broker/spec/domain-req.md
+      - Порты и протоколы задействованные при обмене с ECP VeiL: broker/spec/ports_info.md
     - Гостевой агент: broker/vm/guest_agent.md
     - Службы каталогов:
-        - Интеграция службы каталогов: broker/active_directory/info.md
-        - Базовая интеграция службы каталогов: broker/active_directory/ad_base.md
-        - Расширенная интеграция службы каталогов: broker/active_directory/ad_extend.md
-        - Заведение ВРС в Active Directory: broker/active_directory/ad_vm_prepare.md
+      - Интеграция службы каталогов: broker/active_directory/info.md
+      - Базовая интеграция службы каталогов: broker/active_directory/ad_base.md
+      - Расширенная интеграция службы каталогов: broker/active_directory/ad_extend.md
+      - Заведение ВРС в Active Directory: broker/active_directory/ad_vm_prepare.md
     - Пулы:
-        - Автоматический пул 3.0: broker/pools/automated_pool_v3.md
-        - Гостевой пул: broker/pools/guest_pool.md
-        - Пулы приложений: broker/pools/apps-pool.md
-        - Подбор свободной ВМ: broker/pools/get-user-vm.md
+      - Автоматический пул 3.0: broker/pools/automated_pool_v3.md
+      - Гостевой пул: broker/pools/guest_pool.md
+      - Пулы приложений: broker/pools/apps-pool.md
+      - Подбор свободной ВМ: broker/pools/get-user-vm.md
     - Система управления доступом 3.0:
-        - Базовое описание: broker/auth_v3/info.md
-        - Роли: broker/auth_v3/roles.md
-        - Пользователи: broker/auth_v3/users.md
-        - Группы: broker/auth_v3/groups.md
-        - Разрешения ТК: broker/auth_v3/client-permissions.md
+      - Базовое описание: broker/auth_v3/info.md
+      - Роли: broker/auth_v3/roles.md
+      - Пользователи: broker/auth_v3/users.md
+      - Группы: broker/auth_v3/groups.md
+      - Разрешения ТК: broker/auth_v3/client-permissions.md
   - VeiL Connect:
     - Cписок изменений:
       - 1.6.0: connect/changelog/1.6.0.md
