@@ -226,8 +226,8 @@ nav:
           - Окно доступных пулов ВМ: connect/thin_clients/operator_guide/pools.md
           - Окно ВМ: connect/thin_clients/operator_guide/domains.md
         - Сообщения оператору: connect/thin_clients/operator_guide/messages.md
-        - Приложение. Установка ОС "Astra Linux Common Edition": connect/thin_clients/operator_guide/messages.md
-        - Приложение. Установка ОС "Astra Linux Special Edition": connect/thin_clients/operator_guide/messages.md
-        - Приложение. Установка ОС "Альт Рабочая станция": connect/thin_clients/operator_guide/messages.md
+        - Приложение. Установка ОС "Astra Linux Common Edition": connect/thin_clients/operator_guide/application1.md
+        - Приложение. Установка ОС "Astra Linux Special Edition": connect/thin_clients/operator_guide/application2.md
+        - Приложение. Установка ОС "Альт Рабочая станция": connect/thin_clients/operator_guide/application3.md
         - Перечень принятых сокращений: connect/thin_clients/operator_guide/reductions.md
   - ECP VeiL: https://veil.mashtab.org/docs/
