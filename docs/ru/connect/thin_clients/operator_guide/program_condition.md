@@ -14,6 +14,7 @@
 и следующих пакетов:
 
 1. процессор с архитектурой х86:
+
    - libhiredis-dev;
    - libspice-client-gtk-3.0-dev;
    - libjson-glib-dev;
@@ -27,6 +28,7 @@
    - libusbredirparser-dev;
 
 1. процессор с архитектурой e2k-8c:
+
    - spice-client-gtk;
    - libspice-client-gtk-3.0-dev;
    - libjson-glib-dev;
@@ -52,6 +54,7 @@
    - locales-all;
 
 1. процессор с архитектурой miplsel (*Таволга Терминал*):
+
    - rpm-build;
    - libspice-gtk3-devel;
    - libfreerdp-devel;
