@@ -205,19 +205,20 @@ nav:
       - Общие ошибки: connect/possible_errors/common.md
       - Ошибки RDP: connect/possible_errors/rdp.md
       - Ошибки Spice: connect/possible_errors/spice.md
-    - Тонкие клиенты: connect/thin_clients.md
+    - Тонкие клиенты:
+      - Описание: connect/thin_clients.md
       - Руководство оператора VeiL Connect E:
         - Аннотация: connect/thin_clients/operator_guide/annotate.md
         - Назначение программы: connect/thin_clients/operator_guide/general_info.md
         - Условия выполнения программы: connect/thin_clients/operator_guide/program_condition.md
-        - Установка и удаление программы: 
+        - Установка и удаление программы:
           - Общие сведения: connect/thin_clients/operator_guide/info.md
           - Установка и настройка ОС: connect/thin_clients/operator_guide/install_os.md
           - Проверка целостности программы: connect/thin_clients/operator_guide/integrity_check.md
           - Установка VeiL Connect E: connect/thin_clients/operator_guide/install.md
           - Удаление VeiL Connect E: connect/thin_clients/operator_guide/delete.md
           - Перевод рабочего стола ОС в режим "киоска": connect/thin_clients/operator_guide/kiosk.md
-        - Выполнение программы:  
+        - Выполнение программы:
           - Подготовка к работе: connect/thin_clients/operator_guide/prepare.md
           - Общие правила при работе с программой: connect/thin_clients/operator_guide/rules.md
           - Включение программы: connect/thin_clients/operator_guide/start.md
@@ -228,5 +229,5 @@ nav:
         - Приложение. Установка ОС "Astra Linux Common Edition": connect/thin_clients/operator_guide/messages.md
         - Приложение. Установка ОС "Astra Linux Special Edition": connect/thin_clients/operator_guide/messages.md
         - Приложение. Установка ОС "Альт Рабочая станция": connect/thin_clients/operator_guide/messages.md
-        - Перечень принятых сокращений: connect/thin_clients/operator_guide/reductions.md   
+        - Перечень принятых сокращений: connect/thin_clients/operator_guide/reductions.md
   - ECP VeiL: https://veil.mashtab.org/docs/
