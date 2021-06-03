@@ -36,7 +36,7 @@
 
    - создать файл конфигурации фаервола c помощью команды
 
-     `vim /etc/ufw/aplications.d/vdi-broker`
+     `vim etc/ufw/aplications.d/vdi-broker`
 
    - ввести следующую конфигурацию
 
@@ -46,7 +46,7 @@
 
      `description=Ports for VeiL-Broker`
 
-     `ports=443, 80, 6379/tcp`
+     `ports=443,80,6379/tcp`
 
    - перезапустить фаервол c помощью команды
 
