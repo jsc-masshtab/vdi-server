@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import textwrap
 import uuid
+from datetime import datetime, timezone
 from enum import Enum
 
 from sqlalchemy import Enum as AlchemyEnum, and_
@@ -62,11 +63,14 @@ class Task(db.Model, AbstractSortableStatusModel):
     message = db.Column(db.Unicode(length=256), nullable=True)
 
     def get_task_duration(self):
-        duration = (
-            self.finished - self.started
-            if (self.finished and self.started)
-            else "00000000"
-        )
+        if self.started:
+            if self.finished:
+                duration = self.finished - self.started
+            else:
+                duration = datetime.now(timezone.utc) - self.started
+        else:
+            duration = "00000000"
+
         return str(duration)[:-7]
 
     async def form_user_friendly_text(self):
@@ -106,6 +110,8 @@ class Task(db.Model, AbstractSortableStatusModel):
         # msg
         if message is None:
             message = await self.form_user_friendly_text()
+        shorten_msg = textwrap.shorten(message, width=256)
+        await self.update(message=shorten_msg).apply()
 
         # datetime data
         if status == TaskStatus.IN_PROGRESS:
@@ -124,9 +130,6 @@ class Task(db.Model, AbstractSortableStatusModel):
         # возобновляемое
         if status == TaskStatus.FINISHED or status == TaskStatus.FAILED:
             await self.update(resumable=False).apply()
-
-        shorten_msg = textwrap.shorten(message, width=256)
-        await self.update(message=shorten_msg).apply()
 
         # publish task event
         await publish_data_in_internal_channel(VDI_TASKS_SUBSCRIPTION, "UPDATED", self)
@@ -216,11 +219,13 @@ class Task(db.Model, AbstractSortableStatusModel):
         return tasks
 
     @staticmethod
-    async def get_tasks_associated_with_entity(entity_id, task_status=None):
+    async def get_tasks_associated_with_entity(entity_id, task_status=None, task_type=None):
 
         where_conditions = [Task.entity_id == entity_id]
         if task_status:
             where_conditions.append(Task.status == task_status)
+        if task_type:
+            where_conditions.append(Task.task_type == task_type)
 
         tasks = await Task.query.where(and_(*where_conditions)).gino.all()
         return tasks

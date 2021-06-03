@@ -104,7 +104,6 @@ class PoolGetVm(BaseHandler, ABC):
         if not pool:
             response = {"errors": [{"message": _("Pool not found."), "code": "404"}]}
             return await self.log_finish(response)
-        pool_extended = False
 
         # Проверяем разрешен ли присланный remote_protocol для данного пула
         if PoolModel.PoolConnectionTypes[remote_protocol] not in pool.connection_types:
@@ -121,13 +120,14 @@ class PoolGetVm(BaseHandler, ABC):
             return await self.log_finish(response)
 
         pool_type = await pool.pool_type
+        expandable_pool = False  # В данный момент расширится может автоматический (гостевой пул)
         if pool_type == PoolModel.PoolTypes.AUTOMATED or pool_type == PoolModel.PoolTypes.GUEST:
             # Запрос на расширение пула
             auto_pool = await AutomatedPool.get(pool.id)
-            pool_extended = True
+            expandable_pool = True
 
         vm = await pool.get_vm(user_id=user.id)
-        if not vm:
+        if not vm:  # ВМ для пользователя не присутствует
             # В случае RDS пула выдаем общий для всех RDS Сервер
             if pool_type == PoolModel.PoolTypes.RDS:
                 vms = await pool.vms
@@ -135,13 +135,13 @@ class PoolGetVm(BaseHandler, ABC):
             else:
                 # Если у пользователя нет VM в пуле, то нужно попытаться назначить ему свободную VM.
                 vm = await pool.get_free_vm_v2()
+
             # Если свободная VM найдена, нужно закрепить ее за пользователем.
             if vm:
                 await vm.add_user(user.id, creator="system")
-                pool_type = await pool.pool_type
-                if pool_type == PoolModel.PoolTypes.AUTOMATED or pool_type == PoolModel.PoolTypes.GUEST:
-                    await self._send_cmd_to_expand_pool(pool)
-            elif pool_extended and (auto_pool.total_size > await pool.get_vm_amount()):
+                if expandable_pool:
+                    await self._expand_pool_if_required(pool)
+            elif expandable_pool and not await auto_pool.check_if_total_size_reached():
                 response = {
                     "errors": [
                         {
@@ -152,7 +152,7 @@ class PoolGetVm(BaseHandler, ABC):
                         }
                     ]
                 }
-                await self._send_cmd_to_expand_pool(pool)
+                await self._expand_pool_if_required(pool)
                 return await self.log_finish(response)
             else:
                 response = {
@@ -164,6 +164,9 @@ class PoolGetVm(BaseHandler, ABC):
                     ]
                 }
                 return await self.log_finish(response)
+
+        elif expandable_pool:  # Даже если у пользователя есть ВМ, то попробовать расшириться все равно нужно
+            await self._expand_pool_if_required(pool)
 
         # TODO: обработка новых исключений
         # Только включение ВМ.
@@ -264,8 +267,8 @@ class PoolGetVm(BaseHandler, ABC):
         }
         return await self.log_finish(response)
 
-    async def _send_cmd_to_expand_pool(self, pool_model):
-        """Запускаем задачу только если расширение возможно и над пулом не выполняютя другие задачи."""
+    async def _expand_pool_if_required(self, pool_model):
+        """Запускаем задачу только если расширение возможно и над пулом не выполняются другие задачи расширения."""
         if not pool_model:
             return
         # 1) is max reached
@@ -275,7 +278,7 @@ class PoolGetVm(BaseHandler, ABC):
         is_not_enough_free_vms = await autopool.check_if_not_enough_free_vms()
         # 3) other tasks
         tasks = await Task.get_tasks_associated_with_entity(
-            pool_model.id, TaskStatus.IN_PROGRESS
+            pool_model.id, TaskStatus.IN_PROGRESS, PoolTaskType.POOL_EXPAND
         )
 
         if not total_size_reached and not tasks and is_not_enough_free_vms:

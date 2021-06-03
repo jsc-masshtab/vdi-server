@@ -123,7 +123,6 @@ class ActiveTkConnection(db.Model, AbstractSortableStatusModel):
             # Создаем таску пересоздания ВМ
             await request_to_execute_pool_task(
                 vm.id, PoolTaskType.VM_GUEST_RECREATION,
-                ignore_reserve_size=True,
                 vm_id=str(vm.id)
             )
 
