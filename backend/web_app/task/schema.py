@@ -7,6 +7,7 @@ from graphene import Enum as GrapheneEnum
 
 from sqlalchemy import and_
 
+
 from common.languages import lang_init
 from common.models.task import PoolTaskType, Task, TaskStatus
 from common.utils import convert_gino_model_to_graphene_type
@@ -103,16 +104,6 @@ class TaskQuery(graphene.ObjectType):
         task_graphene_type = convert_gino_model_to_graphene_type(task_model, TaskType)
         task_graphene_type.duration = task_model.get_task_duration()
         return task_graphene_type
-
-    @staticmethod
-    def _calculate_task_duration(task_graphene_type):
-        duration = (
-            task_graphene_type.finished - task_graphene_type.started
-            if (task_graphene_type.finished and task_graphene_type.started)
-            else None
-        )
-
-        return duration
 
 
 class CancelTaskMutation(graphene.Mutation):

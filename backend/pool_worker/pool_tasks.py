@@ -292,9 +292,6 @@ class RecreationGuestVmTask(AbstractTask):
 
         self._pool_locks = pool_locks
         self.vm_id = vm_id
-        self.ignore_reserve_size = (
-            ignore_reserve_size
-        )  # форсированное добавление ВМ вместо удаляемой, игнорируя резерв
         self.wait_for_lock = (
             wait_for_lock
         )  # Если true-ждем освобождения локов. Если false, то исключение-локи заняты
@@ -323,19 +320,18 @@ class RecreationGuestVmTask(AbstractTask):
                 # Проверяем, что максимальное значение ВМ в пуле не достигнуто
                 pool = await Pool.get(automated_pool.id)
 
-                if self.ignore_reserve_size:
-                    # Удаление и добавление 1 ВМ.
-                    try:
-                        vm_ids = list()
-                        vm_ids.append(self.task_model.entity_id)
-                        await pool.remove_vms(vm_ids)
-                        await vm.soft_delete(creator="system",
-                                             remove_on_controller=True)
-                        vm_list = await automated_pool.add_vm(count=1)
-                    except VmCreationError as vm_error:
-                        await system_logger.error(
-                            _("VM creating error."), description=vm_error
-                        )
+                # Удаление и добавление 1 ВМ.
+                try:
+                    vm_ids = list()
+                    vm_ids.append(self.task_model.entity_id)
+                    await pool.remove_vms(vm_ids)
+                    await vm.soft_delete(creator="system",
+                                         remove_on_controller=True)
+                    vm_list = await automated_pool.add_vm(count=1)
+                except VmCreationError as vm_error:
+                    await system_logger.error(
+                        _("VM creating error."), description=vm_error
+                    )
 
             # Подготовка ВМ для подключения к ТК (под async with pool_lock)
             try:

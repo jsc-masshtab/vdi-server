@@ -239,12 +239,8 @@ class PoolTaskManager:
             task.execute_in_async_task(task_id)
 
         elif pool_task == PoolTaskType.VM_GUEST_RECREATION.name:
-            try:
-                ignore_reserve_size = task_data_dict["ignore_reserve_size"]
-            except KeyError:
-                ignore_reserve_size = True
             task = RecreationGuestVmTask(
-                self.pool_locks, ignore_reserve_size=ignore_reserve_size,
+                self.pool_locks,
                 vm_id=task_data_dict["vm_id"]
             )
             task.execute_in_async_task(task_id)
