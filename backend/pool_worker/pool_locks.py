@@ -30,9 +30,10 @@ class PoolLocks:
         return self._template_lock_dict[template_id]
 
     async def fill_start_data(self):
-        """При старте VDI заполняем _pool_lock_dict (создаем pool lock для каждого пула).
+        """При старте заполняем _pool_lock_dict (создаем pool lock для каждого пула).
 
-        Заполняем _template_lock_dict (создаем template lock для каждого использованного шаблона).
+        Заполняем _template_lock_dict (создаем template lock для каждого
+        использованного шаблона).
         """
         # get data from db
         auto_pools_data = await self._get_pools_data_from_db()
@@ -49,10 +50,11 @@ class PoolLocks:
         self._add_data(pool_id, template_id)
 
     async def remove_pool_data(self, pool_id: str, template_id: str):
-        """Удалям локи из пямяти. Испоьзуется послке удаления пула."""
+        """Удалям локи из памяти. Используется после удаления пула."""
         del self._pool_lock_dict[pool_id]
 
-        # Нужно проверить: использует ли этот шаблон еще кто-то кроме удаляемого пула и удалить, если не импользуется
+        # Нужно проверить: использует ли этот шаблон еще кто-то кроме удаляемого
+        # пула и удалить, если не используется
         auto_pools_data = await self._get_pools_data_from_db()
         template_ids_list = [str(template_id) for _, template_id in auto_pools_data]
 

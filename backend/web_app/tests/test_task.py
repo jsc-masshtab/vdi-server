@@ -60,7 +60,7 @@ async def test_cancel_tasks(
             mutation {
                       addDynamicPool(
                         connection_types: [SPICE, RDP],
-                        verbose_name: "pool_name",
+                        verbose_name: "pool-name",
                         controller_id: "%s",
                         resource_pool_id: "%s",
                         template_id: "%s",

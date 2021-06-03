@@ -786,7 +786,9 @@ class Pool(VeilModel):
 
     async def full_delete(self, creator):
         """Удаление сущности с удалением зависимых сущностей."""
-        old_status = self.status  # Запомнить теущий статус
+        old_status = self.status  # Запомнить текущий статус
+        controller_obj = await self.controller_obj
+        controller_client = controller_obj.veil_client
         try:
             await self.set_status(Status.DELETING)
 
@@ -810,10 +812,21 @@ class Pool(VeilModel):
                         ),
                         entity=vm.entity,
                     )
-                await VmModel.remove_vms(vm_ids, creator, True)
+                # Отключено 02.06.2021
+                # await VmModel.remove_vms(vm_ids, creator, True)
+                # Добавлено 02.06.2021
+                await VmModel.step_by_step_removing(controller_client=controller_client,
+                                                    vms_ids=vm_ids,
+                                                    creator=creator,
+                                                    remove_from_ecp=True)
             else:
                 vm_ids = await VmModel.get_vms_ids_in_pool(self.id)
-                await VmModel.remove_vms(vm_ids, creator)
+                # Отключено 02.06.2021
+                # await VmModel.remove_vms(vm_ids, creator)
+                await VmModel.step_by_step_removing(controller_client=controller_client,
+                                                    vms_ids=vm_ids,
+                                                    creator=creator,
+                                                    remove_from_ecp=False)
 
             if self.tag:
                 await self.tag_remove(self.tag)
@@ -831,7 +844,8 @@ class Pool(VeilModel):
 
         # Оповещаем об удалении пула
         additional_data = await self.additional_model_to_json_data()
-        await publish_data_in_internal_channel(self.get_resource_type(), "DELETED",
+        await publish_data_in_internal_channel(self.get_resource_type(),
+                                               "DELETED",
                                                self, additional_data)
         return True
 
