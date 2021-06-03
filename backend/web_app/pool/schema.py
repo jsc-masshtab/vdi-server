@@ -14,7 +14,12 @@ from common.models.controller import Controller
 from common.models.pool import AutomatedPool, Pool, RdsPool, StaticPool
 from common.models.task import PoolTaskType, Task, TaskStatus
 from common.models.vm import Vm
-from common.settings import DOMAIN_CREATION_MAX_STEP, POOL_MAX_SIZE, POOL_MIN_SIZE
+from common.settings import (
+    DOMAIN_CREATION_MAX_STEP,
+    POOL_MAX_SIZE,
+    POOL_MIN_SIZE,
+    VEIL_OPERATION_WAITING
+)
 from common.veil.veil_decorators import administrator_required
 from common.veil.veil_errors import SilentError, SimpleError, ValidationError
 from common.veil.veil_gino import (
@@ -1652,6 +1657,61 @@ class TemplateChange(graphene.Mutation):
         return TemplateChange(ok=ok)
 
 
+class VmConvertToTemplate(graphene.Mutation, PoolValidator):
+    """Мутация для ВМ, которая конвертирует ВМ в шаблон."""
+
+    class Arguments:
+        verbose_name = graphene.String(required=True)
+        vm_id = graphene.UUID(required=True)
+        controller_id = graphene.UUID(required=True)
+
+    ok = graphene.Boolean()
+
+    @classmethod
+    @administrator_required
+    async def mutate(cls, root, info, verbose_name, vm_id, controller_id, creator):
+        await cls.validate(vm_name_template=verbose_name)
+
+        controller = await Controller.get(controller_id)
+        veil_domain = controller.veil_client.domain(domain_id=str(vm_id))
+        await veil_domain.info()
+        if veil_domain.powered:
+            raise SilentError(
+                _("VM {} is powered. Please shutdown this.").format(
+                    veil_domain.public_attrs["verbose_name"]))
+        params = {
+            "verbose_name": verbose_name,
+            "domain_id": veil_domain.id,
+            "resource_pool_id": str(veil_domain.resource_pool["id"]),
+            "controller_id": controller_id,
+            "create_thin_clones": False,
+            "count": 1
+        }
+        vm_info = await Vm.copy(**params)
+
+        # Ожидаем завершения таски создания ВМ
+        task_completed = False
+        task_client = controller.veil_client.task(task_id=vm_info["task_id"])
+        while task_client and not task_completed:
+            await asyncio.sleep(VEIL_OPERATION_WAITING)
+            task_completed = await task_client.is_finished()
+
+        new_vm_id = vm_info["ids"][0]
+        veil_new_vm = controller.veil_client.domain(domain_id=str(new_vm_id))
+        response = await veil_new_vm.convert_to_template()
+
+        ok = response.success
+        if not ok:
+            for error in response.errors:
+                raise SilentError(_("VeiL ECP error: {}.").format(error["detail"]))
+
+        await system_logger.info(
+            _("Vm {} has converted to template {}.").format(
+                veil_domain.verbose_name, verbose_name),
+            user=creator)
+        return VmConvertToTemplate(ok=ok)
+
+
 # --- --- --- --- ---
 # Schema concatenation
 class PoolMutations(graphene.ObjectType):
@@ -1687,6 +1747,7 @@ class PoolMutations(graphene.ObjectType):
     restoreBackupVm = VmRestoreBackup.Field()
     attachVeilUtilsVm = AttachVeilUtilsMutation.Field()
     changeTemplate = TemplateChange.Field()
+    convertToTemplate = VmConvertToTemplate.Field()
 
 
 pool_schema = graphene.Schema(
