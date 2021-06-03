@@ -15,7 +15,7 @@ snapshots["test_resolve_controllers 1"] = {
             "address": "0.0.0.0",
             "description": "controller_added_during_test",
             "verbose_name": "controller_added_during_test",
-            "version": "4.5.0",
+            "version": "4.6.0",
         }
     ]
 }
@@ -28,7 +28,7 @@ snapshots["test_resolve_controller 1"] = {
         "status": "ACTIVE",
         "token": "*" * 12,
         "verbose_name": "controller_added_during_test",
-        "version": "4.5.0",
+        "version": "4.6.0",
         "clusters": [
             {
                 "id": "c3f56e1f-9bd1-45e8-a3e6-a5f69256ee5e",

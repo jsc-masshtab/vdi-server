@@ -87,6 +87,21 @@ class EntityOwner(db.Model):
         )
         return entity_query
 
+    @classmethod
+    async def multi_remove(cls, ids: list, entity_type: EntityType):
+        """Групповое удаление прав владения."""
+        # Преобразуем UUID в строки
+        entity_ids_str = [str(entity_row) for entity_row in ids]
+        # Определяем есть ли что удалять
+        entity_q = Entity.select("id").where(
+            (Entity.entity_type == entity_type)
+            & (Entity.entity_uuid.in_(entity_ids_str))  # noqa: W503
+        )
+        has_ownership = await entity_q.gino.all()
+        if has_ownership:
+            return await cls.delete.where(cls.entity_id.in_(entity_q)).gino.status()
+        return False
+
 
 class User(AbstractSortableStatusModel, VeilModel):
     __tablename__ = "user"

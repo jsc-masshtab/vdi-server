@@ -173,10 +173,6 @@ async def fixt_create_automated_pool(fixt_controller):
         {"id": pool_id, "is_pool_successfully_created": is_pool_successfully_created}
     )
 
-    # Слип  для обхода проблемы вейла: если создать вм и сразу попытаться удалить, то вываливает что-то типа
-    # Entity  (domain) is locked by task  (MultiCreateDomain).']}}
-    await asyncio.sleep(2)
-
     # remove pool
     qu = (
         """

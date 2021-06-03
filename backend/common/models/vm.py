@@ -23,10 +23,12 @@ from common.models.auth import (
 from common.models.authentication_directory import AuthenticationDirectory
 from common.models.event import Event, EventReadByUser
 from common.settings import (
+    DOMAIN_CREATION_MAX_STEP,
     VEIL_GUEST_AGENT_EXTRA_WAITING,
     VEIL_MAX_VM_CREATE_ATTEMPTS,
     VEIL_OPERATION_WAITING,
     VEIL_VM_PREPARE_TIMEOUT,
+    VEIL_VM_REMOVE_TIMEOUT
 )
 from common.veil.veil_api import compare_error_detail
 from common.veil.veil_errors import SimpleError, VmCreationError
@@ -171,16 +173,100 @@ class Vm(VeilModel):
 
         return vm
 
+    @classmethod
+    async def multi_soft_delete(cls,
+                                controller_client,
+                                vms_ids: list,
+                                creator: str = "system",
+                                remove_from_ecp: bool = False):
+        """Групповое удаление ВМ."""
+        # Прерываем, если нечего удалять
+        if not controller_client:
+            raise AssertionError(_("VM has no api client."))
+        if not vms_ids:
+            return False
+        vms_to_delete_on_ecp = None
+
+        # Определяем ВМ, которые нужно удалить на контроллере
+        if remove_from_ecp:
+            query = cls.select("id").where(
+                (cls.id.in_(vms_ids)) & (cls.created_by_vdi == True))  # noqa: E712
+            vms_to_delete_on_ecp = await query.gino.all()
+
+        # Удаляем ВМ на ECP, если нашлись
+        if remove_from_ecp and vms_to_delete_on_ecp:
+            try:
+                # Преобразуем UUID в строки
+                vms_ids_str = [str(vm_row[0]) for vm_row in vms_to_delete_on_ecp]
+                # Формируем запрос на удаление
+                domain_client = controller_client.domain()
+                multi_delete_response = await domain_client.multi_remove(
+                    entity_ids=vms_ids_str, full=True)
+                # Если задачу поставить не удалось - прерываемся
+                if not multi_delete_response.success:
+                    raise AssertionError(_("Failed to create multi-delete task."))
+
+                # Ждем выполнения задачи удаления на ECP VeiL
+                multi_delete_task = multi_delete_response.task
+                task_completed = False
+                while multi_delete_task and not task_completed:
+                    await asyncio.sleep(VEIL_OPERATION_WAITING)
+                    task_completed = await multi_delete_task.is_finished()
+
+                # Если задача выполнена с ошибкой прокидываем исключение выше
+                if multi_delete_task:
+                    task_success = await multi_delete_task.is_success()
+                    task_id = multi_delete_task.api_object_id
+                else:
+                    task_success = False
+                    task_id = ""
+
+                if not task_success:
+                    raise AssertionError(
+                        _("VM deletion task {} finished with error.").format(
+                            task_id
+                        )
+                    )
+
+            except asyncio.CancelledError:
+                # TODO: отменить задачу удаления вм на ECP VeiL
+                # TODO: не до конца понимаю зачем тут это исключение, отмена должна
+                # TODO: произойти выше на уровне cls.remove_vms_with_timeout
+                raise
+            except Exception as e:  # noqa
+                # Сейчас нас не заботит, что именно пошло не так при удалении на ECP.
+                msg = _(
+                    "VM multi-deletion task finished with error. Please see task details on VeiL ECP.")  # noqa: E501
+                description = _("VMs: {}").format(vms_ids)
+                await system_logger.warning(
+                    message=msg,
+                    description=description,
+                    entity={"entity_type": EntityType.VM, "entity_uuid": None},
+                    user=creator,
+                )
+
+        # Удаляем атрибуты владения
+        await EntityOwnerModel.multi_remove(ids=vms_ids,
+                                            entity_type=EntityType.VM)
+        # Удаляем ВМ на брокере.
+        # На текущий момент creator не используется в родительском soft_delete,
+        # поэтому тут он игнорируется
+        return await cls.delete.where(cls.id.in_(vms_ids)).gino.status()
+
     async def soft_delete(self, creator, remove_on_controller=True):
-        entity = EntityModel.select("id").where(
-            (EntityModel.entity_type == self.entity_type)
-            & (EntityModel.entity_uuid == self.id)  # noqa: W503
-        )
-        entity_id = await entity.gino.all()
-        if entity_id:
-            await EntityOwnerModel.delete.where(
-                EntityOwnerModel.entity_id == entity
-            ).gino.status()
+        # Добавлено 02.06.2021
+        await EntityOwnerModel.multi_remove(ids=[self.id],
+                                            entity_type=self.entity_type)
+        # Отключено 02.06.2021
+        # entity = EntityModel.select("id").where(
+        #     (EntityModel.entity_type == self.entity_type)
+        #     & (EntityModel.entity_uuid == self.id)  # noqa: W503
+        # )
+        # entity_id = await entity.gino.all()
+        # if entity_id:
+        #     await EntityOwnerModel.delete.where(
+        #         EntityOwnerModel.entity_id == entity
+        #     ).gino.status()
 
         if remove_on_controller and self.created_by_vdi:
             try:
@@ -228,7 +314,6 @@ class Vm(VeilModel):
         status = await super().soft_delete(creator=creator)
         return status
 
-    # TODO: очевидное дублирование однотипного кода. Переселить это все в универсальный метод
     async def add_user(self, user_id, creator):
         entity = await self.entity_obj
         try:
@@ -261,7 +346,8 @@ class Vm(VeilModel):
             (EntityModel.entity_type == self.entity_type)
             & (EntityModel.entity_uuid == self.id)  # noqa: W503
         )
-        # TODO: временное решение. Скорее всего потом права отзываться будут на конкретные сущности
+        # TODO: временное решение. Скорее всего потом права отзываться будут
+        #  на конкретные сущности
         await self.soft_update(id=self.id, status=Status.RESERVED, creator=creator)
         await system_logger.info(
             _("VM {} is clear from users.").format(self.verbose_name),
@@ -425,6 +511,30 @@ class Vm(VeilModel):
         except ValueError as err_msg:
             await system_logger.error(message=str(err_msg))
 
+    @classmethod
+    async def remove_vms_with_timeout(cls,
+                                      controller_client,
+                                      vms_ids: list,
+                                      creator: str = "system",
+                                      remove_from_ecp: bool = False):
+        """Групповое удаление ВМ с таймаутом."""
+        try:
+            await asyncio.wait_for(
+                cls.multi_soft_delete(controller_client=controller_client,
+                                      vms_ids=vms_ids,
+                                      creator=creator,
+                                      remove_from_ecp=remove_from_ecp),
+                VEIL_VM_REMOVE_TIMEOUT,
+            )
+        except asyncio.TimeoutError:
+            await system_logger.error(
+                message=_(
+                    "VM multi-deletion task cancelled by timeout. Please see task details on VeiL ECP.")  # noqa: E501
+            )
+        except ValueError as err_msg:
+            await system_logger.error(message=str(err_msg))
+
+    # TODO: отказаться в пользу группового удаления
     @staticmethod
     async def remove_vms(vm_ids, creator="system", remove_vms_on_controller=False):
         """Remove given vms."""
@@ -437,6 +547,32 @@ class Vm(VeilModel):
                 for vm_id in vm_ids
             ]
         )
+        return True
+
+    @classmethod
+    async def step_by_step_removing(cls,
+                                    controller_client,
+                                    vms_ids: list,
+                                    creator: str = "system",
+                                    remove_from_ecp: bool = False) -> bool:
+        """Групповое удаление ВМ блоками."""
+        # Нечего удалять
+        if not vms_ids:
+            return False
+        # Разделяем список на блоки
+        slice_start = 0
+        for i in range(0, len(vms_ids), DOMAIN_CREATION_MAX_STEP):
+            slice_end = i + DOMAIN_CREATION_MAX_STEP
+            vms_group = vms_ids[slice_start:slice_end]
+            # Снимаем действующие блокировки для ВМ
+            for vm_id in vms_group:
+                await send_cmd_to_cancel_tasks_associated_with_entity(vm_id)
+            # Запускаем удаление блока
+            await cls.remove_vms_with_timeout(controller_client=controller_client,
+                                              vms_ids=vms_group,
+                                              creator=creator,
+                                              remove_from_ecp=remove_from_ecp)
+            slice_start = i + DOMAIN_CREATION_MAX_STEP
         return True
 
     @staticmethod

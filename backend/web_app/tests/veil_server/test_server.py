@@ -14,38 +14,61 @@ class VeilTestServer:
 
         # ssl
         self.ssl_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
-        self.ssl_context.load_cert_chain("87658490_0.0.0.0.cert", "87658490_0.0.0.0.key")
+        self.ssl_context.load_cert_chain("87658490_0.0.0.0.cert",
+                                         "87658490_0.0.0.0.key")
 
         # handlers
-        self.app.add_routes([web.get(self.base_url + "domains/{domain_id}/", self.get_domain_info)])
+        self.app.add_routes(
+            [web.get(self.base_url + "domains/{domain_id}/", self.get_domain_info)])
         self.app.add_routes([web.get(self.base_url + "domains/", self.get_domains)])
 
-        self.app.add_routes([web.post(self.base_url + "domains/{domain_id}/start/", self.start_vm)])
+        self.app.add_routes(
+            [web.post(self.base_url + "domains/{domain_id}/start/", self.start_vm)])
+
+        # Групповые действия
+        self.app.add_routes(
+            [web.post(self.base_url + "domains/multi-manager/", self.multi_manager)])
+
         # урлы, чтобы не отключился контроллер
-        self.app.add_routes([web.post(self.base_url + "domains/{domain_id}/reboot/", self.start_vm)])
-        self.app.add_routes([web.post(self.base_url + "domains/{domain_id}/remove/", self.start_vm)])
-        self.app.add_routes([web.post(self.base_url + "domains/{domain_id}/set-hostname/", self.start_vm)])
+        self.app.add_routes(
+            [web.post(self.base_url + "domains/{domain_id}/reboot/", self.start_vm)])
+        self.app.add_routes(
+            [web.post(self.base_url + "domains/{domain_id}/remove/", self.start_vm)])
+        self.app.add_routes([web.post(
+            self.base_url + "domains/{domain_id}/set-hostname/", self.start_vm)])
 
-        self.app.add_routes([web.post(self.base_url + "domains/multi-create-domain/", self.multi_create_domain)])
-        self.app.add_routes([web.post(self.base_url + "domains/{domain_id}/remote-access/", self.remote_access)])
+        self.app.add_routes([web.post(self.base_url + "domains/multi-create-domain/",
+                                      self.multi_create_domain)])
+        self.app.add_routes([web.post(
+            self.base_url + "domains/{domain_id}/remote-access/", self.remote_access)])
 
-        self.app.add_routes([web.get(self.base_url + "tasks/{task_id}/", self.get_task_data)])
+        self.app.add_routes(
+            [web.get(self.base_url + "tasks/{task_id}/", self.get_task_data)])
 
-        self.app.add_routes([web.get(self.base_url + "controllers/check/", self.check_controllers)])
-        self.app.add_routes([web.get(self.base_url + "controllers/base-version/", self.get_base_controller_version)])
+        self.app.add_routes(
+            [web.get(self.base_url + "controllers/check/", self.check_controllers)])
+        self.app.add_routes([web.get(self.base_url + "controllers/base-version/",
+                                     self.get_base_controller_version)])
 
         # resources
         self.app.add_routes([web.get(self.base_url + "clusters/", self.get_clusters)])
-        self.app.add_routes([web.get(self.base_url + "clusters/{cluster_id}/", self.get_cluster)])
+        self.app.add_routes(
+            [web.get(self.base_url + "clusters/{cluster_id}/", self.get_cluster)])
 
-        self.app.add_routes([web.get(self.base_url + "resource_pools/", self.get_resource_pools)])
-        self.app.add_routes([web.get(self.base_url + "resource_pools/{resource_pool_id}/", self.get_resource_pool)])
+        self.app.add_routes(
+            [web.get(self.base_url + "resource_pools/", self.get_resource_pools)])
+        self.app.add_routes([web.get(
+            self.base_url + "resource_pools/{resource_pool_id}/",
+            self.get_resource_pool)])
 
         self.app.add_routes([web.get(self.base_url + "nodes/", self.get_nodes)])
-        self.app.add_routes([web.get(self.base_url + "nodes/{node_id}/", self.get_node)])
+        self.app.add_routes(
+            [web.get(self.base_url + "nodes/{node_id}/", self.get_node)])
 
-        self.app.add_routes([web.get(self.base_url + "data-pools/", self.get_datapools)])
-        self.app.add_routes([web.get(self.base_url + "data-pools/{datapool_id}/", self.get_datapool)])
+        self.app.add_routes(
+            [web.get(self.base_url + "data-pools/", self.get_datapools)])
+        self.app.add_routes(
+            [web.get(self.base_url + "data-pools/{datapool_id}/", self.get_datapool)])
 
         # tags
         self.app.add_routes([web.get(self.base_url + "tags/", self.get_tags)])
@@ -53,8 +76,10 @@ class VeilTestServer:
         self.app.add_routes([web.put(self.base_url + "tags/", self.get_tags)])
 
         # USB
-        self.app.add_routes([web.post(self.base_url + "domains/{domain_id}/attach-usb/", self.attach_usb)])
-        self.app.add_routes([web.post(self.base_url + "domains/{domain_id}/detach-usb/", self.detach_usb)])
+        self.app.add_routes([web.post(self.base_url + "domains/{domain_id}/attach-usb/",
+                                      self.attach_usb)])
+        self.app.add_routes([web.post(self.base_url + "domains/{domain_id}/detach-usb/",
+                                      self.detach_usb)])
 
     def start(self):
 
@@ -314,6 +339,78 @@ class VeilTestServer:
         }
 
         return web.Response(text=json.dumps(res_dict), content_type="application/json")
+
+    async def multi_manager(self, request):
+        """Обработчик групповых действий."""
+        request_json = await request.json()
+        action = request_json['action']
+        if action == 'delete':
+            res_dict = {
+            "_task": {
+                "id": "0daf02eb-3172-48a8-b50c-a38b751f9b0b",
+                "verbose_name": "Task",
+                "name": "Starting the virtual machine win_test.",
+                "progress": 0,
+                "status": "IN_PROGRESS",
+                "created": "2020-10-29T12:08:18.248553Z",
+                "executed": 0,
+                "finished_time": None,
+                "nodes_user_responses": [
+                    {
+                        "node_id": "cdf10fc6-57f8-436c-a031-78ba3ba1ae40",
+                        "node_response": "None"
+                    }
+                ],
+                "events": [
+                    {
+                        "id": "79280435-3b14-4374-990b-6831aea1008c",
+                        "message": "Task created:  Starting the virtual machine win_test.",
+                        "user": "solomin",
+                        "created": "2020-10-29T12:08:18.433958Z",
+                        "task": "0daf02eb-3172-48a8-b50c-a38b751f9b0b",
+                        "readed": [],
+                        "entities": [
+                            {
+                                "entity_uuid": "0daf02eb-3172-48a8-b50c-a38b751f9b0b",
+                                "entity_class": "domain"
+                            },
+                            {
+                                "entity_uuid": "cdf10fc6-57f8-436c-a031-78ba3ba1ae40",
+                                "entity_class": "node"
+                            }
+                        ],
+                        "detail_message": "Task",
+                        "permissions": {
+                            "mark": True
+                        },
+                        "type": "info"
+                    }
+                ],
+                "nodes_list": [
+                    "cdf10fc6-57f8-436c-a031-78ba3ba1ae40"
+                ],
+                "user": {
+                    "id": 204,
+                    "username": "solomin"
+                },
+                "error_message": "",
+                "is_cancellable": True,
+                "permissions": {
+                    "cancel": True,
+                    "release_locks": True,
+                    "check": True,
+                    "run": True
+                },
+                "is_multitask": False,
+                "parent": None,
+                "entities": {
+                    "0daf02eb-3172-48a8-b50c-a38b751f9b0b": "domain",
+                    "cdf10fc6-57f8-436c-a031-78ba3ba1ae40": "node"
+                }
+            }
+        }
+        return web.Response(text=json.dumps(res_dict), content_type="application/json",
+                            status=202)
 
     async def start_vm(self, request):
         domain_id = request.match_info["domain_id"]
@@ -922,7 +1019,7 @@ class VeilTestServer:
         return web.Response(body=json.dumps(dict()), content_type="application/json")
 
     async def get_base_controller_version(self, request):
-        res_dict = {"version": "4.5.0"}
+        res_dict = {"version": "4.6.0"}
         return web.Response(body=json.dumps(res_dict), content_type="application/json")
 
     async def get_clusters(self, request):
