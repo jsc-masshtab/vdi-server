@@ -729,7 +729,7 @@ export class VmDetalsPopupComponent implements OnInit {
         if (vnc.port) {
           port = vnc.port;
         }
-        
+
         this.vnc = this.sanitizer.bypassSecurityTrustResourceUrl(`novnc/vnc.html?host=${vnc.host}&port=${port}&password=${vnc.password}&path=websockify?token=${vnc.token}`);
 
         this.show = true;

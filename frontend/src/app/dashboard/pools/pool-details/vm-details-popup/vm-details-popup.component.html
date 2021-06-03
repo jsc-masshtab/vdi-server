@@ -67,7 +67,7 @@
   </div>
 
   <div class="details-row details-static">
-    
+
     <ul class="details-menu">
       <li (click)="routeTo('info')" [class.active]="menuActive === 'info'" title="Информация"> <fa-icon [icon]="['fas','chart-bar']"></fa-icon><span class="name">Информация</span></li>
       <li *ngIf="data?.vm?.spice_connection" (click)="routeTo('spice')" [class.active]="menuActive === 'spice'" title="Spice"> <fa-icon [icon]="['fas','terminal']"></fa-icon><span class="name">SPICE-консоль</span></li>
