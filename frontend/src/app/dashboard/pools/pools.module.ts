@@ -29,6 +29,8 @@ import { PrepareVmPoolComponent } from './pool-details/prepare-vm/prepare-vm.com
 import { EventsModule } from '../log/events/events.module';
 import { InfoBackupComponent } from './pool-details/vm-details-popup/info-backup/info-backup.component';
 import { SpiceComponent } from './pool-details/vm-details-popup/spice/spice.component';
+import { VmDetailsPopupService } from './pool-details/vm-details-popup/vm-details-popup.service';
+import { ConvertToTemaplteComponent } from './pool-details/vm-details-popup/convert-to-template/convert-to-template.component';
 
 @NgModule({
   declarations: [
@@ -47,7 +49,8 @@ import { SpiceComponent } from './pool-details/vm-details-popup/spice/spice.comp
     RemoveGroupComponent,
     AddGropComponent,
     InfoBackupComponent,
-    SpiceComponent
+    SpiceComponent,
+    ConvertToTemaplteComponent
   ],
   imports: [
     SharedModule,
@@ -64,6 +67,7 @@ import { SpiceComponent } from './pool-details/vm-details-popup/spice/spice.comp
   providers: [
     PoolsService,
     PoolDetailsService,
+    VmDetailsPopupService,
     AddPoolService,
     {
       provide: MAT_CHECKBOX_DEFAULT_OPTIONS,
