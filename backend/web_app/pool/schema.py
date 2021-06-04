@@ -1687,6 +1687,9 @@ class VmConvertToTemplate(graphene.Mutation, PoolValidator):
             "create_thin_clones": False,
             "count": 1
         }
+        if veil_domain.thin:
+            raise SilentError(_("Prohibited creating template from the thin clone."))
+
         vm_info = await Vm.copy(**params)
 
         # Ожидаем завершения таски создания ВМ
