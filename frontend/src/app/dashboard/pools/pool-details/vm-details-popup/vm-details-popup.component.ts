@@ -8,6 +8,7 @@ import { InfoBackupComponent } from './info-backup/info-backup.component';
 import { InfoEventComponent } from '../../../log/events/info-event/info-event.component';
 import { DomSanitizer } from '@angular/platform-browser';
 import { WaitService } from 'src/app/dashboard/common/components/single/wait/wait.service';
+import { ConvertToTemaplteComponent } from './convert-to-template/convert-to-template.component';
 
 interface Backup {
   backup: {
@@ -932,24 +933,24 @@ export class VmDetalsPopupComponent implements OnInit {
 
   public attachVeilUtils() {
     this.dialog.open(YesNoFormComponent, {
-        disableClose: true,
-        width: '500px',
-        data: {
-          form: {
-            header: 'Подтверждение действия',
-            question: `Монтировать образ VeiL utils для ВМ ${this.data.vm.verbose_name}?`,
-            button: 'Выполнить'
-          },
-          request: {
-            service: this.service,
-            action: 'attachVeilUtils',
-            body: {
-              id: this.data.vm.id,
-              controller_id: this.data.vm.controller.id
-            }
+      disableClose: true,
+      width: '500px',
+      data: {
+        form: {
+          header: 'Подтверждение действия',
+          question: `Монтировать образ VeiL utils для ВМ ${this.data.vm.verbose_name}?`,
+          button: 'Выполнить'
+        },
+        request: {
+          service: this.service,
+          action: 'attachVeilUtils',
+          body: {
+            id: this.data.vm.id,
+            controller_id: this.data.vm.controller.id
           }
         }
-      })
+      }
+    })
   }
 
   public changeTemplate() {
@@ -978,5 +979,18 @@ export class VmDetalsPopupComponent implements OnInit {
   public toPage(message: any): void {
     this.offset = message.offset;
     this.service.getPool(this.data.idPool, this.data.typePool).refetch();
+  }
+
+  public convertToTemplate(): void {
+
+    this.dialog.open(ConvertToTemaplteComponent, {
+      disableClose: true,
+      width: '500px',
+      data: {
+        vm_id: this.data.vm.id,
+        controller_id: this.data.vm.controller.id,
+        pool: this.data
+      }
+    });
   }
 }
