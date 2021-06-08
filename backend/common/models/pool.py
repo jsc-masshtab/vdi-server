@@ -1377,14 +1377,16 @@ class RdsPool(db.Model):
                                   ".\'C:\\Program Files\\Qemu-ga\\get_published_apps.ps1'",
                                   user_name],
                               "capture-output": True}
-        response = await domain_veil_api.guest_command(qemu_cmd="guest-exec",
-                                                       f_args=qemu_guest_command)
+        response = await domain_veil_api.guest_command(qemu_cmd="guest-exec", f_args=qemu_guest_command)
 
-        json_farms_data = response.data["guest-exec"]["out-data"]
-        farm_data_dict = json.loads(json_farms_data)
-        farm_list = farm_data_dict["farmlist"]
-
-        return farm_list
+        if response.status_code == 400:
+            errors = response.data["errors"]
+            raise RuntimeError(errors)
+        else:
+            json_farms_data = response.data["guest-exec"]["out-data"]
+            farm_data_dict = json.loads(json_farms_data)
+            farm_list = farm_data_dict["farmlist"]
+            return farm_list
 
     async def activate(self):
         return await Pool.activate(self.id)
