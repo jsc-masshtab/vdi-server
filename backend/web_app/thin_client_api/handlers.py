@@ -17,8 +17,8 @@ from veil_api_client import DomainTcpUsb, VeilRetryConfiguration
 
 from common.languages import lang_init
 from common.log.journal import system_logger
-from common.models.active_tk_connection import ActiveTkConnection  # , TkConnectionStatistics
-from common.models.pool import AutomatedPool, Pool as PoolModel, RdsPool
+from common.models.active_tk_connection import ActiveTkConnection
+from common.models.pool import AutomatedPool, Pool as PoolM, RdsPool
 from common.models.task import PoolTaskType, Task, TaskStatus
 from common.settings import (
     REDIS_DB, REDIS_PASSWORD, REDIS_PORT, REDIS_TEXT_MSG_CHANNEL,
@@ -87,26 +87,27 @@ class PoolGetVm(BaseHandler, ABC):
     """Получает конкретную ВМ пользователя."""
 
     async def post(self, pool_id):
-        # Определяем удаленный протокол. Если данные не были получены, то по умолчанию spice
         remote_protocol = self.args.get(
-            "remote_protocol", PoolModel.PoolConnectionTypes.SPICE.name
+            "remote_protocol", PoolM.PoolConnectionTypes.SPICE.name
         )
-
         # Проверяем лимит клиентов
-        if PoolModel.thin_client_limit_exceeded():
+        if PoolM.thin_client_limit_exceeded():
             response = {
-                "errors": [{"message": _("Thin client limit exceeded."), "code": "001"}]
+                "errors": [{"message": _("Thin client limit exceeded."),
+                            "code": "001"}]
             }
             return await self.log_finish(response)
-
         user = await self.get_user_model_instance()
-        pool = await PoolModel.get(pool_id)
+        pool = await PoolM.get(pool_id)
         if not pool:
-            response = {"errors": [{"message": _("Pool not found."), "code": "404"}]}
+            response = {
+                "errors": [{"message": _("Pool not found."), "code": "404"}]}
             return await self.log_finish(response)
-
         # Проверяем разрешен ли присланный remote_protocol для данного пула
-        if PoolModel.PoolConnectionTypes[remote_protocol] not in pool.connection_types:
+        con_t = pool.connection_types
+        bad_connection_type = remote_protocol not in PoolM.PoolConnectionTypes.values() or \
+                              PoolM.PoolConnectionTypes[remote_protocol] not in con_t  # noqa: E127
+        if bad_connection_type:
             response = {
                 "errors": [
                     {
@@ -118,18 +119,16 @@ class PoolGetVm(BaseHandler, ABC):
                 ]
             }
             return await self.log_finish(response)
-
         pool_type = await pool.pool_type
         expandable_pool = False  # В данный момент расширится может автоматический (гостевой пул)
-        if pool_type == PoolModel.PoolTypes.AUTOMATED or pool_type == PoolModel.PoolTypes.GUEST:
+        if pool_type == PoolM.PoolTypes.AUTOMATED or pool_type == PoolM.PoolTypes.GUEST:
             # Запрос на расширение пула
             auto_pool = await AutomatedPool.get(pool.id)
             expandable_pool = True
-
         vm = await pool.get_vm(user_id=user.id)
         if not vm:  # ВМ для пользователя не присутствует
             # В случае RDS пула выдаем общий для всех RDS Сервер
-            if pool_type == PoolModel.PoolTypes.RDS:
+            if pool_type == PoolM.PoolTypes.RDS:
                 vms = await pool.vms
                 vm = vms[0]
             else:
@@ -167,7 +166,6 @@ class PoolGetVm(BaseHandler, ABC):
 
         elif expandable_pool:  # Даже если у пользователя есть ВМ, то попробовать расшириться все равно нужно
             await self._expand_pool_if_required(pool)
-
         # TODO: обработка новых исключений
         # Только включение ВМ.
         try:
@@ -210,11 +208,10 @@ class PoolGetVm(BaseHandler, ABC):
                 "errors": [{"message": _("The remote controller is unavailable.")}]
             }
             return await self.log_finish(response)
-
         if (
-            remote_protocol == PoolModel.PoolConnectionTypes.RDP.name
+            remote_protocol == PoolM.PoolConnectionTypes.RDP.name
             or remote_protocol  # noqa: W503
-            == PoolModel.PoolConnectionTypes.NATIVE_RDP.name  # noqa: W503
+            == PoolM.PoolConnectionTypes.NATIVE_RDP.name  # noqa: W503
         ):
             try:
                 vm_address = veil_domain.first_ipv4
@@ -228,27 +225,28 @@ class PoolGetVm(BaseHandler, ABC):
                         {
                             "message": _(
                                 "VM does not support RDP. The controller didn`t provide a VM address."
-                            )
+                            ),
+                            "code": "005"
                         }
                     ]
                 }
                 return await self.log_finish(response)
 
-        elif remote_protocol == PoolModel.PoolConnectionTypes.SPICE_DIRECT.name:
+        elif remote_protocol == PoolM.PoolConnectionTypes.SPICE_DIRECT.name:
             # Нужен адрес сервера поэтому делаем запрос
             node_id = str(veil_domain.node["id"])
             node_info = await vm_controller.veil_client.node(node_id=node_id).info()
             vm_address = node_info.response[0].management_ip
             vm_port = info.data["real_remote_access_port"]
 
-        else:  # PoolModel.PoolConnectionTypes.SPICE.name by default
+        else:  # PoolM.PoolConnectionTypes.SPICE.name by default
             vm_address = vm_controller.address
             vm_port = veil_domain.remote_access_port
 
         permissions = await user.get_permissions()
         try:
             farm_list = await RdsPool.get_farm_list(pool.id, user.username) \
-                if pool_type == PoolModel.PoolTypes.RDS else []
+                if pool_type == PoolM.PoolTypes.RDS else []
         except (KeyError, JSONDecodeError, RuntimeError) as ex:
             response = {"errors": [{"message": _("Unable to get list of published applications. {}.").format(str(ex))}]}
             return await self.log_finish(response)
@@ -267,15 +265,16 @@ class PoolGetVm(BaseHandler, ABC):
         }
         return await self.log_finish(response)
 
-    async def _expand_pool_if_required(self, pool_model):
-        """Запускаем задачу только если расширение возможно и над пулом не выполняются другие задачи расширения."""
+    @staticmethod
+    async def _expand_pool_if_required(pool_model):
+        """Только если расширение возможно и над пулом не выполняются другие задачи расширения."""  # noqa: E501
         if not pool_model:
             return
         # 1) is max reached
-        autopool = await AutomatedPool.get(pool_model.id)
-        total_size_reached = await autopool.check_if_total_size_reached()
+        auto_pool = await AutomatedPool.get(pool_model.id)
+        total_size_reached = await auto_pool.check_if_total_size_reached()
         # 2) is not enough free vms
-        is_not_enough_free_vms = await autopool.check_if_not_enough_free_vms()
+        is_not_enough_free_vms = await auto_pool.check_if_not_enough_free_vms()
         # 3) other tasks
         tasks = await Task.get_tasks_associated_with_entity(
             pool_model.id, TaskStatus.IN_PROGRESS, PoolTaskType.POOL_EXPAND

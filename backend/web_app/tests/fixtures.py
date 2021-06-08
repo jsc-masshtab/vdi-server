@@ -241,6 +241,74 @@ async def fixt_create_static_pool(fixt_controller):
 
 @pytest.fixture
 @async_generator
+async def several_static_pools(fixt_controller, count: int = 5):
+    """Создать несколько статических пулов."""
+    pool_main_resources = await get_resources_for_pool_test()
+    controller_id = pool_main_resources["controller_id"]
+    resource_pool_id = pool_main_resources["resource_pool_id"]
+    context = await get_auth_context()
+    pools_list = list()
+    # Создаем пулы
+    for i in range(count + 1):
+        vm_id = uuid.uuid4()
+        qu = """
+            mutation{addStaticPool(
+              verbose_name: "%s",
+              controller_id: "%s",
+              resource_pool_id: "%s",
+              vms:[
+                {id: "%s",
+                  verbose_name: "test_2"}
+              ],
+              connection_types: [SPICE, RDP],
+            ){
+              pool {
+                pool_id
+              }
+              ok
+            }
+            }""" % (
+            get_test_pool_name(),
+            controller_id,
+            resource_pool_id,
+            vm_id,
+        )
+        # id созданного пула
+        pool_create_res = await execute_scheme(pool_schema, qu, context=context)
+        pools_list.append(pool_create_res["addStaticPool"]["pool"]["pool_id"])
+    # Пулы созданы
+    await yield_({"pools": pools_list})
+    # Удаляем созданные пулы
+    for pool_id in pools_list:
+        qu = (
+            """
+        mutation {
+          removePool(pool_id: "%s", full: true) {
+            ok
+          }
+        }
+        """
+            % pool_id
+        )
+        await execute_scheme(pool_schema, qu, context=context)
+
+
+@pytest.fixture
+@async_generator
+async def several_static_pools_with_user(fixt_controller,
+                                         several_static_pools,
+                                         fixt_user):
+    temporary_user_id = "10913d5d-ba7a-4049-88c5-769267a6cbe4"
+    # Закрепляем 1 из пулов за пользователем
+    pool = await Pool.query.gino.first()
+    await pool.add_user(temporary_user_id, "system")
+    await yield_({"pool_with_user": pool.id_str})
+    # Открепляем пользователя от пула
+    await pool.remove_users(creator="system", users_list=[temporary_user_id])
+
+
+@pytest.fixture
+@async_generator
 async def fixt_create_rds_pool(fixt_controller):
     """Создается пул, пул удаляется."""
     pool_main_resources = await get_resources_for_pool_test()
@@ -672,7 +740,6 @@ async def fixt_controller(fixt_veil_client):
     context = await get_auth_context()
     executed = await execute_scheme(controller_schema, qu, context=context)
     controller_id = executed["addController"]["controller"]["id"]
-    print("controller_id ", controller_id, flush=True)
     await yield_({"controller_id": controller_id})
 
     # remove controller

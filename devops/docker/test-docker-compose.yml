@@ -32,6 +32,7 @@ services:
     volumes:
       - ../../backend/web_app/tests/veil_server:/opt/veil-vdi/app
     command: sh -c "echo 'running veil-test-server...' && python test_server.py"
+
   vdi-test-tornado:
     build:
       context: ../../
@@ -48,12 +49,13 @@ services:
     working_dir: /opt/veil-vdi/app
     volumes:
       - ../../backend:/opt/veil-vdi/app
-    command: sh -c "sleep 10 && pip install -U veil_api_client veil_aio_au && cd /opt/veil-vdi/app/common/migrations && alembic upgrade head && cd /opt/veil-vdi/app/web_app/tests && pytest -m 'smoke_test' && pytest --cov=web_app -vv -m 'not broken_runner'"
+#    command: sh -c "sleep 10 && pip install -U veil_api_client veil_aio_au && cd /opt/veil-vdi/app/common/migrations && alembic upgrade head && cd /opt/veil-vdi/app/web_app/tests && pytest -m 'smoke_test' && pytest --cov=web_app --cov-report=html -vv -m 'not broken_runner'"
+    command: /usr/sbin/tests_entry_point.sh
     depends_on:
       - vdi-test-postgres
       - vdi-test-redis
       - vdi-test-veil-server
-#
+
 # manual run only
 #  vdi-black:
 #    image: mercutiodesign/docker-black
