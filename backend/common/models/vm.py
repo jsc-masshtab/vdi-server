@@ -237,7 +237,7 @@ class Vm(VeilModel):
                 # Сейчас нас не заботит, что именно пошло не так при удалении на ECP.
                 msg = _(
                     "VM multi-deletion task finished with error. Please see task details on VeiL ECP.")  # noqa: E501
-                description = _("VMs: {}").format(vms_ids)
+                description = _("VMs: {}.").format(vms_ids)
                 await system_logger.warning(
                     message=msg,
                     description=description,
