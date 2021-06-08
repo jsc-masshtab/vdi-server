@@ -38,7 +38,7 @@ pipeline {
 
     parameters {
         string(      name: 'BRANCH',               defaultValue: 'dev',              description: 'branch')
-        choice(      name: 'REPO',                 choices: ['test', 'prod-30'],     description: 'repo for uploading')
+        choice(      name: 'REPO',                 choices: ['test', 'prod-30', 'prod-31'],     description: 'repo for uploading')
         string(      name: 'VERSION',              defaultValue: '3.1.0',            description: 'base version')
         string(      name: 'AGENT',                defaultValue: 'master',           description: 'jenkins build agent')
         booleanParam(name: 'BACKEND',              defaultValue: false,              description: 'veil-broker-backend')
