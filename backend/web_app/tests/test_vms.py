@@ -174,12 +174,12 @@ class VmActionTestCase(VdiHttpTestCase):
         await vm.add_user("10913d5d-ba7a-4049-88c5-769267a6cbe3", creator="system")
 
         # Формируем данные для тестируемого параметра
-        headers = await self.generate_headers_for_tk()
+        headers = await self.get_auth_headers()
         body = '{"force": true}'
         url = "/client/pools/{pool_id}/{action}/".format(pool_id=pool_id, action=action)
         return {"headers": headers, "body": body, "url": url}
 
-    @gen_test
+    @gen_test(timeout=20)
     async def test_valid_action(self):
         action = 'start'  # Заведомо правильное действие.
         moking_dict = await self.get_moking_dict(action=action)

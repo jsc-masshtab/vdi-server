@@ -47,7 +47,7 @@ class USbTestCase(VdiHttpTestCase):
         # Закрепляем VM за тестовым пользователем
         await vm.add_user("10913d5d-ba7a-4049-88c5-769267a6cbe3", creator="system")
 
-        headers = await self.generate_headers_for_tk()
+        headers = await self.get_auth_headers()
         # Формируем данные для attach usb запроса
         usb_tcp_port = 17001
         usb_tcp_ip = "127.0.0.1"
