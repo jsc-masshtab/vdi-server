@@ -10,6 +10,21 @@ export class PoolDetailsService {
 
     constructor(private service: Apollo) { }
 
+    public orderingVms: any = {
+        spin: true,
+        nameSort: undefined
+    };
+
+    public orderingUsers: any = {
+        spin: true,
+        nameSort: undefined
+    };
+
+    public orderingGroups: any = {
+        spin: true,
+        nameSort: undefined
+    };
+
     public removePool(pool_id: number,  full: boolean) {
         return this.service.mutate<any>({
             mutation: gql`
@@ -46,12 +61,12 @@ export class PoolDetailsService {
     public getPool(pool_id: string | number, type: string): QueryRef<any, any> {
         if (type === 'automated' || type === 'guest') {
             return this.service.watchQuery({
-                query: gql`  query pools($pool_id: String) {
+                query: gql`  query pools($pool_id: String, $ordering_vms: String, $ordering_users: String, $ordering_groups: String) {
                                 pool(pool_id: $pool_id) {
                                     pool_id
                                     verbose_name
                                     pool_type
-                                    vms {
+                                    vms(ordering: $ordering_vms) {
                                         id
                                         verbose_name
                                         user {
@@ -77,7 +92,7 @@ export class PoolDetailsService {
                                     increase_step
                                     vm_name_template
                                     ad_cn_pattern
-                                    users {
+                                    users(ordering: $ordering_users) {
                                         username
                                     }
                                     resource_pool {
@@ -89,7 +104,7 @@ export class PoolDetailsService {
                                     create_thin_clones
                                     prepare_vms
                                     keep_vms_on
-                                    assigned_groups {
+                                    assigned_groups(ordering: $ordering_groups) {
                                         id
                                         verbose_name
                                     }
@@ -103,18 +118,21 @@ export class PoolDetailsService {
                             }`,
                 variables: {
                     method: 'GET',
-                    pool_id
+                    pool_id,
+                    ordering_vms: this.orderingVms.nameSort,
+                    ordering_users: this.orderingUsers.nameSort,
+                    ordering_groups: this.orderingGroups.nameSort
                 }
             });
         }
 
         if (type === 'static' || type === 'rds') {
             return this.service.watchQuery({
-                query: gql`  query pools($pool_id: String) {
+                query: gql`  query pools($pool_id: String, $ordering_vms: String, $ordering_users: String, $ordering_groups: String) {
                                 pool(pool_id: $pool_id) {
                                     verbose_name
                                     pool_type
-                                    vms {
+                                    vms(ordering: $ordering_vms) {
                                         verbose_name
                                         id
                                         user {
@@ -138,13 +156,13 @@ export class PoolDetailsService {
                                         verbose_name
                                     }
                                     resource_pool_id
-                                    users {
+                                    users(ordering: $ordering_users) {
                                         username
                                     }
                                     resource_pool {
                                         verbose_name
                                     }
-                                    assigned_groups {
+                                    assigned_groups(ordering: $ordering_groups) {
                                         id
                                         verbose_name
                                     }
@@ -158,7 +176,10 @@ export class PoolDetailsService {
                             }`,
                 variables: {
                     method: 'GET',
-                    pool_id
+                    pool_id,
+                    ordering_vms: this.orderingVms.nameSort,
+                    ordering_users: this.orderingUsers.nameSort,
+                    ordering_groups: this.orderingGroups.nameSort
                 }
             });
         }

@@ -319,12 +319,14 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       property: 'verbose_name',
       class: 'name-start',
       icon: 'desktop',
-      type: 'string'
+      type: 'string',
+      sort: true
     },
     {
       title: 'Шаблон',
       property: 'parent_name',
-      type: 'string'
+      type: 'string',
+      sort: true
     },
     // {
     //   title: 'Принадлежность',
@@ -337,16 +339,19 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
     {
       title: 'Пользователь',
       property: 'user',
-      property_lv2: 'username'
+      property_lv2: 'username',
+      sort: true
     },
     {
       title: 'Статус',
-      property: 'status'
+      property: 'status',
+      sort: true
     },
     {
       title: 'Гостевой агент',
       property: 'qemu_state',
-      type: 'string'
+      type: 'string',
+      sort: true
     }
   ];
 
@@ -356,26 +361,31 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       property: 'verbose_name',
       class: 'name-start',
       icon: 'desktop',
-      type: 'string'
+      type: 'string',
+      sort: true
     },
     {
       title: 'Шаблон',
       property: 'parent_name',
-      type: 'string'
+      type: 'string',
+      sort: true
     },
     {
       title: 'Пользователь',
       property: 'user',
-      property_lv2: 'username'
+      property_lv2: 'username',
+      sort: true
     },
     {
       title: 'Статус',
-      property: 'status'
+      property: 'status',
+      sort: true
     },
     {
       title: 'Гостевой агент',
       property: 'qemu_state',
-      type: 'string'
+      type: 'string',
+      sort: true
     }
   ];
 
@@ -385,7 +395,8 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       property: 'verbose_name',
       class: 'name-start',
       icon: 'desktop',
-      type: 'string'
+      type: 'string',
+      sort: true
     },
     // {
     //   title: 'Принадлежность',
@@ -398,16 +409,19 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
     {
       title: 'Пользователь',
       property: 'user',
-      property_lv2: 'username'
+      property_lv2: 'username',
+      sort: true
     },
     {
       title: 'Статус',
-      property: 'status'
+      property: 'status',
+      sort: true
     },
     {
       title: 'Гостевой агент',
       property: 'qemu_state',
-      type: 'string'
+      type: 'string',
+      sort: true
     }
   ];
 
@@ -417,16 +431,19 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       property: 'verbose_name',
       class: 'name-start',
       icon: 'desktop',
-      type: 'string'
+      type: 'string',
+      sort: true
     },
     {
       title: 'Статус',
-      property: 'status'
+      property: 'status',
+      sort: true
     },
     {
       title: 'Гостевой агент',
       property: 'qemu_state',
-      type: 'string'
+      type: 'string',
+      sort: true
     }
   ];
 
@@ -436,7 +453,8 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       property: 'username',
       class: 'name-start',
       icon: 'user',
-      type: 'string'
+      type: 'string',
+      sort: true
     }
   ];
 
@@ -456,7 +474,8 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       type: 'string',
       property: 'verbose_name',
       class: 'name-start',
-      icon: 'users-cog'
+      icon: 'users-cog',
+      sort: true
     }
   ];
 
@@ -505,6 +524,29 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
   //   (error) => console.log(error, 'error'),
   //   () =>  console.log( 'complete'));
   // }
+  sortVms(param) {
+    let output_param = param.nameSort;
+    this.poolService.orderingVms.nameSort = output_param;
+    this.poolService.getPool(this.idPool, this.typePool).refetch().then(data => {
+      this.pool = data.data['pool'];
+    });
+  }
+
+  sortUsers(param) {
+    let output_param = param.nameSort;
+    this.poolService.orderingUsers.nameSort = output_param;
+    this.poolService.getPool(this.idPool, this.typePool).refetch().then(data => {
+      this.pool = data.data['pool'];
+    });
+  }
+
+  sortGroups(param) {
+    let output_param = param.nameSort;
+    this.poolService.orderingGroups.nameSort = output_param;
+    this.poolService.getPool(this.idPool, this.typePool).refetch().then(data => {
+      this.pool = data.data['pool'];
+    });
+  }
 
   public getPool(): void {
     if (this.subPool) {
@@ -522,7 +564,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
     this.host = false;
     this.subPool = this.poolService.getPool(this.idPool, this.typePool)
       .valueChanges.pipe(map((data: any) => data.data['pool']))
-      .subscribe( (data) => {
+      .subscribe((data) => {
         this.pool = data;
         this.host = true;
       },
