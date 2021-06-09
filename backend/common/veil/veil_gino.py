@@ -235,7 +235,8 @@ class VeilModel(db.Model):
             await self.delete()
             if self.entity_name == "Group":
                 await system_logger.info(
-                    _("Group {} has been deleted.").format(self.verbose_name))
+                    _("Group {} has been deleted.").format(self.verbose_name),
+                    entity=self.entity, user=creator)
         except DataError as db_error:
             await system_logger.debug(_("Soft_delete exception: {}.").format(db_error))
             return False
