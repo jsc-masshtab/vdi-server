@@ -131,16 +131,7 @@ async def test_update_automated_pool(
 class PoolTestCase(VdiHttpTestCase):
     @gen_test(timeout=VEIL_WS_MAX_TIME_TO_WAIT + 10)
     def test_automated_pool_expand(self):
-
-        # На случай отсутствия лицензии
-        current_license = License()
-        license_data = {
-            "verbose_name": "Fake license",
-            "thin_clients_limit": 1,
-            "uuid": str(uuid.uuid4()),
-        }
-        current_license.license_data = LicenseData(**license_data)
-
+        # Инициализация лицензии происходит в VdiHttpTestCase
         pool = yield Pool.query.gino.first()
         pool_type = yield pool.pool_type
         self.assertEqual(pool_type, Pool.PoolTypes.AUTOMATED)
@@ -169,7 +160,7 @@ class PoolTestCase(VdiHttpTestCase):
             # Исключение на случай отсутствия лицензии
             response_data = response_dict["errors"][0]
             response_code = response_data["code"]
-            self.assertIn(response_code, ["001", "002"])
+            self.assertIn(response_code, ["001", "002", "404"])
         else:
             response_data = response_dict["data"]
             self.assertIsInstance(response_data, dict)

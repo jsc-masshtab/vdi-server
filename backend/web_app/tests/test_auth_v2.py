@@ -32,6 +32,7 @@ pytestmark = [
 class AuthLocalTestCase(VdiHttpTestCase):
     def check_local_auth(self, response_dict: dict):
         """Если локальная авторизация отключена - ожидаем ошибку."""
+
         if not LOCAL_AUTH:
             error_message = response_dict["errors"][0]["message"]
             self.assertIn("Ошибка авторизации пользователя:", error_message)

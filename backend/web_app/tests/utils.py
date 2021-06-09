@@ -2,6 +2,7 @@
 from abc import ABC
 import json
 import asyncio
+import uuid
 
 from graphql.execution.executors.asyncio import AsyncioExecutor
 from graphql.graphql import graphql
@@ -9,6 +10,7 @@ from tornado.testing import AsyncHTTPTestCase
 from tornado.ioloop import IOLoop
 from tornado.escape import json_decode
 
+from web_app.auth.license.utils import License, LicenseData
 from web_app.app import make_app
 
 from common.subscription_sources import WsMessageType
@@ -50,7 +52,36 @@ async def ws_wait_for_text_msg_with_timeout(ws_conn, msg_type=WsMessageType.TEXT
     return msg_dict
 
 
-class VdiHttpTestCase(AsyncHTTPTestCase, ABC):
+class VdiHttpTestCase(AsyncHTTPTestCase):
+
+    @staticmethod
+    def init_fake_license(expired: bool = False):
+        current_license = License()
+        if expired:
+            license_data = {
+                "verbose_name": "Fake license",
+                "thin_clients_limit": 10,
+                "uuid": str(uuid.uuid4()),
+                "expiration_date": "2020-05-01",
+                "support_expiration_date": "2020-05-01"
+            }
+        else:
+            license_data = {
+                "verbose_name": "Fake license",
+                "thin_clients_limit": 10,
+                "uuid": str(uuid.uuid4()),
+                "expiration_date": "2030-05-01",
+                "support_expiration_date": "2030-05-01"
+            }
+        current_license.license_data = LicenseData(**license_data)
+
+    def get_app(self):
+        self.init_fake_license()
+        return make_app()
+
+    def get_new_ioloop(self):
+        return IOLoop.current()
+
     async def do_login(self, user_name="test_user_admin", password="veil"):
         body = {"username": user_name, "password": password}
         response_dict = await self.get_response(body=json.dumps(body))
@@ -59,11 +90,16 @@ class VdiHttpTestCase(AsyncHTTPTestCase, ABC):
 
         return user_name, access_token
 
-    def get_app(self):
-        return make_app()
-
-    def get_new_ioloop(self):
-        return IOLoop.current()
+    async def get_auth_headers(self, username: str = "test_user_admin",
+                               password: str = "veil") -> dict:
+        """Заголовки для подключения к брокеру."""
+        (user_name, access_token) = await self.do_login(user_name=username,
+                                                        password=password)
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": "jwt {}".format(access_token),
+        }
+        return headers
 
     async def fetch_request(self, body, url, headers, method="POST"):
         if not headers:
@@ -72,7 +108,11 @@ class VdiHttpTestCase(AsyncHTTPTestCase, ABC):
             self.get_url(url), method=method, body=body, headers=headers
         )
 
-    async def get_response(self, body: dict, url="/auth", headers=None, method="POST"):
+    async def get_response(self,
+                           body,
+                           url="/auth",
+                           headers=None,
+                           method="POST"):
         response = await self.fetch_request(
             body=body, url=url, headers=headers, method=method
         )
@@ -81,13 +121,3 @@ class VdiHttpTestCase(AsyncHTTPTestCase, ABC):
         self.assertIsInstance(response_dict, dict)
         return response_dict
 
-    async def generate_headers_for_tk(self, user_name="test_user_admin", password="veil"):
-        # Авторизуемся, чтобы получить токен
-        (_, access_token) = await self.do_login(user_name, password)
-
-        # Формируем данные для тестируемого параметра
-        headers = {
-            "Content-Type": "application/json",
-            "Authorization": "jwt {}".format(access_token),
-        }
-        return headers
