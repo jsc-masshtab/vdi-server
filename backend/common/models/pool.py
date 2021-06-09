@@ -85,6 +85,10 @@ class Pool(VeilModel):
         RDP = "RDP"
         NATIVE_RDP = "NATIVE_RDP"
 
+        @classmethod
+        def values(cls):
+            return [conn_type.value for conn_type in cls]
+
     __tablename__ = "pool"
 
     POOL_TYPE_LABEL = "pool_type"
@@ -188,7 +192,8 @@ class Pool(VeilModel):
     @classmethod
     def thin_client_limit_exceeded(cls):
         current_license = License()
-        return get_thin_clients_count() >= current_license.thin_clients_limit
+        current_clients = get_thin_clients_count()
+        return current_clients >= current_license.thin_clients_limit
 
     @staticmethod
     def build_ordering(query, ordering=None):

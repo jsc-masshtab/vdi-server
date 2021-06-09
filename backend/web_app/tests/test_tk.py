@@ -2,6 +2,7 @@
 import pytest
 import json
 import asyncio
+from uuid import uuid4
 from common.database import db
 
 import tornado
@@ -28,8 +29,10 @@ from web_app.tests.fixtures import (
     fixt_create_static_pool,  # noqa: F401
     fixt_controller,  # noqa: F401
     fixt_veil_client,  # noqa: F401
-    get_auth_context,
-)  # noqa: F401
+    get_auth_context,  # noqa: F401
+    several_static_pools,  # noqa: F401
+    several_static_pools_with_user,  # noqa: F401
+)
 
 from common.subscription_sources import WsMessageType
 
@@ -42,7 +45,9 @@ pytestmark = [
 ]
 
 
-class TestTk(VdiHttpTestCase):
+class TestWebsockets(VdiHttpTestCase):
+    # TODO: дополнить сценарии
+
     @pytest.mark.usefixtures("fixt_db", "fixt_user_admin")
     @gen_test
     async def test_ws_connect_update_disconnect_ok(self):
@@ -140,7 +145,8 @@ class TestTk(VdiHttpTestCase):
                 }"""
                 % conn_id
             )
-            executed = await execute_scheme(thin_client_schema, qu, context=auth_context)
+            executed = await execute_scheme(thin_client_schema, qu,
+                                            context=auth_context)
             assert executed["disconnectThinClient"]["ok"]
 
         except Exception:
@@ -150,21 +156,156 @@ class TestTk(VdiHttpTestCase):
             ws_client.close()
             await asyncio.sleep(0.1)
 
+
+class TestPool(VdiHttpTestCase):
+
+    API_URL = "/client/pools/"
+
     @pytest.mark.usefixtures("fixt_db", "fixt_user_admin", "fixt_create_static_pool")
     @gen_test
-    async def test_get_pool_info_ok(self):
+    async def test_superuser_pools_list(self):
         """Check tk rest api"""
-        # login
-        (user_name, access_token) = await self.do_login()
-
-        # get pool data
-        headers = {
-            "Content-Type": "application/json",
-            "Authorization": "jwt {}".format(access_token),
-        }
-        url = "/client/pools/"
+        auth_headers = await self.get_auth_headers(username="test_user_admin")
 
         response_dict = await self.get_response(
-            body=None, url=url, headers=headers, method="GET"
+            body=None, url=self.API_URL, headers=auth_headers, method="GET"
         )
         assert len(response_dict["data"]) == 1
+
+    @pytest.mark.usefixtures("fixt_db", "fixt_user", "fixt_create_static_pool")
+    @gen_test
+    async def test_user_has_no_pools(self):
+        """Сценарий, когда у пользователя нет закрепленных пулов."""
+        auth_headers = await self.get_auth_headers(username="test_user")
+
+        response_dict = await self.get_response(
+            body=None, url=self.API_URL, headers=auth_headers, method="GET"
+        )
+        assert "data" in response_dict
+        assert len(response_dict["data"]) == 0
+
+    @pytest.mark.usefixtures("fixt_db", "fixt_user", "several_static_pools")
+    @gen_test
+    async def test_user_has_one_pool(self):
+        """Сценарий, когда обычному пользователю выдан 1 пул из 2х."""
+        # Данные для подключения
+        auth_headers = await self.get_auth_headers(username="test_user")
+        # Проверяем, что изначально нет пулов
+        response_dict = await self.get_response(
+            body=None, url=self.API_URL, headers=auth_headers, method="GET"
+        )
+        assert "data" in response_dict
+        assert len(response_dict["data"]) == 0
+        # Закрепляем 1 из пулов за пользователем
+        pool = await Pool.query.gino.first()
+        await pool.add_user("10913d5d-ba7a-4049-88c5-769267a6cbe4", "system")
+        # Проверяем, что пользователю выдался пул
+        response_dict = await self.get_response(
+            body=None, url=self.API_URL, headers=auth_headers, method="GET"
+        )
+        assert "data" in response_dict
+        assert len(response_dict["data"]) == 1
+
+
+class TestPoolVm(VdiHttpTestCase):
+
+    API_URL = "/client/pools/{pool_id}"
+
+    @pytest.mark.usefixtures("fixt_db", "fixt_user", "several_static_pools_with_user")
+    @gen_test(timeout=20)
+    def test_bad_license(self):
+        self.init_fake_license(expired=True)
+        vm_url = self.API_URL.format(pool_id=str(uuid4()))
+        body = ''
+        auth_headers = yield self.get_auth_headers(username="test_user")
+        response_dict = yield self.get_response(
+            body=body, url=vm_url, headers=auth_headers, method="POST"
+        )
+
+        assert 'errors' in response_dict
+        assert '001' == response_dict['errors'][0]['code']
+
+    @pytest.mark.usefixtures("fixt_db", "fixt_user")
+    @gen_test(timeout=20)
+    def test_bad_pool_id(self):
+        """Сценарий, когда отправляется несуществующий пул."""
+        vm_url = self.API_URL.format(pool_id=str(uuid4()))
+        body = ''
+        auth_headers = yield self.get_auth_headers(username="test_user")
+        response_dict = yield self.get_response(
+            body=body,
+            url=vm_url,
+            headers=auth_headers,
+        )
+
+        assert 'errors' in response_dict
+        assert '404' == response_dict['errors'][0]['code']
+
+    @pytest.mark.usefixtures("fixt_db", "fixt_user", "several_static_pools_with_user")
+    @gen_test(timeout=20)
+    def test_user_get_vm(self):
+        """Сценарий получения пользователем ВМ из пула."""
+        pool = yield Pool.query.gino.first()
+        get_vm_url = self.API_URL.format(pool_id=pool.id_str)
+        auth_headers = yield self.get_auth_headers(username="test_user")
+        body = ''
+        # Получаем
+        response_dict = yield self.get_response(
+            body=body,
+            url=get_vm_url,
+            headers=auth_headers,
+        )
+        # Проверяем, что ВМ выдана
+        assert 'data' in response_dict
+        port = response_dict['data']['port']
+        assert port == 5900
+        permissions = response_dict['data']['permissions']
+        assert 'USB_REDIR' in permissions
+        assert 'FOLDERS_REDIR' in permissions
+        assert 'SHARED_CLIPBOARD' in permissions
+        pool_type = response_dict['data']['pool_type']
+        assert pool_type == 'STATIC'
+        host = response_dict['data']['host']
+        assert host == '0.0.0.0'
+        assert 'vm_id' in response_dict['data']
+        vm_controller_address = response_dict['data']['vm_controller_address']
+        assert vm_controller_address == '0.0.0.0'
+        vm_verbose_name = response_dict['data']['vm_verbose_name']
+        assert vm_verbose_name == 'alt_linux'
+        password = response_dict['data']['password']
+        assert password == '1'
+
+    @pytest.mark.usefixtures("fixt_db", "fixt_user", "several_static_pools_with_user")
+    @gen_test(timeout=20)
+    def test_bad_connection_type(self):
+        pool = yield Pool.query.gino.first()
+        vm_url = self.API_URL.format(pool_id=pool.id_str)
+        body = json.dumps({"remote_protocol": "BAD"})
+        auth_headers = yield self.get_auth_headers(username="test_user")
+        response_dict = yield self.get_response(
+            body=body, url=vm_url, headers=auth_headers, method="POST"
+        )
+
+        assert 'errors' in response_dict
+        assert '404' == response_dict['errors'][0]['code']
+
+    @pytest.mark.usefixtures("fixt_db", "fixt_user", "several_static_pools_with_user")
+    @gen_test(timeout=20)
+    def test_rdp_connection_type(self):
+        pool = yield Pool.query.gino.first()
+        vm_url = self.API_URL.format(pool_id=pool.id_str)
+        body = json.dumps({"remote_protocol": "RDP"})
+        auth_headers = yield self.get_auth_headers(username="test_user")
+        response_dict = yield self.get_response(
+            body=body, url=vm_url, headers=auth_headers, method="POST"
+        )
+        # Проверяем, что ВМ выдана
+        assert 'errors' in response_dict
+        assert '005' == response_dict['errors'][0]['code']
+
+
+class TestVm(VdiHttpTestCase):
+    # TODO: подключение USB к ВМ
+    # TODO: отключение USB от ВМ
+    # TODO: действие над ВМ
+    pass
