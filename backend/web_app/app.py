@@ -36,6 +36,7 @@ from web_app.controller.schema import controller_schema
 from web_app.front_ws_api.urls import ws_event_monitoring_urls
 from web_app.journal.schema import event_schema
 from web_app.pool.schema import pool_schema
+from web_app.settings.schema import settings_schema
 from web_app.task.schema import task_schema
 from web_app.thin_client_api.schema import thin_client_schema
 from web_app.thin_client_api.urls import thin_client_api_urls
@@ -68,6 +69,11 @@ handlers = [
     ),
     (r"/pools", VdiTornadoGraphQLHandler, dict(graphiql=True, schema=pool_schema)),
     (r"/events", VdiTornadoGraphQLHandler, dict(graphiql=True, schema=event_schema)),
+    (
+        r"/settings",
+        VdiTornadoGraphQLHandler,
+        dict(graphiql=True, schema=settings_schema)
+    ),
     (r"/tasks", VdiTornadoGraphQLHandler, dict(graphiql=True, schema=task_schema)),
     (
         r"/thin_clients",
