@@ -6,7 +6,7 @@ from common.log.journal import system_logger
 from common.veil.auth.veil_jwt import jwtauth
 from common.veil.veil_decorators import is_administrator
 from common.veil.veil_errors import Unauthorized, ValidationError
-from common.veil.veil_handlers import BaseHandler
+from common.veil.veil_handlers import BaseHttpHandler
 from common.veil.veil_redis import get_thin_clients_count
 
 from web_app.auth.license.utils import License
@@ -15,7 +15,7 @@ _ = lang_init()
 
 
 @jwtauth
-class LicenseHandler(BaseHandler, ABC):
+class LicenseHandler(BaseHttpHandler, ABC):
     async def get(self):
         """Get license key info."""
         license_data = License().license_data.public_attrs_dict
@@ -27,7 +27,7 @@ class LicenseHandler(BaseHandler, ABC):
     async def post(self):
         """Upload license key."""
         # проверка наличия роли
-        # TODO: вынести метод в BaseHandler
+        # TODO: вынести метод в BaseHttpHandler
         try:
             user = await self.get_user_object()
             roles = await user.roles
