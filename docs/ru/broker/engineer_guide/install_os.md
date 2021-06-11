@@ -11,21 +11,21 @@
 
    - получить привилегии *root* с помощью команды
    
-   `sudo su`
+     `sudo su`
 
    - подключить iso-образ установочного диска с ОС выполнив последовательно команды:
 
-   `mount /media/cdrom`
+     `mount /media/cdrom`
 
-   `mkdir /opt/main`
+     `mkdir /opt/main`
 
    - осуществить копирование deb-пакетов в систему с помощью команды
    
-   `cp -r /media/cdrom/pool /media/cdrom/dists /opt/main/`
+     `cp -r /media/cdrom/pool /media/cdrom/dists /opt/main/`
    
    - размонтировать диск с помощью команды
    
-   `umount /media/cdrom`
+     `umount /media/cdrom`
 
 Вернуться в окно управления ECP VeiL и перейти во вкладку **Виртуальная машина** - <имя ВМ> - **CD-ROM**. 
 В списке приводов нажать на название привода и в открывшемся диалоговом окне выполнить следующие действия:
@@ -42,35 +42,35 @@
 
    - если необходимо, получить привилегии *root* с помощью команды
 
-   `sudo su`
+     `sudo su`
 
    - подключить iso-образ диска со средствами разработки выполнив последовательно команды:
 
-   `mount /media/cdrom`
+     `mount /media/cdrom`
 
-   `mkdir /opt/devel`
+     `mkdir /opt/devel`
 
    - осуществить копирование deb-пакетов в систему с помощью команды
    
-   `cp -r /media/cdrom/pool /media/cdrom/dists /opt/devel/`
+     `cp -r /media/cdrom/pool /media/cdrom/dists /opt/devel/`
 
    - размонтировать диск с помощью команды
    
-   `umount /media/cdrom`
+     `umount /media/cdrom`
 
 Настроить локальный apt-репозиторий для установки необходимых пакетов, выполнив следующие действия:
 
    - открыть для редактирования файл *sources.list* с помощью команды
 
-   `nano /etc/apt/sources.list`
+     `nano /etc/apt/sources.list`
 
    - в открывшемся файле добавить путь к папке с обновлениями безопасности:
 
-   `#deb cdrom:[OS Astra Linux 1.6 smolensk - amd64 DVD ]/ smolensk contrib main non-free`
+     `#deb cdrom:[OS Astra Linux 1.6 smolensk - amd64 DVD ]/ smolensk contrib main non-free`
 
-   `deb file:///opt/devel smolensk contrib main non-free`
+     `deb file:///opt/devel smolensk contrib main non-free`
 
-   `deb file:///opt/main smolensk contrib main non-free`
+     `deb file:///opt/main smolensk contrib main non-free`
 
    - после редактирования файла нажать *Ctrl+Х* и согласиться с сохранением файла. 
 
