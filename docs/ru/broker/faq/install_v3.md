@@ -29,7 +29,8 @@
     sudo bash /media/cdrom/install.sh
     sudo umount /media/cdrom
     ```
-
+Дополнительную информацию по установке VeiL Broker смотрите в 
+[руководстве системного программиста](../engineer_guide/install.md).
 
 1. Установка выполняется около 5 мин. После установки Web-интерфейс VeiL Broker будет доступен по 
    https://server_ip_address. По умолчанию пользователь **vdiadmin** и пароль **Bazalt1!**.
