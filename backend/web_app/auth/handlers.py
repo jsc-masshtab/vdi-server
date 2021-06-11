@@ -12,12 +12,12 @@ from common.veil.auth.veil_jwt import (
 )
 from common.veil.veil_errors import AssertError, ValidationError
 from common.veil.veil_gino import EntityType
-from common.veil.veil_handlers import BaseHandler
+from common.veil.veil_handlers import BaseHttpHandler
 
 _ = lang_init()
 
 
-class AuthHandler(BaseHandler, ABC):
+class AuthHandler(BaseHttpHandler, ABC):
     async def post(self):
         try:
             if not self.args:
@@ -82,7 +82,7 @@ class AuthHandler(BaseHandler, ABC):
         return await self.log_finish(response)
 
 
-class LogoutHandler(BaseHandler, ABC):
+class LogoutHandler(BaseHttpHandler, ABC):
     async def post(self):
         username, token = extract_user_and_token_with_no_expire_check(
             self.request.headers
@@ -91,7 +91,7 @@ class LogoutHandler(BaseHandler, ABC):
         await system_logger.debug(_("User {} logged out.").format(username))
 
 
-class VersionHandler(BaseHandler, ABC):
+class VersionHandler(BaseHttpHandler, ABC):
     async def get(self):
         info_dict = {
             "version": "3.1.0",

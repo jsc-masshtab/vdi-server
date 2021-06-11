@@ -26,6 +26,17 @@ _ = lang_init()
 
 
 class BaseHandler(RequestHandler, ABC):
+    @property
+    def remote_ip(self):
+        remote_ip = (
+            self.request.headers.get("X-Real-IP")
+            or self.request.headers.get("X-Forwarded-For")  # noqa: W503
+            or self.request.remote_ip  # noqa: W503
+        )
+        return remote_ip
+
+
+class BaseHttpHandler(BaseHandler):
     args = dict()
 
     def prepare(self):
@@ -57,19 +68,10 @@ class BaseHandler(RequestHandler, ABC):
 
     async def log_finish(self, response):
         if "data" in response:
-            await system_logger.debug("BaseHandler data: {}".format(response))
+            await system_logger.debug("BaseHttpHandler data: {}".format(response))
         else:
-            await system_logger.debug("BaseHandler error: {}".format(response))
+            await system_logger.debug("BaseHttpHandler error: {}".format(response))
         return self.finish(response)
-
-    @property
-    def remote_ip(self):
-        remote_ip = (
-            self.request.headers.get("X-Real-IP")
-            or self.request.headers.get("X-Forwarded-For")  # noqa: W503
-            or self.request.remote_ip  # noqa: W503
-        )
-        return remote_ip
 
     @property
     def client_type(self):
@@ -127,7 +129,7 @@ class VdiTornadoGraphQLHandler(TornadoGraphQLHandler, ABC):
     pass
 
 
-class BaseWsHandler(websocket.WebSocketHandler, ABC):
+class BaseWsHandler(BaseHandler, websocket.WebSocketHandler):
     def __init__(
         self,
         application: Application,
@@ -186,12 +188,3 @@ class BaseWsHandler(websocket.WebSocketHandler, ABC):
     # unused abstract method implementation
     def data_received(self, chunk: bytes) -> Optional[Awaitable[None]]:
         pass
-
-    @property
-    def remote_ip(self):
-        remote_ip = (
-            self.request.headers.get("X-Real-IP")
-            or self.request.headers.get("X-Forwarded-For")  # noqa: W503
-            or self.request.remote_ip  # noqa: W503
-        )
-        return remote_ip

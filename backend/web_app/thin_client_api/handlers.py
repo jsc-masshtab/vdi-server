@@ -29,7 +29,7 @@ from common.subscription_sources import (
     USERS_SUBSCRIPTION, WsMessageDirection, WsMessageType
 )
 from common.veil.auth.veil_jwt import jwtauth
-from common.veil.veil_handlers import BaseHandler, BaseWsHandler
+from common.veil.veil_handlers import BaseHttpHandler, BaseWsHandler
 from common.veil.veil_redis import (
     REDIS_CLIENT,
     ThinClientCmd,
@@ -41,7 +41,7 @@ _ = lang_init()
 
 
 @jwtauth
-class RedisInfoHandler(BaseHandler, ABC):
+class RedisInfoHandler(BaseHttpHandler, ABC):
     """Данные для подключения тонких клиентов к Redis."""
 
     async def get(self):
@@ -66,7 +66,7 @@ class RedisInfoHandler(BaseHandler, ABC):
 
 
 @jwtauth
-class PoolHandler(BaseHandler, ABC):
+class PoolHandler(BaseHttpHandler, ABC):
     """Возвращает все пулы пользователя."""
 
     async def get(self):
@@ -83,7 +83,7 @@ class PoolHandler(BaseHandler, ABC):
 
 
 @jwtauth
-class PoolGetVm(BaseHandler, ABC):
+class PoolGetVm(BaseHttpHandler, ABC):
     """Получает конкретную ВМ пользователя."""
 
     async def post(self, pool_id):
@@ -285,13 +285,13 @@ class PoolGetVm(BaseHandler, ABC):
 
 
 @jwtauth
-class VmAction(BaseHandler, ABC):
+class VmAction(BaseHttpHandler, ABC):
     """Пересылка действия над ВМ на ECP VeiL."""
 
     async def post(self, pool_id, action):
 
         user = await self.get_user_model_instance()
-        vm = await BaseHandler.validate_and_get_vm(user, pool_id)
+        vm = await self.validate_and_get_vm(user, pool_id)
 
         try:
             force = self.args.get("force", False)
@@ -317,7 +317,7 @@ class VmAction(BaseHandler, ABC):
 
 
 @jwtauth
-class AttachUsb(BaseHandler, ABC):
+class AttachUsb(BaseHttpHandler, ABC):
     """Добавить usb tcp редирект девайс."""
 
     async def post(self, pool_id):
@@ -326,7 +326,7 @@ class AttachUsb(BaseHandler, ABC):
         host_port = self.validate_and_get_parameter("host_port")
 
         user = await self.get_user_model_instance()
-        vm = await BaseHandler.validate_and_get_vm(user, pool_id)
+        vm = await self.validate_and_get_vm(user, pool_id)
 
         # attach request
         try:
@@ -352,7 +352,7 @@ class AttachUsb(BaseHandler, ABC):
 
 
 @jwtauth
-class DetachUsb(BaseHandler, ABC):
+class DetachUsb(BaseHttpHandler, ABC):
     """Убрать usb tcp редирект девайс."""
 
     async def post(self, pool_id):
@@ -361,7 +361,7 @@ class DetachUsb(BaseHandler, ABC):
         remove_all = self.args.get("remove_all", False)
 
         user = await self.get_user_model_instance()
-        vm = await BaseHandler.validate_and_get_vm(user, pool_id)
+        vm = await self.validate_and_get_vm(user, pool_id)
 
         # detach request
         try:
@@ -379,7 +379,7 @@ class DetachUsb(BaseHandler, ABC):
 
 
 @jwtauth
-class SendTextMsgHandler(BaseHandler, ABC):
+class SendTextMsgHandler(BaseHttpHandler, ABC):
     """Текстовое сообщение от пользователя ТК.
 
     Пользователь ТК ничего не знает об админах, поэтому шлет сообщение всем текущим активным администраторам
