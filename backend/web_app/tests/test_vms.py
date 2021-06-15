@@ -151,39 +151,3 @@ class TestVmStatus:
             pool_schema, qu, context=fixt_auth_context
         )  # noqa
         snapshot.assert_match(executed)
-
-
-@pytest.mark.asyncio
-@pytest.mark.usefixtures(
-    "fixt_db",
-    "fixt_controller",
-    "fixt_user_admin",
-    "fixt_create_static_pool",
-    "fixt_veil_client",
-)
-class VmActionTestCase(VdiHttpTestCase):
-    async def get_moking_dict(self, action):
-
-        # Получаем pool_id из динамической фикстуры пула
-        pool_id = await Pool.select("id").gino.scalar()
-
-        # Получаем виртуальную машину из динамической фикстуры пула
-        vm = await Vm.query.where(pool_id == pool_id).gino.first()
-
-        # Закрепляем VM за тестовым пользователем
-        await vm.add_user("10913d5d-ba7a-4049-88c5-769267a6cbe3", creator="system")
-
-        # Формируем данные для тестируемого параметра
-        headers = await self.get_auth_headers()
-        body = '{"force": true}'
-        url = "/client/pools/{pool_id}/{action}/".format(pool_id=pool_id, action=action)
-        return {"headers": headers, "body": body, "url": url}
-
-    @gen_test(timeout=20)
-    async def test_valid_action(self):
-        action = 'start'  # Заведомо правильное действие.
-        moking_dict = await self.get_moking_dict(action=action)
-        self.assertIsInstance(moking_dict, dict)
-        response_dict = await self.get_response(**moking_dict)
-        response_data = response_dict['data']
-        self.assertEqual(response_data, 'success')

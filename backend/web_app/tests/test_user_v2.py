@@ -9,6 +9,7 @@ from web_app.tests.fixtures import fixt_db, fixt_auth_context, fixt_user  # noqa
 from web_app.tests.utils import execute_scheme, ExecError
 from web_app.auth.user_schema import user_schema
 from common.models.auth import User
+from common.models.user_tk_permission import TkPermission
 from common.settings import PAM_AUTH
 
 pytestmark = [
@@ -246,8 +247,9 @@ class TestUserSchema:
         assigned_permissions_list = executed["removeUserPermission"]["user"][
             "assigned_permissions"
         ]
-        assert len(assigned_permissions_list) == 2
-        assert "SHARED_CLIPBOARD" in assigned_permissions_list
+        assert len(assigned_permissions_list) == 3
+        assert "SHARED_CLIPBOARD_CLIENT_TO_GUEST" in assigned_permissions_list
+        assert "SHARED_CLIPBOARD_GUEST_TO_CLIENT" in assigned_permissions_list
         assert "FOLDERS_REDIR" in assigned_permissions_list
 
         query = """mutation {
@@ -264,8 +266,7 @@ class TestUserSchema:
         assigned_permissions_list = executed["addUserPermission"]["user"][
             "assigned_permissions"
         ]
-        assert len(assigned_permissions_list) == 3
+        assert len(assigned_permissions_list) == 4
         # Permissions are Set. Snapshot would`t work.
-        assert "USB_REDIR" in assigned_permissions_list
-        assert "SHARED_CLIPBOARD" in assigned_permissions_list
-        assert "FOLDERS_REDIR" in assigned_permissions_list
+        for permission_type in TkPermission:
+            assert permission_type.name in assigned_permissions_list
