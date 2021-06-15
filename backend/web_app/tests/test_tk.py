@@ -13,6 +13,8 @@ from web_app.tests.utils import VdiHttpTestCase
 from common.models.active_tk_connection import ActiveTkConnection
 from common.models.auth import User
 from common.models.pool import Pool
+from common.models.vm import Vm
+from common.models.user_tk_permission import TkPermission
 
 from web_app.tests.utils import execute_scheme
 from web_app.thin_client_api.schema import thin_client_schema
@@ -259,10 +261,11 @@ class TestPoolVm(VdiHttpTestCase):
         assert 'data' in response_dict
         port = response_dict['data']['port']
         assert port == 5900
+        # Проверка наличие всех разрешений
         permissions = response_dict['data']['permissions']
-        assert 'USB_REDIR' in permissions
-        assert 'FOLDERS_REDIR' in permissions
-        assert 'SHARED_CLIPBOARD' in permissions
+        for permission_type in TkPermission:
+            assert permission_type.name in permissions
+
         pool_type = response_dict['data']['pool_type']
         assert pool_type == 'STATIC'
         host = response_dict['data']['host']
@@ -304,8 +307,94 @@ class TestPoolVm(VdiHttpTestCase):
         assert '005' == response_dict['errors'][0]['code']
 
 
-class TestVm(VdiHttpTestCase):
-    # TODO: подключение USB к ВМ
-    # TODO: отключение USB от ВМ
-    # TODO: действие над ВМ
-    pass
+@pytest.mark.asyncio
+@pytest.mark.usefixtures(
+    "fixt_db",
+    "fixt_controller",
+    "fixt_user_admin",
+    "fixt_create_static_pool",
+    "fixt_veil_client",
+)
+class VmActionTestCase(VdiHttpTestCase):
+    async def get_moking_dict(self, action):
+
+        # Получаем pool_id из динамической фикстуры пула
+        pool_id = await Pool.select("id").gino.scalar()
+
+        # Получаем виртуальную машину из динамической фикстуры пула
+        vm = await Vm.query.where(pool_id == pool_id).gino.first()
+
+        # Закрепляем VM за тестовым пользователем
+        await vm.add_user("10913d5d-ba7a-4049-88c5-769267a6cbe3", creator="system")
+
+        # Формируем данные для тестируемого параметра
+        headers = await self.get_auth_headers()
+        body = '{"force": true}'
+        url = "/client/pools/{pool_id}/{action}/".format(pool_id=pool_id, action=action)
+        return {"headers": headers, "body": body, "url": url}
+
+    @gen_test(timeout=20)
+    async def test_valid_action(self):
+        action = 'start'  # Заведомо правильное действие.
+        moking_dict = await self.get_moking_dict(action=action)
+        self.assertIsInstance(moking_dict, dict)
+        response_dict = await self.get_response(**moking_dict)
+        response_data = response_dict['data']
+        self.assertEqual(response_data, 'success')
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures(
+    "fixt_db",
+    "fixt_controller",
+    "fixt_user_admin",
+    "fixt_create_static_pool",
+    "fixt_veil_client",
+)
+class USbTestCase(VdiHttpTestCase):
+
+    @gen_test
+    async def test_attach_detach_usb_ok(self):
+
+        # Получаем pool_id из динамической фикстуры пула
+        pool_id = await Pool.select("id").gino.scalar()
+
+        # Получаем виртуальную машину из динамической фикстуры пула
+        vm = await Vm.query.where(pool_id == pool_id).gino.first()
+
+        # Закрепляем VM за тестовым пользователем
+        await vm.add_user("10913d5d-ba7a-4049-88c5-769267a6cbe3", creator="system")
+
+        headers = await self.get_auth_headers()
+        # Формируем данные для attach usb запроса
+        usb_tcp_port = 17001
+        usb_tcp_ip = "127.0.0.1"
+        send_data = dict(host_address=usb_tcp_ip, host_port=usb_tcp_port)
+        body = json.dumps(send_data)
+
+        url = "/client/pools/{pool_id}/attach-usb/".format(pool_id=pool_id)
+        request_data_dict = {"headers": headers, "body": body, "url": url}
+
+        # Send attach request
+        response_dict = await self.get_response(**request_data_dict)
+        # print('!!!response_dict ', response_dict, flush=True)
+        usb_array = response_dict['tcp_usb_devices']
+
+        # some attach response checks
+        try:
+            usb = next(usb for usb in usb_array if usb['service'] == usb_tcp_port and usb['host'] == usb_tcp_ip)
+        except StopIteration:
+            raise AssertionError("USB not found")
+
+        usb_uuid = usb.get('uuid')
+        assert usb_uuid is not None
+
+        # Данные для detach
+        send_data = dict(usb_uuid=usb_uuid, remove_all=False)
+        body = json.dumps(send_data)
+
+        url = "/client/pools/{pool_id}/detach-usb/".format(pool_id=pool_id)
+        request_data_dict = {"headers": headers, "body": body, "url": url}
+
+        # Send detach request
+        await self.get_response(**request_data_dict)
