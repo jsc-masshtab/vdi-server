@@ -28,7 +28,7 @@ from common.settings import (
 from common.subscription_sources import (
     USERS_SUBSCRIPTION, WsMessageDirection, WsMessageType
 )
-from common.veil.auth.veil_jwt import jwtauth
+from common.veil.auth.veil_jwt import jwtauth, jwtauth_ws
 from common.veil.veil_handlers import BaseHttpHandler, BaseWsHandler
 from common.veil.veil_redis import (
     REDIS_CLIENT,
@@ -417,6 +417,7 @@ class SendTextMsgHandler(BaseHttpHandler, ABC):
             return await self.log_finish(response)
 
 
+@jwtauth_ws
 class ThinClientWsHandler(BaseWsHandler):
     def __init__(
         self,
@@ -431,9 +432,6 @@ class ThinClientWsHandler(BaseWsHandler):
         self._listen_for_cmd_task = None
 
     async def open(self):
-        is_validated = await self._validate_token()
-        if not is_validated:
-            return
 
         try:
             # Сохраняем юзера с инфой
@@ -455,7 +453,7 @@ class ThinClientWsHandler(BaseWsHandler):
                 "error": False,
                 "msg": "Auth success",
             }
-            await self._write_msg(json.dumps(response))
+            await self.write_msg(json.dumps(response))
 
         except Exception as ex:  # noqa
             response = {
@@ -463,7 +461,7 @@ class ThinClientWsHandler(BaseWsHandler):
                 "error": True,
                 "msg": str(ex),
             }
-            await self._write_msg(json.dumps(response))
+            await self.write_msg(json.dumps(response))
             self.close(code=4000)
 
         # start tasks
@@ -498,7 +496,7 @@ class ThinClientWsHandler(BaseWsHandler):
                 "error": True,
                 "msg": "Wrong msg format " + str(ex),
             }
-            await self._write_msg(json.dumps(response))
+            await self.write_msg(json.dumps(response))
 
     def on_close(self):
         # print("!!!WebSocket closed", flush=True)
@@ -546,7 +544,7 @@ class ThinClientWsHandler(BaseWsHandler):
                         if redis_message_data_dict["resource"] == "/domains/":
                             vm_id = await ActiveTkConnection.get_vm_id(self.conn_id)
                             if vm_id and redis_message_data_dict["id"] == str(vm_id):
-                                await self._write_msg(redis_message_data)
+                                await self.write_msg(redis_message_data)
 
                     elif (
                         msg_type == WsMessageType.TEXT_MSG.value
@@ -561,7 +559,7 @@ class ThinClientWsHandler(BaseWsHandler):
                         if (recipient_id is None) or (
                             recipient_id == str(self.user_id)
                         ):
-                            await self._write_msg(redis_message_data)
+                            await self.write_msg(redis_message_data)
 
             except asyncio.CancelledError:
                 break
@@ -614,7 +612,7 @@ class ThinClientWsHandler(BaseWsHandler):
                                 "error": False,
                                 "msg": "Disconnect requested",
                             }
-                            await self._write_msg(json.dumps(response))
+                            await self.write_msg(json.dumps(response))
                             self.close()
 
             except asyncio.CancelledError:

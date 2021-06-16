@@ -20,6 +20,51 @@ from common.settings import (
 _ = lang_init()
 
 
+def jwtauth_ws(handler_class):
+
+    def wrap_open(open_method):
+
+        async def modified_open(self):  # noqa
+            if AUTH_ENABLED:
+                """Проверить токен."""
+                try:
+                    token = self.get_query_argument("token")
+                    if not token:
+                        raise AssertionError("Jwt token must be send as query param")
+                    if token and "jwt" in token:
+                        token = token.replace("jwt", "")
+                    token = token.replace(" ", "")
+
+                    # token checking
+                    payload = decode_jwt(token)
+                    payload_user = payload.get("username")
+                    is_valid = await UserJwtInfo.check_token(payload_user, token)
+                    if not is_valid:
+                        raise AssertionError("Auth failed. Wrong jwt token")
+
+                    self.user_id = await User.get_id(payload_user)
+                    if not self.user_id:
+                        raise AssertionError("User {} not found.".format(payload_user))
+
+                    await open_method(self)  # invoke original open
+
+                except jwt.ExpiredSignature:
+                    msg = _("Token expired.")
+                    await self.close_with_msg(msg)
+
+                except Exception as ex:  # noqa
+                    msg = "Token validation error. {}".format(str(ex))
+                    await self.close_with_msg(msg)
+
+            else:  # invoke original open without auth
+                await open_method(self)
+
+        return modified_open
+
+    handler_class.open = wrap_open(handler_class.open)  # noqa
+    return handler_class
+
+
 def jwtauth(handler_class):
     """Handle Tornado JWT Auth."""
 
