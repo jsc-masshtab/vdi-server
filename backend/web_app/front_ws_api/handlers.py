@@ -21,12 +21,14 @@ from common.subscription_sources import (
     WsMessageDirection,
     WsMessageType
 )
+from common.veil.auth.veil_jwt import jwtauth_ws
 from common.veil.veil_handlers import BaseWsHandler
 from common.veil.veil_redis import REDIS_CLIENT, a_redis_get_message
 
 _ = lang_init()
 
 
+@jwtauth_ws
 class VdiFrontWsHandler(BaseWsHandler):  # noqa
     def __init__(
         self,
@@ -41,10 +43,6 @@ class VdiFrontWsHandler(BaseWsHandler):  # noqa
         self._send_messages_task = None
 
     async def open(self):
-
-        is_validated = await self._validate_token()
-        if not is_validated:
-            return
 
         # on success
         await system_logger.debug(_("WebSocket opened."))
@@ -72,7 +70,7 @@ class VdiFrontWsHandler(BaseWsHandler):  # noqa
             response["resource"] = subscription_source
         except ValueError:
             response["error"] = True
-            await self._write_msg(response)
+            await self.write_msg(response)
             return
         # check if allowed
         if subscription_source not in VDI_FRONT_ALLOWED_SUBSCRIPTIONS_LIST:
@@ -80,7 +78,7 @@ class VdiFrontWsHandler(BaseWsHandler):  # noqa
             description = _("Unknown subscription source.")
             await system_logger.error(message=msg, description=description)
             response["error"] = True
-            await self._write_msg(response)
+            await self.write_msg(response)
             return
         # if 'add' cmd and not subscribed  then subscribe
         if (
@@ -112,7 +110,7 @@ class VdiFrontWsHandler(BaseWsHandler):  # noqa
             response["error"] = False
 
         # send response
-        await self._write_msg(response)
+        await self.write_msg(response)
 
     async def _send_messages_co(self):
         """Wait for message and send it to front client."""
@@ -144,11 +142,11 @@ class VdiFrontWsHandler(BaseWsHandler):  # noqa
                                 == WsMessageDirection.USER_TO_ADMIN.value  # noqa: W503
                             ):
                                 # Текстовые сообщения (от пользователей ТК) администратору
-                                await self._write_msg(redis_message_data)
+                                await self.write_msg(redis_message_data)
                         # other resources
                         else:
                             # print("_send_messages_co: redis_message_data ", redis_message_data)
-                            await self._write_msg(redis_message_data)
+                            await self.write_msg(redis_message_data)
 
             except asyncio.CancelledError:
                 break

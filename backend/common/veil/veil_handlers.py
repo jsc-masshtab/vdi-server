@@ -11,11 +11,9 @@ from tornado.web import Application, RequestHandler
 
 from common.languages import lang_init
 from common.log.journal import system_logger
-from common.models.auth import User, UserJwtInfo
+from common.models.auth import User
 from common.models.pool import Pool
 from common.veil.auth.veil_jwt import (
-    JWT_OPTIONS,
-    decode_jwt,
     extract_user,
     extract_user_object,
     jwtauth,
@@ -141,49 +139,19 @@ class BaseWsHandler(BaseHandler, websocket.WebSocketHandler):
         self.user_id = None
 
     def check_origin(self, origin):
-        # TODO: временное решение
         return True
 
-    async def _validate_token(self):
-        """Проверить токен. Вернуть True, если валидация прошла. Иначе False."""
-        try:
-            token = self.get_query_argument("token")
-            if not token:
-                raise AssertionError("Jwt token must be send as query param")
-            if token and "jwt" in token:
-                token = token.replace("jwt", "")
-            token = token.replace(" ", "")
-
-            # token checking
-            payload = decode_jwt(token)
-            payload_user = payload.get("username")
-            is_valid = await UserJwtInfo.check_token(payload_user, token)
-            if not is_valid:
-                raise AssertionError("Auth failed. Wrong jwt token")
-
-            # extract user
-            payload = decode_jwt(token, JWT_OPTIONS)
-            user_name = payload["username"]
-
-            self.user_id = await User.get_id(user_name)
-            if not self.user_id:
-                raise AssertionError("User {} not found.".format(user_name))
-
-            return True
-
-        except Exception as ex:  # noqa
-            error_msg = "Token validation error. {}".format(str(ex))
-            await self._write_msg(error_msg)
-            self.close(code=4001, reason=error_msg)
-            return False
-
-    async def _write_msg(self, msg):
+    async def write_msg(self, msg):
         try:
             await self.write_message(msg)
         except (websocket.WebSocketError, IOError) as ex:
             await system_logger.debug(
                 message=_("Ws write error."), description=(str(ex))
             )
+
+    async def close_with_msg(self, msg, code=4001):
+        await self.write_msg(msg)
+        self.close(code=code, reason=msg)
 
     # unused abstract method implementation
     def data_received(self, chunk: bytes) -> Optional[Awaitable[None]]:

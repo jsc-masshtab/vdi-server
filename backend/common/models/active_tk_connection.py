@@ -27,7 +27,7 @@ class ActiveTkConnection(db.Model, AbstractSortableStatusModel):
 
     id = db.Column(UUID(), primary_key=True, default=uuid.uuid4)
 
-    user_id = db.Column(UUID(), nullable=False)
+    user_id = db.Column(UUID(), nullable=True)  # Сделан nullable=True для работы в режиме без авторизации
     veil_connect_version = db.Column(db.Unicode(length=128))
     vm_id = db.Column(UUID())
     tk_ip = db.Column(db.Unicode(length=128))

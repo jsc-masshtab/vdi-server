@@ -82,6 +82,8 @@ def gino_model_to_json_serializable_dict(model):
         elif isinstance(value, str):
             if key != "token" and key != "password":
                 json_serializable_dict[key] = value
+        elif isinstance(value, (int, float)):
+            json_serializable_dict[key] = value
         elif value is None:
             json_serializable_dict[key] = None
         else:
