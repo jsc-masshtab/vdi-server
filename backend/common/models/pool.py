@@ -11,9 +11,7 @@ from asyncpg.exceptions import UniqueViolationError
 from sqlalchemy import (
     Enum as AlchemyEnum,
     and_,
-    case,
     desc,
-    literal_column,
     text,
     union_all,
 )
@@ -69,7 +67,7 @@ _ = lang_init()
 class Pool(VeilModel):
     """Сейчас отсутствует смысловая валидация на уровне таблиц (она в схемах)."""
 
-    class PoolTypes:
+    class PoolTypes(Enum):
         """Доступные типы пулов."""
 
         AUTOMATED = "AUTOMATED"
@@ -91,8 +89,7 @@ class Pool(VeilModel):
 
     __tablename__ = "pool"
 
-    POOL_TYPE_LABEL = "pool_type"
-    EXTRA_ORDER_FIELDS = ["controller_address", "users_count", "vm_amount", "pool_type"]
+    EXTRA_ORDER_FIELDS = ["controller_address", "users_count", "vm_amount"]
 
     id = db.Column(UUID(), primary_key=True, default=uuid.uuid4, unique=True)
     verbose_name = db.Column(db.Unicode(length=128), nullable=False, unique=True)
@@ -106,6 +103,8 @@ class Pool(VeilModel):
         ARRAY(AlchemyEnum(PoolConnectionTypes)), nullable=False, index=True
     )
     tag = db.Column(UUID(), nullable=True)
+
+    pool_type = db.Column(AlchemyEnum(PoolTypes), nullable=False)
 
     # ----- ----- ----- ----- ----- ----- -----
     # Properties and getters:
@@ -154,22 +153,6 @@ class Pool(VeilModel):
     @property
     async def is_automated_pool(self):
         return await AutomatedPool.get(self.id)
-
-    @property
-    async def pool_type(self):
-        """Возвращает тип пула виртуальных машин."""
-        pool = await AutomatedPool.get(self.id)
-        if pool:
-            if pool.is_guest:
-                return Pool.PoolTypes.GUEST
-            else:
-                return Pool.PoolTypes.AUTOMATED
-
-        pool = await StaticPool.get(self.id)
-        if pool:
-            return Pool.PoolTypes.STATIC
-
-        return Pool.PoolTypes.RDS
 
     @property
     async def template_id(self):
@@ -229,12 +212,6 @@ class Pool(VeilModel):
                         if reversed_order
                         else query.order_by(vms_count)
                     )
-                elif ordering == "pool_type":
-                    query = (
-                        query.order_by(desc(text(Pool.POOL_TYPE_LABEL)))
-                        if reversed_order
-                        else query.order_by(text(Pool.POOL_TYPE_LABEL))
-                    )
             else:
                 # Соответствие переданного наименования поля полю модели, чтобы не использовать raw_sql в order
                 query = (
@@ -255,28 +232,7 @@ class Pool(VeilModel):
     ):
         from common.models.controller import Controller
 
-        # Добавление в итоговый НД данных о признаке пула
-        pool_type = case(
-            [
-                (
-                    RdsPool.id.isnot(None),
-                    literal_column("'{}'".format(Pool.PoolTypes.RDS)),
-                ),
-                (
-                    and_(AutomatedPool.id.isnot(None),
-                         AutomatedPool.is_guest.isnot(True)),
-                    literal_column("'{}'".format(Pool.PoolTypes.AUTOMATED)),
-                ),
-                (
-                    and_(AutomatedPool.id.isnot(None),
-                         AutomatedPool.is_guest.isnot(False)),
-                    literal_column("'{}'".format(Pool.PoolTypes.GUEST)),
-                ),
-            ],
-            else_=literal_column("'{}'".format(Pool.PoolTypes.STATIC)),
-        ).label(Pool.POOL_TYPE_LABEL)
-
-        # Формирование общего селекта из таблиц пулов с добавлением принадлежности пула.
+        # Формирование общего селекта из таблиц пулов
         query = db.select(
             [
                 Pool.id.label("master_id"),
@@ -296,7 +252,7 @@ class Pool(VeilModel):
                 AutomatedPool.create_thin_clones,
                 AutomatedPool.prepare_vms,
                 AutomatedPool.ad_cn_pattern,
-                pool_type,
+                Pool.pool_type,
                 Pool.connection_types,
             ]
         )
@@ -764,7 +720,7 @@ class Pool(VeilModel):
 
     @classmethod
     async def create(
-        cls, verbose_name, resource_pool_id, controller_ip, connection_types, tag
+        cls, verbose_name, resource_pool_id, controller_ip, connection_types, tag, pool_type
     ):
         # TODO: controller_ip заменить на controller_id
         from common.models.controller import Controller
@@ -780,6 +736,7 @@ class Pool(VeilModel):
             status=Status.CREATING,
             connection_types=connection_types,
             tag=tag,
+            pool_type=pool_type
         )
 
         # Оповещаем о создании пула
@@ -1151,11 +1108,6 @@ class Pool(VeilModel):
     def get_resource_type(self):
         return POOLS_SUBSCRIPTION
 
-    # override
-    async def additional_model_to_json_data(self):
-        pool_type = await self.pool_type
-        return dict(pool_type=pool_type)
-
     async def get_tag(self, tag):
         controller_obj = await self.controller_obj
         controller_client = controller_obj.veil_client
@@ -1325,7 +1277,8 @@ class RdsPool(db.Model):
                 resource_pool_id=resource_pool_id,
                 tag=None,
                 controller_ip=controller_address,
-                connection_types=connection_types
+                connection_types=connection_types,
+                pool_type=Pool.PoolTypes.RDS
             )
             pool = await super().create(id=base_pool.id)
 
@@ -1446,6 +1399,7 @@ class StaticPool(db.Model):
                 resource_pool_id=resource_pool_id,
                 connection_types=connection_types,
                 tag=tag,
+                pool_type=Pool.PoolTypes.STATIC
             )
             pool = await super().create(id=pl.id)
             # Создаем ВМ
@@ -1596,6 +1550,7 @@ class AutomatedPool(db.Model):
         is_guest: bool = False,
     ):
         """Nested transactions are atomic."""
+        current_pool_type = Pool.PoolTypes.GUEST if is_guest else Pool.PoolTypes.AUTOMATED
         async with db.transaction():
             # Создаем базовую сущность Pool
             pool = await Pool.create(
@@ -1604,6 +1559,7 @@ class AutomatedPool(db.Model):
                 controller_ip=controller_ip,
                 connection_types=connection_types,
                 tag=tag,
+                pool_type=current_pool_type
             )
             # Создаем AutomatedPool
             automated_pool = await super().create(

@@ -617,7 +617,7 @@ def pool_obj_to_type(pool_obj: Pool) -> PoolType:
         "pool_id": pool_obj.master_id,
         "master_id": pool_obj.master_id,
         "verbose_name": pool_obj.verbose_name,
-        "pool_type": pool_obj.pool_type,
+        "pool_type": pool_obj.pool_type.name,
         "resource_pool_id": pool_obj.resource_pool_id,
         "static_pool_id": pool_obj.master_id,
         "automated_pool_id": pool_obj.master_id,
@@ -697,7 +697,7 @@ class DeletePoolMutation(graphene.Mutation, PoolValidator):
             entity = {"entity_type": EntityType.POOL, "entity_uuid": None}
             raise SimpleError(_("No such pool."), entity=entity)
 
-        pool_type = await pool.pool_type
+        pool_type = pool.pool_type
 
         # Авто пул или Гостевой пул
         if pool_type == Pool.PoolTypes.AUTOMATED or pool_type == Pool.PoolTypes.GUEST:
@@ -1121,7 +1121,7 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator, ControllerFe
                 tag=tag,
                 is_guest=is_guest,
             )
-        except Exception as E:  # Возможные исключения: дубликат имени вм
+        except Exception as E:  # Возможные исключения: дубликат имени
             desc = str(E)
             error_msg = _("Failed to create pool {}.").format(verbose_name)
             entity = {"entity_type": EntityType.POOL, "entity_uuid": None}
@@ -1357,7 +1357,7 @@ class AssignVmToUser(graphene.Mutation):
         pool_type = None
         if pool_id:
             pool = await Pool.get(pool_id)
-            pool_type = await pool.pool_type
+            pool_type = pool.pool_type
 
             assigned_users = await pool.assigned_users()
             assigned_users_list = [user.id for user in assigned_users]

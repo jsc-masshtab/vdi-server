@@ -28,8 +28,8 @@ from common.settings import (
 from common.subscription_sources import (
     USERS_SUBSCRIPTION, WsMessageDirection, WsMessageType
 )
-from common.veil.auth.veil_jwt import jwtauth
-from common.veil.veil_handlers import BaseHandler, BaseWsHandler
+from common.veil.auth.veil_jwt import jwtauth, jwtauth_ws
+from common.veil.veil_handlers import BaseHttpHandler, BaseWsHandler
 from common.veil.veil_redis import (
     REDIS_CLIENT,
     ThinClientCmd,
@@ -41,7 +41,7 @@ _ = lang_init()
 
 
 @jwtauth
-class RedisInfoHandler(BaseHandler, ABC):
+class RedisInfoHandler(BaseHttpHandler, ABC):
     """Данные для подключения тонких клиентов к Redis."""
 
     async def get(self):
@@ -66,7 +66,7 @@ class RedisInfoHandler(BaseHandler, ABC):
 
 
 @jwtauth
-class PoolHandler(BaseHandler, ABC):
+class PoolHandler(BaseHttpHandler, ABC):
     """Возвращает все пулы пользователя."""
 
     async def get(self):
@@ -83,7 +83,7 @@ class PoolHandler(BaseHandler, ABC):
 
 
 @jwtauth
-class PoolGetVm(BaseHandler, ABC):
+class PoolGetVm(BaseHttpHandler, ABC):
     """Получает конкретную ВМ пользователя."""
 
     async def post(self, pool_id):
@@ -119,7 +119,7 @@ class PoolGetVm(BaseHandler, ABC):
                 ]
             }
             return await self.log_finish(response)
-        pool_type = await pool.pool_type
+        pool_type = pool.pool_type
         expandable_pool = False  # В данный момент расширится может автоматический (гостевой пул)
         if pool_type == PoolM.PoolTypes.AUTOMATED or pool_type == PoolM.PoolTypes.GUEST:
             # Запрос на расширение пула
@@ -260,7 +260,7 @@ class PoolGetVm(BaseHandler, ABC):
                 vm_id=str(vm.id),
                 permissions=[permission.value for permission in permissions],
                 farm_list=farm_list,
-                pool_type=pool_type
+                pool_type=pool_type.name
             )
         }
         return await self.log_finish(response)
@@ -285,13 +285,13 @@ class PoolGetVm(BaseHandler, ABC):
 
 
 @jwtauth
-class VmAction(BaseHandler, ABC):
+class VmAction(BaseHttpHandler, ABC):
     """Пересылка действия над ВМ на ECP VeiL."""
 
     async def post(self, pool_id, action):
 
         user = await self.get_user_model_instance()
-        vm = await BaseHandler.validate_and_get_vm(user, pool_id)
+        vm = await self.validate_and_get_vm(user, pool_id)
 
         try:
             force = self.args.get("force", False)
@@ -317,7 +317,7 @@ class VmAction(BaseHandler, ABC):
 
 
 @jwtauth
-class AttachUsb(BaseHandler, ABC):
+class AttachUsb(BaseHttpHandler, ABC):
     """Добавить usb tcp редирект девайс."""
 
     async def post(self, pool_id):
@@ -326,7 +326,7 @@ class AttachUsb(BaseHandler, ABC):
         host_port = self.validate_and_get_parameter("host_port")
 
         user = await self.get_user_model_instance()
-        vm = await BaseHandler.validate_and_get_vm(user, pool_id)
+        vm = await self.validate_and_get_vm(user, pool_id)
 
         # attach request
         try:
@@ -352,7 +352,7 @@ class AttachUsb(BaseHandler, ABC):
 
 
 @jwtauth
-class DetachUsb(BaseHandler, ABC):
+class DetachUsb(BaseHttpHandler, ABC):
     """Убрать usb tcp редирект девайс."""
 
     async def post(self, pool_id):
@@ -361,7 +361,7 @@ class DetachUsb(BaseHandler, ABC):
         remove_all = self.args.get("remove_all", False)
 
         user = await self.get_user_model_instance()
-        vm = await BaseHandler.validate_and_get_vm(user, pool_id)
+        vm = await self.validate_and_get_vm(user, pool_id)
 
         # detach request
         try:
@@ -379,7 +379,7 @@ class DetachUsb(BaseHandler, ABC):
 
 
 @jwtauth
-class SendTextMsgHandler(BaseHandler, ABC):
+class SendTextMsgHandler(BaseHttpHandler, ABC):
     """Текстовое сообщение от пользователя ТК.
 
     Пользователь ТК ничего не знает об админах, поэтому шлет сообщение всем текущим активным администраторам
@@ -417,6 +417,7 @@ class SendTextMsgHandler(BaseHandler, ABC):
             return await self.log_finish(response)
 
 
+@jwtauth_ws
 class ThinClientWsHandler(BaseWsHandler):
     def __init__(
         self,
@@ -431,9 +432,6 @@ class ThinClientWsHandler(BaseWsHandler):
         self._listen_for_cmd_task = None
 
     async def open(self):
-        is_validated = await self._validate_token()
-        if not is_validated:
-            return
 
         try:
             # Сохраняем юзера с инфой
@@ -455,7 +453,7 @@ class ThinClientWsHandler(BaseWsHandler):
                 "error": False,
                 "msg": "Auth success",
             }
-            await self._write_msg(json.dumps(response))
+            await self.write_msg(json.dumps(response))
 
         except Exception as ex:  # noqa
             response = {
@@ -463,7 +461,7 @@ class ThinClientWsHandler(BaseWsHandler):
                 "error": True,
                 "msg": str(ex),
             }
-            await self._write_msg(json.dumps(response))
+            await self.write_msg(json.dumps(response))
             self.close(code=4000)
 
         # start tasks
@@ -498,7 +496,7 @@ class ThinClientWsHandler(BaseWsHandler):
                 "error": True,
                 "msg": "Wrong msg format " + str(ex),
             }
-            await self._write_msg(json.dumps(response))
+            await self.write_msg(json.dumps(response))
 
     def on_close(self):
         # print("!!!WebSocket closed", flush=True)
@@ -546,7 +544,7 @@ class ThinClientWsHandler(BaseWsHandler):
                         if redis_message_data_dict["resource"] == "/domains/":
                             vm_id = await ActiveTkConnection.get_vm_id(self.conn_id)
                             if vm_id and redis_message_data_dict["id"] == str(vm_id):
-                                await self._write_msg(redis_message_data)
+                                await self.write_msg(redis_message_data)
 
                     elif (
                         msg_type == WsMessageType.TEXT_MSG.value
@@ -561,7 +559,7 @@ class ThinClientWsHandler(BaseWsHandler):
                         if (recipient_id is None) or (
                             recipient_id == str(self.user_id)
                         ):
-                            await self._write_msg(redis_message_data)
+                            await self.write_msg(redis_message_data)
 
             except asyncio.CancelledError:
                 break
@@ -614,7 +612,7 @@ class ThinClientWsHandler(BaseWsHandler):
                                 "error": False,
                                 "msg": "Disconnect requested",
                             }
-                            await self._write_msg(json.dumps(response))
+                            await self.write_msg(json.dumps(response))
                             self.close()
 
             except asyncio.CancelledError:

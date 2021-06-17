@@ -201,7 +201,7 @@ class ThinClientQuery(graphene.ObjectType):
 
         # request to db
         tk_db_data_container = await query.limit(limit).offset(offset).gino.all()
-        # print('tk_db_data_container ', tk_db_data_container, flush=True)
+
         # conversion
         graphene_types = [
             ThinClientType.create_from_db_data(tk_db_data)
