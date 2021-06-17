@@ -48,26 +48,3 @@ class LicenseTestCase(VdiHttpTestCase):
         self.assertIn("expiration_date", data)
         self.assertIn("uuid", data)
         self.assertIn("support_expiration_date", data)
-
-    @pytest.mark.usefixtures("fixt_db", "fixt_user_admin")
-    @gen_test
-    def test_thin_client_redis_info(self):
-        body = '{"username": "test_user_admin","password": "veil"}'
-        response_dict = yield self.get_response(body=body, method="POST")
-        access_token = response_dict["data"]["access_token"]
-        self.assertTrue(access_token)
-
-        headers = {
-            "Content-Type": "application/json",
-            "Authorization": "jwt {}".format(access_token),
-        }
-        response_dict = yield self.get_response(
-            body=None, url="/client/message_broker", headers=headers, method="GET"
-        )
-
-        self.assertIn("data", response_dict)
-        data = response_dict["data"]
-        self.assertIn("password", data)
-        self.assertIn("db", data)
-        self.assertIn("port", data)
-        self.assertIn("channel", data)

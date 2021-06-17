@@ -21,8 +21,8 @@ from common.models.active_tk_connection import ActiveTkConnection
 from common.models.pool import AutomatedPool, Pool as PoolM, RdsPool
 from common.models.task import PoolTaskType, Task, TaskStatus
 from common.settings import (
-    REDIS_DB, REDIS_PASSWORD, REDIS_PORT, REDIS_TEXT_MSG_CHANNEL,
-    REDIS_THIN_CLIENT_CHANNEL, REDIS_THIN_CLIENT_CMD_CHANNEL,
+    REDIS_TEXT_MSG_CHANNEL,
+    REDIS_THIN_CLIENT_CMD_CHANNEL,
     WS_MONITOR_CHANNEL_OUT
 )
 from common.subscription_sources import (
@@ -38,31 +38,6 @@ from common.veil.veil_redis import (
 )
 
 _ = lang_init()
-
-
-@jwtauth
-class RedisInfoHandler(BaseHttpHandler, ABC):
-    """Данные для подключения тонких клиентов к Redis."""
-
-    async def get(self):
-        """  # noqa
-        {
-            "data": {
-                "port": 6379,
-                "password": "veil",
-                "channel": "TC_CHANNEL"
-                "db": 0:
-            }
-        }
-        """
-        redis_info = dict(
-            port=REDIS_PORT,
-            channel=REDIS_THIN_CLIENT_CHANNEL,
-            password=REDIS_PASSWORD,
-            db=REDIS_DB,
-        )
-        response = dict(data=redis_info)
-        return self.finish(response)
 
 
 @jwtauth
@@ -91,7 +66,8 @@ class PoolGetVm(BaseHttpHandler, ABC):
             "remote_protocol", PoolM.PoolConnectionTypes.SPICE.name
         )
         # Проверяем лимит клиентов
-        if PoolM.thin_client_limit_exceeded():
+        thin_client_limit_exceeded = await ActiveTkConnection.thin_client_limit_exceeded()
+        if thin_client_limit_exceeded:
             response = {
                 "errors": [{"message": _("Thin client limit exceeded."),
                             "code": "001"}]

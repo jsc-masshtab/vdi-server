@@ -122,7 +122,6 @@ REDIS_PORT = 6379
 REDIS_DB = 0
 REDIS_PASSWORD = "4NZ7GpHn4IlshPhb"
 REDIS_TIMEOUT = 5
-REDIS_THIN_CLIENT_CHANNEL = "TC_CHANNEL"
 REDIS_THIN_CLIENT_CMD_CHANNEL = (
     "TC_CMD_CHANNEL"
 )  # канал для комманд обработчикам ws тонких клиентов.
