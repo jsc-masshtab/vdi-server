@@ -463,7 +463,7 @@ class PrepareVmTask(AbstractTask):
 
         pool = await Pool.get(vm.pool_id)
 
-        pool_type = await pool.pool_type
+        pool_type = pool.pool_type
         if pool_type == Pool.PoolTypes.AUTOMATED or pool_type == Pool.PoolTypes.GUEST:
             auto_pool = await AutomatedPool.get(pool.id)
             active_directory_object = await AuthenticationDirectory.query.where(
@@ -556,7 +556,7 @@ class RemoveVmsTask(AbstractTask):
 
     async def do_task(self):
         pool = await Pool.get(self.task_model.entity_id)
-        pool_type = await pool.pool_type
+        pool_type = pool.pool_type
 
         if pool_type == Pool.PoolTypes.AUTOMATED or pool_type == Pool.PoolTypes.GUEST:
             pool_lock = self._pool_locks.get_pool_lock(str(pool.id))

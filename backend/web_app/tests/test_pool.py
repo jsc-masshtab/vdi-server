@@ -133,7 +133,7 @@ class PoolTestCase(VdiHttpTestCase):
     def test_automated_pool_expand(self):
         # Инициализация лицензии происходит в VdiHttpTestCase
         pool = yield Pool.query.gino.first()
-        pool_type = yield pool.pool_type
+        pool_type = pool.pool_type
         self.assertEqual(pool_type, Pool.PoolTypes.AUTOMATED)
         pool_id = pool.id
 

@@ -119,7 +119,7 @@ class PoolGetVm(BaseHttpHandler, ABC):
                 ]
             }
             return await self.log_finish(response)
-        pool_type = await pool.pool_type
+        pool_type = pool.pool_type
         expandable_pool = False  # В данный момент расширится может автоматический (гостевой пул)
         if pool_type == PoolM.PoolTypes.AUTOMATED or pool_type == PoolM.PoolTypes.GUEST:
             # Запрос на расширение пула
@@ -260,7 +260,7 @@ class PoolGetVm(BaseHttpHandler, ABC):
                 vm_id=str(vm.id),
                 permissions=[permission.value for permission in permissions],
                 farm_list=farm_list,
-                pool_type=pool_type
+                pool_type=pool_type.name
             )
         }
         return await self.log_finish(response)
