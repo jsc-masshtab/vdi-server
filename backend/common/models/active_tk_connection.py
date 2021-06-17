@@ -17,6 +17,9 @@ from common.subscription_sources import THIN_CLIENTS_SUBSCRIPTION
 from common.veil.veil_gino import AbstractSortableStatusModel, Status
 from common.veil.veil_redis import publish_data_in_internal_channel, request_to_execute_pool_task
 
+from web_app.auth.license.utils import License
+
+
 _ = lang_init()
 
 
@@ -76,7 +79,7 @@ class ActiveTkConnection(db.Model, AbstractSortableStatusModel):
         return model
 
     @staticmethod
-    async def get_thin_clients_conn_count(get_disconnected, user_id):
+    async def get_thin_clients_conn_count(get_disconnected=False, user_id=None):
 
         query = db.select([db.func.count()]).select_from(ActiveTkConnection)
 
@@ -106,6 +109,13 @@ class ActiveTkConnection(db.Model, AbstractSortableStatusModel):
             filters.append(ActiveTkConnection.user_id == user_id)
 
         return filters
+
+    @classmethod
+    async def thin_client_limit_exceeded(cls):
+
+        current_license = License()
+        current_clients_count = await ActiveTkConnection.get_thin_clients_conn_count()
+        return current_clients_count >= current_license.thin_clients_limit
 
     async def recreation_guest_vm(self):
         vm = await Vm.get(self.vm_id)

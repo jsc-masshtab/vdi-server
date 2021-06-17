@@ -114,8 +114,6 @@ class BaseHttpHandler(BaseHandler):
             exc_info = kwargs["exc_info"]
             (_, exc, _) = exc_info
             message = "Server error: " + str(exc)
-        except Exception:  # noqa
-            pass
         finally:
             shorten_msg = textwrap.shorten(message, width=100)
             response = {"errors": [{"message": shorten_msg}]}

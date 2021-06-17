@@ -65,21 +65,6 @@ def redis_error_handle(func):
     return wrapped_function
 
 
-def get_thin_clients_count():
-    numsub = REDIS_CLIENT.pubsub_numsub(settings.REDIS_THIN_CLIENT_CHANNEL)
-
-    if isinstance(numsub, list):
-        channel_count = numsub[0]
-        if isinstance(channel_count, tuple):
-            channel_count = channel_count[1]
-        else:
-            channel_count = 0
-    else:
-        channel_count = 0
-
-    return channel_count
-
-
 def save_license_dict(dict_name, data):
     for value in data:
         data[value] = str(data[value])

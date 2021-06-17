@@ -56,10 +56,8 @@ from common.veil.veil_errors import (
 )
 from common.veil.veil_gino import EntityType, Status, VeilModel
 from common.veil.veil_graphene import VmState
-from common.veil.veil_redis import get_thin_clients_count, \
-    publish_data_in_internal_channel
+from common.veil.veil_redis import publish_data_in_internal_channel
 
-from web_app.auth.license.utils import License
 
 _ = lang_init()
 
@@ -171,12 +169,6 @@ class Pool(VeilModel):
             random.randint(0, 255),
             random.randint(0, 255),
         )
-
-    @classmethod
-    def thin_client_limit_exceeded(cls):
-        current_license = License()
-        current_clients = get_thin_clients_count()
-        return current_clients >= current_license.thin_clients_limit
 
     @staticmethod
     def build_ordering(query, ordering=None):
