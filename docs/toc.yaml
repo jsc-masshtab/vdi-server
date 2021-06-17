@@ -69,16 +69,16 @@ markdown_extensions:
 
 # Navigation
 nav:
-  - FAQ:
+  - FAQ VeiL Broker:
     - Установка: broker/faq/install_v3.md
     - Обновление: broker/faq/update_v3.md
     - Cоздание локального репозитория: broker/faq/repo_without_inet.md
     - Резервные копии: broker/faq/backup.md
+    - Службы системы: broker/faq/services.md
     - Подготовка эталонного образа на основе Windows 8.1/10: broker/faq/rdp/example_template_win.md
     - Работа по RDP с пулами ВРС: broker/faq/rdp/example_rdp.md
     - Настройка GPO через RDP для ВМ в домене MS AD: broker/faq/rdp/example_rdp_domain.md
     - nVidia Grid: broker/faq/vm/nvidia.md
-    - Подбор свободной ВМ: broker/pools/get-user-vm.md
   - VeiL Broker:
     - Руководство системного программиста:
       - Аннотация: broker/engineer_guide/annotate.md
@@ -125,22 +125,6 @@ nav:
         - Настройка: broker/operator_guide/web_settings.md
       - Сообщения оператору: broker/operator_guide/messages.md
       - Перечень принятых сокращений: broker/operator_guide/reductions.md
-    - FAQ:
-      - Установка: broker/faq/install_v3.md
-      - Обновление: broker/faq/update_v3.md
-      - Cоздание локального репозитория: broker/faq/repo_without_inet.md
-      - Резервные копии: broker/faq/backup.md
-      - Службы системы: broker/faq/services.md
-      - Фоновые задачи VeiL Broker: broker/worker/tasks.md
-      - Подготовка эталонного образа на основе Windows 8.1/10: broker/faq/rdp/example_template_win.md
-      - Работа по RDP с пулами ВРС: broker/faq/rdp/example_rdp.md
-      - Настройка GPO через RDP для ВМ в домене MS AD: broker/faq/rdp/example_rdp_domain.md
-      - nVidia Grid: broker/faq/vm/nvidia.md
-      - Подбор свободной ВМ: broker/pools/get-user-vm.md
-    - Cписок изменений:
-      - 3.1.0: broker/changelog/3.1.0.md
-      - 3.0.0: broker/changelog/3.0.0.md
-      - 2.1.4: broker/changelog/2.1.4.md
     - Спецификация:
       - Требования к хост-системе брокера: broker/spec/domain-req.md
       - Порты и протоколы задействованные при обмене с ECP VeiL: broker/spec/ports_info.md
@@ -155,13 +139,47 @@ nav:
       - Гостевой пул: broker/pools/guest_pool.md
       - Пулы приложений: broker/pools/apps-pool.md
       - Подбор свободной ВМ: broker/pools/get-user-vm.md
+    - Фоновые задачи VeiL Broker: broker/worker/tasks.md
     - Система управления доступом 3.0:
       - Базовое описание: broker/auth_v3/info.md
       - Роли: broker/auth_v3/roles.md
       - Пользователи: broker/auth_v3/users.md
       - Группы: broker/auth_v3/groups.md
       - Разрешения ТК: broker/auth_v3/client-permissions.md
+    - Cписок изменений:
+      - 3.1.0: broker/changelog/3.1.0.md
+      - 3.0.0: broker/changelog/3.0.0.md
+      - 2.1.4: broker/changelog/2.1.4.md
   - VeiL Connect:
+    - Аннотация: connect/operator_guide/annotate.md
+    - Назначение программы: connect/operator_guide/general_info.md
+    - Условия выполнения программы: connect/operator_guide/program_condition.md
+    - Установка и удаление программы:
+      - Проверка целостности программы: connect/operator_guide/integrity_check.md
+      - Установка с физического носителя: connect/operator_guide/install.md
+      - Процедура установки VeiL Connect: connect/operator_guide/process_install.md
+      - Процедура удаления VeiL Connect: connect/operator_guide/delete.md
+    - Выполнение программы:
+      - Подготовка к работе: connect/operator_guide/prepare.md
+      - Общие правила при работе с программой: connect/operator_guide/rules.md
+      - Включение программы: connect/operator_guide/start.md
+      - Окно авторизации пользователя и настройка соединения: connect/operator_guide/interface.md
+      - Окно доступных пулов ВМ: connect/operator_guide/pools.md
+      - Окно ВМ: connect/operator_guide/domains.md
+    - Сообщения оператору: connect/operator_guide/messages.md
+    - Перечень принятых сокращений: connect/operator_guide/reductions.md
+    - Обновление: connect/update.md
+    - Cоздание локального репозитория: connect/repo_without_inet.md
+    - Настройки:
+      - Общие настройки: connect/settings/main_settings.md
+      - Настройки Spice: connect/settings/spice_settings.md
+      - Настройки RDP: connect/settings/rdp_settings.md
+      - Служебные настройки: connect/settings/service_settings.md
+    - Запуск в режиме доступа одного приложения: connect/one_app_mode.md
+    - Возможные ошибки:
+      - Общие ошибки: connect/possible_errors/common.md
+      - Ошибки RDP: connect/possible_errors/rdp.md
+      - Ошибки Spice: connect/possible_errors/spice.md
     - Cписок изменений:
       - 1.6.0: connect/changelog/1.6.0.md
       - 1.5.4: connect/changelog/1.5.4.md
@@ -175,59 +193,28 @@ nav:
       - 1.3.8: connect/changelog/1.3.8.md
       - 1.3.7: connect/changelog/1.3.7.md
       - 1.3.6: connect/changelog/1.3.6.md
-    - Руководство оператора:
-      - Аннотация: connect/operator_guide/annotate.md
-      - Назначение программы: connect/operator_guide/general_info.md
-      - Условия выполнения программы: connect/operator_guide/program_condition.md
-      - Установка и удаление программы: 
-        - Проверка целостности программы: connect/operator_guide/integrity_check.md
-        - Установка с физического носителя: connect/operator_guide/install.md
-        - Процедура установки VeiL Connect: connect/operator_guide/process_install.md
-        - Процедура удаления VeiL Connect: connect/operator_guide/delete.md
-      - Выполнение программы:  
-        - Подготовка к работе: connect/operator_guide/prepare.md
-        - Общие правила при работе с программой: connect/operator_guide/rules.md
-        - Включение программы: connect/operator_guide/start.md
-        - Окно авторизации пользователя и настройка соединения: connect/operator_guide/interface.md
-        - Окно доступных пулов ВМ: connect/operator_guide/pools.md
-        - Окно ВМ: connect/operator_guide/domains.md
-      - Сообщения оператору: connect/operator_guide/messages.md
-      - Перечень принятых сокращений: connect/operator_guide/reductions.md
-    - Обновление: connect/update.md
-    - Cоздание локального репозитория: connect/repo_without_inet.md
-    - Настройки:
-      - Общие настройки: connect/settings/main_settings.md
-      - Настройки Spice: connect/settings/spice_settings.md
-      - Настройки RDP: connect/settings/rdp_settings.md
-      - Служебные настройки: connect/settings/service_settings.md
-    - Запуск в режиме доступа одного приложения: connect/one_app_mode.md
-    - Возможные ошибки:
-      - Общие ошибки: connect/possible_errors/common.md
-      - Ошибки RDP: connect/possible_errors/rdp.md
-      - Ошибки Spice: connect/possible_errors/spice.md
     - Тонкие клиенты:
-      - Описание: connect/thin_clients.md
-      - Руководство оператора VeiL Connect E:
-        - Аннотация: connect/thin_clients/operator_guide/annotate.md
-        - Назначение программы: connect/thin_clients/operator_guide/general_info.md
-        - Условия выполнения программы: connect/thin_clients/operator_guide/program_condition.md
-        - Установка и удаление программы:
-          - Общие сведения: connect/thin_clients/operator_guide/info.md
-          - Установка и настройка ОС: connect/thin_clients/operator_guide/install_os.md
-          - Проверка целостности программы: connect/thin_clients/operator_guide/integrity_check.md
-          - Установка VeiL Connect E: connect/thin_clients/operator_guide/install.md
-          - Удаление VeiL Connect E: connect/thin_clients/operator_guide/delete.md
-          - Перевод рабочего стола ОС в режим "киоска": connect/thin_clients/operator_guide/kiosk.md
-        - Выполнение программы:
-          - Подготовка к работе: connect/thin_clients/operator_guide/prepare.md
-          - Общие правила при работе с программой: connect/thin_clients/operator_guide/rules.md
-          - Включение программы: connect/thin_clients/operator_guide/start.md
-          - Окно авторизации пользователя и настройка соединения: connect/thin_clients/operator_guide/interface.md
-          - Окно доступных пулов ВМ: connect/thin_clients/operator_guide/pools.md
-          - Окно ВМ: connect/thin_clients/operator_guide/domains.md
-        - Сообщения оператору: connect/thin_clients/operator_guide/messages.md
-        - Приложение. Установка ОС "Astra Linux Common Edition": connect/thin_clients/operator_guide/application1.md
-        - Приложение. Установка ОС "Astra Linux Special Edition": connect/thin_clients/operator_guide/application2.md
-        - Приложение. Установка ОС "Альт Рабочая станция": connect/thin_clients/operator_guide/application3.md
-        - Перечень принятых сокращений: connect/thin_clients/operator_guide/reductions.md
+      - Аннотация: connect/thin_clients/operator_guide/annotate.md
+      - Назначение программы: connect/thin_clients/operator_guide/general_info.md
+      - Условия выполнения программы: connect/thin_clients/operator_guide/program_condition.md
+      - Установка и удаление программы:
+        - Общие сведения: connect/thin_clients/operator_guide/info.md
+        - Установка и настройка ОС: connect/thin_clients/operator_guide/install_os.md
+        - Проверка целостности программы: connect/thin_clients/operator_guide/integrity_check.md
+        - Установка VeiL Connect E: connect/thin_clients/operator_guide/install.md
+        - Удаление VeiL Connect E: connect/thin_clients/operator_guide/delete.md
+        - Перевод рабочего стола ОС в режим "киоска": connect/thin_clients/operator_guide/kiosk.md
+      - Выполнение программы:
+        - Подготовка к работе: connect/thin_clients/operator_guide/prepare.md
+        - Общие правила при работе с программой: connect/thin_clients/operator_guide/rules.md
+        - Включение программы: connect/thin_clients/operator_guide/start.md
+        - Окно авторизации пользователя и настройка соединения: connect/thin_clients/operator_guide/interface.md
+        - Окно доступных пулов ВМ: connect/thin_clients/operator_guide/pools.md
+        - Окно ВМ: connect/thin_clients/operator_guide/domains.md
+      - Сообщения оператору: connect/thin_clients/operator_guide/messages.md
+      - Приложение. Установка ОС "Astra Linux Common Edition": connect/thin_clients/operator_guide/application1.md
+      - Приложение. Установка ОС "Astra Linux Special Edition": connect/thin_clients/operator_guide/application2.md
+      - Приложение. Установка ОС "Альт Рабочая станция": connect/thin_clients/operator_guide/application3.md
+      - Перечень принятых сокращений: connect/thin_clients/operator_guide/reductions.md
+      - FAQ ТК: connect/thin_clients.md
   - ECP VeiL: https://veil.mashtab.org/docs/
