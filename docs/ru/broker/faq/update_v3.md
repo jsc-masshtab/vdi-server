@@ -19,18 +19,18 @@
 1. Подключить новый iso-образ **VeiL Broker** и выполнить 
    команды для обновления:
 
-```bash
-sudo mv /etc/apt/sources.list.d/media_cdrom_repo.list /etc/apt/sources.list.d/media_cdrom_repo.back
-sudo apt-get update
-```
-   !!! note "Примечание"
-       Команда очистки старого репозитория актуальна для 3.0.
+    ```bash
+    sudo mv /etc/apt/sources.list.d/media_cdrom_repo.list /etc/apt/sources.list.d/media_cdrom_repo.back
+    sudo apt-get update
+    ```
+    !!! note "Примечание"
+        Команда очистки старого репозитория актуальна для 3.0.
 
-```bash
-sudo mount /media/cdrom0
-cd ~
-sudo bash /media/cdrom0/install.sh > vdi_update.log
-```
+    ```bash
+    sudo mount /media/cdrom0
+    cd ~
+    sudo bash /media/cdrom0/install.sh > vdi_update.log
+    ```
  
 
 ## Миграция данных VeiL Broker 2.0 на версию 3.0.0
@@ -45,7 +45,7 @@ sudo bash /media/cdrom0/install.sh > vdi_update.log
     !!! note "Примечание"
         Если используется более ранняя версия, необходимо сначала обновить ее до 2.1.4.
 
-2. Выполнить установку пакета vdi-migration-tool 
+2. Выполнить установку пакета _vdi-migration-tool_ 
 ```
 sudo dpkg -i vdi-migration-tool_1.0-1_all.deb
 ```
@@ -77,13 +77,13 @@ cd /opt/veil-vdi/app && ./migrate.sh -v 2
         Дампы памяти должны быть загружены в каталог, к которому будет доступ у пользователя 
         **_vdiadmin_**.
    
-```
-/tmp/broker_pt_1.sql
-/tmp/broker_pt_2.sql
-/tmp/broker_pt_3.sql 
-```
+    ```
+    /tmp/broker_pt_1.sql
+    /tmp/broker_pt_2.sql
+    /tmp/broker_pt_3.sql 
+    ```
 
-3. Выполнить установку пакета vdi-migration-tool 
+3. Выполнить установку пакета _vdi-migration-tool_ 
 ```
 sudo dpkg -i vdi-migration-tool_1.0-1_all.deb
 ```
