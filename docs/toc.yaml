@@ -181,6 +181,11 @@ nav:
       - Ошибки RDP: connect/possible_errors/rdp.md
       - Ошибки Spice: connect/possible_errors/spice.md
     - Cписок изменений:
+      - 1.6.5: connect/changelog/1.6.5.md
+      - 1.6.4: connect/changelog/1.6.4.md
+      - 1.6.3: connect/changelog/1.6.3.md
+      - 1.6.2: connect/changelog/1.6.2.md
+      - 1.6.1: connect/changelog/1.6.1.md
       - 1.6.0: connect/changelog/1.6.0.md
       - 1.5.4: connect/changelog/1.5.4.md
       - 1.5.3: connect/changelog/1.5.3.md

@@ -9,6 +9,7 @@
 ## Создание пула приложений
 
 1. Разверните Remote Desktop Services на виртуальных машинах ECP VeiL.
+1. На машине с ролью Connection Broker выполните дейсвия согласно README.txt (https://veil-update.mashtab.org/veil_agent/iso/windows/rds/README.txt)
 1. В Web-интерфейсе VeiL VDI перейдите на вкладку **Пулы** и нажмите кнопку **Добавить пул**.
 1. Выберите создание RDS пула и нажмите **Далее**.
 1. Задайте параметры пула и выберите машину, на которой установлена роль Remote Desktop Connection Broker.
