@@ -1,7 +1,8 @@
 # Службы каталогов
 
 Добавление службы каталогов позволяет выполнить интеграцию с:
-* MS Windows Active Directory (далее MS AD) 
+
+* MS Windows Active Directory (далее MS AD);
 * Free IPA
 
 по Lightweight Directory Access Protocol (LDAP). Данная интеграция необходима для возможности использования
