@@ -199,6 +199,7 @@ nav:
       - 1.3.7: connect/changelog/1.3.7.md
       - 1.3.6: connect/changelog/1.3.6.md
     - Описание ini файла настроек: connect/ini_file_description.md
+    - Описание логов: connect/log_files_description.md
     - Тонкие клиенты:
       - Аннотация: connect/thin_clients/operator_guide/annotate.md
       - Назначение программы: connect/thin_clients/operator_guide/general_info.md
