@@ -98,7 +98,6 @@ nav:
       - Регистрация лицензионного ключа через Web-интерфейс: broker/engineer_guide/registr_key.md
       - Сообщения системному программисту: broker/engineer_guide/messages.md
       - Приложение. Установка ОС «ASTRA LINUX SPECIAL EDITION»: broker/engineer_guide/application.md
-      - Перечень принятых сокращений: broker/engineer_guide/reductions.md
     - Руководство оператора:
       - Подготовка к работе: broker/operator_guide/prepare.md
       - Общие правила: broker/operator_guide/rules.md
