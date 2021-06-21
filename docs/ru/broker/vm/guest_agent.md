@@ -43,9 +43,9 @@ SPICE-протокол поддерживает канал связи между
 
 Обычно драйверы довольно стабильны, поэтому сначала следует попробовать самый последний выпуск.
 
-[Последние драйвера virtio](https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/latest-virtio/virtio-win.iso).
+[Последние драйверы virtio](https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/latest-virtio/virtio-win.iso).
 
-[Стабильные драйвера virtio](https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/stable-virtio/virtio-win.iso).
+[Стабильные драйверы virtio](https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/stable-virtio/virtio-win.iso).
 
 #### Монтирование образа
 
@@ -100,6 +100,7 @@ SPICE-протокол поддерживает канал связи между
 
 Во вкладке **ВМ/Шаблон** ВМ при активном гостевом агенте можно добавить ВМ в AD,
 указав:
+
    - hostname (необязательный параметр);
    - имя домена; 
    - логин;
@@ -109,7 +110,7 @@ SPICE-протокол поддерживает канал связи между
 !!! note "Примечание"
     Не забудьте прописать DNS домена или настройте DHCP.
 
-#### Удаление из AD.
+#### Удаление из AD
 
 Во вкладке **ВМ/Шаблон** ВМ при активном гостевом агенте можно убрать ВМ из AD, указав:
    - логин;
