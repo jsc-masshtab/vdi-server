@@ -4,6 +4,7 @@ import json
 import random
 import uuid
 from enum import Enum
+from json.decoder import JSONDecodeError
 from textwrap import wrap
 
 from asyncpg.exceptions import UniqueViolationError
@@ -1307,7 +1308,7 @@ class RdsPool(db.Model):
 
     @staticmethod
     async def get_farm_list(pool_id, user_name):
-        """Получить с RDS Сервера список приложений, которые доступны пользователю.
+        """Получить с RDS Сервера список коллекций приложений, которые доступны пользователю.
 
         Приложение доступно, если оно опубликовано на ферме и у юзера есть право на пользование фермой.
         Запускаемый скрипт проходится по всем фермам, смотрит доступны ли они указанному юзеру,
@@ -1321,22 +1322,38 @@ class RdsPool(db.Model):
         domain_veil_api = controller_client.domain(
             domain_id=str(vms[0].id))  # В пуле только одна ВМ - RDS
 
-        # Execute script to get published apps
-        qemu_guest_command = {"path": "powershell.exe",
-                              "arg": [
-                                  ".\'C:\\Program Files\\Qemu-ga\\get_published_apps.ps1'",
-                                  user_name],
+        qemu_agent_path = "C:\\Program Files\\Qemu-ga\\"
+        qemu_guest_command = {"path": "wscript.exe",
+                              "arg": [qemu_agent_path + "vbs.vbs",
+                                      qemu_agent_path + "get_published_apps.ps1",
+                                      user_name,
+                                      "//B",
+                                      "//NoLogo"],
                               "capture-output": True}
-        response = await domain_veil_api.guest_command(qemu_cmd="guest-exec", f_args=qemu_guest_command)
 
-        if response.status_code == 400:
-            errors = response.data["errors"]
-            raise RuntimeError(errors)
-        else:
-            json_farms_data = response.data["guest-exec"]["out-data"]
-            farm_data_dict = json.loads(json_farms_data)
+        stdout_farms_data = ""
+        try:
+            response = await domain_veil_api.guest_command(qemu_cmd="guest-exec", f_args=qemu_guest_command)
+            # Ошибка запуска скриптка
+            if response.status_code == 400:
+                errors = response.data["errors"]
+                raise RuntimeError(errors)
+
+            # ошибки выполнения скрипта
+            stderr_farms_data = response.data["guest-exec"]["err-data"]
+            stderr_farms_data = stderr_farms_data.strip()
+            stderr_farms_data = stderr_farms_data.strip("\r\n")
+            if stderr_farms_data:
+                raise RuntimeError(stderr_farms_data)
+
+            stdout_farms_data = response.data["guest-exec"]["out-data"]
+            farm_data_dict = json.loads(stdout_farms_data)
             farm_list = farm_data_dict["farmlist"]
             return farm_list
+        except JSONDecodeError:
+            raise RuntimeError("Cant decode json. {}".format(stdout_farms_data))
+        except asyncio.TimeoutError:
+            raise RuntimeError("Timeout. Applications request took too long.")
 
     async def activate(self):
         return await Pool.activate(self.id)
