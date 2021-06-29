@@ -23,6 +23,7 @@
     sudo mv /etc/apt/sources.list.d/media_cdrom_repo.list /etc/apt/sources.list.d/media_cdrom_repo.back
     sudo apt-get update
     ```
+
     !!! note "Примечание"
         Команда очистки старого репозитория актуальна для 3.0.
 
