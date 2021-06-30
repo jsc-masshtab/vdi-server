@@ -10,7 +10,7 @@ from tornado.web import Application
 import uvloop
 
 from common.database import start_gino, stop_gino
-from common.languages import lang_init
+from common.languages import _
 from common.log.journal import system_logger
 from common.settings import (
     AUTH_ENABLED,
@@ -40,8 +40,6 @@ from web_app.settings.schema import settings_schema
 from web_app.task.schema import task_schema
 from web_app.thin_client_api.schema import thin_client_schema
 from web_app.thin_client_api.urls import thin_client_api_urls
-
-_ = lang_init()
 
 define("port", default=8888, help="port to listen on")
 define("address", default="127.0.0.1", help="address to listen on")

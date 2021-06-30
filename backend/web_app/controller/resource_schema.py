@@ -8,7 +8,7 @@ import graphene
 
 from veil_api_client import VeilRestPaginator
 
-from common.languages import lang_init
+from common.languages import _
 from common.log.journal import system_logger
 from common.models.controller import Controller
 from common.models.pool import Pool
@@ -24,8 +24,6 @@ from common.veil.veil_graphene import (
 )
 
 from web_app.controller.schema import ControllerFetcher, ControllerType
-
-_ = lang_init()
 
 
 # Cluster

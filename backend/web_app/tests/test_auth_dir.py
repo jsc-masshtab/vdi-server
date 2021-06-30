@@ -24,10 +24,7 @@ from web_app.auth.authentication_directory.auth_dir_schema import auth_dir_schem
 from common.models.authentication_directory import AuthenticationDirectory, Mapping
 from common.models.auth import Group, User
 from common.settings import PAM_AUTH
-from common.languages import lang_init
-
-
-_ = lang_init()
+from common.languages import _
 
 pytestmark = [
     pytest.mark.asyncio,

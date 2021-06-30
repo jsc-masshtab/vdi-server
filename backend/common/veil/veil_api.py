@@ -117,10 +117,9 @@ class VdiVeilClient(VeilClient):
 
     async def api_request(self, *args, **kwargs):
         from common.log import system_logger
-        from common.languages import lang_init
+        from common.languages import _
         from common.models.controller import Controller as ControllerModel, Status
 
-        _ = lang_init()
         url = kwargs.get("url")
         params = kwargs.get("params")
         api_object = kwargs.get("api_object")

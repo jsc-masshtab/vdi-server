@@ -1,12 +1,8 @@
 # -*- coding: utf-8 -*-
 import graphene
 
-from common.languages import lang_init
 from common.models.settings import Settings
 from common.veil.veil_decorators import administrator_required
-
-
-_ = lang_init()
 
 
 class SettingsType(graphene.ObjectType):

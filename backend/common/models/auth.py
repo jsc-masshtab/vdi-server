@@ -11,7 +11,7 @@ from sqlalchemy.sql import func, text
 from veil_aio_au import VeilResult as VeilAuthResult
 
 from common.database import db
-from common.languages import lang_init
+from common.languages import _
 from common.log.journal import system_logger
 from common.models.user_tk_permission import (
     GroupTkPermission,
@@ -29,8 +29,6 @@ from common.veil.veil_gino import (
     VeilModel,
 )
 from common.veil.veil_redis import REDIS_CLIENT, ThinClientCmd
-
-_ = lang_init()
 
 
 class Entity(db.Model):

@@ -13,7 +13,7 @@ from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.sql import desc, text
 
 from common.database import db
-from common.languages import lang_init
+from common.languages import _
 from common.log.journal import system_logger
 from common.models.auth import Group as GroupModel, User as UserModel
 from common.settings import (LDAP_LOGIN_PATTERN,
@@ -38,9 +38,6 @@ from common.veil.veil_gino import (
     Status,
     VeilModel,
 )
-
-
-_ = lang_init()
 
 
 class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):

@@ -2,7 +2,7 @@
 import graphene
 
 from common.database import db
-from common.languages import lang_init
+from common.languages import _
 from common.models.auth import Group, User
 from common.models.user_tk_permission import TkPermission
 from common.veil.veil_decorators import security_administrator_required
@@ -11,8 +11,6 @@ from common.veil.veil_gino import Role, RoleTypeGraphene
 from common.veil.veil_validators import MutationValidation
 
 from web_app.auth.user_schema import PermissionTypeGraphene, UserType
-
-_ = lang_init()
 
 
 class GroupValidator(MutationValidation):

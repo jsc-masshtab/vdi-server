@@ -7,16 +7,13 @@ from graphene import Enum as GrapheneEnum
 from sqlalchemy import and_
 
 from common.database import db
-from common.languages import lang_init
+from common.languages import _
 from common.models.auth import User
 from common.models.user_tk_permission import TkPermission
 from common.veil.veil_decorators import security_administrator_required
 from common.veil.veil_errors import AssertError, SimpleError, ValidationError
 from common.veil.veil_gino import Role, RoleTypeGraphene
 from common.veil.veil_validators import MutationValidation
-
-_ = lang_init()
-
 
 PermissionTypeGraphene = GrapheneEnum.from_enum(TkPermission)
 

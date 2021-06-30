@@ -9,7 +9,7 @@ from sqlalchemy import and_
 from sqlalchemy.sql import desc
 
 from common.database import db
-from common.languages import lang_init
+from common.languages import _
 from common.log.journal import system_logger
 from common.models.active_tk_connection import (
     ActiveTkConnection
@@ -23,9 +23,6 @@ from common.utils import extract_ordering_data
 from common.veil.veil_decorators import administrator_required
 from common.veil.veil_errors import SilentError, ValidationError
 from common.veil.veil_redis import REDIS_CLIENT, ThinClientCmd
-
-
-_ = lang_init()
 
 ConnectionTypesGraphene = graphene.Enum.from_enum(Pool.PoolConnectionTypes)
 

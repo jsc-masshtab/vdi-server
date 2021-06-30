@@ -2,10 +2,6 @@
 import asyncio
 
 from common.database import db
-from common.languages import lang_init
-
-
-_ = lang_init()
 
 
 class PoolLocks:

@@ -9,7 +9,7 @@ from tornado import httputil, websocket
 from tornado.escape import json_decode
 from tornado.web import Application, RequestHandler
 
-from common.languages import lang_init
+from common.languages import _
 from common.log.journal import system_logger
 from common.models.auth import User
 from common.models.pool import Pool
@@ -19,8 +19,6 @@ from common.veil.auth.veil_jwt import (
     jwtauth,
 )
 from common.veil.veil_errors import InvalidUserError, ValidationError
-
-_ = lang_init()
 
 
 class BaseHandler(RequestHandler, ABC):

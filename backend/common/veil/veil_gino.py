@@ -10,11 +10,9 @@ from sqlalchemy.sql import and_, desc
 from sqlalchemy.sql.schema import Column
 
 from common.database import db
-from common.languages import lang_init
+from common.languages import _
 from common.settings import VEIL_OPERATION_WAITING
 from common.veil.veil_redis import publish_data_in_internal_channel
-
-_ = lang_init()
 
 
 async def get_list_of_values_from_db(db_model, column):

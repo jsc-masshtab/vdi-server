@@ -8,7 +8,6 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import and_, func
 
 from common.database import db
-from common.languages import lang_init
 from common.log.journal import system_logger
 from common.models.pool import AutomatedPool, Pool
 from common.models.task import PoolTaskType
@@ -18,9 +17,6 @@ from common.veil.veil_gino import AbstractSortableStatusModel, Status
 from common.veil.veil_redis import publish_data_in_internal_channel, request_to_execute_pool_task
 
 from web_app.auth.license.utils import License
-
-
-_ = lang_init()
 
 
 class ActiveTkConnection(db.Model, AbstractSortableStatusModel):

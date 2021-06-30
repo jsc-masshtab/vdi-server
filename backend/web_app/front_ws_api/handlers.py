@@ -7,7 +7,7 @@ from typing import Any
 from tornado import httputil
 from tornado.web import Application
 
-from common.languages import lang_init
+from common.languages import _
 from common.log.journal import system_logger
 from common.settings import (
     INTERNAL_EVENTS_CHANNEL,
@@ -24,8 +24,6 @@ from common.subscription_sources import (
 from common.veil.auth.veil_jwt import jwtauth_ws
 from common.veil.veil_handlers import BaseWsHandler
 from common.veil.veil_redis import REDIS_CLIENT, a_redis_get_message
-
-_ = lang_init()
 
 
 @jwtauth_ws

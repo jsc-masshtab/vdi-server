@@ -9,7 +9,7 @@ from alembic import op
 
 from common.veil.auth.hashers import make_password
 from common.settings import DB_USER, SECRET_KEY
-from common.languages import lang_init
+from common.languages import _
 
 import uuid
 from datetime import datetime
@@ -19,7 +19,6 @@ revision = "07972ddc0722"
 down_revision = "b58c521ba8d4"
 branch_labels = None
 depends_on = None
-_ = lang_init()
 
 
 def upgrade():

@@ -3,15 +3,13 @@ from functools import wraps
 
 from graphql.execution.base import ResolveInfo
 
-from common.languages import lang_init
+from common.languages import _
 from common.log.journal import system_logger
 from common.models.auth import User
 from common.settings import AUTH_ENABLED
 from common.veil.auth.veil_jwt import extract_user_object
 from common.veil.veil_errors import Unauthorized
 from common.veil.veil_gino import EntityType, Role
-
-_ = lang_init()
 
 
 def context(f):

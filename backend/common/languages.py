@@ -8,3 +8,7 @@ def lang_init():
     translation = gettext.translation("messages", LOCALES_PATH, languages=[LANGUAGE])
     translation.install()
     return translation.gettext
+
+
+# TODO: переименовать _ в _localization_
+_ = lang_init()

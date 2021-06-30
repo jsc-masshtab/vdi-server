@@ -6,7 +6,7 @@ import sys
 from sqlalchemy import and_
 
 from common.database import db
-from common.languages import lang_init
+from common.languages import _
 from common.log.journal import system_logger
 from common.models.pool import Pool
 from common.models.task import PoolTaskType, Task, TaskStatus
@@ -27,9 +27,6 @@ from pool_worker.pool_tasks import (
     RecreationGuestVmTask,
     RemoveVmsTask
 )
-
-
-_ = lang_init()
 
 
 class PoolTaskManager:

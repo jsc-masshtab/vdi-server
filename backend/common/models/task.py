@@ -9,13 +9,11 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
 
 from common.database import db
-from common.languages import lang_init
+from common.languages import _
 from common.models.auth import Entity
 from common.subscription_sources import VDI_TASKS_SUBSCRIPTION
 from common.veil.veil_gino import AbstractSortableStatusModel, EntityType
 from common.veil.veil_redis import publish_data_in_internal_channel
-
-_ = lang_init()
 
 
 class PoolTaskType(Enum):

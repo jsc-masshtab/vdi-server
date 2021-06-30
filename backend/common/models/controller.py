@@ -9,7 +9,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from veil_api_client import VeilClient, VeilRetryConfiguration
 
 from common.database import db
-from common.languages import lang_init
+from common.languages import _
 from common.log.journal import system_logger
 from common.models.pool import Pool as PoolModel
 from common.subscription_sources import CONTROLLERS_SUBSCRIPTION
@@ -27,10 +27,6 @@ from common.veil.veil_redis import (
     send_cmd_to_resume_tasks_associated_with_controller,
     send_cmd_to_ws_monitor
 )
-
-
-# TODO: переименовать _ в _localization_
-_ = lang_init()
 
 
 #  Нужно сделать, чтобы деактивация контроллера останавливала создание пула и скидывала задачу в очередь.

@@ -14,13 +14,11 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
 
 from common.database import db
-from common.languages import lang_init
+from common.languages import _
 from common.settings import INTERNAL_EVENTS_CHANNEL
 from common.subscription_sources import EVENTS_SUBSCRIPTION, WsMessageType
 from common.utils import gino_model_to_json_serializable_dict
 from common.veil.veil_redis import REDIS_CLIENT
-
-_ = lang_init()
 
 
 class Event(db.Model):

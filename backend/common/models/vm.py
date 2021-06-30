@@ -13,7 +13,7 @@ from veil_api_client import (DomainBackupConfiguration,
                              DomainConfiguration)
 
 from common.database import db
-from common.languages import lang_init
+from common.languages import _
 from common.log.journal import system_logger
 from common.models.auth import (
     Entity as EntityModel,
@@ -39,8 +39,6 @@ from common.veil.veil_gino import (
     get_list_of_values_from_db,
 )
 from common.veil.veil_redis import send_cmd_to_cancel_tasks_associated_with_entity
-
-_ = lang_init()
 
 
 class VmPowerState(IntEnum):

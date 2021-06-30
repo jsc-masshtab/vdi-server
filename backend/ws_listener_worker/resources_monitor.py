@@ -8,7 +8,7 @@ import redis
 from tornado.websocket import WebSocketClosedError
 from tornado.websocket import websocket_connect
 
-from common.languages import lang_init
+from common.languages import _
 from common.log.journal import system_logger
 from common.models.controller import Controller
 from common.settings import WS_MONITOR_CHANNEL_OUT, WS_PING_INTERVAL, WS_PING_TIMEOUT
@@ -16,8 +16,6 @@ from common.subscription_sources import CONTROLLER_SUBSCRIPTIONS_LIST, Subscript
 from common.utils import cancel_async_task
 from common.veil.veil_gino import Status
 from common.veil.veil_redis import REDIS_CLIENT
-
-_ = lang_init()
 
 # TODO: в событиях журнала задействовать отдельный entity для монитора ресурсов
 

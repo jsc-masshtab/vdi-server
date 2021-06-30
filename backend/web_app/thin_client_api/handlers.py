@@ -15,7 +15,7 @@ from tornado.web import Application
 
 from veil_api_client import DomainTcpUsb, VeilRetryConfiguration
 
-from common.languages import lang_init
+from common.languages import _
 from common.log.journal import system_logger
 from common.models.active_tk_connection import ActiveTkConnection
 from common.models.pool import AutomatedPool, Pool as PoolM, RdsPool
@@ -36,8 +36,6 @@ from common.veil.veil_redis import (
     a_redis_get_message,
     request_to_execute_pool_task,
 )
-
-_ = lang_init()
 
 
 @jwtauth

@@ -7,7 +7,7 @@ import graphene
 
 from veil_api_client import VeilRestPaginator
 
-from common.languages import lang_init
+from common.languages import _
 from common.models.controller import Controller
 from common.models.pool import Pool
 from common.models.vm import Vm
@@ -16,8 +16,6 @@ from common.veil.veil_errors import SilentError, SimpleError, ValidationError
 from common.veil.veil_gino import Status, StatusGraphene
 from common.veil.veil_graphene import VeilEventTypeEnum, VeilResourceType, VeilShortEntityType, VmState
 from common.veil.veil_validators import MutationValidation
-
-_ = lang_init()
 
 
 class ControllerValidator(MutationValidation):

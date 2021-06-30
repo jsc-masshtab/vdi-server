@@ -10,7 +10,7 @@ from sqlalchemy import and_, desc, text
 from veil_api_client import VeilRestPaginator
 
 from common.database import db
-from common.languages import lang_init
+from common.languages import _
 from common.log.journal import system_logger
 from common.models.auth import Entity
 from common.models.event import Event, EventReadByUser, JournalSettings
@@ -22,8 +22,6 @@ from common.veil.veil_graphene import VeilEventTypeEnum, VeilResourceType
 
 from web_app.auth.user_schema import User, UserType
 from web_app.controller.schema import ControllerFetcher
-
-_ = lang_init()
 
 
 def build_filters(

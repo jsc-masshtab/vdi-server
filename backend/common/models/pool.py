@@ -27,7 +27,7 @@ from veil_api_client import (
 )
 
 from common.database import db
-from common.languages import lang_init
+from common.languages import _
 from common.log.journal import system_logger
 from common.models.auth import (
     Entity as EntityModel,
@@ -58,9 +58,6 @@ from common.veil.veil_errors import (
 from common.veil.veil_gino import EntityType, Status, VeilModel
 from common.veil.veil_graphene import VmState
 from common.veil.veil_redis import publish_data_in_internal_channel
-
-
-_ = lang_init()
 
 
 class Pool(VeilModel):

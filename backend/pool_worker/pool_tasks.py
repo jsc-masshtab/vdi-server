@@ -5,7 +5,7 @@ from abc import ABC, abstractmethod
 
 from aiohttp import client_exceptions
 
-from common.languages import lang_init
+from common.languages import _
 from common.log.journal import system_logger
 from common.models.authentication_directory import AuthenticationDirectory
 from common.models.pool import AutomatedPool, Pool
@@ -14,8 +14,6 @@ from common.models.vm import Vm
 from common.utils import cancel_async_task
 from common.veil.veil_errors import PoolCreationError, VmCreationError
 from common.veil.veil_gino import EntityType, Status
-
-_ = lang_init()
 
 
 class AbstractTask(ABC):

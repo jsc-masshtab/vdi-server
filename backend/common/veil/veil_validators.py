@@ -1,11 +1,8 @@
 # -*- coding: utf-8 -*-
 from graphene.types.structures import NonNull
 
-from common.languages import lang_init
+from common.languages import _
 from common.veil.veil_errors import ValidationError
-
-
-_ = lang_init()
 
 
 class MutationValidation:

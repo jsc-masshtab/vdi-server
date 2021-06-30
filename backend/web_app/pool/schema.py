@@ -7,7 +7,7 @@ from asyncpg.exceptions import UniqueViolationError
 import graphene
 
 from common.database import db
-from common.languages import lang_init
+from common.languages import _
 from common.log.journal import system_logger
 from common.models.auth import Entity, User
 from common.models.controller import Controller
@@ -47,14 +47,12 @@ from web_app.controller.resource_schema import ResourceDataPoolType
 from web_app.controller.schema import ControllerType
 from web_app.journal.schema import EntityType as TypeEntity, EventType
 
-_ = lang_init()
+ConnectionTypesGraphene = graphene.Enum.from_enum(Pool.PoolConnectionTypes)
 
 # TODO: отсутствует валидация входящих ресурсов вроде node_uid, cluster_uid и т.п. Ранее шла речь,
 #  о том, что мы будем кешированно хранить какие-то ресурсы полученные от ECP Veil. Возможно стоит
 #  обращаться к этому хранилищу для проверки корректности присланных ресурсов. Аналогичный принцип
 #  стоит применить и к статическим пулам (вместо похода на вейл для проверки присланных параметров).
-
-ConnectionTypesGraphene = graphene.Enum.from_enum(Pool.PoolConnectionTypes)
 
 
 class ControllerFetcher:

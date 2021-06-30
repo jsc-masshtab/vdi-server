@@ -11,14 +11,13 @@ from alembic import op
 
 import sqlalchemy as sa
 
-from common.languages import lang_init
+from common.languages import _
 
 # revision identifiers, used by Alembic.
 revision = "70220709e7b8"
 down_revision = "c8c16054b1a9"
 branch_labels = None
 depends_on = None
-_ = lang_init()
 
 
 def upgrade():

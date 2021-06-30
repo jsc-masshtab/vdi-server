@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from abc import ABC
 
-from common.languages import lang_init
+from common.languages import _
 from common.log.journal import system_logger
 from common.models.auth import User
 from common.models.authentication_directory import AuthenticationDirectory
@@ -13,8 +13,6 @@ from common.veil.auth.veil_jwt import (
 from common.veil.veil_errors import AssertError, ValidationError
 from common.veil.veil_gino import EntityType
 from common.veil.veil_handlers import BaseHttpHandler
-
-_ = lang_init()
 
 
 class AuthHandler(BaseHttpHandler, ABC):

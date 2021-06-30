@@ -10,11 +10,9 @@ from functools import wraps
 import redis
 
 import common.settings as settings
-from common.languages import lang_init
+from common.languages import _
 from common.subscription_sources import VDI_TASKS_SUBSCRIPTION, WsMessageType
 from common.utils import gino_model_to_json_serializable_dict
-
-_ = lang_init()
 
 
 class PoolWorkerCmd(Enum):

@@ -16,11 +16,8 @@ from web_app.tests.fixtures import (
     fixt_group_role,
 )  # noqa
 
-from common.languages import lang_init
+from common.languages import _
 from common.settings import LOCAL_AUTH, EXTERNAL_AUTH, PAM_AUTH
-
-
-_ = lang_init()
 
 pytestmark = [
     pytest.mark.asyncio,

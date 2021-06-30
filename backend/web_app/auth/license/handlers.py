@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from abc import ABC
 
-from common.languages import lang_init
+from common.languages import _
 from common.log.journal import system_logger
 from common.models.active_tk_connection import ActiveTkConnection
 from common.veil.auth.veil_jwt import jwtauth
@@ -11,8 +11,6 @@ from common.veil.veil_handlers import BaseHttpHandler
 
 
 from web_app.auth.license.utils import License
-
-_ = lang_init()
 
 
 @jwtauth

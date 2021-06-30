@@ -3,11 +3,8 @@
 import asyncio
 from abc import ABC
 
-from common.languages import lang_init
+from common.languages import _
 from common.log.journal import system_logger
-
-
-_ = lang_init()
 
 
 class ValidationError(AssertionError):

@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
 from common.database import db
-from common.languages import lang_init
+from common.languages import _
 from common.log.journal import system_logger
-
-_ = lang_init()
 
 
 class Settings(db.Model):

@@ -4,7 +4,7 @@ import datetime
 
 import jwt
 
-from common.languages import lang_init
+from common.languages import _
 from common.log.journal import system_logger
 from common.models.auth import User, UserJwtInfo
 from common.settings import (
@@ -15,9 +15,6 @@ from common.settings import (
     JWT_OPTIONS,
     SECRET_KEY,
 )
-
-
-_ = lang_init()
 
 
 def jwtauth_ws(handler_class):
