@@ -7,7 +7,7 @@ from asyncpg.exceptions import UniqueViolationError
 import graphene
 
 from common.database import db
-from common.languages import _
+from common.languages import _local_
 from common.log.journal import system_logger
 from common.models.auth import Entity, User
 from common.models.controller import Controller
@@ -64,7 +64,7 @@ class ControllerFetcher:
         # TODO: универсальный метод в родительском валидаторе для сокращения дублированияа
         controller = await Controller.get(id_)
         if not controller:
-            raise SimpleError(_("No such controller."))
+            raise SimpleError(_local_("No such controller."))
         return controller
 
     @staticmethod
@@ -237,7 +237,7 @@ class VmType(VeilResourceType):
                                         token=spice.token,
                                         connection_url=spice.connection_url,
                                         connection_type=spice.connection_type)
-            raise SimpleError(_("Missing connection spice data."))
+            raise SimpleError(_local_("Missing connection spice data."))
 
     async def resolve_vnc_connection(self, _info, **kwargs):
         vm_obj = await Vm.get(self.id)
@@ -251,7 +251,7 @@ class VmType(VeilResourceType):
                                         token=vnc.token,
                                         connection_url=vnc.connection_url,
                                         connection_type=vnc.connection_type)
-            raise SimpleError(_("Missing connection vnc data."))
+            raise SimpleError(_local_("Missing connection vnc data."))
 
 
 class VmInput(graphene.InputObjectType):
@@ -271,7 +271,7 @@ class PoolValidator(MutationValidation):
         pool = await Pool.get_pool(value)
         if pool:
             return value
-        raise ValidationError(_("No such pool."))
+        raise ValidationError(_local_("No such pool."))
 
     @staticmethod
     async def validate_verbose_name(obj_dict, value):
@@ -282,7 +282,7 @@ class PoolValidator(MutationValidation):
         if template_name:
             return value
         raise ValidationError(
-            _("Pool name must contain only characters, digits and -.")
+            _local_("Pool name must contain only characters, digits and -.")
         )
 
     @staticmethod
@@ -297,7 +297,7 @@ class PoolValidator(MutationValidation):
         if template_name:
             return value
         raise ValidationError(
-            _(
+            _local_(
                 "Template name of VM must contain only characters, digits, -. "
                 "Template name length must be in [{} {}] interval."
             ).format(min_len, max_len)
@@ -309,7 +309,7 @@ class PoolValidator(MutationValidation):
             return
         if value < POOL_MIN_SIZE or value > POOL_MAX_SIZE:
             raise ValidationError(
-                _("Initial number of VM must be in {}-{} interval.").format(
+                _local_("Initial number of VM must be in {}-{} interval.").format(
                     POOL_MIN_SIZE, POOL_MAX_SIZE
                 )
             )
@@ -333,12 +333,12 @@ class PoolValidator(MutationValidation):
 
         if value > total_size:
             raise ValidationError(
-                _("Reserve size of VMs can not be more than maximal number of Vms.")
+                _local_("Reserve size of VMs can not be more than maximal number of Vms.")
             )
 
         if value < POOL_MIN_SIZE or value > POOL_MAX_SIZE:
             raise ValidationError(
-                _("Reserve size of VM must be in {}-{} interval.").format(
+                _local_("Reserve size of VM must be in {}-{} interval.").format(
                     POOL_MIN_SIZE, POOL_MAX_SIZE
                 )
             )
@@ -366,19 +366,19 @@ class PoolValidator(MutationValidation):
 
         if value < initial_size:
             raise ValidationError(
-                _(
+                _local_(
                     "Maximal number of created VM can not be less than initial number of VM."
                 )
             )
         if value < POOL_MIN_SIZE or value > POOL_MAX_SIZE:
             raise ValidationError(
-                _("Maximal number of created VM must be in [{} {}] interval.").format(
+                _local_("Maximal number of created VM must be in [{} {}] interval.").format(
                     POOL_MIN_SIZE, POOL_MAX_SIZE
                 )
             )
         if vm_amount_in_pool and value < vm_amount_in_pool:
             raise ValidationError(
-                _(
+                _local_(
                     "Maximal number of created VMs can not be less than current amount of Vms."
                 )
             )
@@ -397,11 +397,11 @@ class PoolValidator(MutationValidation):
                 total_size = automated_pool.total_size
         if value < 1 or value > total_size:
             raise ValidationError(
-                _("Increase step must be positive and less or equal to total_size.")
+                _local_("Increase step must be positive and less or equal to total_size.")
             )
         if value > DOMAIN_CREATION_MAX_STEP:
             raise ValidationError(
-                _("Increase step must be less than {}.").format(
+                _local_("Increase step must be less than {}.").format(
                     DOMAIN_CREATION_MAX_STEP)
             )
         return value
@@ -409,7 +409,7 @@ class PoolValidator(MutationValidation):
     @staticmethod
     async def validate_connection_types(obj_dict, value):
         if not value:
-            raise ValidationError(_("Connection type cannot be empty."))
+            raise ValidationError(_local_("Connection type cannot be empty."))
 
 
 class PoolGroupType(graphene.ObjectType):
@@ -561,7 +561,7 @@ class PoolType(graphene.ObjectType):
                     data["address"] = veil_domain.guest_agent.ipv4
             return VmType(**data)
         else:
-            raise SilentError(_("VM is unreachable on ECP VeiL."))
+            raise SilentError(_local_("VM is unreachable on ECP VeiL."))
 
     @classmethod
     @administrator_required
@@ -672,7 +672,7 @@ class PoolQuery(graphene.ObjectType):
         pool = await Pool.get_pool(pool_id)
         if not pool:
             entity = {"entity_type": EntityType.POOL, "entity_uuid": None}
-            raise SimpleError(_("No such pool."), entity=entity)
+            raise SimpleError(_local_("No such pool."), entity=entity)
         return pool_obj_to_type(pool)
 
 
@@ -693,7 +693,7 @@ class DeletePoolMutation(graphene.Mutation, PoolValidator):
         pool = await Pool.get(pool_id)
         if not pool:
             entity = {"entity_type": EntityType.POOL, "entity_uuid": None}
-            raise SimpleError(_("No such pool."), entity=entity)
+            raise SimpleError(_local_("No such pool."), entity=entity)
 
         pool_type = pool.pool_type
 
@@ -720,15 +720,15 @@ class ClearPoolMutation(graphene.Mutation):
         if (pool.status != Status.ACTIVE) and (pool.status != Status.SERVICE):
             await pool.activate(pool.id)
             await system_logger.info(
-                _("Pool {} has been restored.").format(pool.verbose_name), user=creator
+                _local_("Pool {} has been restored.").format(pool.verbose_name), user=creator
             )
             return ClearPoolMutation(ok=True)
         elif pool.status == Status.SERVICE:
             raise SilentError(
-                _("Pool {} is in service mode.").format(pool.verbose_name)
+                _local_("Pool {} is in service mode.").format(pool.verbose_name)
             )
         else:
-            raise SilentError(_("Pool {} is already active.").format(pool.verbose_name))
+            raise SilentError(_local_("Pool {} is already active.").format(pool.verbose_name))
 
 
 # --- --- --- --- ---
@@ -799,7 +799,7 @@ class CreateStaticPoolMutation(graphene.Mutation, ControllerFetcher):
         except Exception as E:  # Возможные исключения: дубликат имени или вм id, сетевой фейл enable_remote_accesses
             # TODO: указать конкретные Exception
             desc = str(E)
-            error_msg = _("Failed to create static pool {}.").format(verbose_name)
+            error_msg = _local_("Failed to create static pool {}.").format(verbose_name)
             await system_logger.debug(desc)
             entity = {"entity_type": EntityType.POOL, "entity_uuid": None}
             raise SimpleError(error_msg, description=desc, entity=entity)
@@ -882,7 +882,7 @@ class AddVmsToStaticPoolMutation(graphene.Mutation):
             if vm_id in used_vm_ids:
                 entity = {"entity_type": EntityType.POOL, "entity_uuid": None}
                 raise SimpleError(
-                    _("VM {} is already in one of pools.").format(vm_id), entity=entity
+                    _local_("VM {} is already in one of pools.").format(vm_id), entity=entity
                 )
 
         # TODO: использовать нормальный набор данных с verbose_name и id
@@ -899,7 +899,7 @@ class AddVmsToStaticPoolMutation(graphene.Mutation):
             vm_objects.append(vm)
             entity = {"entity_type": EntityType.POOL, "entity_uuid": None}
             await system_logger.info(
-                _("VM {} has been added to the pool {}.").format(
+                _local_("VM {} has been added to the pool {}.").format(
                     vm.verbose_name, pool.verbose_name
                 ),
                 user=creator,
@@ -941,7 +941,7 @@ class UpdateStaticPoolMutation(graphene.Mutation, PoolValidator):
                 creator,
             )
         except UniqueViolationError:
-            error_msg = _(
+            error_msg = _local_(
                 "Failed to update static pool {}. Name must be unique."
             ).format(kwargs["pool_id"])
             entity = {"entity_type": EntityType.POOL, "entity_uuid": None}
@@ -975,7 +975,7 @@ class UpdateRdsPoolMutation(graphene.Mutation, PoolValidator):
                 creator,
             )
         except UniqueViolationError:
-            error_msg = _(
+            error_msg = _local_(
                 "Failed to update RDS pool {}. Name must be unique."
             ).format(pool_id)
             entity = {"entity_type": EntityType.POOL, "entity_uuid": pool_id}
@@ -1009,7 +1009,7 @@ class ExpandPoolMutation(graphene.Mutation, PoolValidator):
         total_size_reached = await autopool.check_if_total_size_reached()
         if total_size_reached:
             raise SilentError(
-                _("Can not expand pool {} because it reached its total_size.").format(
+                _local_("Can not expand pool {} because it reached its total_size.").format(
                     pool_name
                 )
             )
@@ -1019,16 +1019,16 @@ class ExpandPoolMutation(graphene.Mutation, PoolValidator):
             pool_id, TaskStatus.IN_PROGRESS
         )
         if tasks:
-            raise SilentError(_("Another task works on pool {}.").format(pool_name))
+            raise SilentError(_local_("Another task works on pool {}.").format(pool_name))
 
         task_id = await request_to_execute_pool_task(
             pool_id, PoolTaskType.POOL_EXPAND, ignore_reserve_size=True
         )
 
         verbose_name = await autopool.verbose_name
-        description = _("Increase_step {}.").format(autopool.increase_step)
+        description = _local_("Increase_step {}.").format(autopool.increase_step)
         await system_logger.info(
-            _("Expansion of pool {} requested.").format(verbose_name),
+            _local_("Expansion of pool {} requested.").format(verbose_name),
             user=creator,
             entity=autopool.entity,
             description=description,
@@ -1121,7 +1121,7 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator, ControllerFe
             )
         except Exception as E:  # Возможные исключения: дубликат имени
             desc = str(E)
-            error_msg = _("Failed to create pool {}.").format(verbose_name)
+            error_msg = _local_("Failed to create pool {}.").format(verbose_name)
             entity = {"entity_type": EntityType.POOL, "entity_uuid": None}
             raise SimpleError(error_msg, description=desc, user=creator, entity=entity)
 
@@ -1209,7 +1209,7 @@ class UpdateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
                     creator=creator,
                 )
             except UniqueViolationError:
-                error_msg = _(
+                error_msg = _local_(
                     "Failed to update pool {}. Name must be unique."
                 ).format(kwargs["verbose_name"])
                 entity = {"entity_type": EntityType.POOL, "entity_uuid": None}
@@ -1345,7 +1345,7 @@ class AssignVmToUser(graphene.Mutation):
         # find pool the vm belongs to
         vm = await Vm.get(vm_id)
         if not vm:
-            raise SimpleError(_("There is no VM {}.").format(vm_id))
+            raise SimpleError(_local_("There is no VM {}.").format(vm_id))
 
         pool_id = vm.pool_id
         # TODO: заменить на user_id
@@ -1363,7 +1363,7 @@ class AssignVmToUser(graphene.Mutation):
             if user_id not in assigned_users_list:
                 # Requested user is not entitled to the pool the requested vm belongs to
                 raise SimpleError(
-                    _("User does not have the right to use pool, which has VM.")
+                    _local_("User does not have the right to use pool, which has VM.")
                 )
 
             # another vm in the pool may have this user as owner. Remove assignment
@@ -1407,7 +1407,7 @@ class PrepareVm(graphene.Mutation):
         )
         if tasks:
             vm = await Vm.get(vm_id)
-            raise SilentError(_("Another task works on VM {}.").format(vm.verbose_name))
+            raise SilentError(_local_("Another task works on VM {}.").format(vm.verbose_name))
 
         await Entity.create(entity_uuid=vm_id, entity_type=EntityType.VM)
         await request_to_execute_pool_task(vm_id, PoolTaskType.VM_PREPARE)
@@ -1564,7 +1564,7 @@ class VmTestDomain(graphene.Mutation):
             if domain_entity.os_windows:
                 ok = await domain_entity.is_in_ad()
                 return VmTestDomain(ok=ok)
-        raise SilentError(_("Only VM with Windows OS can be in domain."))
+        raise SilentError(_local_("Only VM with Windows OS can be in domain."))
 
 
 class VmRestoreBackup(graphene.Mutation):
@@ -1611,7 +1611,7 @@ class AttachVeilUtilsMutation(graphene.Mutation):
         await veil_domain.info()
         if veil_domain.powered:
             raise SilentError(
-                _("Cant create CD-ROM for powered domain {}.").format(veil_domain.public_attrs["verbose_name"]))
+                _local_("Cant create CD-ROM for powered domain {}.").format(veil_domain.public_attrs["verbose_name"]))
         response = await veil_domain.attach_veil_utils_iso()
         ok = response.success
         if not ok:
@@ -1619,7 +1619,7 @@ class AttachVeilUtilsMutation(graphene.Mutation):
                 raise SimpleError(error["detail"])
 
         await system_logger.info(
-            _("Creating a CD-ROM on the virtual machine {}.").format(veil_domain.public_attrs["verbose_name"]),
+            _local_("Creating a CD-ROM on the virtual machine {}.").format(veil_domain.public_attrs["verbose_name"]),
             user=creator)
         return AttachVeilUtilsMutation(ok=ok)
 
@@ -1641,15 +1641,15 @@ class TemplateChange(graphene.Mutation):
         await veil_domain.info()
         if veil_domain.powered:
             raise SilentError(
-                _("VM {} is powered. Please shutdown this.").format(veil_domain.public_attrs["verbose_name"]))
+                _local_("VM {} is powered. Please shutdown this.").format(veil_domain.public_attrs["verbose_name"]))
         response = await veil_domain.change_template()
         ok = response.success
         if not ok:
             for error in response.errors:
-                raise SilentError(_("VeiL ECP error: {}.").format(error["detail"]))
+                raise SilentError(_local_("VeiL ECP error: {}.").format(error["detail"]))
 
         await system_logger.info(
-            _("The template {} change and distribute this changes to thin clones.").format(
+            _local_("The template {} change and distribute this changes to thin clones.").format(
                 veil_domain.parent_name),
             user=creator)
         return TemplateChange(ok=ok)
@@ -1675,7 +1675,7 @@ class VmConvertToTemplate(graphene.Mutation, PoolValidator):
         await veil_domain.info()
         if veil_domain.powered:
             raise SilentError(
-                _("VM {} is powered. Please shutdown this.").format(
+                _local_("VM {} is powered. Please shutdown this.").format(
                     veil_domain.public_attrs["verbose_name"]))
         params = {
             "verbose_name": verbose_name,
@@ -1686,7 +1686,7 @@ class VmConvertToTemplate(graphene.Mutation, PoolValidator):
             "count": 1
         }
         if veil_domain.thin:
-            raise SilentError(_("Prohibited creating template from the thin clone."))
+            raise SilentError(_local_("Prohibited creating template from the thin clone."))
 
         vm_info = await Vm.copy(**params)
 
@@ -1704,10 +1704,10 @@ class VmConvertToTemplate(graphene.Mutation, PoolValidator):
         ok = response.success
         if not ok:
             for error in response.errors:
-                raise SilentError(_("VeiL ECP error: {}.").format(error["detail"]))
+                raise SilentError(_local_("VeiL ECP error: {}.").format(error["detail"]))
 
         await system_logger.info(
-            _("Vm {} has converted to template {}.").format(
+            _local_("Vm {} has converted to template {}.").format(
                 veil_domain.verbose_name, verbose_name),
             user=creator)
         return VmConvertToTemplate(ok=ok)

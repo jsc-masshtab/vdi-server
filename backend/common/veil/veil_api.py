@@ -117,7 +117,7 @@ class VdiVeilClient(VeilClient):
 
     async def api_request(self, *args, **kwargs):
         from common.log import system_logger
-        from common.languages import _
+        from common.languages import _local_
         from common.models.controller import Controller as ControllerModel, Status
 
         url = kwargs.get("url")
@@ -144,7 +144,7 @@ class VdiVeilClient(VeilClient):
                 if vm_object and vm_object.active:
                     await vm_object.make_failed()
                 await system_logger.warning(
-                    _("Can`t find VM {} on VeiL ECP.").format(api_object.api_object_id)
+                    _local_("Can`t find VM {} on VeiL ECP.").format(api_object.api_object_id)
                 )
             elif response.status_code == 404 and isinstance(api_object, VeilTag):
                 from common.models.pool import Pool
@@ -154,7 +154,7 @@ class VdiVeilClient(VeilClient):
                 )
                 await query.gino.status()
                 await system_logger.warning(
-                    _("Can`t find Tag {} on VeiL ECP.").format(api_object.api_object_id)
+                    _local_("Can`t find Tag {} on VeiL ECP.").format(api_object.api_object_id)
                 )
 
         if not response.success:
@@ -176,7 +176,7 @@ class VdiVeilClient(VeilClient):
                 if controller_object
                 else self.server_address
             )
-            error_message = _("VeiL ECP {} request error.").format(controller_name)
+            error_message = _local_("VeiL ECP {} request error.").format(controller_name)
             error_description = "status code: {}\nurl: {}\nparams: {}\nresponse:{}".format(
                 response.status_code, url, params, response.data
             )

@@ -5,7 +5,7 @@ from abc import ABC, abstractmethod
 
 from aiohttp import client_exceptions
 
-from common.languages import _
+from common.languages import _local_
 from common.log.journal import system_logger
 from common.models.authentication_directory import AuthenticationDirectory
 from common.models.pool import AutomatedPool, Pool
@@ -73,7 +73,7 @@ class AbstractTask(ABC):
         # set task status
         await self.task_model.set_status(TaskStatus.IN_PROGRESS)
         friendly_task_name = await self.task_model.form_user_friendly_text()
-        await system_logger.info(_("Task '{}' started.").format(friendly_task_name))
+        await system_logger.info(_local_("Task '{}' started.").format(friendly_task_name))
 
         # Добавить себя в список выполняющихся задач
         AbstractTask.task_list.append(self)
@@ -82,20 +82,20 @@ class AbstractTask(ABC):
             await self.do_task()
             await self.task_model.set_status(TaskStatus.FINISHED)
             await system_logger.info(
-                _("Task '{}' finished successfully.").format(friendly_task_name)
+                _local_("Task '{}' finished successfully.").format(friendly_task_name)
             )
 
         except asyncio.CancelledError:
             await self.task_model.set_status(TaskStatus.CANCELLED)
             await system_logger.warning(
-                _("Task '{}' cancelled.").format(friendly_task_name)
+                _local_("Task '{}' cancelled.").format(friendly_task_name)
             )
 
             await self.do_on_cancel()
 
         except (asyncio.TimeoutError, Exception) as ex:
             # Условие намеренно задублировано, чтобы подчеркнуть идею 2 основных случаев
-            message = _("Task '{}' failed.").format(friendly_task_name)
+            message = _local_("Task '{}' failed.").format(friendly_task_name)
 
             await self.task_model.set_status(TaskStatus.FAILED, message + " " + str(ex))
             # Сейчас сообщение для ошибок TimeoutError пишутся в вызывающих их методах
@@ -161,12 +161,12 @@ class InitPoolTask(AbstractTask):
                     # Чтобы проблема была передана внешнему обработчику в AbstractTask
                     raise
                 except asyncio.CancelledError:
-                    await system_logger.warning(_("Pool Creation cancelled."))
+                    await system_logger.warning(_local_("Pool Creation cancelled."))
                     await automated_pool.deactivate()
                     raise
                 except Exception as E:
                     await system_logger.error(
-                        message=_("Failed to init pool."), description=str(E)
+                        message=_local_("Failed to init pool."), description=str(E)
                     )
                     await automated_pool.deactivate()
                     raise E
@@ -186,7 +186,7 @@ class InitPoolTask(AbstractTask):
             except Exception as E:
                 await automated_pool.deactivate()
                 await system_logger.error(
-                    message=_("Pool initialization VM(s) preparation error."),
+                    message=_local_("Pool initialization VM(s) preparation error."),
                     description=str(E),
                 )
                 raise E
@@ -257,7 +257,7 @@ class ExpandPoolTask(AbstractTask):
                         vm_list = await automated_pool.add_vm(real_amount_to_add)
                     except VmCreationError as vm_error:
                         await system_logger.error(
-                            _("VM creating error."), description=vm_error
+                            _local_("VM creating error."), description=vm_error
                         )
 
             # Подготовка ВМ для подключения к ТК  (под async with pool_lock)
@@ -279,7 +279,7 @@ class ExpandPoolTask(AbstractTask):
                 raise
             except Exception as E:
                 await system_logger.error(
-                    message=_("VM preparation error."), description=str(E)
+                    message=_local_("VM preparation error."), description=str(E)
                 )
 
 
@@ -328,7 +328,7 @@ class RecreationGuestVmTask(AbstractTask):
                     vm_list = await automated_pool.add_vm(count=1)
                 except VmCreationError as vm_error:
                     await system_logger.error(
-                        _("VM creating error."), description=vm_error
+                        _local_("VM creating error."), description=vm_error
                     )
 
             # Подготовка ВМ для подключения к ТК (под async with pool_lock)
@@ -350,7 +350,7 @@ class RecreationGuestVmTask(AbstractTask):
                 raise
             except Exception as E:
                 await system_logger.error(
-                    message=_("VM preparation error."), description=str(E)
+                    message=_local_("VM preparation error."), description=str(E)
                 )
 
 
@@ -444,7 +444,7 @@ class PrepareVmTask(AbstractTask):
         # Проверить выполняется ли уже задача подготовки этой вм. Запускать еще одну нет смысла и даже вредно.
         vm_prepare_tasks = self._get_related_progressing_tasks()
         if len(vm_prepare_tasks) > 0:
-            raise RuntimeError(_("Another task works on this VM."))
+            raise RuntimeError(_local_("Another task works on this VM."))
 
         # preparation (код перенесен из pool/schema.py)
         vm = await Vm.get(self.task_model.entity_id)
@@ -487,10 +487,10 @@ class PrepareVmTask(AbstractTask):
 
             if not action_response.success:
                 # Вернуть исключение?
-                raise ValueError(_("ECP VeiL domain request error."))
+                raise ValueError(_local_("ECP VeiL domain request error."))
             if action_response.status_code == 200:
                 # Задача не встала в очередь, а выполнилась немедленно. Такого не должно быть.
-                raise ValueError(_("Task has`t been created."))
+                raise ValueError(_local_("Task has`t been created."))
             if action_response.status_code == 202:
                 # Была установлена задача. Необходимо дождаться ее выполнения.
                 # TODO: метод ожидания задачи
@@ -510,7 +510,7 @@ class PrepareVmTask(AbstractTask):
 
                 if not task_success:
                     raise ValueError(
-                        _("VM remote access task {} for VM {} finished with error.").format(
+                        _local_("VM remote access task {} for VM {} finished with error.").format(
                             api_object_id, vm.verbose_name
                         )
                     )
@@ -536,10 +536,10 @@ class BackupVmsTask(AbstractTask):
             ok = await pool.backup_vms(creator=self._creator)
 
         else:
-            raise RuntimeError(_("Wrong entity type."))
+            raise RuntimeError(_local_("Wrong entity type."))
 
         if not ok:
-            raise RuntimeError(_("Creating backup finished with error."))
+            raise RuntimeError(_local_("Creating backup finished with error."))
 
 
 class RemoveVmsTask(AbstractTask):
@@ -563,7 +563,7 @@ class RemoveVmsTask(AbstractTask):
         elif pool_type == Pool.PoolTypes.STATIC:
             await self.remove_vms(pool)
         else:
-            raise RuntimeError(_("Unsupported pool type."))
+            raise RuntimeError(_local_("Unsupported pool type."))
 
     async def remove_vms(self, pool, remove_vms_on_controller=False):
         await pool.remove_vms(self._vm_ids, self._creator)

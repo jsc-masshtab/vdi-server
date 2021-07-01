@@ -9,7 +9,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
 
 from common.database import db
-from common.languages import _
+from common.languages import _local_
 from common.models.auth import Entity
 from common.subscription_sources import VDI_TASKS_SUBSCRIPTION
 from common.veil.veil_gino import AbstractSortableStatusModel, EntityType
@@ -75,21 +75,21 @@ class Task(db.Model, AbstractSortableStatusModel):
 
         entity_name = await self.get_associated_entity_name()
         if self.task_type == PoolTaskType.POOL_CREATE:
-            task_message = _("Creation of pool {}.").format(entity_name)
+            task_message = _local_("Creation of pool {}.").format(entity_name)
         elif self.task_type == PoolTaskType.POOL_EXPAND:
-            task_message = _("Expanding of pool {}.").format(entity_name)
+            task_message = _local_("Expanding of pool {}.").format(entity_name)
         elif self.task_type == PoolTaskType.POOL_DELETE:
-            task_message = _("Deleting of pool {}.").format(entity_name)
+            task_message = _local_("Deleting of pool {}.").format(entity_name)
         elif self.task_type == PoolTaskType.POOL_DECREASE:
-            task_message = _("Decreasing of pool {}.").format(entity_name)
+            task_message = _local_("Decreasing of pool {}.").format(entity_name)
         elif self.task_type == PoolTaskType.VM_PREPARE:
-            task_message = _("Preparation of vm {}.").format(entity_name)
+            task_message = _local_("Preparation of vm {}.").format(entity_name)
         elif self.task_type == PoolTaskType.VMS_BACKUP:
-            task_message = _("Backup of {}.").format(entity_name)
+            task_message = _local_("Backup of {}.").format(entity_name)
         elif self.task_type == PoolTaskType.VMS_REMOVE:
-            task_message = _("Removal of VMs from pool {}.").format(entity_name)
+            task_message = _local_("Removal of VMs from pool {}.").format(entity_name)
         elif self.task_type == PoolTaskType.VM_GUEST_RECREATION:
-            task_message = _(
+            task_message = _local_(
                 "Automatic recreation of VM {} in the guest pool.").format(
                 entity_name)
         else:

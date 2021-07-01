@@ -10,7 +10,7 @@ from sqlalchemy import and_, desc, text
 from veil_api_client import VeilRestPaginator
 
 from common.database import db
-from common.languages import _
+from common.languages import _local_
 from common.log.journal import system_logger
 from common.models.auth import Entity
 from common.models.event import Event, EventReadByUser, JournalSettings
@@ -281,7 +281,7 @@ class EventQuery(graphene.ObjectType):
                     return event.created if event.created else "2000-01-01T00:00:01Z"
 
             else:
-                raise SimpleError(_("The sort parameter is incorrect."))
+                raise SimpleError(_local_("The sort parameter is incorrect."))
             event_type_list = sorted(event_type_list, key=sort_lam, reverse=reverse)
 
         return event_type_list
@@ -303,7 +303,7 @@ class EventQuery(graphene.ObjectType):
         ).first()
 
         if not event:
-            raise GraphQLError(_("No such event."))
+            raise GraphQLError(_local_("No such event."))
 
         event_type = EventType(
             read_by=[UserType(**user.__values__) for user in event.read_by],
@@ -423,7 +423,7 @@ class EventExportMutation(graphene.Mutation):
         name = await Event.event_export(start, finish, journal_path)
         entity = {"entity_type": "SECURITY", "entity_uuid": None}
         await system_logger.info(
-            _("Journal is exported."), description=name, entity=entity
+            _local_("Journal is exported."), description=name, entity=entity
         )
         return EventExportMutation(ok=True)
 

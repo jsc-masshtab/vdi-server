@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from abc import ABC
 
-from common.languages import _
+from common.languages import _local_
 from common.log.journal import system_logger
 from common.models.auth import User
 from common.models.authentication_directory import AuthenticationDirectory
@@ -19,16 +19,16 @@ class AuthHandler(BaseHttpHandler, ABC):
     async def post(self):
         try:
             if not self.args:
-                raise ValidationError(_("Missing request body."))
+                raise ValidationError(_local_("Missing request body."))
             if "username" and "password" not in self.args:
-                raise AssertError(_("Missing username and password."))
+                raise AssertError(_local_("Missing username and password."))
 
             username = self.args["username"]
             password = self.args["password"]
             if not username or len(username) < 2:
-                raise ValidationError(_("Missing username."))
+                raise ValidationError(_local_("Missing username."))
             if not password or len(password) < 2:
-                raise ValidationError(_("Missing password."))
+                raise ValidationError(_local_("Missing password."))
 
             # Updated 26.12.2020
             if self.args.get("ldap") and EXTERNAL_AUTH:
@@ -40,21 +40,21 @@ class AuthHandler(BaseHttpHandler, ABC):
                 )
             elif self.args.get("ldap") and not EXTERNAL_AUTH:
                 raise ValidationError(
-                    _("External auth system is disabled. Check broker settings.")
+                    _local_("External auth system is disabled. Check broker settings.")
                 )
             elif PAM_AUTH and LOCAL_AUTH:
                 raise ValidationError(
-                    _("PAM or LOCAL auth only. Check broker settings.")
+                    _local_("PAM or LOCAL auth only. Check broker settings.")
                 )
             elif LOCAL_AUTH or PAM_AUTH:
                 password_is_valid = await User.check_user(username, password)
                 account_name = username
                 domain_name = None
                 if not password_is_valid:
-                    raise AssertError(_("Invalid credentials."))
+                    raise AssertError(_local_("Invalid credentials."))
             else:
                 raise ValidationError(
-                    _("Auth system is disabled. Check broker settings.")
+                    _local_("Auth system is disabled. Check broker settings.")
                 )
 
             access_token = encode_jwt(account_name, domain=domain_name)
@@ -69,7 +69,7 @@ class AuthHandler(BaseHttpHandler, ABC):
         except AssertionError as auth_error:
             error_description = "IP: {}\n{}".format(self.remote_ip, auth_error)
             entity = {"entity_type": EntityType.SECURITY, "entity_uuid": None}
-            error_message = _("Authentication failed for user: {}.").format(
+            error_message = _local_("Authentication failed for user: {}.").format(
                 self.args.get("username", "unknown")
             )
             await system_logger.warning(
@@ -86,7 +86,7 @@ class LogoutHandler(BaseHttpHandler, ABC):
             self.request.headers
         )
         await User.logout(username=username, access_token=token)
-        await system_logger.debug(_("User {} logged out.").format(username))
+        await system_logger.debug(_local_("User {} logged out.").format(username))
 
 
 class VersionHandler(BaseHttpHandler, ABC):

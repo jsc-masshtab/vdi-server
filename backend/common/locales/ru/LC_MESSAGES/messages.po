@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-06-29 18:44+0300\n"
+"POT-Creation-Date: 2021-07-01 13:22+0300\n"
 "PO-Revision-Date: 2020-07-30 11:25+0300\n"
 "Last-Translator: Emil <emil@emil-pc>\n"
 "Language-Team: Russian\n"
@@ -233,7 +233,7 @@ msgstr "Новые аргументы: {} группы: {}."
 
 #: ../common/models/authentication_directory.py:320
 msgid "Mapping for auth directory {} is updated."
-msgstr "Mapping for auth directory {} is updated."
+msgstr "Сопоставление для службы каталогов {} обновлено."
 
 #: ../common/models/authentication_directory.py:349
 #: ../common/models/authentication_directory.py:583
@@ -429,7 +429,7 @@ msgstr "Удаление виртуальных машин для автомат
 
 #: ../common/models/pool.py:762
 msgid "VM {} has been removed from ECP VeiL."
-msgstr "ВМ {} удалена  из ECP VeiL."
+msgstr "ВМ {} удалена из ECP VeiL."
 
 #: ../common/models/pool.py:787
 #, python-brace-format
@@ -736,7 +736,7 @@ msgstr "ВМ {} успешно задан hostname."
 
 #: ../common/models/vm.py:1015
 msgid "VM {} failed to receive DHCP ip address ({})."
-msgstr "VM {} не удалось получить IP адрес по DHCP ({})."
+msgstr "ВМ {} не получила IP адрес по DHCP ({})."
 
 #: ../common/models/vm.py:1043
 msgid "VM {} domain including task failed."
@@ -826,7 +826,7 @@ msgstr "{} {} деактивирована."
 
 #: ../common/veil/veil_gino.py:223
 msgid "{} {} has`t been found in ECP VeiL. Switched to FAILED."
-msgstr "{} {} не найдена на ECP VeiL. Переключена в стутус FAILED."
+msgstr "{} {} не найдена на ECP VeiL. Переключена в статус с ошибкой."
 
 #: ../common/veil/veil_gino.py:236
 msgid "Group {} has been deleted."
@@ -842,7 +842,7 @@ msgstr "Пользователь {} не найден."
 
 #: ../common/veil/veil_handlers.py:99
 msgid "There is no pool with id: {}."
-msgstr "Отсутствует пул с ID: {}."
+msgstr "Отсутствует пул с id: {}."
 
 #: ../common/veil/veil_handlers.py:103
 msgid "User {} has no VM on pool {}."
@@ -910,7 +910,7 @@ msgstr "ВМ заблокирована выполнением другой за
 
 #: ../pool_worker/pool_tasks.py:490
 msgid "ECP VeiL domain request error."
-msgstr "Ошибка запроса ECP VeiL ВМ."
+msgstr "Ошибка запроса ВМ на ECP VeiL."
 
 #: ../pool_worker/pool_tasks.py:493
 msgid "Task has`t been created."
@@ -970,7 +970,7 @@ msgstr "Ссылка на службу каталогов должна начи�
 
 #: ../web_app/auth/authentication_directory/auth_dir_schema.py:44
 msgid "Verbose name should not be empty."
-msgstr "Имя verbose не должно быть пустым."
+msgstr "Имя не должно быть пустым."
 
 #: ../web_app/auth/authentication_directory/auth_dir_schema.py:51
 msgid "Value should be 1-63 latin characters, -, . or _."
@@ -995,7 +995,7 @@ msgstr "Класс объекта домена не должен быть пус
 
 #: ../web_app/auth/authentication_directory/auth_dir_schema.py:207
 msgid "Specify id."
-msgstr "Укажите ID."
+msgstr "Укажите id."
 
 #: ../web_app/auth/group_schema.py:25 ../web_app/auth/group_schema.py:143
 msgid "No such group."
@@ -1112,7 +1112,7 @@ msgstr "Фамилия должна быть <= 128 символам."
 
 #: ../web_app/auth/user_schema.py:248
 msgid "Specify id or username."
-msgstr "Укажите ID или имя пользователя."
+msgstr "Укажите id или имя пользователя."
 
 #: ../web_app/auth/user_schema.py:476
 msgid "Can`t remove permission(s) {} because they are granted to groups of user {}."
@@ -1409,7 +1409,7 @@ msgstr "Все подключения."
 
 #: ../web_app/thin_client_api/schema.py:237
 msgid "Connection id: {}."
-msgstr "ID подключения: {}."
+msgstr "id подключения: {}."
 
 #: ../web_app/thin_client_api/schema.py:244
 msgid "Connections of user: {}."

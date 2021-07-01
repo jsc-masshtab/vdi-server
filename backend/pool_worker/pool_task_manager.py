@@ -6,7 +6,7 @@ import sys
 from sqlalchemy import and_
 
 from common.database import db
-from common.languages import _
+from common.languages import _local_
 from common.log.journal import system_logger
 from common.models.pool import Pool
 from common.models.task import PoolTaskType, Task, TaskStatus
@@ -71,7 +71,7 @@ class PoolTaskManager:
                 raise
             except Exception as ex:
                 await system_logger.error(
-                    message=_("Can`t launch task."), description=str(ex)
+                    message=_local_("Can`t launch task."), description=str(ex)
                 )
 
     async def listen_for_commands(self):

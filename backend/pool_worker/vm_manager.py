@@ -5,7 +5,7 @@ import json
 import redis
 
 from common.database import db
-from common.languages import _
+from common.languages import _local_
 from common.log.journal import system_logger
 from common.models.auth import Entity as EntityModel, EntityOwner as EntityOwnerModel
 from common.models.controller import Controller
@@ -99,7 +99,7 @@ class VmManager:
                 break
             except Exception as ex:
                 await system_logger.debug(
-                    message=_("Keep vms on task error."), description=str(ex)
+                    message=_local_("Keep vms on task error."), description=str(ex)
                 )
 
             await asyncio.sleep(VM_MANGER_DATA_QUERY_INTERVAL)
@@ -143,5 +143,5 @@ class VmManager:
                 break
             except Exception as ex:
                 await system_logger.debug(
-                    message=_("Synchronize vm data task error."), description=str(ex)
+                    message=_local_("Synchronize vm data task error."), description=str(ex)
                 )

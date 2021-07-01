@@ -9,7 +9,7 @@ from sqlalchemy import and_
 from sqlalchemy.sql import desc
 
 from common.database import db
-from common.languages import _
+from common.languages import _local_
 from common.log.journal import system_logger
 from common.models.active_tk_connection import (
     ActiveTkConnection
@@ -231,21 +231,21 @@ class DisconnectThinClientMutation(graphene.Mutation):
         user_id = kwargs.get("user_id")
 
         if conn_id is None and user_id is None:
-            add_message = _("All connections.")
+            add_message = _local_("All connections.")
         elif conn_id:
             cmd_dict.update(conn_id=str(conn_id))
-            add_message = _("Connection id: {}.").format(conn_id)
+            add_message = _local_("Connection id: {}.").format(conn_id)
 
         elif user_id:
             cmd_dict.update(user_id=str(user_id))
             user = await User.get(user_id)
             if not user:
-                raise ValidationError(_("No such user."))
-            add_message = _("Connections of user: {}.").format(user.username)
+                raise ValidationError(_local_("No such user."))
+            add_message = _local_("Connections of user: {}.").format(user.username)
 
         REDIS_CLIENT.publish(REDIS_THIN_CLIENT_CMD_CHANNEL, json.dumps(cmd_dict))
 
-        base_message = _("Thin client disconnect requested.")
+        base_message = _local_("Thin client disconnect requested.")
         await system_logger.info(base_message + " " + add_message, user=creator)
 
         return DisconnectThinClientMutation(ok=True)
@@ -281,7 +281,7 @@ class SendMessageToThinClientMutation(graphene.Mutation):
         if recipient_id:
             user = await User.get(recipient_id)
             if not user:
-                raise SilentError(_("User {} does not exist.").format(recipient_id))
+                raise SilentError(_local_("User {} does not exist.").format(recipient_id))
             message_data_dict.update(recipient_id=str(recipient_id))
 
         REDIS_CLIENT.publish(REDIS_TEXT_MSG_CHANNEL, json.dumps(message_data_dict))

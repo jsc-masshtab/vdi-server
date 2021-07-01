@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from abc import ABC
 
-from common.languages import _
+from common.languages import _local_
 from common.log.journal import system_logger
 from common.models.active_tk_connection import ActiveTkConnection
 from common.veil.auth.veil_jwt import jwtauth
@@ -34,7 +34,7 @@ class LicenseHandler(BaseHttpHandler, ABC):
             if not is_administrator(roles):
                 raise Unauthorized
         except (Unauthorized, AttributeError, TypeError):
-            response = {"errors": [{"message": _("Invalid permissions.")}]}
+            response = {"errors": [{"message": _local_("Invalid permissions.")}]}
             return await self.log_finish(response)
         # загрузка самого файла
         try:
@@ -49,7 +49,7 @@ class LicenseHandler(BaseHttpHandler, ABC):
 
             key_file_name = key_file_dict["filename"]
             if not key_file_name.endswith(".key"):
-                raise ValidationError(_("Bad extension."))
+                raise ValidationError(_local_("Bad extension."))
 
             # TODO: check content_type of file - application/x-iwork-keynote-sffkey
             # key_file_content_type = key_file_dict.get('content_type')  # noqa
@@ -60,16 +60,16 @@ class LicenseHandler(BaseHttpHandler, ABC):
             response = {
                 "errors": [
                     {
-                        "message": _("Fail to open license key file.").format(
+                        "message": _local_("Fail to open license key file.").format(
                             ip=self.remote_ip
                         )
                     }
                 ]
             }
         if License().take_verbose_name == "Unlicensed Veil VDI":
-            msg = _("Try to upload invalid license key.")
+            msg = _local_("Try to upload invalid license key.")
             await system_logger.error(msg)
         else:
-            msg = _("Valid license key is uploaded.")
+            msg = _local_("Valid license key is uploaded.")
             await system_logger.info(msg, user=user.username)
         return await self.log_finish(response)

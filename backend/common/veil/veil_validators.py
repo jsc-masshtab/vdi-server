@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from graphene.types.structures import NonNull
 
-from common.languages import _
+from common.languages import _local_
 from common.veil.veil_errors import ValidationError
 
 
@@ -28,5 +28,5 @@ class MutationValidation:
                     if value is not None or isinstance(argument, NonNull):
                         await validator(kwargs, value)
                 except ValidationError as E:
-                    msg = _('Field "{}" - {}.').format(argument_name, E)
+                    msg = _local_('Field "{}" - {}.').format(argument_name, E)
                     raise ValidationError(msg.replace("..", "."))

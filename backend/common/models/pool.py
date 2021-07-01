@@ -27,7 +27,7 @@ from veil_api_client import (
 )
 
 from common.database import db
-from common.languages import _
+from common.languages import _local_
 from common.log.journal import system_logger
 from common.models.auth import (
     Entity as EntityModel,
@@ -212,7 +212,7 @@ class Pool(VeilModel):
         except AttributeError:
             entity = {"entity_type": EntityType.POOL, "entity_uuid": None}
             raise SimpleError(
-                _("Incorrect sorting option {}.").format(ordering), entity=entity
+                _local_("Incorrect sorting option {}.").format(ordering), entity=entity
             )
         return query
 
@@ -321,7 +321,7 @@ class Pool(VeilModel):
                 creator=creator,
             )
 
-            msg = _("Pool {} has been updated.").format(old_pool_obj.verbose_name)
+            msg = _local_("Pool {} has been updated.").format(old_pool_obj.verbose_name)
             creator = update_dict.pop("creator")
             desc = str(update_dict)
             await system_logger.info(
@@ -584,7 +584,7 @@ class Pool(VeilModel):
                 )
                 user = await UserModel.get(user_id)
                 await system_logger.info(
-                    _("User {} has been included to pool {}.").format(
+                    _local_("User {} has been included to pool {}.").format(
                         user.username, self.verbose_name
                     ),
                     user=creator,
@@ -592,7 +592,7 @@ class Pool(VeilModel):
                 )
         except UniqueViolationError:
             raise SimpleError(
-                _("{} already has permission.").format(type(self).__name__),
+                _local_("{} already has permission.").format(type(self).__name__),
                 user=creator,
                 entity=self.entity,
             )
@@ -613,7 +613,7 @@ class Pool(VeilModel):
             user = await UserModel.get(user_id)
             if has_permission:
                 await system_logger.info(
-                    _("Removing user {} from pool {}.").format(
+                    _local_("Removing user {} from pool {}.").format(
                         user.username, self.verbose_name
                     ),
                     user=creator,
@@ -621,7 +621,7 @@ class Pool(VeilModel):
                 )
             else:
                 await system_logger.warning(
-                    _("User {} has no direct right to pool {}.").format(
+                    _local_("User {} has no direct right to pool {}.").format(
                         user.username, self.verbose_name
                     ),
                     user=creator,
@@ -649,7 +649,7 @@ class Pool(VeilModel):
                 )
                 group = await GroupModel.get(group_id)
                 await system_logger.info(
-                    _("Group {} has been included to pool {}.").format(
+                    _local_("Group {} has been included to pool {}.").format(
                         group.verbose_name, self.verbose_name
                     ),
                     user=creator,
@@ -657,7 +657,7 @@ class Pool(VeilModel):
                 )
         except UniqueViolationError:
             raise SimpleError(
-                _("Pool already has permission."), user=creator, entity=self.entity
+                _local_("Pool already has permission."), user=creator, entity=self.entity
             )
         return ero
 
@@ -670,7 +670,7 @@ class Pool(VeilModel):
         for group_id in groups_list:
             group = await GroupModel.get(group_id)
             await system_logger.info(
-                _("Removing group {} from pool {}.").format(
+                _local_("Removing group {} from pool {}.").format(
                     group.verbose_name, self.verbose_name
                 ),
                 user=creator,
@@ -717,7 +717,7 @@ class Pool(VeilModel):
 
         controller_id = await Controller.get_controller_id_by_ip(controller_ip)
         if not controller_id:
-            raise ValidationError(_("Controller {} not found.").format(controller_ip))
+            raise ValidationError(_local_("Controller {} not found.").format(controller_ip))
 
         pool = await super().create(
             verbose_name=verbose_name,
@@ -749,17 +749,17 @@ class Pool(VeilModel):
             if automated_pool:
                 if automated_pool.is_guest:
                     await system_logger.debug(
-                        _("Delete VMs for GuestPool {}.").format(self.verbose_name)
+                        _local_("Delete VMs for GuestPool {}.").format(self.verbose_name)
                     )
                 else:
                     await system_logger.debug(
-                        _("Delete VMs for AutomatedPool {}.").format(self.verbose_name)
+                        _local_("Delete VMs for AutomatedPool {}.").format(self.verbose_name)
                     )
                 vm_ids = await VmModel.get_vms_ids_in_pool(self.id)
                 for vm_id in vm_ids:
                     vm = await VmModel.get(vm_id)
                     await system_logger.info(
-                        _("VM {} has been removed from ECP VeiL.").format(
+                        _local_("VM {} has been removed from ECP VeiL.").format(
                             vm.verbose_name
                         ),
                         entity=vm.entity,
@@ -784,7 +784,7 @@ class Pool(VeilModel):
                 await self.tag_remove(self.tag)
 
             await self.delete()
-            msg = _("Complete removal pool of desktops {verbose_name} is done.").format(
+            msg = _local_("Complete removal pool of desktops {verbose_name} is done.").format(
                 verbose_name=self.verbose_name
             )
             await system_logger.info(msg, entity=self.entity, user=creator)
@@ -817,7 +817,7 @@ class Pool(VeilModel):
             if vm.status != Status.RESERVED:
                 await vm.update(status=Status.ACTIVE).apply()
         await system_logger.info(
-            _("Pool {} has been activated.").format(pool.verbose_name), entity=entity
+            _local_("Pool {} has been activated.").format(pool.verbose_name), entity=entity
         )
         return True
 
@@ -833,7 +833,7 @@ class Pool(VeilModel):
                 if vm.status != Status.RESERVED:
                     await vm.update(status=Status.FAILED).apply()
         await system_logger.warning(
-            _("Pool {} status changed to {}.").format(pool.verbose_name, status.value),
+            _local_("Pool {} status changed to {}.").format(pool.verbose_name, status.value),
             entity=entity,
         )
         return True
@@ -1010,7 +1010,7 @@ class Pool(VeilModel):
                 def sort_lam(vm):
                     return vm["parent_name"] if vm["parent_name"] else DEFAULT_NAME
             else:
-                raise SimpleError(_("The sort parameter is incorrect."))
+                raise SimpleError(_local_("The sort parameter is incorrect."))
             vms_list = sorted(vms_list, key=sort_lam, reverse=reverse)
 
         for vm_info in vms_list:
@@ -1021,7 +1021,7 @@ class Pool(VeilModel):
         """Перенесенный метод из схемы и модели ВМ."""
         if not vm_ids:
             entity = {"entity_type": EntityType.POOL, "entity_uuid": None}
-            raise SimpleError(_("List of VM should not be empty."), entity=entity)
+            raise SimpleError(_local_("List of VM should not be empty."), entity=entity)
 
         # get automated pool object
         automated_pool = await AutomatedPool.get(self.id)
@@ -1039,7 +1039,7 @@ class Pool(VeilModel):
             if vm_not_in_the_pool:
                 entity = {"entity_type": EntityType.POOL, "entity_uuid": None}
                 raise SimpleError(
-                    _("VM doesn't belong to specified pool."),
+                    _local_("VM doesn't belong to specified pool."),
                     description=str(vm_id),
                     entity=entity,
                 )
@@ -1049,11 +1049,11 @@ class Pool(VeilModel):
                 vms_list.append(vm)
 
             if automated_pool:
-                msg = _("VM {} has been removed from the pool {} and ECP VeiL.").format(
+                msg = _local_("VM {} has been removed from the pool {} and ECP VeiL.").format(
                     vm.verbose_name, self.verbose_name
                 )
             else:
-                msg = _("VM {} has been removed from the pool {}.").format(
+                msg = _local_("VM {} has been removed from the pool {}.").format(
                     vm.verbose_name, self.verbose_name
                 )
             await system_logger.info(msg, entity=vm.entity, user=creator)
@@ -1120,7 +1120,7 @@ class Pool(VeilModel):
             tag = task.first_entity if tag_response.task else None
             entity = {"entity_type": EntityType.POOL, "entity_uuid": None}
             await system_logger.info(
-                _("Tag {name} created for pool {name}.").format(name=verbose_name),
+                _local_("Tag {name} created for pool {name}.").format(name=verbose_name),
                 user=creator,
                 entity=entity,
             )
@@ -1139,7 +1139,7 @@ class Pool(VeilModel):
         remove_response = await pool_tag.remove()
         if remove_response.success:
             await system_logger.info(
-                _("Tag {} removed from ECP VeiL.").format(pool_tag.verbose_name),
+                _local_("Tag {} removed from ECP VeiL.").format(pool_tag.verbose_name),
                 user="system",
                 entity=self.entity,
             )
@@ -1150,7 +1150,7 @@ class Pool(VeilModel):
         update_response = await pool_tag.update(verbose_name=verbose_name)
         if update_response.success:
             await system_logger.info(
-                _("Tag {name} updated for pool {name} and all vms in pool.").format(
+                _local_("Tag {name} updated for pool {name} and all vms in pool.").format(
                     name=verbose_name
                 ),
                 user=creator,
@@ -1177,7 +1177,7 @@ class Pool(VeilModel):
         if entity_response.success:
             for vm in vm_objects:
                 await system_logger.info(
-                    _("Tag {} removed from VM {}.").format(
+                    _local_("Tag {} removed from VM {}.").format(
                         pool_tag.verbose_name, vm.verbose_name
                     ),
                     user="system",
@@ -1192,7 +1192,7 @@ class Pool(VeilModel):
         if entity_response.success:
             entity = {"entity_type": EntityType.VM, "entity_uuid": None}
             await system_logger.info(
-                _("Tag {} added to VM {}.").format(pool_tag.verbose_name, verbose_name),
+                _local_("Tag {} added to VM {}.").format(pool_tag.verbose_name, verbose_name),
                 user="system",
                 entity=entity,
             )
@@ -1209,7 +1209,7 @@ class Pool(VeilModel):
         if entity_response.success:
             for vm in vm_objects:
                 await system_logger.info(
-                    _("Tag {} added to VM {}.").format(
+                    _local_("Tag {} added to VM {}.").format(
                         pool_tag.verbose_name, vm.verbose_name
                     ),
                     user="system",
@@ -1282,7 +1282,7 @@ class RdsPool(db.Model):
 
             # log
             await system_logger.info(
-                _("RDS pool {} created.").format(verbose_name),
+                _local_("RDS pool {} created.").format(verbose_name),
                 user=creator,
                 entity=pool.entity,
             )
@@ -1297,7 +1297,7 @@ class RdsPool(db.Model):
 
         for conn_type in connection_types:
             if conn_type not in RdsPool.get_supported_conn_types():
-                raise SilentError(_("Connection type {} is not supported.").format(conn_type))
+                raise SilentError(_local_("Connection type {} is not supported.").format(conn_type))
 
     @staticmethod
     def get_supported_conn_types():
@@ -1420,11 +1420,11 @@ class StaticPool(db.Model):
                 )
                 vm_obj_list.append(vm)
                 await system_logger.debug(
-                    _("VM {} created.").format(vm_type.verbose_name)
+                    _local_("VM {} created.").format(vm_type.verbose_name)
                 )
 
-                msg = _("VM {} created.").format(vm.verbose_name)
-                description = _("VM {} created and added to the pool {}.").format(
+                msg = _local_("VM {} created.").format(vm.verbose_name)
+                description = _local_("VM {} created and added to the pool {}.").format(
                     vm.verbose_name, verbose_name
                 )
                 await system_logger.info(
@@ -1435,7 +1435,7 @@ class StaticPool(db.Model):
                 await pl.tag_add_entities(tag=tag, vm_objects=vm_obj_list)
             # Записываем в лог успех
             await system_logger.info(
-                _("Static pool {} created.").format(verbose_name),
+                _local_("Static pool {} created.").format(verbose_name),
                 user=creator,
                 entity=pool.entity,
             )
@@ -1583,19 +1583,19 @@ class AutomatedPool(db.Model):
                 is_guest=is_guest,
             )
             # Записываем событие в журнал
-            description = _(
+            description = _local_(
                 "Initial_size: {}, total_size: {}, increase_step {}, reserve_size {}."
             ).format(initial_size, total_size, increase_step, reserve_size)
             if automated_pool.is_guest:
                 await system_logger.info(
-                    _("GuestPool {} is created.").format(verbose_name),
+                    _local_("GuestPool {} is created.").format(verbose_name),
                     user=creator,
                     entity=pool.entity,
                     description=description,
                 )
             else:
                 await system_logger.info(
-                    _("AutomatedPool {} is created.").format(verbose_name),
+                    _local_("AutomatedPool {} is created.").format(verbose_name),
                     user=creator,
                     entity=pool.entity,
                     description=description,
@@ -1637,7 +1637,7 @@ class AutomatedPool(db.Model):
 
             if pool_kwargs:
                 await system_logger.debug(
-                    _("Update Pool {} values.").format(
+                    _local_("Update Pool {} values.").format(
                         await self.verbose_name
                     )
                 )
@@ -1664,7 +1664,7 @@ class AutomatedPool(db.Model):
             if auto_pool_kwargs:
                 desc = str(auto_pool_kwargs)
                 await system_logger.debug(
-                    _("Update Pool {} values.").format(
+                    _local_("Update Pool {} values.").format(
                         await self.verbose_name
                     ),
                     description=desc,
@@ -1674,7 +1674,7 @@ class AutomatedPool(db.Model):
                 await self.update(**auto_pool_kwargs).apply()
         # Событие о редакировании пула
         pool_kwargs.update(auto_pool_kwargs)
-        msg = _("Pool {} has been updated.").format(old_verbose_name)
+        msg = _local_("Pool {} has been updated.").format(old_verbose_name)
         await system_logger.info(
             message=msg, description=str(pool_kwargs), user=creator, entity=self.entity
         )
@@ -1760,7 +1760,7 @@ class AutomatedPool(db.Model):
         # Прерываем выполнение при отсутствии клиента
         if not pool_controller.veil_client:
             raise AssertionError(
-                _("There is no client for pool {}.").format(pool_verbose_name)
+                _local_("There is no client for pool {}.").format(pool_verbose_name)
             )
         # Подбор имени выполняет VeiL ECP, но, если ВМ 1 - не будет присвоен индекс.
         if count == 1:
@@ -1798,7 +1798,7 @@ class AutomatedPool(db.Model):
             if not task_success:
                 success_vm_ids = await self.process_failed_multitask(vm_multi_task_id)
                 await system_logger.warning(
-                    message=_("VM creation task {} finished with error.").format(
+                    message=_local_("VM creation task {} finished with error.").format(
                         api_object_id
                     )
                 )
@@ -1818,7 +1818,7 @@ class AutomatedPool(db.Model):
                 task_client = pool_controller.veil_client.task(task_id=vm_multi_task_id)
                 await task_client.cancel()
             except Exception as ex:
-                msg = _("Fail to cancel VM creation task.")
+                msg = _local_("Fail to cancel VM creation task.")
                 entity = {"entity_type": EntityType.VM, "entity_uuid": None}
                 await system_logger.debug(
                     message=msg, description=str(ex), entity=entity
@@ -1856,8 +1856,8 @@ class AutomatedPool(db.Model):
                     )
                     vm_obj_list.append(vm_object)
 
-                    msg = _("VM {} created.").format(vm_object.verbose_name)
-                    description = _("VM {} created and added to the pool {}.").format(
+                    msg = _local_("VM {} created.").format(vm_object.verbose_name)
+                    description = _local_("VM {} created and added to the pool {}.").format(
                         vm_object.verbose_name, verbose_name
                     )
                     await system_logger.info(
@@ -1932,7 +1932,7 @@ class AutomatedPool(db.Model):
         if creation_error:
             # log that we can`t create required initial amount of VMs
             await system_logger.error(
-                _("VM creation error."),
+                _local_("VM creation error."),
                 entity=self.entity,
                 description=str(creation_error)
             )
@@ -1944,15 +1944,15 @@ class AutomatedPool(db.Model):
 
         creation_successful = self.initial_size <= num_of_vms_in_pool
         if creation_successful:
-            msg = _("{} vm(s) are successfully added in the {} pool.").format(
+            msg = _local_("{} vm(s) are successfully added in the {} pool.").format(
                 self.initial_size, verbose_name
             )
             await system_logger.info(msg, entity=self.entity)
         else:
-            msg = _("Adding VM to the pool {} finished with errors.").format(
+            msg = _local_("Adding VM to the pool {} finished with errors.").format(
                 verbose_name
             )
-            description = _("Required: {}, created: {}.").format(
+            description = _local_("Required: {}, created: {}.").format(
                 self.initial_size, num_of_vms_in_pool
             )
             await system_logger.error(

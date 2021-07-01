@@ -11,7 +11,7 @@ from alembic import op
 
 import sqlalchemy as sa
 
-from common.languages import _
+from common.languages import _local_
 
 # revision identifiers, used by Alembic.
 revision = "70220709e7b8"
@@ -184,9 +184,9 @@ def downgrade():
     op.drop_column("journal_settings", "en_msg_str")
     op.drop_column("journal_settings", "en_name_str")
     op.drop_column("journal_settings", "en_path_str")
-    msg_str = _("Add new journal archive.")
-    name_str = _("Archive name:")
-    path_str = _("path:")
+    msg_str = _local_("Add new journal archive.")
+    name_str = _local_("Archive name:")
+    path_str = _local_("path:")
     op.execute(
         """CREATE OR REPLACE FUNCTION archived(partition_date timestamp)
                 RETURNS VOID AS

@@ -13,7 +13,7 @@ from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.sql import desc, text
 
 from common.database import db
-from common.languages import _
+from common.languages import _local_
 from common.log.journal import system_logger
 from common.models.auth import Group as GroupModel, User as UserModel
 from common.settings import (LDAP_LOGIN_PATTERN,
@@ -175,7 +175,7 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
         count = await db.func.count(AuthenticationDirectory.id).gino.scalar()
         if count > 0:
             raise SilentError(
-                _("More than one authentication directory can not be created.")
+                _local_("More than one authentication directory can not be created.")
             )
         # Шифруем пароль
         if service_password and isinstance(service_password, str):
@@ -203,7 +203,7 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
         # Создаем запись
         auth_dir = await AuthenticationDirectory.create(**auth_dir_dict)
         await system_logger.info(
-            _("Authentication directory {} is created.").format(
+            _local_("Authentication directory {} is created.").format(
                 auth_dir_dict.get("verbose_name")
             ),
             user=creator,
@@ -240,7 +240,7 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
         creator = update_dict.pop("creator")
         desc = str(update_dict)
         await system_logger.info(
-            _("Values for auth directory is updated."),
+            _local_("Values for auth directory is updated."),
             entity=update_type.entity,
             description=desc,
             user=creator,
@@ -275,10 +275,10 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
                     mapping_id=mapping_obj.id,
                 )
                 group_name = await GroupModel.get(group_id)
-                desc = _("Arguments: {} of group: {}.").format(
+                desc = _local_("Arguments: {} of group: {}.").format(
                     mapping, group_name.verbose_name
                 )
-                msg = _("Mapping for auth directory {} is created.").format(
+                msg = _local_("Mapping for auth directory {} is created.").format(
                     self.verbose_name
                 )
                 await system_logger.info(
@@ -314,10 +314,10 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
                         mapping_id=mapping_id,
                     )
                     group_name = await GroupModel.get(group_id)
-                    desc = _("New arguments: {} of group: {}.").format(
+                    desc = _local_("New arguments: {} of group: {}.").format(
                         mapping, group_name.verbose_name
                     )
-                    msg = _("Mapping for auth directory {} is updated.").format(
+                    msg = _local_("Mapping for auth directory {} is updated.").format(
                         self.verbose_name
                     )
                     await system_logger.info(
@@ -346,7 +346,7 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
             await self.update(status=Status.BAD_AUTH).apply()
             return False
         except ldap.SERVER_DOWN as ex_error:
-            msg = _("Authentication directory server {} is down.").format(
+            msg = _local_("Authentication directory server {} is down.").format(
                 self.directory_url
             )
             await system_logger.warning(msg, entity=self.entity, description=ex_error)
@@ -356,7 +356,7 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
             ldap_server.unbind_s()
             await self.update(status=Status.ACTIVE).apply()
         await system_logger.info(
-            _("Authentication directory server {} is connected.").format(
+            _local_("Authentication directory server {} is connected.").format(
                 self.directory_url
             ),
             entity=self.entity,
@@ -403,7 +403,7 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
         :return: объект пользователя, флаг создания пользователя
         """
         if not isinstance(username, str):
-            raise ValidationError(_("Username must be a string."))
+            raise ValidationError(_local_("Username must be a string."))
 
         username = username.lower()
         user = await UserModel.get_object(
@@ -436,7 +436,7 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
         user_info, user_groups = self._get_ad_user_attributes(account_name, ldap_server)
 
         mappings = await self.mappings
-        await system_logger.debug(_("Mappings: {}.").format(mappings))
+        await system_logger.debug(_local_("Mappings: {}.").format(mappings))
 
         if not mappings:
             return True
@@ -459,9 +459,9 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
 
         for role_mapping in mappings:
             escaped_values = list(map(ldap.dn.escape_dn_chars, role_mapping.values))
-            await system_logger.debug(_("escaped values: {}.").format(escaped_values))
+            await system_logger.debug(_local_("escaped values: {}.").format(escaped_values))
             await system_logger.debug(
-                _("role mapping value type: {}.").format(role_mapping.value_type)
+                _local_("role mapping value type: {}.").format(role_mapping.value_type)
             )
 
             if role_mapping.value_type == Mapping.ValueTypes.USER:
@@ -474,7 +474,7 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
                 )
 
             await system_logger.debug(
-                _("User VeiL groups: {}.").format(user_veil_groups)
+                _local_("User VeiL groups: {}.").format(user_veil_groups)
             )
 
             if user_veil_groups:
@@ -482,7 +482,7 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
                     user_groups = await user.assigned_groups_ids
                     if group.id not in user_groups:
                         await system_logger.debug(
-                            _("Attaching user {} to group: {}.").format(
+                            _local_("Attaching user {} to group: {}.").format(
                                 user.username, group.verbose_name
                             )
                         )
@@ -502,7 +502,7 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
                 first=True
             )
             if not authentication_directory:
-                raise ValidationError(_("No authentication directory controllers."))
+                raise ValidationError(_local_("No authentication directory controllers."))
             domain_name = authentication_directory.domain_name
         return domain_name
 
@@ -513,7 +513,7 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
         if not authentication_directory:
             # Если для доменного имени службы каталогов не создано записей в БД,
             # то авторизоваться невозможно.
-            raise ValidationError(_("No authentication directory controllers."))
+            raise ValidationError(_local_("No authentication directory controllers."))
 
         account_name, domain_name = extract_domain_from_username(username)
         user, created = await cls._get_user(account_name)
@@ -542,13 +542,13 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
             # о провале.
             success = False
             raise ValidationError(
-                _("Invalid credentials (ldap): {}.").format(ldap_error)
+                _local_("Invalid credentials (ldap): {}.").format(ldap_error)
             )
         except ldap.SERVER_DOWN:
             # Если нет связи с сервером службы каталогов,
             # то возвращаем ошибку о недоступности сервера
             success = False
-            raise ValidationError(_("Server down (ldap)."))
+            raise ValidationError(_local_("Server down (ldap)."))
         except Exception as E:
             success = False
             await system_logger.debug(E)
@@ -565,7 +565,7 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
         try:
             # Прерываем выполнение, если не указаны данные подключения
             if not self.service_username or not self.service_password:
-                raise AssertionError(_("LDAP username and password can`t be empty."))
+                raise AssertionError(_local_("LDAP username and password can`t be empty."))
             # Пытаемся подключиться
             ldap.set_option(ldap.OPT_X_TLS_REQUIRE_CERT, ldap.OPT_X_TLS_NEVER)
             ldap_connection = ldap.initialize(self.directory_url)
@@ -573,14 +573,14 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
             ldap_connection.set_option(ldap.OPT_NETWORK_TIMEOUT, LDAP_TIMEOUT)
             ldap_connection.simple_bind_s(self.connection_username, self.password)
         except (ldap.INVALID_CREDENTIALS, TypeError):
-            msg = _("Authentication directory server {} has bad auth info.").format(
+            msg = _local_("Authentication directory server {} has bad auth info.").format(
                 self.directory_url
             )
             await system_logger.warning(msg, entity=self.entity)
             await self.update(status=Status.BAD_AUTH).apply()
             return False
         except ldap.SERVER_DOWN:
-            msg = _("Authentication directory server {} is down.").format(
+            msg = _local_("Authentication directory server {} is down.").format(
                 self.directory_url
             )
             await system_logger.warning(msg, entity=self.entity)
@@ -705,7 +705,7 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
             groups_list = self.extract_groups(ldap_groups)
         except ldap.LDAPError as err_msg:
             # На случай ошибочности запроса к AD
-            msg = _(
+            msg = _local_(
                 "Fail to connect to Authentication Directory. Check service information."
             )
             await system_logger.error(msg, entity=self.entity, description=err_msg)
@@ -849,7 +849,7 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
             elif self.directory_type == self.DirectoryTypes.FreeIPA:
                 users_list = self.extract_free_ipa_group_members(ldap_response)
         except ldap.LDAPError:
-            msg = _(
+            msg = _local_(
                 "Fail to connect to Authentication Directory. Check service information."
             )
             await system_logger.error(msg, entity=self.entity)
@@ -907,7 +907,7 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
                     new_users_count += 1
         entity = {"entity_type": EntityType.AUTH, "entity_uuid": None}
         await system_logger.info(
-            _("{} new users synced from Authentication Directory.").format(
+            _local_("{} new users synced from Authentication Directory.").format(
                 new_users_count
             ),
             entity=entity,
@@ -918,17 +918,17 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
         """Синхронизирует пользователей группы из AD на VDI."""
         group = await GroupModel.get(group_id)
         if not group:
-            raise SilentError(_("No such Group."))
+            raise SilentError(_local_("No such Group."))
         if not group.ad_guid:
             raise SilentError(
-                _("Group {} is not synchronized by AD.".format(group.verbose_name))
+                _local_("Group {} is not synchronized by AD.".format(group.verbose_name))
             )
         # Поиск по ID наладить не удалось, поэтому ищем по имени группы.
         ad_group_members = await self.get_members_of_ad_group(group.ad_cn)
         # Добавлено 19.11.2020
         # Если отсутствуют пользователи - покажем ошибку
         if isinstance(ad_group_members, list) and len(ad_group_members) == 0:
-            raise SilentError(_("There is no users to sync."))
+            raise SilentError(_local_("There is no users to sync."))
         # Определяем кого нужно исключить
         vdi_group_members = await group.assigned_users
         exclude_user_list = list()

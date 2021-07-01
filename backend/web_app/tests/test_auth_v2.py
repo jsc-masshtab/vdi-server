@@ -16,7 +16,7 @@ from web_app.tests.fixtures import (
     fixt_group_role,
 )  # noqa
 
-from common.languages import _
+from common.languages import _local_
 from common.settings import LOCAL_AUTH, EXTERNAL_AUTH, PAM_AUTH
 
 pytestmark = [
@@ -110,7 +110,7 @@ class AuthLocalTestCase(VdiHttpTestCase):
                 body=body, url="/users", headers=headers
             )
             error_message = response_dict["errors"][0]["message"]
-            self.assertIn(_("Invalid permissions."), error_message)
+            self.assertIn(_local_("Invalid permissions."), error_message)
 
     @pytest.mark.usefixtures("fixt_db", "fixt_user")
     @gen_test

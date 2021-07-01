@@ -5,7 +5,7 @@ import graphene
 from graphene import Enum as GrapheneEnum
 
 from common.database import db
-from common.languages import _
+from common.languages import _local_
 from common.models.auth import Group
 from common.models.authentication_directory import AuthenticationDirectory, Mapping
 from common.veil.veil_decorators import security_administrator_required
@@ -28,27 +28,27 @@ class AuthenticationDirectoryValidator(MutationValidation):
         ad = await AuthenticationDirectory.get_object(id_=value, include_inactive=True)
         if ad:
             return value
-        raise ValidationError(_("No such Authentication Directory."))
+        raise ValidationError(_local_("No such Authentication Directory."))
 
     @staticmethod
     async def validate_directory_url(obj_dict, value):
         if not re.match(r"^ldap[s]?://[\S]+$", value):
             raise ValidationError(
-                _("Authentication directory URL should start with ldap(s)://.")
+                _local_("Authentication directory URL should start with ldap(s)://.")
             )
         return value
 
     @staticmethod
     async def validate_verbose_name(obj_dict, value):
         if len(value) == 0:
-            raise ValidationError(_("Verbose name should not be empty."))
+            raise ValidationError(_local_("Verbose name should not be empty."))
         return value
 
     @staticmethod
     async def validate_domain_name(obj_dict, value):
         if not re.match(r"^[a-zA-Z0-9\-_\.]{1,63}$", value):
             raise ValidationError(
-                _("Value should be 1-63 latin characters, -, . or _.")
+                _local_("Value should be 1-63 latin characters, -, . or _.")
             )
         return value
 
@@ -69,21 +69,21 @@ class AuthenticationDirectoryValidator(MutationValidation):
                 .gino.scalar()
             )
             if exists_count != value_count:
-                raise ValidationError(_("users count not much with db count."))
+                raise ValidationError(_local_("users count not much with db count."))
             return value
-        raise ValidationError(_("groups list is empty."))
+        raise ValidationError(_local_("groups list is empty."))
 
     @staticmethod
     async def validate_mapping_id(obj_dict, value):
         mapping = await Mapping.get(value)
         if mapping:
             return value
-        raise ValidationError(_("No such mapping."))
+        raise ValidationError(_local_("No such mapping."))
 
     @staticmethod
     async def validate_dc_str(obj_dict, value):
         if len(value) == 0:
-            raise ValidationError(_("DC should not be empty."))
+            raise ValidationError(_local_("DC should not be empty."))
         return value
 
 
@@ -204,11 +204,11 @@ class AuthenticationDirectoryQuery(graphene.ObjectType):
     @security_administrator_required
     async def resolve_auth_dir(self, info, creator, id=None):
         if not id:
-            raise SilentError(_("Specify id."))
+            raise SilentError(_local_("Specify id."))
 
         auth_dir = await AuthenticationDirectory.get_object(id)
         if not auth_dir:
-            raise SilentError(_("No such Authentication Directory."))
+            raise SilentError(_local_("No such Authentication Directory."))
         return AuthenticationDirectoryQuery.instance_to_type(auth_dir)
 
     @security_administrator_required
@@ -272,7 +272,7 @@ class DeleteAuthenticationDirectoryMutation(
         await cls.validate(**kwargs)
         auth_dir = await AuthenticationDirectory.get(kwargs["id"])
         if not auth_dir:
-            raise SilentError(_("No such Authentication Directory."))
+            raise SilentError(_local_("No such Authentication Directory."))
         status = await auth_dir.soft_delete(creator=creator)
         return DeleteAuthenticationDirectoryMutation(ok=status)
 
@@ -443,7 +443,7 @@ class SyncAuthenticationDirectoryGroupUsers(graphene.Mutation):
     async def mutate(self, _info, auth_dir_id, sync_data, **kwargs):
         auth_dir = await AuthenticationDirectory.get(auth_dir_id)
         if not auth_dir:
-            raise SilentError(_("No such Authentication Directory."))
+            raise SilentError(_local_("No such Authentication Directory."))
         await auth_dir.synchronize(sync_data)
         return SyncAuthenticationDirectoryGroupUsers(ok=True)
 
@@ -461,7 +461,7 @@ class SyncExistingAuthenticationDirectoryGroupUsers(graphene.Mutation):
     async def mutate(self, info, auth_dir_id, group_id, **kwargs):
         auth_dir = await AuthenticationDirectory.get(auth_dir_id)
         if not auth_dir:
-            raise SilentError(_("No such Authentication Directory."))
+            raise SilentError(_local_("No such Authentication Directory."))
         await auth_dir.synchronize_group(group_id)
         return SyncAuthenticationDirectoryGroupUsers(ok=True)
 

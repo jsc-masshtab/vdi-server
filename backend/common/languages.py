@@ -10,5 +10,4 @@ def lang_init():
     return translation.gettext
 
 
-# TODO: переименовать _ в _localization_
-_ = lang_init()
+_local_ = lang_init()

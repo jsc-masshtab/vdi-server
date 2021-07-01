@@ -15,7 +15,7 @@ from tornado.web import Application
 
 from veil_api_client import DomainTcpUsb, VeilRetryConfiguration
 
-from common.languages import _
+from common.languages import _local_
 from common.log.journal import system_logger
 from common.models.active_tk_connection import ActiveTkConnection
 from common.models.pool import AutomatedPool, Pool as PoolM, RdsPool
@@ -48,7 +48,7 @@ class PoolHandler(BaseHttpHandler, ABC):
         response = {"data": pools}
 
         await system_logger.info(
-            _("User {} requested pools data.").format(user.username),
+            _local_("User {} requested pools data.").format(user.username),
             entity=user.entity,
             user=user.username,
         )
@@ -67,7 +67,7 @@ class PoolGetVm(BaseHttpHandler, ABC):
         thin_client_limit_exceeded = await ActiveTkConnection.thin_client_limit_exceeded()
         if thin_client_limit_exceeded:
             response = {
-                "errors": [{"message": _("Thin client limit exceeded."),
+                "errors": [{"message": _local_("Thin client limit exceeded."),
                             "code": "001"}]
             }
             return await self.log_finish(response)
@@ -75,7 +75,7 @@ class PoolGetVm(BaseHttpHandler, ABC):
         pool = await PoolM.get(pool_id)
         if not pool:
             response = {
-                "errors": [{"message": _("Pool not found."), "code": "404"}]}
+                "errors": [{"message": _local_("Pool not found."), "code": "404"}]}
             return await self.log_finish(response)
         # Проверяем разрешен ли присланный remote_protocol для данного пула
         con_t = pool.connection_types
@@ -85,7 +85,7 @@ class PoolGetVm(BaseHttpHandler, ABC):
             response = {
                 "errors": [
                     {
-                        "message": _(
+                        "message": _local_(
                             "The pool doesnt support connection type {}."
                         ).format(remote_protocol),
                         "code": "404",
@@ -118,7 +118,7 @@ class PoolGetVm(BaseHttpHandler, ABC):
                 response = {
                     "errors": [
                         {
-                            "message": _(
+                            "message": _local_(
                                 "The pool doesn`t have free machines. Try again after 5 minutes."
                             ),
                             "code": "002",
@@ -131,7 +131,7 @@ class PoolGetVm(BaseHttpHandler, ABC):
                 response = {
                     "errors": [
                         {
-                            "message": _("The pool doesn`t have free machines."),
+                            "message": _local_("The pool doesn`t have free machines."),
                             "code": "003",
                         }
                     ]
@@ -154,7 +154,7 @@ class PoolGetVm(BaseHttpHandler, ABC):
         except client_exceptions.ServerDisconnectedError:
             response = {
                 "errors": [
-                    {"message": _("VM is unreachable on ECP VeiL."), "code": "004"}
+                    {"message": _local_("VM is unreachable on ECP VeiL."), "code": "004"}
                 ]
             }
             return await self.log_finish(response)
@@ -162,12 +162,12 @@ class PoolGetVm(BaseHttpHandler, ABC):
         info = await veil_domain.info()
 
         await system_logger.info(
-            _("User {} connected to pool {}.").format(user.username, pool.verbose_name),
+            _local_("User {} connected to pool {}.").format(user.username, pool.verbose_name),
             entity=pool.entity,
             user=user.username,
         )
         await system_logger.info(
-            _("User {} connected to VM {}.").format(user.username, vm.verbose_name),
+            _local_("User {} connected to VM {}.").format(user.username, vm.verbose_name),
             entity=vm.entity,
             user=user.username,
         )
@@ -179,7 +179,7 @@ class PoolGetVm(BaseHttpHandler, ABC):
         veil_client = vm_controller.veil_client
         if not veil_client:
             response = {
-                "errors": [{"message": _("The remote controller is unavailable.")}]
+                "errors": [{"message": _local_("The remote controller is unavailable.")}]
             }
             return await self.log_finish(response)
         if (
@@ -197,7 +197,7 @@ class PoolGetVm(BaseHttpHandler, ABC):
                 response = {
                     "errors": [
                         {
-                            "message": _(
+                            "message": _local_(
                                 "VM does not support RDP. The controller didn`t provide a VM address."
                             ),
                             "code": "005"
@@ -222,7 +222,7 @@ class PoolGetVm(BaseHttpHandler, ABC):
             farm_list = await RdsPool.get_farm_list(pool.id, user.username) \
                 if pool_type == PoolM.PoolTypes.RDS else []
         except (KeyError, IndexError, RuntimeError) as ex:
-            response = {"errors": [{"message": _("Unable to get list of published applications. {}.").format(str(ex))}]}
+            response = {"errors": [{"message": _local_("Unable to get list of published applications. {}.").format(str(ex))}]}
             return await self.log_finish(response)
         response = {
             "data": dict(
@@ -278,9 +278,9 @@ class VmAction(BaseHttpHandler, ABC):
 
         # log action
         if is_action_successful:
-            msg = _("User {} executed action {} on VM {}.")
+            msg = _local_("User {} executed action {} on VM {}.")
         else:
-            msg = _("User {} failed to execute action {} on VM {}.")
+            msg = _local_("User {} failed to execute action {} on VM {}.")
         await system_logger.info(
             msg.format(user.username, action, vm.verbose_name),
             entity=vm.entity,
@@ -311,7 +311,7 @@ class AttachUsb(BaseHttpHandler, ABC):
             )
 
             if not veil_client:
-                raise AssertionError(_("VM has no api client."))
+                raise AssertionError(_local_("VM has no api client."))
             domain_tcp_usb_params = DomainTcpUsb(host=host_address, service=host_port)
             controller_response = await veil_client.attach_usb(
                 action_type="tcp_usb_device",
@@ -341,7 +341,7 @@ class DetachUsb(BaseHttpHandler, ABC):
         try:
             veil_client = await vm.vm_client
             if not veil_client:
-                raise AssertionError(_("VM has no api client."))
+                raise AssertionError(_local_("VM has no api client."))
             controller_response = await veil_client.detach_usb(
                 action_type="tcp_usb_device", usb=usb_uuid, remove_all=remove_all
             )
@@ -365,7 +365,7 @@ class SendTextMsgHandler(BaseHttpHandler, ABC):
 
         text_message = self.args.get("message")
         if not text_message:
-            response = {"errors": [{"message": _("Message can not be empty.")}]}
+            response = {"errors": [{"message": _local_("Message can not be empty.")}]}
             return await self.log_finish(response)
 
         try:
@@ -386,7 +386,7 @@ class SendTextMsgHandler(BaseHttpHandler, ABC):
             return await self.log_finish(response)
 
         except (KeyError, JSONDecodeError, TypeError) as ex:
-            message = _("Wrong message format.") + str(ex)
+            message = _local_("Wrong message format.") + str(ex)
             response = {"errors": [{"message": message}]}
             return await self.log_finish(response)
 

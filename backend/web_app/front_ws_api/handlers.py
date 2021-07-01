@@ -7,7 +7,7 @@ from typing import Any
 from tornado import httputil
 from tornado.web import Application
 
-from common.languages import _
+from common.languages import _local_
 from common.log.journal import system_logger
 from common.settings import (
     INTERNAL_EVENTS_CHANNEL,
@@ -43,12 +43,12 @@ class VdiFrontWsHandler(BaseWsHandler):  # noqa
     async def open(self):
 
         # on success
-        await system_logger.debug(_("WebSocket opened."))
+        await system_logger.debug(_local_("WebSocket opened."))
         loop = asyncio.get_event_loop()
         self._send_messages_task = loop.create_task(self._send_messages_co())
 
     async def on_message(self, message):
-        await system_logger.debug(_("Message: {}.").format(message))
+        await system_logger.debug(_local_("Message: {}.").format(message))
         await self._check_for_subscription_cmd(message)
 
     def on_close(self):
@@ -72,8 +72,8 @@ class VdiFrontWsHandler(BaseWsHandler):  # noqa
             return
         # check if allowed
         if subscription_source not in VDI_FRONT_ALLOWED_SUBSCRIPTIONS_LIST:
-            msg = _("WS listener error.")
-            description = _("Unknown subscription source.")
+            msg = _local_("WS listener error.")
+            description = _local_("Unknown subscription source.")
             await system_logger.error(message=msg, description=description)
             response["error"] = True
             await self.write_msg(response)
@@ -90,14 +90,14 @@ class VdiFrontWsHandler(BaseWsHandler):  # noqa
             subscription_cmd == SubscriptionCmd.add
             and subscription_source in self._subscriptions  # noqa: W503
         ):
-            await system_logger.debug(_("Already subscribed."))
+            await system_logger.debug(_local_("Already subscribed."))
             response["error"] = True
         # if 'delete' cmd and not subscribed  then do nothing
         elif (
             subscription_cmd == SubscriptionCmd.delete
             and subscription_source not in self._subscriptions  # noqa: W503
         ):
-            await system_logger.debug(_("Not subscribed."))
+            await system_logger.debug(_local_("Not subscribed."))
             response["error"] = True
         # if 'delete' cmd and subscribed then unsubscribe
         elif (
