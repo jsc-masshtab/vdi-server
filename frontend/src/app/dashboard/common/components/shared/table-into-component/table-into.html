@@ -31,6 +31,8 @@
         <ng-container *ngIf="obj.property && obj.property != 'status' && obj.property != 'assignment_type' && !obj.property_lv2">
           <ng-container *ngIf="item[obj.property] || item[obj.property] === false && obj.type; else nothing">
             <span *ngIf="obj.type === 'string'">{{ item[obj.property] }}</span>
+            
+            <span *ngIf="obj.type === 'metric'">{{ item[obj.property] }} {{ obj.unit }}</span>
 
             <span *ngIf="obj.type === 'bites'">{{ formatBytes(item[obj.property], obj.delimiter) }}</span>
 
@@ -67,14 +69,10 @@
                   <span> {{ dict['verbose_name'] }}</span>
               </ul>
             </ng-container>
-
-
-
           </ng-container>
         </ng-container>
-
-
       </div>
+      
       <ng-template #nothing>
         <div *ngIf="!item; else noitem" class="table-area-value">
           {{ parseNothing(obj, item) }}
