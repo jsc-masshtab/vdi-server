@@ -96,7 +96,8 @@ class BaseHttpHandler(BaseHandler):
 
         pool = await Pool.get(pool_id)
         if not pool:
-            raise ValidationError(_local_("There is no pool with id: {}.").format(pool_id))
+            raise ValidationError(
+                _local_("There is no pool with id: {}.").format(pool_id))
         vm = await pool.get_vm(user_id=user.id)
         if not vm:
             raise ValidationError(

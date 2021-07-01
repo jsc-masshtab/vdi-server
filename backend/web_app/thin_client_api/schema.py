@@ -85,7 +85,8 @@ class ThinClientType(graphene.ObjectType):
                 afk_timeout = 300  # как в WoW
                 time_delta = timedelta(seconds=afk_timeout)
                 cur_time = datetime.now(timezone.utc)
-                thin_client_type.is_afk = bool((cur_time - tk_db_data.last_interaction) > time_delta)
+                thin_client_type.is_afk = bool(
+                    (cur_time - tk_db_data.last_interaction) > time_delta)
 
         return thin_client_type
 
@@ -192,7 +193,8 @@ class ThinClientQuery(graphene.ObjectType):
             query = ActiveTkConnection.build_ordering(query, ordering)
 
         # filter.
-        filters = ActiveTkConnection.build_thin_clients_filters(get_disconnected, user_id)
+        filters = ActiveTkConnection.build_thin_clients_filters(get_disconnected,
+                                                                user_id)
         if filters:
             query = query.where(and_(*filters))
 
@@ -281,7 +283,8 @@ class SendMessageToThinClientMutation(graphene.Mutation):
         if recipient_id:
             user = await User.get(recipient_id)
             if not user:
-                raise SilentError(_local_("User {} does not exist.").format(recipient_id))
+                raise SilentError(
+                    _local_("User {} does not exist.").format(recipient_id))
             message_data_dict.update(recipient_id=str(recipient_id))
 
         REDIS_CLIENT.publish(REDIS_TEXT_MSG_CHANNEL, json.dumps(message_data_dict))

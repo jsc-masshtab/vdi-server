@@ -60,7 +60,8 @@ class UserValidator(MutationValidation):
         elif template_name:
             return value
         raise AssertError(
-            _local_("Email must contain English characters and/or digits, @ and domain name.")
+            _local_(
+                "Email must contain English characters and/or digits, @ and domain name.")
         )
 
     @staticmethod

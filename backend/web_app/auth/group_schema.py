@@ -51,7 +51,8 @@ class GroupValidator(MutationValidation):
     @staticmethod
     async def validate_description(obj_dict, value):
         if len(value) > 255:
-            raise ValidationError(_local_("Last name length must be <= 255 characters."))
+            raise ValidationError(
+                _local_("Last name length must be <= 255 characters."))
         return value
 
 

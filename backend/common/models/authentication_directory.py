@@ -459,7 +459,8 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
 
         for role_mapping in mappings:
             escaped_values = list(map(ldap.dn.escape_dn_chars, role_mapping.values))
-            await system_logger.debug(_local_("escaped values: {}.").format(escaped_values))
+            await system_logger.debug(
+                _local_("escaped values: {}.").format(escaped_values))
             await system_logger.debug(
                 _local_("role mapping value type: {}.").format(role_mapping.value_type)
             )
@@ -502,7 +503,8 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
                 first=True
             )
             if not authentication_directory:
-                raise ValidationError(_local_("No authentication directory controllers."))
+                raise ValidationError(
+                    _local_("No authentication directory controllers."))
             domain_name = authentication_directory.domain_name
         return domain_name
 
@@ -565,7 +567,8 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
         try:
             # Прерываем выполнение, если не указаны данные подключения
             if not self.service_username or not self.service_password:
-                raise AssertionError(_local_("LDAP username and password can`t be empty."))
+                raise AssertionError(
+                    _local_("LDAP username and password can`t be empty."))
             # Пытаемся подключиться
             ldap.set_option(ldap.OPT_X_TLS_REQUIRE_CERT, ldap.OPT_X_TLS_NEVER)
             ldap_connection = ldap.initialize(self.directory_url)
@@ -573,7 +576,8 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
             ldap_connection.set_option(ldap.OPT_NETWORK_TIMEOUT, LDAP_TIMEOUT)
             ldap_connection.simple_bind_s(self.connection_username, self.password)
         except (ldap.INVALID_CREDENTIALS, TypeError):
-            msg = _local_("Authentication directory server {} has bad auth info.").format(
+            msg = _local_(
+                "Authentication directory server {} has bad auth info.").format(
                 self.directory_url
             )
             await system_logger.warning(msg, entity=self.entity)
@@ -921,7 +925,8 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
             raise SilentError(_local_("No such Group."))
         if not group.ad_guid:
             raise SilentError(
-                _local_("Group {} is not synchronized by AD.".format(group.verbose_name))
+                _local_(
+                    "Group {} is not synchronized by AD.".format(group.verbose_name))
             )
         # Поиск по ID наладить не удалось, поэтому ищем по имени группы.
         ad_group_members = await self.get_members_of_ad_group(group.ad_cn)

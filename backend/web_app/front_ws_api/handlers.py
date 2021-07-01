@@ -143,7 +143,6 @@ class VdiFrontWsHandler(BaseWsHandler):  # noqa
                                 await self.write_msg(redis_message_data)
                         # other resources
                         else:
-                            # print("_send_messages_co: redis_message_data ", redis_message_data)
                             await self.write_msg(redis_message_data)
 
             except asyncio.CancelledError:

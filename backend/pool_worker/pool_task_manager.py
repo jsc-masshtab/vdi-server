@@ -227,11 +227,13 @@ class PoolTaskManager:
             task.execute_in_async_task(task_id)
 
         elif pool_task == PoolTaskType.VMS_BACKUP.name:
-            task = BackupVmsTask(entity_type=task_data_dict["entity_type"], creator=task_data_dict["creator"])
+            task = BackupVmsTask(entity_type=task_data_dict["entity_type"],
+                                 creator=task_data_dict["creator"])
             task.execute_in_async_task(task_id)
 
         elif pool_task == PoolTaskType.VMS_REMOVE.name:
-            task = RemoveVmsTask(pool_locks=self.pool_locks, vm_ids=task_data_dict["vm_ids"],
+            task = RemoveVmsTask(pool_locks=self.pool_locks,
+                                 vm_ids=task_data_dict["vm_ids"],
                                  creator=task_data_dict["creator"])
             task.execute_in_async_task(task_id)
 

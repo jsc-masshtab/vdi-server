@@ -79,7 +79,8 @@ class AbstractSortableStatusModel:
         field = cls._get_table_field(field_name)
         if field is None:
             # TODO: switch SimpleError to FieldError
-            raise SimpleError(_local_("Incorrect sort parameter {}.").format(field_name))
+            raise SimpleError(
+                _local_("Incorrect sort parameter {}.").format(field_name))
         return field
 
     @classmethod
@@ -90,7 +91,8 @@ class AbstractSortableStatusModel:
         field = cls._get_table_field(field_name)
         if field is None:
             # TODO: switch SimpleError to FieldError
-            raise SimpleError(_local_("Incorrect request parameter {}.").format(field_name))
+            raise SimpleError(
+                _local_("Incorrect request parameter {}.").format(field_name))
         return field
 
     @classmethod
@@ -218,7 +220,8 @@ class VeilModel(db.Model):
         from common.log.journal import system_logger
 
         await self.set_status(Status.FAILED)
-        msg = _local_("{} {} has been disabled.").format(self.entity_name, self.verbose_name)
+        msg = _local_("{} {} has been disabled.").format(self.entity_name,
+                                                         self.verbose_name)
         description = _local_(
             "{} {} has`t been found in ECP VeiL. Switched to FAILED."
         ).format(self.entity_name, self.verbose_name)
@@ -236,7 +239,8 @@ class VeilModel(db.Model):
                     _local_("Group {} has been deleted.").format(self.verbose_name),
                     entity=self.entity, user=creator)
         except DataError as db_error:
-            await system_logger.debug(_local_("Soft_delete exception: {}.").format(db_error))
+            await system_logger.debug(
+                _local_("Soft_delete exception: {}.").format(db_error))
             return False
         return True
 
@@ -292,7 +296,8 @@ class VeilModel(db.Model):
         await self.update(status=status).apply()
 
         additional_data = await self.additional_model_to_json_data()
-        await publish_data_in_internal_channel(self.get_resource_type(), "UPDATED", self, additional_data)
+        await publish_data_in_internal_channel(self.get_resource_type(), "UPDATED",
+                                               self, additional_data)
 
 
 StatusGraphene = GrapheneEnum.from_enum(Status)

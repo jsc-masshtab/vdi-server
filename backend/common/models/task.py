@@ -217,7 +217,8 @@ class Task(db.Model, AbstractSortableStatusModel):
         return tasks
 
     @staticmethod
-    async def get_tasks_associated_with_entity(entity_id, task_status=None, task_type=None):
+    async def get_tasks_associated_with_entity(entity_id, task_status=None,
+                                               task_type=None):
 
         where_conditions = [Task.entity_id == entity_id]
         if task_status:

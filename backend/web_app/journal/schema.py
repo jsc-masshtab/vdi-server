@@ -359,7 +359,8 @@ class EventQuery(graphene.ObjectType):
                 event["id"] = event["api_object_id"]
                 event["event_type"] = VeilEventTypeEnum[event["type"]]
                 event["description"] = event["detail_message"]
-                event["created"] = datetime.strptime("{}".format(event["created"]), "%Y-%m-%dT%H:%M:%S.%fZ")
+                event["created"] = datetime.strptime("{}".format(event["created"]),
+                                                     "%Y-%m-%dT%H:%M:%S.%fZ")
                 veil_events.append(VeilEventType(**event))
         veil_events.sort(key=lambda events: events.created, reverse=True)
         return veil_events

@@ -154,7 +154,8 @@ class Vm(VeilModel):
         created_by_vdi=False,
         status=Status.ACTIVE,
     ):
-        await system_logger.debug(_local_("Create VM {} on VDI DB.").format(verbose_name))
+        await system_logger.debug(
+            _local_("Create VM {} on VDI DB.").format(verbose_name))
         try:
             vm = await super().create(
                 id=id,
@@ -234,7 +235,7 @@ class Vm(VeilModel):
             except Exception as e:  # noqa
                 # Сейчас нас не заботит, что именно пошло не так при удалении на ECP.
                 msg = _local_(
-                    "VM multi-deletion task finished with error. Please see task details on VeiL ECP.")  # noqa: E501
+                    "VM multi-deletion task finished with error. Please see task details on VeiL ECP.")
                 description = _local_("VMs: {}.").format(vms_ids)
                 await system_logger.warning(
                     message=msg,
@@ -527,7 +528,7 @@ class Vm(VeilModel):
         except asyncio.TimeoutError:
             await system_logger.error(
                 message=_local_(
-                    "VM multi-deletion task cancelled by timeout. Please see task details on VeiL ECP.")  # noqa: E501
+                    "VM multi-deletion task cancelled by timeout. Please see task details on VeiL ECP.")
             )
         except ValueError as err_msg:
             await system_logger.error(message=str(err_msg))
@@ -702,7 +703,8 @@ class Vm(VeilModel):
         if start_is_success:
             await self.reboot
         else:
-            await system_logger.warning(_local_("VM can`t be powered on or already powered."))
+            await system_logger.warning(
+                _local_("VM can`t be powered on or already powered."))
 
     async def shutdown(self, creator="system", force=False):
         """Выключает ВМ - Пересылает shutdown для ВМ на ECP VeiL."""
@@ -735,12 +737,12 @@ class Vm(VeilModel):
         domain_entity = await self.get_veil_entity()
         if domain_entity.power_state == VmPowerState.OFF:
             raise SimpleError(
-                _local_("VM {} is shutdown. Please power this.").format(self.verbose_name),
+                _local_("VM {} is shutdown. Please power this.").format(
+                    self.verbose_name),
                 user=creator,
                 entity=self.entity,
             )
         else:
-            # await system_logger.info(_('Rebooting {}').format(self.verbose_name), entity=self.entity)
             task_success = await self.action("reboot", force=force)
 
             if force:
@@ -770,7 +772,8 @@ class Vm(VeilModel):
             return task_success
         else:
             raise SimpleError(
-                _local_("VM {} is shutdown. Please power this.").format(self.verbose_name),
+                _local_("VM {} is shutdown. Please power this.").format(
+                    self.verbose_name),
                 user=creator,
                 entity=self.entity,
             )
@@ -793,7 +796,8 @@ class Vm(VeilModel):
             await self.task_waiting(response.task)
             task_success = await response.task.success
             if not task_success:
-                await system_logger.error(_local_("Creating backup finished with error."))
+                await system_logger.error(
+                    _local_("Creating backup finished with error."))
             else:
                 await system_logger.info(
                     _local_("Backup for VM {} is created.").format(self.verbose_name),
@@ -847,7 +851,8 @@ class Vm(VeilModel):
                         creator=creator,
                     )
                     await system_logger.warning(
-                        _local_("Total size of pool {} increased.").format(pool.verbose_name),
+                        _local_("Total size of pool {} increased.").format(
+                            pool.verbose_name),
                         description=vm_count,
                     )
             restored_vm = await self.create(
@@ -857,7 +862,8 @@ class Vm(VeilModel):
                 created_by_vdi=True,
                 verbose_name=veil_domain.verbose_name,
             )
-            await pool.tag_add_entity(tag=pool.tag, entity_id=restored_vm.id, verbose_name=restored_vm.verbose_name)
+            await pool.tag_add_entity(tag=pool.tag, entity_id=restored_vm.id,
+                                      verbose_name=restored_vm.verbose_name)
             await system_logger.info(
                 _local_("VM {} has been added to the pool {}.").format(
                     veil_domain.verbose_name, pool.verbose_name
@@ -891,7 +897,8 @@ class Vm(VeilModel):
                 await restored_vm.add_user(user[0], creator=creator)
 
             if not task_success:
-                await system_logger.error(_local_("Backup restore finished with error."))
+                await system_logger.error(
+                    _local_("Backup restore finished with error."))
             else:
                 await system_logger.info(
                     _local_("Backup from VM {} restored to pool {} as {}.").format(
@@ -981,11 +988,13 @@ class Vm(VeilModel):
                 task_success = False
             if not task_success:
                 await system_logger.warning(
-                    _local_("VM {} hostname setting task failed.").format(self.verbose_name),
+                    _local_("VM {} hostname setting task failed.").format(
+                        self.verbose_name),
                     entity=self.entity,
                 )
             else:
-                msg = _local_("VM {} hostname setting success.").format(self.verbose_name)
+                msg = _local_("VM {} hostname setting success.").format(
+                    self.verbose_name)
                 await system_logger.info(message=msg, entity=self.entity)
         return True
 
@@ -1040,7 +1049,8 @@ class Vm(VeilModel):
                 task_success = False
             if not task_success:
                 raise ValueError(
-                    _local_("VM {} domain including task failed.").format(self.verbose_name)
+                    _local_("VM {} domain including task failed.").format(
+                        self.verbose_name)
                 )
             msg = _local_("VM {} AD inclusion success.").format(self.verbose_name)
             await system_logger.info(message=msg, entity=self.entity)
@@ -1095,7 +1105,8 @@ class Vm(VeilModel):
             err_str = str(err_msg)
             if err_str:
                 await system_logger.error(
-                    message=_local_("VM {} preparation error.").format(self.verbose_name),
+                    message=_local_("VM {} preparation error.").format(
+                        self.verbose_name),
                     description=err_str,
                     entity=self.entity,
                 )

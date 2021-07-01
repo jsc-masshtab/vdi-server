@@ -14,7 +14,12 @@ from common.models.vm import Vm
 from common.veil.veil_decorators import administrator_required
 from common.veil.veil_errors import SilentError, SimpleError, ValidationError
 from common.veil.veil_gino import Status, StatusGraphene
-from common.veil.veil_graphene import VeilEventTypeEnum, VeilResourceType, VeilShortEntityType, VmState
+from common.veil.veil_graphene import (
+    VeilEventTypeEnum,
+    VeilResourceType,
+    VeilShortEntityType,
+    VmState
+)
 from common.veil.veil_validators import MutationValidation
 
 
@@ -69,7 +74,7 @@ class ControllerFetcher:
     @staticmethod
     async def fetch_by_id(id_):
         """Возваращает инстанс объекта, если он есть."""
-        # TODO: универсальный метод в родительском валидаторе для сокращения дублированияа
+        # TODO: универсальный метод в родительском валидаторе для сокращения дублирования
         controller = await Controller.get(id_)
         if not controller:
             raise SimpleError(_local_("No such controller."))
@@ -458,7 +463,8 @@ class ControllerType(graphene.ObjectType, ControllerFetcher):
             event["id"] = event["api_object_id"]
             event["event_type"] = VeilEventTypeEnum[event["type"]]
             event["description"] = event["detail_message"]
-            event["created"] = datetime.strptime("{}".format(event["created"]), "%Y-%m-%dT%H:%M:%S.%fZ")
+            event["created"] = datetime.strptime("{}".format(event["created"]),
+                                                 "%Y-%m-%dT%H:%M:%S.%fZ")
             veil_events.append(VeilEventType(**event))
 
         return veil_events
@@ -472,7 +478,8 @@ class ControllerType(graphene.ObjectType, ControllerFetcher):
             event = event_info.value
             event["description"] = event["detail_message"]
             event["event_type"] = VeilEventTypeEnum[event["type"]]
-            event["created"] = datetime.strptime("{}".format(event["created"]), "%Y-%m-%dT%H:%M:%S.%fZ")
+            event["created"] = datetime.strptime("{}".format(event["created"]),
+                                                 "%Y-%m-%dT%H:%M:%S.%fZ")
 
             return VeilEventType(**event)
         else:

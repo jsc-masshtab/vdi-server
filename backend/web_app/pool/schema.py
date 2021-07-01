@@ -61,7 +61,7 @@ class ControllerFetcher:
     @staticmethod
     async def fetch_by_id(id_):
         """Возваращает инстанс объекта, если он есть."""
-        # TODO: универсальный метод в родительском валидаторе для сокращения дублированияа
+        # TODO: универсальный метод в родительском валидаторе для сокращения дублирования
         controller = await Controller.get(id_)
         if not controller:
             raise SimpleError(_local_("No such controller."))
@@ -174,7 +174,8 @@ class VmType(VeilResourceType):
     async def resolve_assigned_users_count(self, _info):
         vm = await Vm.get(self.id)
         users_query = await vm.get_users_query()
-        count = await db.select([db.func.count()]).select_from(users_query.alias()).gino.scalar()
+        count = await db.select([db.func.count()]).select_from(
+            users_query.alias()).gino.scalar()
         return count
 
     async def resolve_count(self, _info, **kwargs):
@@ -372,7 +373,8 @@ class PoolValidator(MutationValidation):
             )
         if value < POOL_MIN_SIZE or value > POOL_MAX_SIZE:
             raise ValidationError(
-                _local_("Maximal number of created VM must be in [{} {}] interval.").format(
+                _local_(
+                    "Maximal number of created VM must be in [{} {}] interval.").format(
                     POOL_MIN_SIZE, POOL_MAX_SIZE
                 )
             )
@@ -397,7 +399,8 @@ class PoolValidator(MutationValidation):
                 total_size = automated_pool.total_size
         if value < 1 or value > total_size:
             raise ValidationError(
-                _local_("Increase step must be positive and less or equal to total_size.")
+                _local_(
+                    "Increase step must be positive and less or equal to total_size.")
             )
         if value > DOMAIN_CREATION_MAX_STEP:
             raise ValidationError(
@@ -720,7 +723,8 @@ class ClearPoolMutation(graphene.Mutation):
         if (pool.status != Status.ACTIVE) and (pool.status != Status.SERVICE):
             await pool.activate(pool.id)
             await system_logger.info(
-                _local_("Pool {} has been restored.").format(pool.verbose_name), user=creator
+                _local_("Pool {} has been restored.").format(pool.verbose_name),
+                user=creator
             )
             return ClearPoolMutation(ok=True)
         elif pool.status == Status.SERVICE:
@@ -728,7 +732,8 @@ class ClearPoolMutation(graphene.Mutation):
                 _local_("Pool {} is in service mode.").format(pool.verbose_name)
             )
         else:
-            raise SilentError(_local_("Pool {} is already active.").format(pool.verbose_name))
+            raise SilentError(
+                _local_("Pool {} is already active.").format(pool.verbose_name))
 
 
 # --- --- --- --- ---
@@ -837,8 +842,8 @@ class CreateRdsPoolMutation(graphene.Mutation, PoolValidator, ControllerFetcher)
 
     @classmethod
     @administrator_required
-    async def mutate(cls, root, info, creator, controller_id, resource_pool_id, rds_vm, verbose_name,
-                     connection_types):
+    async def mutate(cls, root, info, creator, controller_id,
+                     resource_pool_id, rds_vm, verbose_name, connection_types):
 
         RdsPool.validate_conn_types(connection_types)
 
@@ -882,7 +887,8 @@ class AddVmsToStaticPoolMutation(graphene.Mutation):
             if vm_id in used_vm_ids:
                 entity = {"entity_type": EntityType.POOL, "entity_uuid": None}
                 raise SimpleError(
-                    _local_("VM {} is already in one of pools.").format(vm_id), entity=entity
+                    _local_("VM {} is already in one of pools.").format(vm_id),
+                    entity=entity
                 )
 
         # TODO: использовать нормальный набор данных с verbose_name и id
@@ -1009,7 +1015,8 @@ class ExpandPoolMutation(graphene.Mutation, PoolValidator):
         total_size_reached = await autopool.check_if_total_size_reached()
         if total_size_reached:
             raise SilentError(
-                _local_("Can not expand pool {} because it reached its total_size.").format(
+                _local_(
+                    "Can not expand pool {} because it reached its total_size.").format(
                     pool_name
                 )
             )
@@ -1019,7 +1026,8 @@ class ExpandPoolMutation(graphene.Mutation, PoolValidator):
             pool_id, TaskStatus.IN_PROGRESS
         )
         if tasks:
-            raise SilentError(_local_("Another task works on pool {}.").format(pool_name))
+            raise SilentError(
+                _local_("Another task works on pool {}.").format(pool_name))
 
         task_id = await request_to_execute_pool_task(
             pool_id, PoolTaskType.POOL_EXPAND, ignore_reserve_size=True
@@ -1230,8 +1238,10 @@ class RemoveVmsFromPoolMutation(graphene.Mutation):
     @administrator_required
     async def mutate(self, _info, pool_id, vm_ids, creator):
         vm_str_ids = [str(vm_id) for vm_id in vm_ids]
-        task_id = await request_to_execute_pool_task(str(pool_id), PoolTaskType.VMS_REMOVE,
-                                                     vm_ids=vm_str_ids, creator=creator)
+        task_id = await request_to_execute_pool_task(str(pool_id),
+                                                     PoolTaskType.VMS_REMOVE,
+                                                     vm_ids=vm_str_ids,
+                                                     creator=creator)
 
         return RemoveVmsFromPoolMutation(ok=True, task_id=task_id)
 
@@ -1400,14 +1410,15 @@ class PrepareVm(graphene.Mutation):
     @administrator_required
     async def mutate(self, _info, vm_id, **kwargs):
 
-        # Проверить есть ли в таблице task таски выполняющиеся над этой вм. Если есть то сообщить фронту ч
+        # Проверить есть ли в таблице task таски выполняющиеся над этой вм. Если есть то сообщить фронту
         # что подготовка вм уже идет
         tasks = await Task.get_tasks_associated_with_entity(
             vm_id, TaskStatus.IN_PROGRESS
         )
         if tasks:
             vm = await Vm.get(vm_id)
-            raise SilentError(_local_("Another task works on VM {}.").format(vm.verbose_name))
+            raise SilentError(
+                _local_("Another task works on VM {}.").format(vm.verbose_name))
 
         await Entity.create(entity_uuid=vm_id, entity_type=EntityType.VM)
         await request_to_execute_pool_task(vm_id, PoolTaskType.VM_PREPARE)
@@ -1611,7 +1622,8 @@ class AttachVeilUtilsMutation(graphene.Mutation):
         await veil_domain.info()
         if veil_domain.powered:
             raise SilentError(
-                _local_("Cant create CD-ROM for powered domain {}.").format(veil_domain.public_attrs["verbose_name"]))
+                _local_("Cant create CD-ROM for powered domain {}.").format(
+                    veil_domain.public_attrs["verbose_name"]))
         response = await veil_domain.attach_veil_utils_iso()
         ok = response.success
         if not ok:
@@ -1619,7 +1631,8 @@ class AttachVeilUtilsMutation(graphene.Mutation):
                 raise SimpleError(error["detail"])
 
         await system_logger.info(
-            _local_("Creating a CD-ROM on the virtual machine {}.").format(veil_domain.public_attrs["verbose_name"]),
+            _local_("Creating a CD-ROM on the virtual machine {}.").format(
+                veil_domain.public_attrs["verbose_name"]),
             user=creator)
         return AttachVeilUtilsMutation(ok=ok)
 
@@ -1641,15 +1654,18 @@ class TemplateChange(graphene.Mutation):
         await veil_domain.info()
         if veil_domain.powered:
             raise SilentError(
-                _local_("VM {} is powered. Please shutdown this.").format(veil_domain.public_attrs["verbose_name"]))
+                _local_("VM {} is powered. Please shutdown this.").format(
+                    veil_domain.public_attrs["verbose_name"]))
         response = await veil_domain.change_template()
         ok = response.success
         if not ok:
             for error in response.errors:
-                raise SilentError(_local_("VeiL ECP error: {}.").format(error["detail"]))
+                raise SilentError(
+                    _local_("VeiL ECP error: {}.").format(error["detail"]))
 
         await system_logger.info(
-            _local_("The template {} change and distribute this changes to thin clones.").format(
+            _local_(
+                "The template {} change and distribute this changes to thin clones.").format(
                 veil_domain.parent_name),
             user=creator)
         return TemplateChange(ok=ok)
@@ -1686,7 +1702,8 @@ class VmConvertToTemplate(graphene.Mutation, PoolValidator):
             "count": 1
         }
         if veil_domain.thin:
-            raise SilentError(_local_("Prohibited creating template from the thin clone."))
+            raise SilentError(
+                _local_("Prohibited creating template from the thin clone."))
 
         vm_info = await Vm.copy(**params)
 
@@ -1704,7 +1721,8 @@ class VmConvertToTemplate(graphene.Mutation, PoolValidator):
         ok = response.success
         if not ok:
             for error in response.errors:
-                raise SilentError(_local_("VeiL ECP error: {}.").format(error["detail"]))
+                raise SilentError(
+                    _local_("VeiL ECP error: {}.").format(error["detail"]))
 
         await system_logger.info(
             _local_("Vm {} has converted to template {}.").format(

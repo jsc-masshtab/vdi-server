@@ -143,5 +143,6 @@ class VmManager:
                 break
             except Exception as ex:
                 await system_logger.debug(
-                    message=_local_("Synchronize vm data task error."), description=str(ex)
+                    message=_local_("Synchronize vm data task error."),
+                    description=str(ex)
                 )

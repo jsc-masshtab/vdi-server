@@ -303,7 +303,8 @@ class Pool(VeilModel):
             query = Pool.build_ordering(query, ordering)
         else:
             # Делаем пересечение только с основными таблицами
-            query = query.select_from(Pool.join(AutomatedPool, isouter=True).join(RdsPool, isouter=True))
+            query = query.select_from(
+                Pool.join(AutomatedPool, isouter=True).join(RdsPool, isouter=True))
 
         return query
 
@@ -657,7 +658,8 @@ class Pool(VeilModel):
                 )
         except UniqueViolationError:
             raise SimpleError(
-                _local_("Pool already has permission."), user=creator, entity=self.entity
+                _local_("Pool already has permission."), user=creator,
+                entity=self.entity
             )
         return ero
 
@@ -710,14 +712,16 @@ class Pool(VeilModel):
 
     @classmethod
     async def create(
-        cls, verbose_name, resource_pool_id, controller_ip, connection_types, tag, pool_type
+        cls, verbose_name, resource_pool_id, controller_ip,
+        connection_types, tag, pool_type
     ):
         # TODO: controller_ip заменить на controller_id
         from common.models.controller import Controller
 
         controller_id = await Controller.get_controller_id_by_ip(controller_ip)
         if not controller_id:
-            raise ValidationError(_local_("Controller {} not found.").format(controller_ip))
+            raise ValidationError(
+                _local_("Controller {} not found.").format(controller_ip))
 
         pool = await super().create(
             verbose_name=verbose_name,
@@ -749,11 +753,13 @@ class Pool(VeilModel):
             if automated_pool:
                 if automated_pool.is_guest:
                     await system_logger.debug(
-                        _local_("Delete VMs for GuestPool {}.").format(self.verbose_name)
+                        _local_("Delete VMs for GuestPool {}.").format(
+                            self.verbose_name)
                     )
                 else:
                     await system_logger.debug(
-                        _local_("Delete VMs for AutomatedPool {}.").format(self.verbose_name)
+                        _local_("Delete VMs for AutomatedPool {}.").format(
+                            self.verbose_name)
                     )
                 vm_ids = await VmModel.get_vms_ids_in_pool(self.id)
                 for vm_id in vm_ids:
@@ -784,7 +790,8 @@ class Pool(VeilModel):
                 await self.tag_remove(self.tag)
 
             await self.delete()
-            msg = _local_("Complete removal pool of desktops {verbose_name} is done.").format(
+            msg = _local_(
+                "Complete removal pool of desktops {verbose_name} is done.").format(
                 verbose_name=self.verbose_name
             )
             await system_logger.info(msg, entity=self.entity, user=creator)
@@ -817,7 +824,8 @@ class Pool(VeilModel):
             if vm.status != Status.RESERVED:
                 await vm.update(status=Status.ACTIVE).apply()
         await system_logger.info(
-            _local_("Pool {} has been activated.").format(pool.verbose_name), entity=entity
+            _local_("Pool {} has been activated.").format(pool.verbose_name),
+            entity=entity
         )
         return True
 
@@ -833,7 +841,8 @@ class Pool(VeilModel):
                 if vm.status != Status.RESERVED:
                     await vm.update(status=Status.FAILED).apply()
         await system_logger.warning(
-            _local_("Pool {} status changed to {}.").format(pool.verbose_name, status.value),
+            _local_("Pool {} status changed to {}.").format(pool.verbose_name,
+                                                            status.value),
             entity=entity,
         )
         return True
@@ -888,9 +897,12 @@ class Pool(VeilModel):
             return await VmModel.get(vm_ids[0])
 
         # Ищем среди ВМ ту, у которой доступен гостевой агент (п.4)
-        await system_logger.debug("Ищем среди ВМ ту, у которой доступен гостевой агент (п.4)")
-        domain_enabled_qemu_id = await self.get_vm_with_enabled_qemu(domains=filtered_domains)
-        await system_logger.debug("ENABLED GUEST AGENT ID:{}".format(domain_enabled_qemu_id))
+        await system_logger.debug(
+            "Ищем среди ВМ ту, у которой доступен гостевой агент (п.4)")
+        domain_enabled_qemu_id = await self.get_vm_with_enabled_qemu(
+            domains=filtered_domains)
+        await system_logger.debug(
+            "ENABLED GUEST AGENT ID:{}".format(domain_enabled_qemu_id))
         if domain_enabled_qemu_id:
             return await VmModel.get(domain_enabled_qemu_id)
 
@@ -1049,7 +1061,8 @@ class Pool(VeilModel):
                 vms_list.append(vm)
 
             if automated_pool:
-                msg = _local_("VM {} has been removed from the pool {} and ECP VeiL.").format(
+                msg = _local_(
+                    "VM {} has been removed from the pool {} and ECP VeiL.").format(
                     vm.verbose_name, self.verbose_name
                 )
             else:
@@ -1120,7 +1133,8 @@ class Pool(VeilModel):
             tag = task.first_entity if tag_response.task else None
             entity = {"entity_type": EntityType.POOL, "entity_uuid": None}
             await system_logger.info(
-                _local_("Tag {name} created for pool {name}.").format(name=verbose_name),
+                _local_("Tag {name} created for pool {name}.").format(
+                    name=verbose_name),
                 user=creator,
                 entity=entity,
             )
@@ -1150,7 +1164,8 @@ class Pool(VeilModel):
         update_response = await pool_tag.update(verbose_name=verbose_name)
         if update_response.success:
             await system_logger.info(
-                _local_("Tag {name} updated for pool {name} and all vms in pool.").format(
+                _local_(
+                    "Tag {name} updated for pool {name} and all vms in pool.").format(
                     name=verbose_name
                 ),
                 user=creator,
@@ -1192,7 +1207,8 @@ class Pool(VeilModel):
         if entity_response.success:
             entity = {"entity_type": EntityType.VM, "entity_uuid": None}
             await system_logger.info(
-                _local_("Tag {} added to VM {}.").format(pool_tag.verbose_name, verbose_name),
+                _local_("Tag {} added to VM {}.").format(pool_tag.verbose_name,
+                                                         verbose_name),
                 user="system",
                 entity=entity,
             )
@@ -1253,7 +1269,8 @@ class RdsPool(db.Model):
     async def soft_update(
         cls, id, verbose_name, keep_vms_on, connection_types, creator
     ):
-        await Pool.soft_update_base_params(id, verbose_name, keep_vms_on, connection_types, creator)
+        await Pool.soft_update_base_params(id, verbose_name, keep_vms_on,
+                                           connection_types, creator)
         return True
 
     @classmethod
@@ -1297,11 +1314,13 @@ class RdsPool(db.Model):
 
         for conn_type in connection_types:
             if conn_type not in RdsPool.get_supported_conn_types():
-                raise SilentError(_local_("Connection type {} is not supported.").format(conn_type))
+                raise SilentError(
+                    _local_("Connection type {} is not supported.").format(conn_type))
 
     @staticmethod
     def get_supported_conn_types():
-        return [Pool.PoolConnectionTypes.RDP.name, Pool.PoolConnectionTypes.NATIVE_RDP.name]
+        return [Pool.PoolConnectionTypes.RDP.name,
+                Pool.PoolConnectionTypes.NATIVE_RDP.name]
 
     @staticmethod
     async def get_farm_list(pool_id, user_name):
@@ -1330,7 +1349,8 @@ class RdsPool(db.Model):
 
         stdout_farms_data = ""
         try:
-            response = await domain_veil_api.guest_command(qemu_cmd="guest-exec", f_args=qemu_guest_command)
+            response = await domain_veil_api.guest_command(qemu_cmd="guest-exec",
+                                                           f_args=qemu_guest_command)
             # Ошибка запуска скриптка
             if response.status_code == 400:
                 errors = response.data["errors"]
@@ -1447,7 +1467,8 @@ class StaticPool(db.Model):
     async def soft_update(
         cls, id, verbose_name, keep_vms_on, connection_types, creator
     ):
-        await Pool.soft_update_base_params(id, verbose_name, keep_vms_on, connection_types, creator)
+        await Pool.soft_update_base_params(id, verbose_name, keep_vms_on,
+                                           connection_types, creator)
         return True
 
     async def activate(self):
@@ -1857,7 +1878,8 @@ class AutomatedPool(db.Model):
                     vm_obj_list.append(vm_object)
 
                     msg = _local_("VM {} created.").format(vm_object.verbose_name)
-                    description = _local_("VM {} created and added to the pool {}.").format(
+                    description = _local_(
+                        "VM {} created and added to the pool {}.").format(
                         vm_object.verbose_name, verbose_name
                     )
                     await system_logger.info(

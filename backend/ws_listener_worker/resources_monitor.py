@@ -160,7 +160,8 @@ class ResourcesMonitor:
             )
         except Exception as ex:  # noqa
             # Причин для исключения может быть множество включая OS specific
-            msg = _local_("Resource monitor can`t connect to controller {}.").format(controller.address)
+            msg = _local_("Resource monitor can`t connect to controller {}.").format(
+                controller.address)
             await system_logger.error(message=msg, description=str(ex))
             return False
 
@@ -184,7 +185,8 @@ class ResourcesMonitor:
         try:
             REDIS_CLIENT.publish(WS_MONITOR_CHANNEL_OUT, message)
         except redis.RedisError as ex:
-            await system_logger.error(message="Resource monitor ws. Redis error.", description=str(ex))
+            await system_logger.error(message="Resource monitor ws. Redis error.",
+                                      description=str(ex))
 
     async def _close_connection(self):
         if self._ws_connection:

@@ -202,7 +202,8 @@ class Controller(AbstractSortableStatusModel, VeilModel):
         await system_logger.info(msg, user=creator, entity=controller.entity)
 
         # Ws сообщение о создание
-        await publish_data_in_internal_channel(controller.get_resource_type(), "CREATED", controller)
+        await publish_data_in_internal_channel(controller.get_resource_type(),
+                                               "CREATED", controller)
 
         # Возвращаем инстанс созданного контроллера
         return controller
@@ -250,7 +251,8 @@ class Controller(AbstractSortableStatusModel, VeilModel):
             controller_kwargs.pop("token")
         # Протоколируем результат операции
         if controller_is_ok:
-            await publish_data_in_internal_channel(self.get_resource_type(), "UPDATED", self)
+            await publish_data_in_internal_channel(self.get_resource_type(), "UPDATED",
+                                                   self)
 
             msg = _local_("Controller {} has been successfully updated.").format(
                 self.verbose_name
@@ -285,12 +287,14 @@ class Controller(AbstractSortableStatusModel, VeilModel):
         # Удаляем запись
         status = await super().soft_delete(creator=creator)
         await system_logger.info(
-            message=_local_("Controller {} has been removed.").format(self.verbose_name),
+            message=_local_("Controller {} has been removed.").format(
+                self.verbose_name),
             user=creator,
             entity=self.entity,
         )
         # Оповещаем об удалении контоллера
-        await publish_data_in_internal_channel(self.get_resource_type(), "DELETED", self)
+        await publish_data_in_internal_channel(self.get_resource_type(), "DELETED",
+                                               self)
 
         return status
 

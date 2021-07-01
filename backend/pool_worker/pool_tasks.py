@@ -73,7 +73,8 @@ class AbstractTask(ABC):
         # set task status
         await self.task_model.set_status(TaskStatus.IN_PROGRESS)
         friendly_task_name = await self.task_model.form_user_friendly_text()
-        await system_logger.info(_local_("Task '{}' started.").format(friendly_task_name))
+        await system_logger.info(
+            _local_("Task '{}' started.").format(friendly_task_name))
 
         # Добавить себя в список выполняющихся задач
         AbstractTask.task_list.append(self)
@@ -440,7 +441,6 @@ class PrepareVmTask(AbstractTask):
         # В случае неполной подготовки только включаем удаленный доступ (для машин статик пула)
 
     async def do_task(self):
-        # print('!!!PrepareVmTask started', flush=True)
         # Проверить выполняется ли уже задача подготовки этой вм. Запускать еще одну нет смысла и даже вредно.
         vm_prepare_tasks = self._get_related_progressing_tasks()
         if len(vm_prepare_tasks) > 0:
@@ -510,7 +510,8 @@ class PrepareVmTask(AbstractTask):
 
                 if not task_success:
                     raise ValueError(
-                        _local_("VM remote access task {} for VM {} finished with error.").format(
+                        _local_(
+                            "VM remote access task {} for VM {} finished with error.").format(
                             api_object_id, vm.verbose_name
                         )
                     )
@@ -526,12 +527,10 @@ class BackupVmsTask(AbstractTask):
     async def do_task(self):
 
         if self._entity_type == EntityType.VM.name:
-            # print('self._entity_type == EntityType.VM.name:', flush=True)
             vm = await Vm.get(self.task_model.entity_id)
             ok = await vm.backup(creator=self._creator)
 
         elif self._entity_type == EntityType.POOL.name:
-            # print('self._entity_type == EntityType.POOL.name:', flush=True)
             pool = await Pool.get(self.task_model.entity_id)
             ok = await pool.backup_vms(creator=self._creator)
 

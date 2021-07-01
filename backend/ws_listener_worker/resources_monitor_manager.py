@@ -68,7 +68,8 @@ class ResourcesMonitorManager:
         for controller in controllers:
             self._add_monitor_for_controller(controller.id)
             await system_logger.debug(
-                _local_("{}: Started.").format(__class__.__name__), entity=controller.entity
+                _local_("{}: Started.").format(__class__.__name__),
+                entity=controller.entity
             )
 
     async def stop(self):
@@ -91,7 +92,8 @@ class ResourcesMonitorManager:
             return
         # add monitor
         self._add_monitor_for_controller(controller_id)
-        msg = _local_("{cls}: resource monitor for controller {name} connected.").format(
+        msg = _local_(
+            "{cls}: resource monitor for controller {name} connected.").format(
             cls=__class__.__name__, name=controller.verbose_name
         )
         await system_logger.debug(msg, entity=controller.entity)

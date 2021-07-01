@@ -344,7 +344,8 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
             }
             return resource_data
         else:
-            raise SilentError(_local_("{} is unreachable on ECP VeiL.").format(resource_type))
+            raise SilentError(
+                _local_("{} is unreachable on ECP VeiL.").format(resource_type))
 
     # Кластеры
     @classmethod
@@ -557,7 +558,8 @@ class AttachVeilUtilsMutation(graphene.Mutation):
         await veil_domain.info()
         if veil_domain.powered:
             raise SilentError(
-                _local_("Cant create CD-ROM for powered domain {}.").format(veil_domain.public_attrs["verbose_name"]))
+                _local_("Cant create CD-ROM for powered domain {}.").format(
+                    veil_domain.public_attrs["verbose_name"]))
         response = await veil_domain.attach_veil_utils_iso()
         ok = response.success
         if not ok:
@@ -565,7 +567,8 @@ class AttachVeilUtilsMutation(graphene.Mutation):
                 raise SimpleError(error["detail"])
 
         await system_logger.info(
-            _local_("Creating a CD-ROM on the virtual machine {}.").format(veil_domain.public_attrs["verbose_name"]),
+            _local_("Creating a CD-ROM on the virtual machine {}.").format(
+                veil_domain.public_attrs["verbose_name"]),
             user=creator)
         return AttachVeilUtilsMutation(ok=ok)
 
@@ -574,4 +577,6 @@ class ControllerResourcesMutations(graphene.ObjectType):
     attachVeilUtils = AttachVeilUtilsMutation.Field()
 
 
-resources_schema = graphene.Schema(query=ResourcesQuery, mutation=ControllerResourcesMutations, auto_camelcase=False)
+resources_schema = graphene.Schema(
+    query=ResourcesQuery, mutation=ControllerResourcesMutations, auto_camelcase=False
+)

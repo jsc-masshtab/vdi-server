@@ -18,7 +18,12 @@ from common.models.user_tk_permission import (
     TkPermission,
     UserTkPermission,
 )
-from common.settings import PAM_AUTH, PAM_SUPERUSER_GROUP, PAM_USER_GROUP, REDIS_THIN_CLIENT_CMD_CHANNEL, SECRET_KEY
+from common.settings import (
+    PAM_AUTH, PAM_SUPERUSER_GROUP,
+    PAM_USER_GROUP,
+    REDIS_THIN_CLIENT_CMD_CHANNEL,
+    SECRET_KEY
+)
 from common.veil.auth import hashers
 from common.veil.auth.veil_pam import veil_auth_class
 from common.veil.veil_errors import PamError, SimpleError
@@ -258,7 +263,8 @@ class User(AbstractSortableStatusModel, VeilModel):
             return add
         except UniqueViolationError:
             raise SimpleError(
-                _local_("Role {} is assigned to user {}.").format(role, self.id), user=creator
+                _local_("Role {} is assigned to user {}.").format(role, self.id),
+                user=creator
             )
 
     async def remove_roles(self, roles_list=None, creator="system"):
@@ -269,7 +275,8 @@ class User(AbstractSortableStatusModel, VeilModel):
         if roles_list and isinstance(roles_list, list):
             role_del = " ".join(roles_list)
             await system_logger.info(
-                _local_("Roles: {} was deleted to user {}.").format(role_del, self.username),
+                _local_("Roles: {} was deleted to user {}.").format(role_del,
+                                                                    self.username),
                 user=creator,
                 entity=self.entity,
             )
@@ -380,7 +387,8 @@ class User(AbstractSortableStatusModel, VeilModel):
         for group in groups:
             await group.remove_users(creator=creator, user_id_list=users_list)
             await system_logger.info(
-                _local_("Group {} is removed for user {}.").format(group, self.username),
+                _local_("Group {} is removed for user {}.").format(group,
+                                                                   self.username),
                 entity=self.entity,
             )
 
@@ -401,7 +409,8 @@ class User(AbstractSortableStatusModel, VeilModel):
         """Разблокировать пользователя в ОС."""
         result = await veil_auth_class.user_unlock(username=self.username)
         if result.success:
-            info_message = _local_("User {username} has been activated on Astra.").format(
+            info_message = _local_(
+                "User {username} has been activated on Astra.").format(
                 username=self.username
             )
             await system_logger.info(info_message, entity=self.entity, user=creator)
@@ -422,7 +431,8 @@ class User(AbstractSortableStatusModel, VeilModel):
 
         superuser_count = await query.gino.scalar()
         if superuser_count == 0:
-            raise SimpleError(_local_("There is no more active superuser."), user=creator)
+            raise SimpleError(_local_("There is no more active superuser."),
+                              user=creator)
 
         query = User.update.values(is_active=False).where(User.id == self.id)
         operation_status = await query.gino.status()
@@ -445,7 +455,8 @@ class User(AbstractSortableStatusModel, VeilModel):
         """Заблокировать пользователя в ОС."""
         result = await veil_auth_class.user_lock(username=self.username)
         if result.success:
-            info_message = _local_("User {username} has been deactivated on Astra.").format(
+            info_message = _local_(
+                "User {username} has been deactivated on Astra.").format(
                 username=self.username
             )
             await system_logger.info(info_message, entity=self.entity, user=creator)
@@ -497,12 +508,14 @@ class User(AbstractSortableStatusModel, VeilModel):
             username=self.username, new_password=raw_password
         )
         if result.success:
-            info_message = _local_("Password of user {username} has been changed.").format(
+            info_message = _local_(
+                "Password of user {username} has been changed.").format(
                 username=self.username
             )
             await system_logger.info(info_message, entity=self.entity, user=creator)
         else:
-            error_message = _local_("Password of user {username} has`t been changed.").format(
+            error_message = _local_(
+                "Password of user {username} has`t been changed.").format(
                 username=self.username
             )
             await system_logger.error(error_message, entity=self.entity, user=creator)
@@ -613,7 +626,8 @@ class User(AbstractSortableStatusModel, VeilModel):
                     if not pam_result.success and pam_result.return_code != 969:
                         raise PamError(pam_result)
                     elif pam_result.return_code == 969:
-                        msg = _local_("User {} password setting error.").format(username)
+                        msg = _local_("User {} password setting error.").format(
+                            username)
                         await system_logger.warning(
                             message=msg,
                             entity={
@@ -756,8 +770,9 @@ class User(AbstractSortableStatusModel, VeilModel):
         info_message = _local_("User {username} has been logged in.").format(
             username=username
         )
-        description = _local_("Auth type: {}, IP: {}, Client type: {}.").format(auth_type, ip,
-                                                                                client_type)
+        description = _local_("Auth type: {}, IP: {}, Client type: {}.").format(
+            auth_type, ip,
+            client_type)
         await system_logger.info(
             info_message, entity=user.entity, description=description
         )
@@ -1050,7 +1065,8 @@ class Group(AbstractSortableStatusModel, VeilModel):
 
         except UniqueViolationError:
             raise SimpleError(
-                _local_("Group {} has already role {}.").format(self.id, role), user=creator
+                _local_("Group {} has already role {}.").format(self.id, role),
+                user=creator
             )
         return group_role
 
@@ -1062,7 +1078,8 @@ class Group(AbstractSortableStatusModel, VeilModel):
     async def remove_roles(self, roles_list, creator):
         role_del = " ".join(roles_list)
         await system_logger.info(
-            _local_("Roles: {} was deleted to group {}.").format(role_del, self.verbose_name),
+            _local_("Roles: {} was deleted to group {}.").format(role_del,
+                                                                 self.verbose_name),
             user=creator,
             entity=self.entity,
         )
