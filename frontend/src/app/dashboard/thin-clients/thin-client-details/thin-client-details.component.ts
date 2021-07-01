@@ -66,12 +66,12 @@ export class ThinClientDetailsComponent implements OnInit, OnDestroy {
       type: 'time'
     },
     {
-      title: 'Время получения',
+      title: 'Время получения данных',
       property: 'data_received',
       type: 'time'
     },
     {
-      title: 'Время взаимодействия',
+      title: 'Время последней активнасти',
       property: 'last_interaction',
       type: 'time'
     },
@@ -80,11 +80,9 @@ export class ThinClientDetailsComponent implements OnInit, OnDestroy {
       property: 'is_afk',
       type: {
         typeDepend: 'boolean',
-        propertyDepend: ['В ожидании', 'Активный']
+        propertyDepend: ['Не активен', 'Активен']
       }
     },
-
-
     {
       title: 'Тип подключения',
       property: 'connection_type',
@@ -101,17 +99,20 @@ export class ThinClientDetailsComponent implements OnInit, OnDestroy {
     {
       title: 'Скорость получения данных',
       property: 'read_speed',
-      type: 'string'
+      type: 'metric',
+      unit: 'байт/сек'
     },
     {
       title: 'Скорость отправки данных',
       property: 'write_speed',
-      type: 'string'
+      type: 'metric',
+      unit: 'байт/сек'
     },
     {
       title: 'Средний RTT',
       property: 'avg_rtt',
-      type: 'string'
+      type: 'metric',
+      unit: 'мсек'
     },
     {
       title: 'Процент сетевых потерь',

@@ -8,6 +8,7 @@ import { WaitService } from '../common/components/single/wait/wait.service';
 import { Router } from '@angular/router';
 import { map } from 'rxjs/operators';
 import { IParams } from 'types';
+import { WebsocketService } from '../common/classes/websock.service';
 
 @Component({
   selector: 'vdi-thin-clients',
@@ -16,6 +17,7 @@ import { IParams } from 'types';
 })
 export class ThinClientsComponent extends DetailsMove implements OnInit, OnDestroy {
 
+  private socketSub: Subscription;
   private getThinClientSub: Subscription;
 
   public limit = 100;
@@ -73,7 +75,8 @@ export class ThinClientsComponent extends DetailsMove implements OnInit, OnDestr
     private service: ThinClientsService,
     public dialog: MatDialog,
     private waitService: WaitService,
-    private router: Router
+    private router: Router,
+    private ws: WebsocketService
   ) { 
     super();
   }
@@ -82,6 +85,7 @@ export class ThinClientsComponent extends DetailsMove implements OnInit, OnDestr
 
   ngOnInit() {
     this.refresh();
+    this.listenSockets();
 
     this.user.valueChanges.subscribe(() => {
       this.getAll();
@@ -98,6 +102,17 @@ export class ThinClientsComponent extends DetailsMove implements OnInit, OnDestr
     this.getAll();
   }
 
+  private listenSockets() {
+    if (this.socketSub) {
+      this.socketSub.unsubscribe();
+    }
+
+    this.socketSub = this.ws.stream('/thin_clients/').subscribe((message: any) => {
+      if (message['msg_type'] === 'data') {
+        this.refresh();
+      }
+    });
+  }
 
   public getAll() {
     if (this.getThinClientSub) {
@@ -156,6 +171,10 @@ export class ThinClientsComponent extends DetailsMove implements OnInit, OnDestr
 
     if (this.getThinClientSub) {
       this.getThinClientSub.unsubscribe();
+    }
+
+    if (this.socketSub) {
+      this.socketSub.unsubscribe();
     }
   }
 }
