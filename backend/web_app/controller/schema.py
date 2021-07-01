@@ -7,17 +7,20 @@ import graphene
 
 from veil_api_client import VeilRestPaginator
 
-from common.languages import lang_init
+from common.languages import _local_
 from common.models.controller import Controller
 from common.models.pool import Pool
 from common.models.vm import Vm
 from common.veil.veil_decorators import administrator_required
 from common.veil.veil_errors import SilentError, SimpleError, ValidationError
 from common.veil.veil_gino import Status, StatusGraphene
-from common.veil.veil_graphene import VeilEventTypeEnum, VeilResourceType, VeilShortEntityType, VmState
+from common.veil.veil_graphene import (
+    VeilEventTypeEnum,
+    VeilResourceType,
+    VeilShortEntityType,
+    VmState
+)
 from common.veil.veil_validators import MutationValidation
-
-_ = lang_init()
 
 
 class ControllerValidator(MutationValidation):
@@ -28,7 +31,7 @@ class ControllerValidator(MutationValidation):
         """Валидатор verbose_name для контроллера."""
         # Проверяем длину значения (работает только если у валидатора value is not None)
         if not value:
-            raise SimpleError(_("name can`t be empty."))
+            raise SimpleError(_local_("name can`t be empty."))
 
         # Проверяем наличие записей в БД
         # TODO: универсальный метод в родительском валидаторе для сокращения дублирования
@@ -38,7 +41,7 @@ class ControllerValidator(MutationValidation):
             .gino.scalar()
         )
         if verbose_name_is_busy:
-            raise ValidationError(_("name `{}` is busy.").format(value))
+            raise ValidationError(_local_("name `{}` is busy.").format(value))
         return value
 
     @staticmethod
@@ -46,7 +49,7 @@ class ControllerValidator(MutationValidation):
         """Валидатор адреса контроллера."""
         # Проверяем длину значения (работает только если у валидатора value is not None)
         if not value:
-            raise SimpleError(_("address can`t be empty."))
+            raise SimpleError(_local_("address can`t be empty."))
 
         # Проверяем наличие записей в БД
         # TODO: универсальный метод в родительском валидаторе для сокращения дублирования
@@ -56,14 +59,14 @@ class ControllerValidator(MutationValidation):
             .gino.scalar()
         )
         if address_is_busy:
-            raise ValidationError(_("address `{}` is busy.").format(value))
+            raise ValidationError(_local_("address `{}` is busy.").format(value))
         return value
 
     @staticmethod
     async def validate_token(obj_dict, value):
         """Валидатор токена интеграции контроллера."""
         if not value:
-            raise ValidationError(_("token can`t be empty."))
+            raise ValidationError(_local_("token can`t be empty."))
         return value
 
 
@@ -71,10 +74,10 @@ class ControllerFetcher:
     @staticmethod
     async def fetch_by_id(id_):
         """Возваращает инстанс объекта, если он есть."""
-        # TODO: универсальный метод в родительском валидаторе для сокращения дублированияа
+        # TODO: универсальный метод в родительском валидаторе для сокращения дублирования
         controller = await Controller.get(id_)
         if not controller:
-            raise SimpleError(_("No such controller."))
+            raise SimpleError(_local_("No such controller."))
         return controller
 
     @staticmethod
@@ -460,7 +463,8 @@ class ControllerType(graphene.ObjectType, ControllerFetcher):
             event["id"] = event["api_object_id"]
             event["event_type"] = VeilEventTypeEnum[event["type"]]
             event["description"] = event["detail_message"]
-            event["created"] = datetime.strptime("{}".format(event["created"]), "%Y-%m-%dT%H:%M:%S.%fZ")
+            event["created"] = datetime.strptime("{}".format(event["created"]),
+                                                 "%Y-%m-%dT%H:%M:%S.%fZ")
             veil_events.append(VeilEventType(**event))
 
         return veil_events
@@ -474,11 +478,12 @@ class ControllerType(graphene.ObjectType, ControllerFetcher):
             event = event_info.value
             event["description"] = event["detail_message"]
             event["event_type"] = VeilEventTypeEnum[event["type"]]
-            event["created"] = datetime.strptime("{}".format(event["created"]), "%Y-%m-%dT%H:%M:%S.%fZ")
+            event["created"] = datetime.strptime("{}".format(event["created"]),
+                                                 "%Y-%m-%dT%H:%M:%S.%fZ")
 
             return VeilEventType(**event)
         else:
-            raise SilentError(_("No such event."))
+            raise SilentError(_local_("No such event."))
 
     @staticmethod
     def obj_to_type(controller_obj: Controller) -> dict:
@@ -518,7 +523,7 @@ class AddControllerMutation(graphene.Mutation, ControllerValidator):
         try:
             controller = await Controller.soft_create(**kwargs)
         except TimeoutError:
-            raise SimpleError(_("Connection to ECP has been failed."))
+            raise SimpleError(_local_("Connection to ECP has been failed."))
         else:
             return AddControllerMutation(controller=controller)
 
@@ -551,7 +556,7 @@ class UpdateControllerMutation(
         try:
             updated_controller = await controller.soft_update(creator=creator, **kwargs)
         except TimeoutError:
-            raise SimpleError(_("Connection to ECP has been failed."))
+            raise SimpleError(_local_("Connection to ECP has been failed."))
         else:
             return UpdateControllerMutation(controller=updated_controller)
 

@@ -10,11 +10,9 @@ from functools import wraps
 import redis
 
 import common.settings as settings
-from common.languages import lang_init
+from common.languages import _local_
 from common.subscription_sources import VDI_TASKS_SUBSCRIPTION, WsMessageType
 from common.utils import gino_model_to_json_serializable_dict
-
-_ = lang_init()
 
 
 class PoolWorkerCmd(Enum):
@@ -135,7 +133,7 @@ async def a_redis_wait_for_message(redis_channel, predicate, timeout):
         from common.log.journal import system_logger
 
         await system_logger.error(
-            message=_("Redis waiting exception."), description=str(ex)
+            message=_local_("Redis waiting exception."), description=str(ex)
         )
 
     return False
@@ -196,7 +194,7 @@ async def a_redis_wait_for_task_completion(task_id):
         from common.log.journal import system_logger
 
         await system_logger.error(
-            message=_("Redis task waiting exception."), description=str(ex)
+            message=_local_("Redis task waiting exception."), description=str(ex)
         )
 
 

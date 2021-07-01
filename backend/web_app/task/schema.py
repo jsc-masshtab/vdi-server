@@ -8,7 +8,7 @@ from graphene import Enum as GrapheneEnum
 from sqlalchemy import and_
 
 
-from common.languages import lang_init
+from common.languages import _local_
 from common.models.task import PoolTaskType, Task, TaskStatus
 from common.utils import convert_gino_model_to_graphene_type
 from common.veil.veil_decorators import administrator_required
@@ -19,7 +19,6 @@ from common.veil.veil_redis import (
     send_cmd_to_cancel_tasks_associated_with_controller,
 )
 
-_ = lang_init()
 TaskStatusGraphene = GrapheneEnum.from_enum(TaskStatus)
 TaskTypeGraphene = GrapheneEnum.from_enum(PoolTaskType)
 
@@ -99,7 +98,7 @@ class TaskQuery(graphene.ObjectType):
         task_model = await Task.get(id)
         if not task_model:
             entity = {"entity_type": EntityType.SYSTEM, "entity_uuid": None}
-            raise SimpleError(_("No such task."), entity=entity)
+            raise SimpleError(_local_("No such task."), entity=entity)
 
         task_graphene_type = convert_gino_model_to_graphene_type(task_model, TaskType)
         task_graphene_type.duration = task_model.get_task_duration()
@@ -125,7 +124,7 @@ class CancelTaskMutation(graphene.Mutation):
         if not progressing_task_id:
             entity = {"entity_type": EntityType.SYSTEM, "entity_uuid": None}
             raise SimpleError(
-                _(
+                _local_(
                     "No such task or status of task {} is not {}.".format(
                         task, TaskStatus.IN_PROGRESS.name
                     )

@@ -4,7 +4,7 @@ import datetime
 
 import jwt
 
-from common.languages import lang_init
+from common.languages import _local_
 from common.log.journal import system_logger
 from common.models.auth import User, UserJwtInfo
 from common.settings import (
@@ -15,9 +15,6 @@ from common.settings import (
     JWT_OPTIONS,
     SECRET_KEY,
 )
-
-
-_ = lang_init()
 
 
 def jwtauth_ws(handler_class):
@@ -49,7 +46,7 @@ def jwtauth_ws(handler_class):
                     await open_method(self)  # invoke original open
 
                 except jwt.ExpiredSignature:
-                    msg = _("Token expired.")
+                    msg = _local_("Token expired.")
                     await self.close_with_msg(msg)
 
                 except Exception as ex:  # noqa
@@ -76,12 +73,12 @@ def jwtauth(handler_class):
                 payload_user = payload.get("username")
                 is_valid = await UserJwtInfo.check_token(payload_user, token)
                 if not is_valid:
-                    raise AssertionError(_("Token invalid."))
+                    raise AssertionError(_local_("Token invalid."))
             except jwt.ExpiredSignature:
                 system_logger._debug("jwtauth: jwt.ExpiredSignature")
                 handler._transforms = []
                 handler.set_status(401)
-                response = {"errors": [{"message": _("Token expired.")}]}
+                response = {"errors": [{"message": _local_("Token expired.")}]}
                 handler.finish(response)
             except AssertionError as error_message:
                 system_logger._debug("jwtauth: {}".format(error_message))
@@ -138,7 +135,7 @@ def decode_jwt(token, decode_options: dict = JWT_OPTIONS, algorithms: list = Non
     except jwt.ExpiredSignatureError:
         raise jwt.ExpiredSignatureError()
     except Exception as E:  # noqa
-        raise AssertionError(_("Error with JWT decode."))
+        raise AssertionError(_local_("Error with JWT decode."))
     return decoded_jwt
 
 
@@ -148,15 +145,15 @@ def extract_access_token(headers: dict) -> str:
     if auth:
         parts = auth.split()
         if parts[0].upper() != JWT_AUTH_HEADER_PREFIX:
-            raise AssertionError(_("Invalid authorization header."))
+            raise AssertionError(_local_("Invalid authorization header."))
         elif len(parts) == 1:
-            raise AssertionError(_("Invalid authorization header."))
+            raise AssertionError(_local_("Invalid authorization header."))
         elif len(parts) > 2:
-            raise AssertionError(_("Invalid authorization header."))
+            raise AssertionError(_local_("Invalid authorization header."))
         access_token = parts[1]
         return access_token
     else:
-        raise AssertionError(_("Missing authorization header."))
+        raise AssertionError(_local_("Missing authorization header."))
 
 
 def extract_user(headers: dict) -> str:

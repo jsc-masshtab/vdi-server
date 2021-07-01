@@ -9,7 +9,7 @@ from alembic import op
 
 from common.veil.auth.hashers import make_password
 from common.settings import DB_USER, SECRET_KEY
-from common.languages import lang_init
+from common.languages import _local_
 
 import uuid
 from datetime import datetime
@@ -19,7 +19,6 @@ revision = "07972ddc0722"
 down_revision = "b58c521ba8d4"
 branch_labels = None
 depends_on = None
-_ = lang_init()
 
 
 def upgrade():
@@ -50,9 +49,9 @@ def upgrade():
     )
     op.execute(sql)
     # объединенные миграции журнала
-    msg_str = _("Add new journal archive.")
-    name_str = _("Archive name:")
-    path_str = _("path:")
+    msg_str = _local_("Add new journal archive.")
+    name_str = _local_("Archive name:")
+    path_str = _local_("path:")
 
     # Архивирование предыдущих N записей (формат csv)
     op.execute(

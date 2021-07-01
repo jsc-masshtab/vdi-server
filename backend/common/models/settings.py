@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
 from common.database import db
-from common.languages import lang_init
+from common.languages import _local_
 from common.log.journal import system_logger
-
-_ = lang_init()
 
 
 class Settings(db.Model):
@@ -33,7 +31,7 @@ class Settings(db.Model):
                     settings[key] = value
             await cls.update.values(settings=settings).gino.status()
             entity = {"entity_type": "SECURITY", "entity_uuid": None}
-            await system_logger.info(_("Settings changed."), description=kwargs,
+            await system_logger.info(_local_("Settings changed."), description=kwargs,
                                      entity=entity, user=creator)
             return True
         except Exception:

@@ -8,19 +8,18 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import and_, func
 
 from common.database import db
-from common.languages import lang_init
 from common.log.journal import system_logger
 from common.models.pool import AutomatedPool, Pool
 from common.models.task import PoolTaskType
 from common.models.vm import Vm
 from common.subscription_sources import THIN_CLIENTS_SUBSCRIPTION
 from common.veil.veil_gino import AbstractSortableStatusModel, Status
-from common.veil.veil_redis import publish_data_in_internal_channel, request_to_execute_pool_task
+from common.veil.veil_redis import (
+    publish_data_in_internal_channel,
+    request_to_execute_pool_task
+)
 
 from web_app.auth.license.utils import License
-
-
-_ = lang_init()
 
 
 class ActiveTkConnection(db.Model, AbstractSortableStatusModel):
@@ -66,10 +65,14 @@ class ActiveTkConnection(db.Model, AbstractSortableStatusModel):
         # update
         if model:
             await model.update(**kwargs, data_received=func.now()).apply()
-            await publish_data_in_internal_channel(THIN_CLIENTS_SUBSCRIPTION, "UPDATED", model)
+            await publish_data_in_internal_channel(THIN_CLIENTS_SUBSCRIPTION,
+                                                   "UPDATED",
+                                                   model)
         else:
             model = await cls.create(**kwargs)
-            await publish_data_in_internal_channel(THIN_CLIENTS_SUBSCRIPTION, "CREATED", model)
+            await publish_data_in_internal_channel(THIN_CLIENTS_SUBSCRIPTION,
+                                                   "CREATED",
+                                                   model)
 
         if (
             is_conn_init_by_user
@@ -83,7 +86,8 @@ class ActiveTkConnection(db.Model, AbstractSortableStatusModel):
 
         query = db.select([db.func.count()]).select_from(ActiveTkConnection)
 
-        filters = ActiveTkConnection.build_thin_clients_filters(get_disconnected, user_id)
+        filters = ActiveTkConnection.build_thin_clients_filters(get_disconnected,
+                                                                user_id)
         if filters:
             query = query.where(and_(*filters))
 
@@ -171,16 +175,20 @@ class ActiveTkConnection(db.Model, AbstractSortableStatusModel):
             read_speed = kwarg["read_speed"]
             write_speed = kwarg["write_speed"]
 
-        await self.update(read_speed=read_speed, write_speed=write_speed, avg_rtt=avg_rtt,
-                          loss_percentage=loss_percentage, data_received=func.now()).apply()
+        await self.update(read_speed=read_speed, write_speed=write_speed,
+                          avg_rtt=avg_rtt,
+                          loss_percentage=loss_percentage,
+                          data_received=func.now()).apply()
         # front ws notification
-        await publish_data_in_internal_channel(THIN_CLIENTS_SUBSCRIPTION, "UPDATED", self)
+        await publish_data_in_internal_channel(THIN_CLIENTS_SUBSCRIPTION,
+                                               "UPDATED", self)
 
     async def deactivate(self):
         """Соединение неативно, когда у него выставлено время дисконнекта."""
         await self.update(disconnected=func.now()).apply()
         # front ws notification
-        await publish_data_in_internal_channel(THIN_CLIENTS_SUBSCRIPTION, "UPDATED", self)
+        await publish_data_in_internal_channel(THIN_CLIENTS_SUBSCRIPTION,
+                                               "UPDATED", self)
 
         try:
             if self.vm_id:

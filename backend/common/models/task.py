@@ -9,13 +9,11 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
 
 from common.database import db
-from common.languages import lang_init
+from common.languages import _local_
 from common.models.auth import Entity
 from common.subscription_sources import VDI_TASKS_SUBSCRIPTION
 from common.veil.veil_gino import AbstractSortableStatusModel, EntityType
 from common.veil.veil_redis import publish_data_in_internal_channel
-
-_ = lang_init()
 
 
 class PoolTaskType(Enum):
@@ -77,21 +75,21 @@ class Task(db.Model, AbstractSortableStatusModel):
 
         entity_name = await self.get_associated_entity_name()
         if self.task_type == PoolTaskType.POOL_CREATE:
-            task_message = _("Creation of pool {}.").format(entity_name)
+            task_message = _local_("Creation of pool {}.").format(entity_name)
         elif self.task_type == PoolTaskType.POOL_EXPAND:
-            task_message = _("Expanding of pool {}.").format(entity_name)
+            task_message = _local_("Expanding of pool {}.").format(entity_name)
         elif self.task_type == PoolTaskType.POOL_DELETE:
-            task_message = _("Deleting of pool {}.").format(entity_name)
+            task_message = _local_("Deleting of pool {}.").format(entity_name)
         elif self.task_type == PoolTaskType.POOL_DECREASE:
-            task_message = _("Decreasing of pool {}.").format(entity_name)
+            task_message = _local_("Decreasing of pool {}.").format(entity_name)
         elif self.task_type == PoolTaskType.VM_PREPARE:
-            task_message = _("Preparation of vm {}.").format(entity_name)
+            task_message = _local_("Preparation of vm {}.").format(entity_name)
         elif self.task_type == PoolTaskType.VMS_BACKUP:
-            task_message = _("Backup of {}.").format(entity_name)
+            task_message = _local_("Backup of {}.").format(entity_name)
         elif self.task_type == PoolTaskType.VMS_REMOVE:
-            task_message = _("Removal of VMs from pool {}.").format(entity_name)
+            task_message = _local_("Removal of VMs from pool {}.").format(entity_name)
         elif self.task_type == PoolTaskType.VM_GUEST_RECREATION:
-            task_message = _(
+            task_message = _local_(
                 "Automatic recreation of VM {} in the guest pool.").format(
                 entity_name)
         else:
@@ -219,7 +217,8 @@ class Task(db.Model, AbstractSortableStatusModel):
         return tasks
 
     @staticmethod
-    async def get_tasks_associated_with_entity(entity_id, task_status=None, task_type=None):
+    async def get_tasks_associated_with_entity(entity_id, task_status=None,
+                                               task_type=None):
 
         where_conditions = [Task.entity_id == entity_id]
         if task_status:

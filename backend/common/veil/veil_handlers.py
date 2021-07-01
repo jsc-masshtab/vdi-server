@@ -9,7 +9,7 @@ from tornado import httputil, websocket
 from tornado.escape import json_decode
 from tornado.web import Application, RequestHandler
 
-from common.languages import lang_init
+from common.languages import _local_
 from common.log.journal import system_logger
 from common.models.auth import User
 from common.models.pool import Pool
@@ -19,8 +19,6 @@ from common.veil.auth.veil_jwt import (
     jwtauth,
 )
 from common.veil.veil_errors import InvalidUserError, ValidationError
-
-_ = lang_init()
 
 
 class BaseHandler(RequestHandler, ABC):
@@ -60,7 +58,7 @@ class BaseHttpHandler(BaseHandler):
         )
 
         if not user:
-            raise InvalidUserError(_("User {} not found.").format(username))
+            raise InvalidUserError(_local_("User {} not found.").format(username))
 
         return user
 
@@ -94,15 +92,16 @@ class BaseHttpHandler(BaseHandler):
     @staticmethod
     async def validate_and_get_vm(user, pool_id):
         if not user:
-            raise InvalidUserError(_("User {} not found."))
+            raise InvalidUserError(_local_("User {} not found."))
 
         pool = await Pool.get(pool_id)
         if not pool:
-            raise ValidationError(_("There is no pool with id: {}.").format(pool_id))
+            raise ValidationError(
+                _local_("There is no pool with id: {}.").format(pool_id))
         vm = await pool.get_vm(user_id=user.id)
         if not vm:
             raise ValidationError(
-                _("User {} has no VM on pool {}.").format(user.username, pool.id)
+                _local_("User {} has no VM on pool {}.").format(user.username, pool.id)
             )
 
         return vm
@@ -144,7 +143,7 @@ class BaseWsHandler(BaseHandler, websocket.WebSocketHandler):
             await self.write_message(msg)
         except (websocket.WebSocketError, IOError) as ex:
             await system_logger.debug(
-                message=_("Ws write error."), description=(str(ex))
+                message=_local_("Ws write error."), description=(str(ex))
             )
 
     async def close_with_msg(self, msg, code=4001):

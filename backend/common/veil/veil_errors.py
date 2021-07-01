@@ -3,11 +3,8 @@
 import asyncio
 from abc import ABC
 
-from common.languages import lang_init
+from common.languages import _local_
 from common.log.journal import system_logger
-
-
-_ = lang_init()
 
 
 class ValidationError(AssertionError):
@@ -155,12 +152,12 @@ class AuthError(HttpError, ABC):
 
 class Forbidden(AuthError):
     code = 403
-    message = _("Unable to logon to system using these credentials.")
+    message = _local_("Unable to logon to system using these credentials.")
 
 
 class Unauthorized(AuthError):
     code = 401
-    message = _("401: Unauthorized.")
+    message = _local_("401: Unauthorized.")
 
 
 class VmCreationError(Exception):

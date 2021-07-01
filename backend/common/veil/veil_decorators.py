@@ -3,15 +3,13 @@ from functools import wraps
 
 from graphql.execution.base import ResolveInfo
 
-from common.languages import lang_init
+from common.languages import _local_
 from common.log.journal import system_logger
 from common.models.auth import User
 from common.settings import AUTH_ENABLED
 from common.veil.auth.veil_jwt import extract_user_object
 from common.veil.veil_errors import Unauthorized
 from common.veil.veil_gino import EntityType, Role
-
-_ = lang_init()
 
 
 def context(f):
@@ -41,13 +39,13 @@ def user_passes_test(test_func, exc=Unauthorized):  # noqa
                     if test_func(await user.roles):
                         return f(*args, **kwargs)
                 await system_logger.warning(
-                    message=_("Invalid permissions."),
-                    description=_("IP: {}. username: {}.").format(
+                    message=_local_("Invalid permissions."),
+                    description=_local_("IP: {}. username: {}.").format(
                         cntxt.remote_ip, user.username
                     ),
                     entity={"entity_type": EntityType.SECURITY, "entity_uuid": None},
                 )
-                raise exc(_("Invalid permissions."))
+                raise exc(_local_("Invalid permissions."))
             else:
                 kwargs["creator"] = "system"
                 return f(*args, **kwargs)

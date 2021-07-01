@@ -10,7 +10,7 @@ from tornado.web import Application
 import uvloop
 
 from common.database import start_gino, stop_gino
-from common.languages import lang_init
+from common.languages import _local_
 from common.log.journal import system_logger
 from common.settings import (
     AUTH_ENABLED,
@@ -40,8 +40,6 @@ from web_app.settings.schema import settings_schema
 from web_app.task.schema import task_schema
 from web_app.thin_client_api.schema import thin_client_schema
 from web_app.thin_client_api.urls import thin_client_api_urls
-
-_ = lang_init()
 
 define("port", default=8888, help="port to listen on")
 define("address", default="127.0.0.1", help="address to listen on")
@@ -122,7 +120,7 @@ def exit_handler(sig, frame):  # noqa
     async def shutdown():
         REDIS_POOL.disconnect()
         await stop_veil_client()
-        await system_logger.info(_("VDI broker stopped."))
+        await system_logger.info(_local_("VDI broker stopped."))
         await stop_gino()
         io_loop.stop()
 
@@ -133,19 +131,19 @@ async def startup_alerts(vdi_license):
     """Выводим сообщения только в первом процессе. Если task_id None, значит процесс 1, если > 0, значит больше 1."""
     if not task_id():
         await system_logger.info(
-            _("VDI broker started with {} worker(s).").format(options.workers)
+            _local_("VDI broker started with {} worker(s).").format(options.workers)
         )
         # Проверка настроек
         if not AUTH_ENABLED:
-            await system_logger.warning(_("Authentication system is disabled."))
+            await system_logger.warning(_local_("Authentication system is disabled."))
         if vdi_license.expired:
             await system_logger.warning(
-                _(
+                _local_(
                     "The license is expired. Some functions will be blocked. Contact your dealer."
                 )
             )
         if DEBUG:
-            await system_logger.warning(_("DEBUG mode is enabled."))
+            await system_logger.warning(_local_("DEBUG mode is enabled."))
 
 
 async def startup_server():

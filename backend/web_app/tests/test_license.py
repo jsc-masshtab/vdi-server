@@ -4,10 +4,7 @@ import pytest
 from tornado.testing import gen_test
 from web_app.tests.utils import VdiHttpTestCase
 from web_app.tests.fixtures import fixt_db, fixt_user_admin  # noqa
-from common.languages import lang_init
 from common.settings import PAM_AUTH
-
-_ = lang_init()
 
 pytestmark = [
     pytest.mark.asyncio,

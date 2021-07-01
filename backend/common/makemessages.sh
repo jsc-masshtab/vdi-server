@@ -17,7 +17,7 @@ mkdir -p $locales_dir
 # create .pot file
 find ../ -iname "*.html" -o -iname "*.py" | xargs \
     xgettext --output=${pot_file} --language=Python --from-code=UTF-8 \
-    --sort-by-file --keyword=_ --keyword=_:1,2 --no-wrap
+    --sort-by-file --keyword=_local_ --keyword=_local_:1,2 --no-wrap
 # init .po file, if it doesn't exist yet
 if [ ! -f $po_file ]; then
     msginit --input=${pot_file} --output-file=${po_file} --no-wrap --locale=${locales}

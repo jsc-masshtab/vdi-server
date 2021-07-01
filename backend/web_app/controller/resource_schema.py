@@ -8,7 +8,7 @@ import graphene
 
 from veil_api_client import VeilRestPaginator
 
-from common.languages import lang_init
+from common.languages import _local_
 from common.log.journal import system_logger
 from common.models.controller import Controller
 from common.models.pool import Pool
@@ -24,8 +24,6 @@ from common.veil.veil_graphene import (
 )
 
 from web_app.controller.schema import ControllerFetcher, ControllerType
-
-_ = lang_init()
 
 
 # Cluster
@@ -346,7 +344,8 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
             }
             return resource_data
         else:
-            raise SilentError(_("{} is unreachable on ECP VeiL.").format(resource_type))
+            raise SilentError(
+                _local_("{} is unreachable on ECP VeiL.").format(resource_type))
 
     # Кластеры
     @classmethod
@@ -559,7 +558,8 @@ class AttachVeilUtilsMutation(graphene.Mutation):
         await veil_domain.info()
         if veil_domain.powered:
             raise SilentError(
-                _("Cant create CD-ROM for powered domain {}.").format(veil_domain.public_attrs["verbose_name"]))
+                _local_("Cant create CD-ROM for powered domain {}.").format(
+                    veil_domain.public_attrs["verbose_name"]))
         response = await veil_domain.attach_veil_utils_iso()
         ok = response.success
         if not ok:
@@ -567,7 +567,8 @@ class AttachVeilUtilsMutation(graphene.Mutation):
                 raise SimpleError(error["detail"])
 
         await system_logger.info(
-            _("Creating a CD-ROM on the virtual machine {}.").format(veil_domain.public_attrs["verbose_name"]),
+            _local_("Creating a CD-ROM on the virtual machine {}.").format(
+                veil_domain.public_attrs["verbose_name"]),
             user=creator)
         return AttachVeilUtilsMutation(ok=ok)
 
@@ -576,4 +577,6 @@ class ControllerResourcesMutations(graphene.ObjectType):
     attachVeilUtils = AttachVeilUtilsMutation.Field()
 
 
-resources_schema = graphene.Schema(query=ResourcesQuery, mutation=ControllerResourcesMutations, auto_camelcase=False)
+resources_schema = graphene.Schema(
+    query=ResourcesQuery, mutation=ControllerResourcesMutations, auto_camelcase=False
+)

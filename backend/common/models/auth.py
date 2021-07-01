@@ -11,14 +11,19 @@ from sqlalchemy.sql import func, text
 from veil_aio_au import VeilResult as VeilAuthResult
 
 from common.database import db
-from common.languages import lang_init
+from common.languages import _local_
 from common.log.journal import system_logger
 from common.models.user_tk_permission import (
     GroupTkPermission,
     TkPermission,
     UserTkPermission,
 )
-from common.settings import PAM_AUTH, PAM_SUPERUSER_GROUP, PAM_USER_GROUP, REDIS_THIN_CLIENT_CMD_CHANNEL, SECRET_KEY
+from common.settings import (
+    PAM_AUTH, PAM_SUPERUSER_GROUP,
+    PAM_USER_GROUP,
+    REDIS_THIN_CLIENT_CMD_CHANNEL,
+    SECRET_KEY
+)
 from common.veil.auth import hashers
 from common.veil.auth.veil_pam import veil_auth_class
 from common.veil.veil_errors import PamError, SimpleError
@@ -29,8 +34,6 @@ from common.veil.veil_gino import (
     VeilModel,
 )
 from common.veil.veil_redis import REDIS_CLIENT, ThinClientCmd
-
-_ = lang_init()
 
 
 class Entity(db.Model):
@@ -247,7 +250,7 @@ class User(AbstractSortableStatusModel, VeilModel):
     async def add_role(self, role, creator):
         try:
             await system_logger.info(
-                _("Role {} is added to user {}.").format(role, self.username),
+                _local_("Role {} is added to user {}.").format(role, self.username),
                 user=creator,
                 entity=self.entity,
             )
@@ -255,12 +258,13 @@ class User(AbstractSortableStatusModel, VeilModel):
             user = await self.get(self.id)
             assigned_roles = await user.roles
             await system_logger.debug(
-                _("User {} roles: {}.").format(user.username, assigned_roles)
+                _local_("User {} roles: {}.").format(user.username, assigned_roles)
             )
             return add
         except UniqueViolationError:
             raise SimpleError(
-                _("Role {} is assigned to user {}.").format(role, self.id), user=creator
+                _local_("Role {} is assigned to user {}.").format(role, self.id),
+                user=creator
             )
 
     async def remove_roles(self, roles_list=None, creator="system"):
@@ -271,7 +275,8 @@ class User(AbstractSortableStatusModel, VeilModel):
         if roles_list and isinstance(roles_list, list):
             role_del = " ".join(roles_list)
             await system_logger.info(
-                _("Roles: {} was deleted to user {}.").format(role_del, self.username),
+                _local_("Roles: {} was deleted to user {}.").format(role_del,
+                                                                    self.username),
                 user=creator,
                 entity=self.entity,
             )
@@ -281,7 +286,7 @@ class User(AbstractSortableStatusModel, VeilModel):
             user = await self.get(self.id)
             assigned_roles = await user.roles
             await system_logger.debug(
-                _("User {} roles: {}.").format(user.username, assigned_roles)
+                _local_("User {} roles: {}.").format(user.username, assigned_roles)
             )
             return remove
 
@@ -329,7 +334,7 @@ class User(AbstractSortableStatusModel, VeilModel):
                     )
                 except UniqueViolationError:  # пара user_id и permission уникальна
                     raise SimpleError(
-                        _("User {} already has permission {}.").format(
+                        _local_("User {} already has permission {}.").format(
                             self.id, permission
                         ),
                         user=creator,
@@ -337,7 +342,7 @@ class User(AbstractSortableStatusModel, VeilModel):
 
         permissions_str = ", ".join(permissions_list)
         await system_logger.info(
-            _("Permission(s) {} added to user {}.").format(
+            _local_("Permission(s) {} added to user {}.").format(
                 permissions_str, self.username
             ),
             user=creator,
@@ -360,7 +365,7 @@ class User(AbstractSortableStatusModel, VeilModel):
             # log
             permissions_str = ", ".join(permissions_list)
             await system_logger.info(
-                _("Permission(s) {} removed from user {}.").format(
+                _local_("Permission(s) {} removed from user {}.").format(
                     permissions_str, self.username
                 ),
                 user=creator,
@@ -369,7 +374,7 @@ class User(AbstractSortableStatusModel, VeilModel):
 
             assigned_permissions = await self.get_permissions()
             await system_logger.debug(
-                _("User {} permission(s): {}.").format(
+                _local_("User {} permission(s): {}.").format(
                     self.username, assigned_permissions
                 )
             )
@@ -382,7 +387,8 @@ class User(AbstractSortableStatusModel, VeilModel):
         for group in groups:
             await group.remove_users(creator=creator, user_id_list=users_list)
             await system_logger.info(
-                _("Group {} is removed for user {}.").format(group, self.username),
+                _local_("Group {} is removed for user {}.").format(group,
+                                                                   self.username),
                 entity=self.entity,
             )
 
@@ -393,7 +399,7 @@ class User(AbstractSortableStatusModel, VeilModel):
         if PAM_AUTH:
             return await self.pam_unlock(creator=creator)
 
-        info_message = _("User {username} has been activated.").format(
+        info_message = _local_("User {username} has been activated.").format(
             username=self.username
         )
         await system_logger.info(info_message, entity=self.entity, user=creator)
@@ -403,7 +409,8 @@ class User(AbstractSortableStatusModel, VeilModel):
         """Разблокировать пользователя в ОС."""
         result = await veil_auth_class.user_unlock(username=self.username)
         if result.success:
-            info_message = _("User {username} has been activated on Astra.").format(
+            info_message = _local_(
+                "User {username} has been activated on Astra.").format(
                 username=self.username
             )
             await system_logger.info(info_message, entity=self.entity, user=creator)
@@ -424,7 +431,8 @@ class User(AbstractSortableStatusModel, VeilModel):
 
         superuser_count = await query.gino.scalar()
         if superuser_count == 0:
-            raise SimpleError(_("There is no more active superuser."), user=creator)
+            raise SimpleError(_local_("There is no more active superuser."),
+                              user=creator)
 
         query = User.update.values(is_active=False).where(User.id == self.id)
         operation_status = await query.gino.status()
@@ -432,7 +440,7 @@ class User(AbstractSortableStatusModel, VeilModel):
         if PAM_AUTH:
             return await self.pam_lock(creator=creator)
 
-        info_message = _("User {username} has been deactivated.").format(
+        info_message = _local_("User {username} has been deactivated.").format(
             username=self.username
         )
         await system_logger.info(info_message, entity=self.entity, user=creator)
@@ -447,7 +455,8 @@ class User(AbstractSortableStatusModel, VeilModel):
         """Заблокировать пользователя в ОС."""
         result = await veil_auth_class.user_lock(username=self.username)
         if result.success:
-            info_message = _("User {username} has been deactivated on Astra.").format(
+            info_message = _local_(
+                "User {username} has been deactivated on Astra.").format(
                 username=self.username
             )
             await system_logger.info(info_message, entity=self.entity, user=creator)
@@ -499,12 +508,14 @@ class User(AbstractSortableStatusModel, VeilModel):
             username=self.username, new_password=raw_password
         )
         if result.success:
-            info_message = _("Password of user {username} has been changed.").format(
+            info_message = _local_(
+                "Password of user {username} has been changed.").format(
                 username=self.username
             )
             await system_logger.info(info_message, entity=self.entity, user=creator)
         else:
-            error_message = _("Password of user {username} has`t been changed.").format(
+            error_message = _local_(
+                "Password of user {username} has`t been changed.").format(
                 username=self.username
             )
             await system_logger.error(error_message, entity=self.entity, user=creator)
@@ -539,7 +550,7 @@ class User(AbstractSortableStatusModel, VeilModel):
             .gino.status()
         )
 
-        info_message = _("Password of user {username} has been changed.").format(
+        info_message = _local_("Password of user {username} has been changed.").format(
             username=self.username
         )
         await system_logger.info(info_message, entity=self.entity, user=creator)
@@ -615,7 +626,8 @@ class User(AbstractSortableStatusModel, VeilModel):
                     if not pam_result.success and pam_result.return_code != 969:
                         raise PamError(pam_result)
                     elif pam_result.return_code == 969:
-                        msg = _("User {} password setting error.").format(username)
+                        msg = _local_("User {} password setting error.").format(
+                            username)
                         await system_logger.warning(
                             message=msg,
                             entity={
@@ -627,7 +639,7 @@ class User(AbstractSortableStatusModel, VeilModel):
                         )
                         await user_obj.deactivate(creator)
         except (PamError, UniqueViolationError) as err_msg:
-            msg = _("User {} creation error.").format(username)
+            msg = _local_("User {} creation error.").format(username)
             await system_logger.error(
                 message=msg,
                 entity={"entity_type": EntityType.USER, "entity_uuid": None},
@@ -636,8 +648,8 @@ class User(AbstractSortableStatusModel, VeilModel):
             )
             raise AssertionError(msg)
 
-        user_role = _("Superuser.") if is_superuser else _("User.")
-        info_message = _("{} {} created.").format(user_role[:-1], username)
+        user_role = _local_("Superuser.") if is_superuser else _local_("User.")
+        info_message = _local_("{} {} created.").format(user_role[:-1], username)
         await system_logger.info(info_message, entity=user_obj.entity, user=creator)
 
         if groups:
@@ -693,7 +705,7 @@ class User(AbstractSortableStatusModel, VeilModel):
                         raise PamError(pam_result)
 
         except PamError as err_msg:
-            msg = _("User {} update error.").format(update_type.username)
+            msg = _local_("User {} update error.").format(update_type.username)
             await system_logger.error(
                 message=msg,
                 entity={"entity_type": EntityType.USER, "entity_uuid": id},
@@ -705,15 +717,15 @@ class User(AbstractSortableStatusModel, VeilModel):
         creator = update_dict.pop("creator")
         desc = str(update_dict)
         await system_logger.info(
-            _("Values of user {} is changed.").format(update_type.username),
+            _local_("Values of user {} is changed.").format(update_type.username),
             description=desc,
             user=creator,
             entity=update_type.entity,
         )
 
         if "is_superuser" in update_dict and update_dict.get("is_superuser"):
-            assigned_roles = _("Roles: {}.".format(str(await update_type.roles)))
-            info_message = _("User {username} has become a superuser.").format(
+            assigned_roles = _local_("Roles: {}.".format(str(await update_type.roles)))
+            info_message = _local_("User {username} has become a superuser.").format(
                 username=update_type.username
             )
             await system_logger.info(
@@ -723,8 +735,8 @@ class User(AbstractSortableStatusModel, VeilModel):
                 user=creator,
             )
         elif update_dict.get("is_superuser") is False:
-            assigned_roles = _("Roles: {}.".format(str(await update_type.roles)))
-            info_message = _("User {username} is no longer a superuser.").format(
+            assigned_roles = _local_("Roles: {}.".format(str(await update_type.roles)))
+            info_message = _local_("User {username} is no longer a superuser.").format(
                 username=update_type.username
             )
             await system_logger.info(
@@ -755,11 +767,12 @@ class User(AbstractSortableStatusModel, VeilModel):
 
         # Login event
         auth_type = "Ldap" if ldap else "Local"
-        info_message = _("User {username} has been logged in.").format(
+        info_message = _local_("User {username} has been logged in.").format(
             username=username
         )
-        description = _("Auth type: {}, IP: {}, Client type: {}.").format(auth_type, ip,
-                                                                          client_type)
+        description = _local_("Auth type: {}, IP: {}, Client type: {}.").format(
+            auth_type, ip,
+            client_type)
         await system_logger.info(
             info_message, entity=user.entity, description=description
         )
@@ -780,7 +793,7 @@ class User(AbstractSortableStatusModel, VeilModel):
         # Запрещаем все выданные пользователю токены (Может быть только 1)
         await UserJwtInfo.delete.where(UserJwtInfo.user_id == user.id).gino.status()
 
-        info_message = _("User {username} has been logged out.").format(
+        info_message = _local_("User {username} has been logged out.").format(
             username=username
         )
         await system_logger.info(info_message, entity=user.entity)
@@ -906,7 +919,7 @@ class Group(AbstractSortableStatusModel, VeilModel):
         if ad_cn:
             group_kwargs["ad_cn"] = ad_cn
         group_obj = await Group.create(**group_kwargs)
-        info_message = _("Group {} is created.").format(verbose_name)
+        info_message = _local_("Group {} is created.").format(verbose_name)
         await system_logger.info(info_message, user=creator, entity=group_obj.entity)
 
         return group_obj
@@ -933,7 +946,7 @@ class Group(AbstractSortableStatusModel, VeilModel):
                     )
                 except UniqueViolationError:  # пара group_id и permission уникальна
                     raise SimpleError(
-                        _("Group {} already has permission {}.").format(
+                        _local_("Group {} already has permission {}.").format(
                             self.id, permission
                         ),
                         user=creator,
@@ -941,7 +954,7 @@ class Group(AbstractSortableStatusModel, VeilModel):
 
         permissions_str = ", ".join(permissions_list)
         await system_logger.info(
-            _("Permission(s) {} added to group {}.").format(
+            _local_("Permission(s) {} added to group {}.").format(
                 permissions_str, self.verbose_name
             ),
             user=creator,
@@ -964,7 +977,7 @@ class Group(AbstractSortableStatusModel, VeilModel):
             # log
             permissions_str = ", ".join(permissions_list)
             await system_logger.info(
-                _("Permission(s) {} removed from group {}.").format(
+                _local_("Permission(s) {} removed from group {}.").format(
                     permissions_str, self.verbose_name
                 ),
                 user=creator,
@@ -973,7 +986,7 @@ class Group(AbstractSortableStatusModel, VeilModel):
 
             assigned_permissions = await self.get_permissions()
             await system_logger.debug(
-                _("Group {} permission(s): {}.").format(
+                _local_("Group {} permission(s): {}.").format(
                     self.verbose_name, assigned_permissions
                 )
             )
@@ -991,7 +1004,7 @@ class Group(AbstractSortableStatusModel, VeilModel):
             await self.update(**group_kwargs).apply()
             desc = str(group_kwargs)
             await system_logger.info(
-                _("Values of group {} is updated.").format(self.verbose_name),
+                _local_("Values of group {} is updated.").format(self.verbose_name),
                 description=desc,
                 user=creator,
                 entity=self.entity,
@@ -1013,14 +1026,14 @@ class Group(AbstractSortableStatusModel, VeilModel):
                 return
             user_group = await UserGroup.create(user_id=user_id, group_id=self.id)
             user = await User.get(user_id)
-            info_message = _("User {} has been included to group {}.").format(
+            info_message = _local_("User {} has been included to group {}.").format(
                 user.username, self.verbose_name
             )
             await system_logger.info(info_message, entity=self.entity, user=creator)
             return user_group
         except UniqueViolationError:
             raise SimpleError(
-                _("User {} is already in group {}.").format(user_id, self.id)
+                _local_("User {} is already in group {}.").format(user_id, self.id)
             )
 
     async def add_users(self, user_id_list, creator):
@@ -1032,7 +1045,7 @@ class Group(AbstractSortableStatusModel, VeilModel):
         for id in user_id_list:
             name = await User.get(id)
             await system_logger.info(
-                _("Removing user {} from group {}.").format(
+                _local_("Removing user {} from group {}.").format(
                     name.username, self.verbose_name
                 ),
                 user=creator,
@@ -1045,14 +1058,15 @@ class Group(AbstractSortableStatusModel, VeilModel):
     async def add_role(self, role, creator):
         try:
             group_role = await GroupRole.create(group_id=self.id, role=role)
-            info_message = _("Role {} has been set to group {}.").format(
+            info_message = _local_("Role {} has been set to group {}.").format(
                 role, self.verbose_name
             )
             await system_logger.info(info_message, entity=self.entity, user=creator)
 
         except UniqueViolationError:
             raise SimpleError(
-                _("Group {} has already role {}.").format(self.id, role), user=creator
+                _local_("Group {} has already role {}.").format(self.id, role),
+                user=creator
             )
         return group_role
 
@@ -1064,7 +1078,8 @@ class Group(AbstractSortableStatusModel, VeilModel):
     async def remove_roles(self, roles_list, creator):
         role_del = " ".join(roles_list)
         await system_logger.info(
-            _("Roles: {} was deleted to group {}.").format(role_del, self.verbose_name),
+            _local_("Roles: {} was deleted to group {}.").format(role_del,
+                                                                 self.verbose_name),
             user=creator,
             entity=self.entity,
         )

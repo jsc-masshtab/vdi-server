@@ -8,7 +8,7 @@ import redis
 from tornado.websocket import WebSocketClosedError
 from tornado.websocket import websocket_connect
 
-from common.languages import lang_init
+from common.languages import _local_
 from common.log.journal import system_logger
 from common.models.controller import Controller
 from common.settings import WS_MONITOR_CHANNEL_OUT, WS_PING_INTERVAL, WS_PING_TIMEOUT
@@ -16,8 +16,6 @@ from common.subscription_sources import CONTROLLER_SUBSCRIPTIONS_LIST, Subscript
 from common.utils import cancel_async_task
 from common.veil.veil_gino import Status
 from common.veil.veil_redis import REDIS_CLIENT
-
-_ = lang_init()
 
 # TODO: в событиях журнала задействовать отдельный entity для монитора ресурсов
 
@@ -102,7 +100,7 @@ class ResourcesMonitor:
         while self._running_flag:
             is_connected = await self._connect()
             await system_logger.debug(
-                _("{} is connected: {}.").format(__class__.__name__, is_connected)
+                _local_("{} is connected: {}.").format(__class__.__name__, is_connected)
             )  # noqa
             # reconnect if not connected
             if not is_connected:
@@ -162,7 +160,8 @@ class ResourcesMonitor:
             )
         except Exception as ex:  # noqa
             # Причин для исключения может быть множество включая OS specific
-            msg = _("Resource monitor can`t connect to controller {}.").format(controller.address)
+            msg = _local_("Resource monitor can`t connect to controller {}.").format(
+                controller.address)
             await system_logger.error(message=msg, description=str(ex))
             return False
 
@@ -186,12 +185,13 @@ class ResourcesMonitor:
         try:
             REDIS_CLIENT.publish(WS_MONITOR_CHANNEL_OUT, message)
         except redis.RedisError as ex:
-            await system_logger.error(message="Resource monitor ws. Redis error.", description=str(ex))
+            await system_logger.error(message="Resource monitor ws. Redis error.",
+                                      description=str(ex))
 
     async def _close_connection(self):
         if self._ws_connection:
             await system_logger.debug(
-                _("Closing ws connection {}.").format(self._controller_id)
+                _local_("Closing ws connection {}.").format(self._controller_id)
             )
             try:
                 self._ws_connection.close()
