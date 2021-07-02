@@ -439,6 +439,8 @@ class ControllerType(graphene.ObjectType, ControllerFetcher):
         for type_ in VeilEventTypeEnum:
             if event_type is type_.value:
                 event_type = type_.name
+        if not controller.veil_client:
+            return
         veil_events = await controller.veil_client.event().list(event_type=event_type,
                                                                 user=veil_user)
         return veil_events.paginator_count
@@ -448,15 +450,15 @@ class ControllerType(graphene.ObjectType, ControllerFetcher):
         controller = await Controller.get(self.id)
         veil_user = await controller.get_veil_user
         paginator = VeilRestPaginator(ordering=ordering, limit=limit, offset=offset)
+        veil_events = list()
         if not controller.veil_client:
-            return
+            return veil_events
         for type_ in VeilEventTypeEnum:
             if event_type is type_.value:
                 event_type = type_.name
         veil_response = await controller.veil_client.event().list(
             paginator=paginator, user=veil_user, event_type=event_type
         )
-        veil_events = list()
         for data in veil_response.response:
             event = data.public_attrs
             # Добавляем id, так как в response он не присутствует в чистом виде
