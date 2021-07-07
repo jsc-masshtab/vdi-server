@@ -13,7 +13,6 @@ class MutationValidation:
 
     @classmethod
     async def validate(cls, **kwargs):
-        # TODO: сделать аналогичный декоратор?
         for argument_name in cls.Arguments.__dict__:
             if argument_name.startswith("_"):
                 continue

@@ -72,7 +72,7 @@ class VdiCacheClient(VeilCacheAbstractClient):
         Внутри себя должен вызывать запись в кэш и чтение из кэша.
         """
         # cache key can`t contain spaces
-        # TODO: key must contain params
+        # key must contain params
         cache_key = url.replace(" ", "")
         # Получаем данные из кэша
         cached_result = self.client.get(cache_key)
@@ -124,7 +124,6 @@ class VdiVeilClient(VeilClient):
         params = kwargs.get("params")
         api_object = kwargs.get("api_object")
 
-        # TODO: remove on 3.0.1
         if DEBUG:
             request_description = "url: {}\nparams: {}".format(url, params)
             await system_logger.info(

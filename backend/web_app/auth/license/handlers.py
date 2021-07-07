@@ -27,7 +27,6 @@ class LicenseHandler(BaseHttpHandler, ABC):
     async def post(self):
         """Upload license key."""
         # проверка наличия роли
-        # TODO: вынести метод в BaseHttpHandler
         try:
             user = await self.get_user_object()
             roles = await user.roles

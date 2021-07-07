@@ -17,8 +17,6 @@ from common.utils import cancel_async_task
 from common.veil.veil_gino import Status
 from common.veil.veil_redis import REDIS_CLIENT
 
-# TODO: в событиях журнала задействовать отдельный entity для монитора ресурсов
-
 
 class ResourcesMonitor:
     """Monitoring of controller events."""

@@ -34,7 +34,6 @@ class ControllerValidator(MutationValidation):
             raise SimpleError(_local_("name can`t be empty."))
 
         # Проверяем наличие записей в БД
-        # TODO: универсальный метод в родительском валидаторе для сокращения дублирования
         verbose_name_is_busy = (
             await Controller.select("id")
             .where(Controller.verbose_name == value)
@@ -52,7 +51,6 @@ class ControllerValidator(MutationValidation):
             raise SimpleError(_local_("address can`t be empty."))
 
         # Проверяем наличие записей в БД
-        # TODO: универсальный метод в родительском валидаторе для сокращения дублирования
         address_is_busy = (
             await Controller.select("id")
             .where(Controller.address == value)
@@ -74,7 +72,6 @@ class ControllerFetcher:
     @staticmethod
     async def fetch_by_id(id_):
         """Возваращает инстанс объекта, если он есть."""
-        # TODO: универсальный метод в родительском валидаторе для сокращения дублирования
         controller = await Controller.get(id_)
         if not controller:
             raise SimpleError(_local_("No such controller."))
@@ -96,15 +93,6 @@ class ControllerPoolType(graphene.ObjectType):
     users_amount = graphene.Int()
     pool_type = graphene.String()
     keep_vms_on = graphene.Boolean()
-
-    async def resolve_vms_amount(self, info):
-        # В self лежит объект модели Pool
-        return await self.get_vm_amount()
-
-    async def resolve_users_amount(self, info):
-        # В self лежит объект модели Pool
-        assigned_users = await self.assigned_users
-        return len(assigned_users)
 
 
 class VeilEventType(VeilResourceType):
@@ -338,7 +326,6 @@ class ControllerType(graphene.ObjectType, ControllerFetcher):
         ordering: str = None,
     ):
         """Сокращенная информация о контроллере."""
-        # TODO: на фронте делать неактивными элементы в плохом статусе?
         controller = await Controller.get(self.id)
         # Прерываем выполнение при отсутствии клиента
         if not controller.veil_client:
@@ -363,7 +350,6 @@ class ControllerType(graphene.ObjectType, ControllerFetcher):
         ordering: str = None,
     ):
         """В self прилетает инстанс модели контроллера."""
-        # TODO: на фронте делать неактивными элементы в плохом статусе?
         controller = await Controller.get(self.id)
         # Прерываем выполнение при отсутствии клиента
         if not controller.veil_client:
@@ -389,7 +375,6 @@ class ControllerType(graphene.ObjectType, ControllerFetcher):
         ordering: str = None,
     ):
         """В self прилетает инстанс модели контроллера."""
-        # TODO: на фронте делать неактивными элементы в плохом статусе?
         controller = await Controller.get(self.id)
         paginator = VeilRestPaginator(ordering=ordering, limit=limit, offset=offset)
         vms = await Vm.query.gino.all()

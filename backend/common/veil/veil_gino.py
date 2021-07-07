@@ -74,25 +74,22 @@ class AbstractSortableStatusModel:
     @classmethod
     def get_order_field(cls, field_name):
         """Соответствие переданного наименования поля полю модели, чтобы не использовать raw_sql в order."""
-        from common.veil.veil_errors import SimpleError
-
+        from common.veil.veil_errors import FieldError
         field = cls._get_table_field(field_name)
+        # Получив FieldError, фронт подсветит GUI элемент, соответствующий field_name
         if field is None:
-            # TODO: switch SimpleError to FieldError
-            raise SimpleError(
-                _local_("Incorrect sort parameter {}.").format(field_name))
+            raise FieldError(message=_local_("Incorrect sort parameter {}.").format(field_name),
+                             field_name=field_name)
         return field
 
     @classmethod
     def get_query_field(cls, field_name):
         """Соответствие переданного наименования поля полю модели, чтобы не использовать raw_sql в where."""
-        from common.veil.veil_errors import SimpleError
-
+        from common.veil.veil_errors import FieldError
         field = cls._get_table_field(field_name)
         if field is None:
-            # TODO: switch SimpleError to FieldError
-            raise SimpleError(
-                _local_("Incorrect request parameter {}.").format(field_name))
+            raise FieldError(message=_local_("Incorrect request parameter {}.").format(field_name),
+                             field_name=field_name)
         return field
 
     @classmethod
@@ -220,8 +217,7 @@ class VeilModel(db.Model):
         from common.log.journal import system_logger
 
         await self.set_status(Status.FAILED)
-        msg = _local_("{} {} has been disabled.").format(self.entity_name,
-                                                         self.verbose_name)
+        msg = _local_("{} {} has been disabled.").format(self.entity_name, self.verbose_name)
         description = _local_(
             "{} {} has`t been found in ECP VeiL. Switched to FAILED."
         ).format(self.entity_name, self.verbose_name)
