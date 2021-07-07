@@ -29,10 +29,6 @@ from common.veil.veil_redis import (
 )
 
 
-#  Нужно сделать, чтобы деактивация контроллера останавливала создание пула и скидывала задачу в очередь.
-#  При активации контроллера нужно брать задачи в очереди.
-
-
 class Controller(AbstractSortableStatusModel, VeilModel):
     """Сущность VeiL контроллера на ECP VeiL.
 
@@ -128,23 +124,6 @@ class Controller(AbstractSortableStatusModel, VeilModel):
         else:
             await self.deactivate()
         return connection_is_ok
-
-    @staticmethod
-    async def get_addresses(status=Status.ACTIVE):
-        """Возвращает ip-контроллеров находящихся в переданном статусе."""
-        # TODO: выпилить?
-        query = Controller.select("address").where(Controller.status == status)
-        addresses = await query.gino.all()
-        return [address[0] for address in addresses]
-
-    @staticmethod
-    async def get_controller_id_by_ip(ip_address):
-        # TODO: remove
-        return (
-            await Controller.select("id")
-            .where(Controller.address == ip_address)
-            .gino.scalar()
-        )
 
     async def get_version(self):
         """Проверяем допустимость версии контроллера."""
@@ -311,7 +290,6 @@ class Controller(AbstractSortableStatusModel, VeilModel):
         # Активируем контроллер
         await self.set_status(Status.ACTIVE)
         # Активируем пулы
-        # TODO: переработать активацию пулов - нужен метод в пулах, который бы активировал ВМ.
         pools = await self.pools
         for pool_obj in pools:
             await pool_obj.enable(pool_obj.id)
@@ -365,7 +343,7 @@ class Controller(AbstractSortableStatusModel, VeilModel):
         for pool_obj in pools:
             await pool_obj.set_status(Status.SERVICE)
             # Перевод ВМ в статус сервис. Добавлено 08.02.2021 - не факт, что нужно.
-            vms = await pool_obj.vms
+            vms = await pool_obj.get_vms()
             for vm in vms:
                 if vm.status != Status.RESERVED:
                     await vm.update(status=Status.SERVICE).apply()

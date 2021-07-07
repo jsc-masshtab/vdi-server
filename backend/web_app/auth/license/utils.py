@@ -2,19 +2,6 @@
 """Ограничение лицензии действует только на подключение тонких клиентов.
 
 Если лицензия истекла - отсутствует возможность подключиться с тонкого клиента.
-
-    TODO: заменить реалилизацию синглтона на декоратор?
-    def singleton(cls):
-        instances = {}
-        def getinstance():
-            if cls not in instances:
-                instances[cls] = cls()
-            return instances[cls]
-        return getinstance
-
-    @singleton
-    class MyClass:
-    ...
 """
 
 import datetime

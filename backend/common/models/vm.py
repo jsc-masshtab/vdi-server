@@ -193,6 +193,7 @@ class Vm(VeilModel):
             vms_to_delete_on_ecp = await query.gino.all()
 
         # Удаляем ВМ на ECP, если нашлись
+        multi_delete_task = None
         if remove_from_ecp and vms_to_delete_on_ecp:
             try:
                 # Преобразуем UUID в строки
@@ -228,9 +229,12 @@ class Vm(VeilModel):
                     )
 
             except asyncio.CancelledError:
-                # TODO: отменить задачу удаления вм на ECP VeiL
-                # TODO: не до конца понимаю зачем тут это исключение, отмена должна
-                # TODO: произойти выше на уровне cls.remove_vms_with_timeout
+                # Остановить удаление на ECP VeiL.
+                try:
+                    if multi_delete_task:
+                        await multi_delete_task.cancel()
+                except Exception as ex:
+                    await system_logger.debug(message="Failed to cancel VM deletion task", description=str(ex))
                 raise
             except Exception as e:  # noqa
                 # Сейчас нас не заботит, что именно пошло не так при удалении на ECP.
@@ -274,10 +278,7 @@ class Vm(VeilModel):
                     raise AssertionError(_local_("VM has no api client."))
                 delete_response = await domain_entity.remove(full=True)
                 delete_task = delete_response.task
-                task_completed = False
-                while delete_task and not task_completed:
-                    await asyncio.sleep(VEIL_OPERATION_WAITING)
-                    task_completed = await delete_task.is_finished()
+                await self.task_waiting(delete_task)
                 # Если задача выполнена с ошибкой прокидываем исключение выше
                 if delete_task:
                     task_success = await delete_task.is_success()
@@ -345,8 +346,7 @@ class Vm(VeilModel):
             (EntityModel.entity_type == self.entity_type)
             & (EntityModel.entity_uuid == self.id)  # noqa: W503
         )
-        # TODO: временное решение. Скорее всего потом права отзываться будут
-        #  на конкретные сущности
+        #  Машина лишаемая пользователя помечается статусом RESERVED
         await self.soft_update(id=self.id, status=Status.RESERVED, creator=creator)
         await system_logger.info(
             _local_("VM {} is clear from users.").format(self.verbose_name),
@@ -392,7 +392,6 @@ class Vm(VeilModel):
 
     @staticmethod
     async def get_all_vms_ids():
-        # TODO: какой-то бесполезный метод
         return await get_list_of_values_from_db(Vm, Vm.id)
 
     async def get_users_query(self):
@@ -533,7 +532,6 @@ class Vm(VeilModel):
         except ValueError as err_msg:
             await system_logger.error(message=str(err_msg))
 
-    # TODO: отказаться в пользу группового удаления
     @staticmethod
     async def remove_vms(vm_ids, creator="system", remove_vms_on_controller=False):
         """Remove given vms."""
@@ -655,7 +653,6 @@ class Vm(VeilModel):
 
     async def action(self, action_name: str, force: bool = False):
         """Пересылает команду управления ВМ на ECP VeiL."""
-        # TODO: проверить есть ли вообще такое действие в допустимых?
         vm_controller = await self.controller
         # Прерываем выполнение при отсутствии клиента
         if not vm_controller.veil_client:
@@ -676,7 +673,7 @@ class Vm(VeilModel):
         else:
             task_success = False
         if not task_success:
-            raise ValueError("Remote task finished with error.")
+            raise ValueError(_local_("Remote task finished with error. Check ECP VeiL."))
         return task_success
 
     async def start(self, creator="system"):
@@ -1001,7 +998,7 @@ class Vm(VeilModel):
     async def set_hostname_and_reboot(self):
         """Задание hostname и перезагрузка ВМ."""
         hostname_is_success = await self.set_hostname()
-        # TODO: когда hostname начнет гарантировано задаваться в этой проверке будет смысл
+        # Когда hostname начнет гарантировано задаваться в этой проверке будет смысл
         if hostname_is_success:
             await self.reboot()
 

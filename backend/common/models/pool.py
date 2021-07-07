@@ -139,12 +139,18 @@ class Pool(VeilModel):
             return False
         return True
 
-    @property
-    async def vms(self):
-        """Возвращаем виртуальные машины привязанные к пулу."""
+    async def get_vms(self, limit=None, offset=0):
+        """Возвращаем виртуальные машины привязанные к пулу.
+
+        Если limit is None, то возвращаем все машины (игнорируя offset)
+        """
         query = VmModel.query.where(VmModel.pool_id == self.id).order_by(
             VmModel.verbose_name)
-        return await query.gino.all()
+
+        if limit is None:
+            return await query.gino.all()
+        else:
+            return await query.limit(limit).offset(offset).gino.all()
 
     @property
     async def is_automated_pool(self):
@@ -179,7 +185,6 @@ class Pool(VeilModel):
         # Определяем порядок сортировки по наличию "-" вначале строки
         (ordering, reversed_order) = extract_ordering_data(ordering)
 
-        # TODO: если сделать валидацию переданных полей на сортировку - try не нужен
         try:
             if ordering in Pool.EXTRA_ORDER_FIELDS:
                 if ordering == "controller_address":
@@ -336,8 +341,11 @@ class Pool(VeilModel):
 
     @staticmethod
     async def get_pool(pool_id, ordering=None):
-        """Такое построение запроса вызвано желанием иметь только 1 запрос с изначальным построением."""
-        # TODO: проверить используется ли. Заменить на Pool.get?
+        """Такое построение запроса вызвано желанием иметь только 1 запрос с изначальным построением.
+
+        Возвращает данные со всех таблиц пулов. В идеале нужно сделать для фронта запрос общих для всех пулов данных и
+        индивидуальные подробные запросы для каждого типа пулов
+        """
         query = Pool.get_pools_query(ordering=ordering)
         query = query.where(Pool.id == pool_id)
         return await query.gino.first()
@@ -345,7 +353,6 @@ class Pool(VeilModel):
     @staticmethod
     async def get_pools(limit, offset, filters=None, ordering=None):
         """Такое построение запроса вызвано желанием иметь только 1 запрос с изначальным построением."""
-        # TODO: проверить используется ли. Заменить на Pool.get?
         query = Pool.get_pools_query(ordering=ordering)
         if filters:
             query = query.where(and_(*filters))
@@ -355,7 +362,6 @@ class Pool(VeilModel):
 
     @staticmethod
     async def get_controller_ip(pool_id):
-        # TODO: заменить на property controller_address
         from common.models.controller import Controller as ControllerModel
 
         query = (
@@ -466,10 +472,7 @@ class Pool(VeilModel):
             .all()
         )
 
-    async def assigned_users(self, ordering=None):
-        """Пользователи назначенные пулу (с учетом групп)."""
-        # TODO: возможно нужно добавить группы и пользователей обладающих Ролью
-
+    async def get_assigned_users_query(self):
         query = EntityModel.query.where(
             (EntityModel.entity_type == EntityType.POOL)
             & (EntityModel.entity_uuid == self.id)  # noqa: W503
@@ -493,16 +496,27 @@ class Pool(VeilModel):
         # Список пользователей встречающихся в пересечении
         union_query = union_all(
             admins_query_ids, user_query_ids, group_users_ids
-        ).alias()
+        ).alias("final_union_query")
 
         # Формирование заключительного списка пользователей
         finish_query = (
-            UserModel.join(union_query, (UserModel.id == text("anon_1.id")))
+            UserModel.join(union_query, (UserModel.id == text("final_union_query.id")))
             .select()
             .group_by(UserModel.id)
         )
         # 5.05.2021 добавлено исключение "не активных" пользователей из итогового списка
         finish_query = finish_query.where(UserModel.is_active)
+        return finish_query
+
+    async def assigned_users_count(self):
+
+        finish_query = await self.get_assigned_users_query()
+        users_count = await db.select([db.func.count()]).select_from(finish_query.alias()).gino.scalar()
+        return users_count
+
+    async def assigned_users(self, ordering=None, limit=100, offset=0):
+        """Пользователи назначенные пулу (с учетом групп)."""
+        finish_query = await self.get_assigned_users_query()
 
         if ordering:
             (ordering, reverse) = extract_ordering_data(ordering)
@@ -511,11 +525,10 @@ class Pool(VeilModel):
                 if reverse
                 else finish_query.order_by(ordering)
             )
-        return await finish_query.gino.all()
+        return await finish_query.limit(limit).offset(offset).gino.all()
 
-    @property
-    async def possible_users(self):
-        """Пользователи которых можно закрепить за пулом."""
+    async def get_possible_users_query(self):
+
         query = EntityModel.query.where(
             (EntityModel.entity_type == EntityType.POOL)
             & (EntityModel.entity_uuid == self.id)  # noqa: W503
@@ -525,54 +538,63 @@ class Pool(VeilModel):
             UserGroupModel.join(GroupModel)
             .join(EntityOwnerModel.join(query).alias())
             .select()
-            .alias()
+            .alias("group_users_query")
         )
         group_users_ids = (
-            db.select([text("anon_7.user_id")]).select_from(group_users_query).alias()
+            db.select([text("group_users_query.user_id")]).select_from(group_users_query).alias("group_users_ids")
         )
 
         # Список явных пользователей
-        users_query = EntityOwnerModel.join(query).select().alias()
+        users_query = EntityOwnerModel.join(query).select().alias("users_query")
         user_query_ids = (
-            db.select([text("anon_4.user_id")]).select_from(users_query).alias()
+            db.select([text("users_query.user_id")]).select_from(users_query).alias("user_query_ids")
         )
 
         # Список администраторов системы
         admins_query_ids = await UserModel.get_superuser_ids_subquery()
-        admins_query_ids = admins_query_ids.alias()
+        admins_query_ids = admins_query_ids.alias("admins_query_ids")
 
         # Объединяем все три запроса и фильтруем активных пользователей
         # Outer join, потому что union_all что-то не взлетел
-        union_query = (
+        finish_query = (
             UserModel.join(
-                admins_query_ids, (UserModel.id == text("anon_1.id")), isouter=True
+                admins_query_ids, (UserModel.id == text("admins_query_ids.id")), isouter=True
             )
             .join(
                 user_query_ids,
-                (UserModel.id == text("anon_3.user_id")),  # noqa
+                (UserModel.id == text("user_query_ids.user_id")),  # noqa
                 isouter=True,
             )
             .join(
             group_users_ids,  # noqa
-            (UserModel.id == text("anon_6.user_id")),  # noqa
+            (UserModel.id == text("group_users_ids.user_id")),  # noqa
                 isouter=True,
             )
             .select()
             .where(
                 (
-                    text("anon_1.id is null")
-                    & text("anon_3.user_id is null")  # noqa: W503
-                    & text("anon_6.user_id is null")  # noqa: W503
+                    text("admins_query_ids.id is null")
+                    & text("user_query_ids.user_id is null")  # noqa: W503
+                    & text("group_users_ids.user_id is null")  # noqa: W503
                 )
                 & (UserModel.is_active)  # noqa: W503
             )
         )  # noqa
+        return finish_query
 
-        return await union_query.order_by(UserModel.username).gino.load(UserModel).all()
+    async def possible_users_count(self):
+
+        finish_query = await self.get_possible_users_query()
+        users_count = await db.select([db.func.count()]).select_from(finish_query.alias()).gino.scalar()
+        return users_count
+
+    async def possible_users(self, limit=100, offset=0):
+        """Пользователи которых можно закрепить за пулом."""
+        finish_query = await self.get_possible_users_query()
+        finish_query = finish_query.order_by(UserModel.username)
+        return await finish_query.limit(limit).offset(offset).gino.load(UserModel).all()
 
     # ----- ----- ----- ----- ----- ----- -----
-    # Setters & etc.
-    # TODO: избавиться от дублирования
 
     async def add_user(self, user_id, creator):
         entity = await self.entity_obj
@@ -712,16 +734,12 @@ class Pool(VeilModel):
 
     @classmethod
     async def create(
-        cls, verbose_name, resource_pool_id, controller_ip,
+        cls, verbose_name, resource_pool_id, controller_id,
         connection_types, tag, pool_type
     ):
-        # TODO: controller_ip заменить на controller_id
-        from common.models.controller import Controller
-
-        controller_id = await Controller.get_controller_id_by_ip(controller_ip)
         if not controller_id:
             raise ValidationError(
-                _local_("Controller {} not found.").format(controller_ip))
+                _local_("Controller {} not found.").format(controller_id))
 
         pool = await super().create(
             verbose_name=verbose_name,
@@ -882,9 +900,13 @@ class Pool(VeilModel):
         domain_client = controller_client.domain(resource_pool=self.resource_pool_id)
         domains_response = await domain_client.list(fields=["id"],
                                                     params={"power_state": "ON"})
+
+        # Берем первую свободную если не достучались до контроллера
         if not domains_response.success:
-            # TODO: raise error of disabled controller?
-            return await VmModel.get(vm_ids[0])
+            vm = await VmModel.get(vm_ids[0])
+            await system_logger.debug(
+                "Не удалось найти подходящую ВМ. Возвращаем первую свободную {}.".format(vm.verbose_name))
+            return await vm
 
         # Фильтруем ВМ пула (п.3)
         await system_logger.debug("Фильтруем ВМ пула (п.3)")
@@ -919,12 +941,12 @@ class Pool(VeilModel):
             if domain.qemu_state and domain.api_object_id:
                 return domain.api_object_id
 
-    async def get_vms_info(self, ordering=None):
+    async def get_vms_info(self, limit=500, offset=0, ordering=None):
         """Возвращает информацию для всех ВМ в пуле."""
         from web_app.pool.schema import VmType
 
         # Получаем список ВМ
-        vms = await self.vms
+        vms = await self.get_vms(limit=limit, offset=offset)
 
         if not vms:
             return
@@ -969,7 +991,6 @@ class Pool(VeilModel):
         vms_list = list()
 
         for vm in vms:
-            # TODO: Добавить принадлежность к домену + на фронте
             user_power_state = VmState.UNDEFINED
             vm_status = (
                 Status.FAILED
@@ -1234,7 +1255,7 @@ class Pool(VeilModel):
         return entity_response.success
 
     async def backup_vms(self, creator="system"):
-        vms = await self.vms
+        vms = await self.get_vms()
 
         backup_response = await asyncio.gather(
             *[vm_object.backup(creator) for vm_object in vms], return_exceptions=True
@@ -1274,7 +1295,7 @@ class RdsPool(db.Model):
         return True
 
     @classmethod
-    async def soft_create(cls, creator, controller_address, resource_pool_id, rds_id,
+    async def soft_create(cls, creator, controller_id, resource_pool_id, rds_id,
                           rds_verbose_name, connection_types, verbose_name):
 
         async with db.transaction():
@@ -1283,7 +1304,7 @@ class RdsPool(db.Model):
                 verbose_name=verbose_name,
                 resource_pool_id=resource_pool_id,
                 tag=None,
-                controller_ip=controller_address,
+                controller_id=controller_id,
                 connection_types=connection_types,
                 pool_type=Pool.PoolTypes.RDS
             )
@@ -1334,7 +1355,7 @@ class RdsPool(db.Model):
         controller = await pool.controller_obj
         controller_client = controller.veil_client
 
-        vms = await pool.vms
+        vms = await pool.get_vms()
         domain_veil_api = controller_client.domain(
             domain_id=str(vms[0].id))  # В пуле только одна ВМ - RDS
 
@@ -1395,16 +1416,6 @@ class StaticPool(db.Model):
     def entity(self):
         return {"entity_type": self.entity_type, "entity_uuid": self.id}
 
-    @staticmethod
-    def vms_on_same_node(node_id: str, veil_vm_data: list) -> bool:
-        # TODO: Проверить использование
-        """Проверка, что все VM находятся на одной Veil node.
-
-        All VMs are on the same node and cluster, all VMs have the same datapool
-        so we can take this data from the first item
-        """
-        return all(vm_data["node"]["id"] == node_id for vm_data in veil_vm_data)
-
     @classmethod
     async def soft_create(
         cls,
@@ -1412,7 +1423,7 @@ class StaticPool(db.Model):
         veil_vm_data: list,
         verbose_name: str,
         tag: str,
-        controller_address: str,
+        controller_id,
         resource_pool_id: str,
         connection_types: list,
     ):
@@ -1421,7 +1432,7 @@ class StaticPool(db.Model):
             # Создаем пул
             pl = await Pool.create(
                 verbose_name=verbose_name,
-                controller_ip=controller_address,
+                controller_id=controller_id,
                 resource_pool_id=resource_pool_id,
                 connection_types=connection_types,
                 tag=tag,
@@ -1561,7 +1572,7 @@ class AutomatedPool(db.Model):
         cls,
         creator,
         verbose_name,
-        controller_ip,
+        controller_id,
         resource_pool_id,
         template_id,
         increase_step,
@@ -1583,7 +1594,7 @@ class AutomatedPool(db.Model):
             pool = await Pool.create(
                 verbose_name=verbose_name,
                 resource_pool_id=resource_pool_id,
-                controller_ip=controller_ip,
+                controller_id=controller_id,
                 connection_types=connection_types,
                 tag=tag,
                 pool_type=current_pool_type
@@ -1756,7 +1767,7 @@ class AutomatedPool(db.Model):
                 # Вызываем копирование ВМ
                 copied_vms = await self.add_vm(count=step_count)
                 copied_vms_list.extend(copied_vms)
-            except (AssertionError, VmCreationError, asyncio.CancelledError) as add_err:
+            except (AssertionError, VmCreationError) as add_err:
                 # прерываем выполнение при первом же Exception
                 result["error"] = add_err
                 return result
@@ -1795,6 +1806,7 @@ class AutomatedPool(db.Model):
             "create_thin_clones": self.create_thin_clones,
             "count": count,
         }
+        vm_multi_task_id = None
         try:
             # Постановка задачи на создание (копирование) ВМ
             vm_info = await VmModel.copy(**params)
@@ -1836,8 +1848,9 @@ class AutomatedPool(db.Model):
             # то отменяем на контроллере таску создания вм.
             # (Например, при мягком завершении процесса pool_worker)
             try:
-                task_client = pool_controller.veil_client.task(task_id=vm_multi_task_id)
-                await task_client.cancel()
+                if vm_multi_task_id:
+                    task_client = pool_controller.veil_client.task(task_id=vm_multi_task_id)
+                    await task_client.cancel()
             except Exception as ex:
                 msg = _local_("Fail to cancel VM creation task.")
                 entity = {"entity_type": EntityType.VM, "entity_uuid": None}
@@ -1914,42 +1927,19 @@ class AutomatedPool(db.Model):
         pool = await Pool.get(self.id)
 
         # если инициализация пула была прервана -> в пуле уже могут быть ВМ
-
         num_of_vms_in_pool = await pool.get_vm_amount()
-
-        # Отключено 1.06.2021
-        # try:
-        #     created_vms = await self.add_vm(count=self.initial_size)
-        #     num_of_vms_in_pool += len(created_vms)
-        #     # update progress of associated task
-        #     await Task.set_progress_to_task_associated_with_entity(self.id, 100)
-        # except VmCreationError as vm_error:
-        #     # log that we can`t create required initial amount of VMs
-        #     await system_logger.error(
-        #         _("VM creation error."), entity=self.entity, description=str(vm_error)
-        #     )
 
         # Добавлено 1.06.2021
         # Создание ВМ происходит блоками и неизвестно в какой момент произойдет ошибка
         # новый механизм не прокидывает исключение явно, но возвращает их в поле `error`
-        creation_result = await self.step_by_step_adding(count=self.initial_size)
+        required_amount_to_create = max(0, self.initial_size - num_of_vms_in_pool)
+        if required_amount_to_create == 0:
+            return
+
+        creation_result = await self.step_by_step_adding(count=required_amount_to_create)
         creation_error = creation_result["error"]
         # Если создание было выполнено с ошибкой отличной от
         # VmCreationError -> прерываем выполнение
-
-        # TODO: ситуация, когда часть вм уже создана
-
-        # По логике должно быть так, но ниже идет принудительная обработка ошибок.
-        # Пробую упростить
-        # if creation_error and isinstance(creation_error, VmCreationError):
-        #     # log that we can`t create required initial amount of VMs
-        #     await system_logger.error(
-        #         _("VM creation error."),
-        #         entity=self.entity,
-        #         description=str(creation_error)
-        #     )
-        # elif creation_error:
-        #     raise creation_error
 
         if creation_error:
             # log that we can`t create required initial amount of VMs

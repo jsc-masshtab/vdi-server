@@ -190,7 +190,6 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
     Информация о ресурсах на конкретном контроллере получается в схеме контроллера.
     """
 
-    # TODO: унифицировать преобразование данных ответа в класс
     cluster = graphene.Field(
         ResourceClusterType, cluster_id=graphene.UUID(), controller_id=graphene.UUID()
     )

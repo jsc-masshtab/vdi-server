@@ -15,6 +15,7 @@ from common.settings import (
     JWT_OPTIONS,
     SECRET_KEY,
 )
+from common.veil.veil_errors import InvalidUserError
 
 
 def jwtauth_ws(handler_class):
@@ -180,13 +181,17 @@ async def extract_user_object(headers: dict) -> User:
     )
 
 
-def refresh_access_token_with_no_expire_check(headers: dict):
+async def refresh_access_token_with_no_expire_check(headers: dict):
     """Не проверяем срок действия токена при decode, но сличаем полученный токен с последним сохраненным."""
     access_token = extract_access_token(headers)
     JWT_OPTIONS["verify_exp"] = False
     payload = decode_jwt(access_token, JWT_OPTIONS)
     username = payload["username"]
-    # TODO: нужно взять пользователя из payload и iot и сравнить в таблице в БД. Дата должна совпадать
+
+    user = await User.query.where(User.username == username).where(User.is_active).gino.first()
+    if not user:
+        raise InvalidUserError(_local_("User {} not found.").format(username))
+
     return encode_jwt(username)
 
 

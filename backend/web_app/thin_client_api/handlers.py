@@ -103,7 +103,7 @@ class PoolGetVm(BaseHttpHandler, ABC):
         if not vm:  # ВМ для пользователя не присутствует
             # В случае RDS пула выдаем общий для всех RDS Сервер
             if pool_type == PoolM.PoolTypes.RDS:
-                vms = await pool.vms
+                vms = await pool.get_vms()
                 vm = vms[0]
             else:
                 # Если у пользователя нет VM в пуле, то нужно попытаться назначить ему свободную VM.
