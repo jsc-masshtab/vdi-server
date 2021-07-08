@@ -60,9 +60,7 @@ class PoolGetVm(BaseHttpHandler, ABC):
     """Получает конкретную ВМ пользователя."""
 
     async def post(self, pool_id):
-        remote_protocol = self.args.get(
-            "remote_protocol", PoolM.PoolConnectionTypes.SPICE.name
-        )
+        remote_protocol = self.args.get("remote_protocol", PoolM.PoolConnectionTypes.SPICE.name)
         # Проверяем лимит клиентов
         thin_client_limit_exceeded = await ActiveTkConnection.thin_client_limit_exceeded()
         if thin_client_limit_exceeded:
@@ -77,22 +75,12 @@ class PoolGetVm(BaseHttpHandler, ABC):
             response = {
                 "errors": [{"message": _local_("Pool not found."), "code": "404"}]}
             return await self.log_finish(response)
+
         # Проверяем разрешен ли присланный remote_protocol для данного пула
-        con_t = pool.connection_types
-        bad_connection_type = remote_protocol not in PoolM.PoolConnectionTypes.values() or \
-                              PoolM.PoolConnectionTypes[remote_protocol] not in con_t  # noqa: E127
-        if bad_connection_type:
-            response = {
-                "errors": [
-                    {
-                        "message": _local_(
-                            "The pool doesnt support connection type {}."
-                        ).format(remote_protocol),
-                        "code": "404",
-                    }
-                ]
-            }
+        protocol_allowed, response = self._check_if_protocol_allowed(pool, remote_protocol)
+        if not protocol_allowed:
             return await self.log_finish(response)
+
         pool_type = pool.pool_type
         expandable_pool = False  # В данный момент расширится может автоматический (гостевой пул)
         if pool_type == PoolM.PoolTypes.AUTOMATED or pool_type == PoolM.PoolTypes.GUEST:
@@ -140,7 +128,6 @@ class PoolGetVm(BaseHttpHandler, ABC):
 
         elif expandable_pool:  # Даже если у пользователя есть ВМ, то попробовать расшириться все равно нужно
             await self._expand_pool_if_required(pool)
-        # TODO: обработка новых исключений
         # Только включение ВМ.
         try:
             # Дальше запросы начинают уходить на veil
@@ -158,6 +145,13 @@ class PoolGetVm(BaseHttpHandler, ABC):
                 ]
             }
             return await self.log_finish(response)
+        except asyncio.TimeoutError:
+            response = {
+                "errors": [
+                    {"message": _local_("Controller did not reply. Check if it is available"), "code": "005"}
+                ]
+            }
+            return await self.log_finish(response)
         # Актуализируем данные для подключения
         info = await veil_domain.info()
 
@@ -171,7 +165,6 @@ class PoolGetVm(BaseHttpHandler, ABC):
             entity=vm.entity,
             user=user.username,
         )
-        # TODO: использовать veil_domain.hostname вместо IP
 
         # Определяем адрес и порт в зависимости от протокола
         vm_controller = await vm.controller
@@ -182,11 +175,9 @@ class PoolGetVm(BaseHttpHandler, ABC):
                 "errors": [{"message": _local_("The remote controller is unavailable.")}]
             }
             return await self.log_finish(response)
-        if (
-            remote_protocol == PoolM.PoolConnectionTypes.RDP.name
-            or remote_protocol  # noqa: W503
-            == PoolM.PoolConnectionTypes.NATIVE_RDP.name  # noqa: W503
-        ):
+
+        if (remote_protocol == PoolM.PoolConnectionTypes.RDP.name
+                or remote_protocol == PoolM.PoolConnectionTypes.NATIVE_RDP.name):  # noqa: W503
             try:
                 vm_address = veil_domain.first_ipv4
                 if vm_address is None:
@@ -238,6 +229,27 @@ class PoolGetVm(BaseHttpHandler, ABC):
             )
         }
         return await self.log_finish(response)
+
+    @staticmethod
+    def _check_if_protocol_allowed(pool, remote_protocol):
+        """Check if protocol allowed."""
+        con_t = pool.connection_types
+        bad_connection_type = remote_protocol not in PoolM.PoolConnectionTypes.values() or \
+                              PoolM.PoolConnectionTypes[remote_protocol] not in con_t  # noqa: E127
+        if bad_connection_type:
+            response = {
+                "errors": [
+                    {
+                        "message": _local_(
+                            "The pool doesnt support connection type {}."
+                        ).format(remote_protocol),
+                        "code": "404",
+                    }
+                ]
+            }
+            return False, response
+        else:
+            return True, None
 
     @staticmethod
     async def _expand_pool_if_required(pool_model):

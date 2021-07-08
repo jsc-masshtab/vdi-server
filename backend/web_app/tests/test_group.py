@@ -85,10 +85,12 @@ class TestGroupSchema:
                           },
                           ok
                         }}"""
+
+        # Ожидаем исключение
         try:
             await execute_scheme(group_schema, query, context=fixt_auth_context)
         except ExecError as E:
-            assert "duplicate key value violates unique constraint" in str(E)
+            assert "Group test_group_1 already exists." in str(E)
         else:
             raise AssertionError
 
