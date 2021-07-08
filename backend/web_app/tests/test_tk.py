@@ -48,7 +48,6 @@ pytestmark = [
 
 
 class TestWebsockets(VdiHttpTestCase):
-    # TODO: дополнить сценарии
 
     @pytest.mark.usefixtures("fixt_db", "fixt_user_admin")
     @gen_test

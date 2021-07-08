@@ -167,6 +167,15 @@ class CreateGroupMutation(graphene.Mutation, GroupValidator):
     @security_administrator_required
     async def mutate(cls, root, info, creator, **kwargs):
         await cls.validate(**kwargs)
+
+        verbose_name = kwargs["verbose_name"]
+        group = await Group.query.where((Group.verbose_name == verbose_name)).gino.first()
+        if group:
+            raise SimpleError(
+                _local_("Group {} already exists.").format(verbose_name),
+                user=creator,
+            )
+
         group = await Group.soft_create(creator=creator, **kwargs)
         return CreateGroupMutation(group=GroupType.instance_to_type(group), ok=True)
 

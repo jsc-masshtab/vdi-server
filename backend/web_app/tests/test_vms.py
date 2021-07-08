@@ -26,8 +26,6 @@ pytestmark = [pytest.mark.asyncio, pytest.mark.vms, pytest.mark.skipif(PAM_AUTH,
 @pytest.mark.asyncio
 @pytest.mark.usefixtures("fixt_db", "fixt_user", "fixt_vm")
 class TestVmPermissionsSchema:
-    # TODO: add group tests
-    # TODO: add role tests
 
     @staticmethod
     async def get_test_vm_username():

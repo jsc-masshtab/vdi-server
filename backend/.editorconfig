@@ -19,7 +19,7 @@ root = true
 
 [*.py]
     indent_size     = 4
-    max_line_length = 88
+    max_line_length = 120
 
 [*.json]
     indent_style    = space
