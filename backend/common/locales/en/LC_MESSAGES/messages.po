@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-07-01 13:22+0300\n"
+"POT-Creation-Date: 2021-07-12 19:09+0300\n"
 "PO-Revision-Date: 2020-07-30 11:25+0300\n"
 "Last-Translator: Emil <emil@emil-pc>\n"
 "Language-Team: English\n"
@@ -16,6 +16,26 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: ../common/log/journal.py:189
+msgid "INFO message from VeiL Broker."
+msgstr "INFO message from VeiL Broker."
+
+#: ../common/log/journal.py:206
+msgid "Warning message from VeiL Broker."
+msgstr "Warning message from VeiL Broker."
+
+#: ../common/log/journal.py:223
+msgid "Error message from VeiL Broker."
+msgstr "Error message from VeiL Broker."
+
+#: ../common/log/journal.py:255
+msgid "SMTP server is not configured."
+msgstr "SMTP server is not configured."
+
+#: ../common/log/journal.py:298
+msgid "Error in smtp server: {}."
+msgstr "Error in smtp server: {}."
 
 #: ../common/migrations/versions/07972ddc0722_admin_user.py:52
 #: ../common/migrations/versions/70220709e7b8_settings.py:187
@@ -32,177 +52,177 @@ msgstr "Archive name:"
 msgid "path:"
 msgstr "path:"
 
-#: ../common/models/auth.py:248
+#: ../common/models/auth.py:253
 msgid "Role {} is added to user {}."
 msgstr "Role {} is added to user {}."
 
-#: ../common/models/auth.py:256 ../common/models/auth.py:282
+#: ../common/models/auth.py:261 ../common/models/auth.py:289
 msgid "User {} roles: {}."
 msgstr "User {} roles: {}."
 
-#: ../common/models/auth.py:261
+#: ../common/models/auth.py:266
 msgid "Role {} is assigned to user {}."
 msgstr "Role {} is assigned to user {}."
 
-#: ../common/models/auth.py:272
+#: ../common/models/auth.py:278
 msgid "Roles: {} was deleted to user {}."
 msgstr "Roles: {} was deleted to user {}."
 
-#: ../common/models/auth.py:330
+#: ../common/models/auth.py:337
 msgid "User {} already has permission {}."
 msgstr "User {} already has permission {}."
 
-#: ../common/models/auth.py:338
+#: ../common/models/auth.py:345
 msgid "Permission(s) {} added to user {}."
 msgstr "Permission(s) {} added to user {}."
 
-#: ../common/models/auth.py:361
+#: ../common/models/auth.py:368
 msgid "Permission(s) {} removed from user {}."
 msgstr "Permission(s) {} removed from user {}."
 
-#: ../common/models/auth.py:370
+#: ../common/models/auth.py:377
 msgid "User {} permission(s): {}."
 msgstr "User {} permission(s): {}."
 
-#: ../common/models/auth.py:383
+#: ../common/models/auth.py:390
 msgid "Group {} is removed for user {}."
 msgstr "Group {} is removed for user {}."
 
-#: ../common/models/auth.py:394
+#: ../common/models/auth.py:402
 #, python-brace-format
 msgid "User {username} has been activated."
 msgstr "User {username} has been activated."
 
-#: ../common/models/auth.py:404
+#: ../common/models/auth.py:413
 #, python-brace-format
 msgid "User {username} has been activated on Astra."
 msgstr "User {username} has been activated on Astra."
 
-#: ../common/models/auth.py:425
+#: ../common/models/auth.py:434
 msgid "There is no more active superuser."
 msgstr "There is no more active superuser."
 
-#: ../common/models/auth.py:433
+#: ../common/models/auth.py:443
 #, python-brace-format
 msgid "User {username} has been deactivated."
 msgstr "User {username} has been deactivated."
 
-#: ../common/models/auth.py:448
+#: ../common/models/auth.py:459
 #, python-brace-format
 msgid "User {username} has been deactivated on Astra."
 msgstr "User {username} has been deactivated on Astra."
 
-#: ../common/models/auth.py:500 ../common/models/auth.py:540
+#: ../common/models/auth.py:512 ../common/models/auth.py:553
 #, python-brace-format
 msgid "Password of user {username} has been changed."
 msgstr "Password of user {username} has been changed."
 
-#: ../common/models/auth.py:505
+#: ../common/models/auth.py:518
 #, python-brace-format
 msgid "Password of user {username} has`t been changed."
 msgstr "Password of user {username} has`t been changed."
 
-#: ../common/models/auth.py:616
+#: ../common/models/auth.py:629
 msgid "User {} password setting error."
 msgstr "User {} password setting error."
 
-#: ../common/models/auth.py:628
+#: ../common/models/auth.py:642
 msgid "User {} creation error."
 msgstr "User {} creation error."
 
-#: ../common/models/auth.py:637
+#: ../common/models/auth.py:651
 msgid "Superuser."
 msgstr "Superuser."
 
-#: ../common/models/auth.py:637
+#: ../common/models/auth.py:651
 msgid "User."
 msgstr "User."
 
-#: ../common/models/auth.py:638
+#: ../common/models/auth.py:652
 msgid "{} {} created."
 msgstr "{} {} created."
 
-#: ../common/models/auth.py:694
+#: ../common/models/auth.py:708
 msgid "User {} update error."
 msgstr "User {} update error."
 
-#: ../common/models/auth.py:706
+#: ../common/models/auth.py:720
 msgid "Values of user {} is changed."
 msgstr "Values of user {} is changed."
 
-#: ../common/models/auth.py:713 ../common/models/auth.py:724
+#: ../common/models/auth.py:727 ../common/models/auth.py:738
 msgid "Roles: {}."
 msgstr "Roles: {}."
 
-#: ../common/models/auth.py:714
+#: ../common/models/auth.py:728
 #, python-brace-format
 msgid "User {username} has become a superuser."
 msgstr "User {username} has become a superuser."
 
-#: ../common/models/auth.py:725
+#: ../common/models/auth.py:739
 #, python-brace-format
 msgid "User {username} is no longer a superuser."
 msgstr "User {username} is no longer a superuser."
 
-#: ../common/models/auth.py:756
+#: ../common/models/auth.py:770
 #, python-brace-format
 msgid "User {username} has been logged in."
 msgstr "User {username} has been logged in."
 
-#: ../common/models/auth.py:759
+#: ../common/models/auth.py:773
 msgid "Auth type: {}, IP: {}, Client type: {}."
 msgstr "Auth type: {}, IP: {}, Client type: {}."
 
-#: ../common/models/auth.py:781
+#: ../common/models/auth.py:796
 #, python-brace-format
 msgid "User {username} has been logged out."
 msgstr "User {username} has been logged out."
 
-#: ../common/models/auth.py:907
+#: ../common/models/auth.py:922
 msgid "Group {} is created."
 msgstr "Group {} is created."
 
-#: ../common/models/auth.py:934
+#: ../common/models/auth.py:949
 msgid "Group {} already has permission {}."
 msgstr "Group {} already has permission {}."
 
-#: ../common/models/auth.py:942
+#: ../common/models/auth.py:957
 msgid "Permission(s) {} added to group {}."
 msgstr "Permission(s) {} added to group {}."
 
-#: ../common/models/auth.py:965
+#: ../common/models/auth.py:980
 msgid "Permission(s) {} removed from group {}."
 msgstr "Permission(s) {} removed from group {}."
 
-#: ../common/models/auth.py:974
+#: ../common/models/auth.py:989
 msgid "Group {} permission(s): {}."
 msgstr "Group {} permission(s): {}."
 
-#: ../common/models/auth.py:992
+#: ../common/models/auth.py:1007
 msgid "Values of group {} is updated."
 msgstr "Values of group {} is updated."
 
-#: ../common/models/auth.py:1014
+#: ../common/models/auth.py:1029
 msgid "User {} has been included to group {}."
 msgstr "User {} has been included to group {}."
 
-#: ../common/models/auth.py:1021
+#: ../common/models/auth.py:1036
 msgid "User {} is already in group {}."
 msgstr "User {} is already in group {}."
 
-#: ../common/models/auth.py:1033
+#: ../common/models/auth.py:1048
 msgid "Removing user {} from group {}."
 msgstr "Removing user {} from group {}."
 
-#: ../common/models/auth.py:1046
+#: ../common/models/auth.py:1061
 msgid "Role {} has been set to group {}."
 msgstr "Role {} has been set to group {}."
 
-#: ../common/models/auth.py:1053
+#: ../common/models/auth.py:1068
 msgid "Group {} has already role {}."
 msgstr "Group {} has already role {}."
 
-#: ../common/models/auth.py:1065
+#: ../common/models/auth.py:1081
 msgid "Roles: {} was deleted to group {}."
 msgstr "Roles: {} was deleted to group {}."
 
@@ -236,7 +256,7 @@ msgid "Mapping for auth directory {} is updated."
 msgstr "Mapping for auth directory {} is updated."
 
 #: ../common/models/authentication_directory.py:349
-#: ../common/models/authentication_directory.py:583
+#: ../common/models/authentication_directory.py:587
 msgid "Authentication directory server {} is down."
 msgstr "Authentication directory server {} is down."
 
@@ -252,98 +272,98 @@ msgstr "Username must be a string."
 msgid "Mappings: {}."
 msgstr "Mappings: {}."
 
-#: ../common/models/authentication_directory.py:462
+#: ../common/models/authentication_directory.py:463
 msgid "escaped values: {}."
 msgstr "escaped values: {}."
 
-#: ../common/models/authentication_directory.py:464
+#: ../common/models/authentication_directory.py:465
 msgid "role mapping value type: {}."
 msgstr "role mapping value type: {}."
 
-#: ../common/models/authentication_directory.py:477
+#: ../common/models/authentication_directory.py:478
 msgid "User VeiL groups: {}."
 msgstr "User VeiL groups: {}."
 
-#: ../common/models/authentication_directory.py:485
+#: ../common/models/authentication_directory.py:486
 msgid "Attaching user {} to group: {}."
 msgstr "Attaching user {} to group: {}."
 
-#: ../common/models/authentication_directory.py:505
-#: ../common/models/authentication_directory.py:516
+#: ../common/models/authentication_directory.py:507
+#: ../common/models/authentication_directory.py:518
 msgid "No authentication directory controllers."
 msgstr "No authentication directory controllers."
 
-#: ../common/models/authentication_directory.py:545
+#: ../common/models/authentication_directory.py:547
 msgid "Invalid credentials (ldap): {}."
 msgstr "Invalid credentials (ldap): {}."
 
-#: ../common/models/authentication_directory.py:551
+#: ../common/models/authentication_directory.py:553
 msgid "Server down (ldap)."
 msgstr "Server down (ldap)."
 
-#: ../common/models/authentication_directory.py:568
+#: ../common/models/authentication_directory.py:571
 msgid "LDAP username and password can`t be empty."
 msgstr "LDAP username and password can`t be empty."
 
-#: ../common/models/authentication_directory.py:576
+#: ../common/models/authentication_directory.py:580
 msgid "Authentication directory server {} has bad auth info."
 msgstr "Authentication directory server {} has bad auth info."
 
-#: ../common/models/authentication_directory.py:709
-#: ../common/models/authentication_directory.py:853
+#: ../common/models/authentication_directory.py:713
+#: ../common/models/authentication_directory.py:857
 msgid "Fail to connect to Authentication Directory. Check service information."
 msgstr "Fail to connect to Authentication Directory. Check service information."
 
-#: ../common/models/authentication_directory.py:910
+#: ../common/models/authentication_directory.py:914
 msgid "{} new users synced from Authentication Directory."
 msgstr "{} new users synced from Authentication Directory."
 
-#: ../common/models/authentication_directory.py:921
-#: ../web_app/auth/group_schema.py:217
+#: ../common/models/authentication_directory.py:925
+#: ../web_app/auth/group_schema.py:227
 msgid "No such Group."
 msgstr "No such Group."
 
-#: ../common/models/authentication_directory.py:924
+#: ../common/models/authentication_directory.py:929
 msgid "Group {} is not synchronized by AD."
 msgstr "Group {} is not synchronized by AD."
 
-#: ../common/models/authentication_directory.py:931
+#: ../common/models/authentication_directory.py:936
 msgid "There is no users to sync."
 msgstr "There is no users to sync."
 
-#: ../common/models/controller.py:155
+#: ../common/models/controller.py:134
 msgid "Controller {} has no api client."
 msgstr "Controller {} has no api client."
 
-#: ../common/models/controller.py:161
+#: ../common/models/controller.py:140
 msgid "ECP VeiL version could not be obtained. Check your token."
 msgstr "ECP VeiL version could not be obtained. Check your token."
 
-#: ../common/models/controller.py:169
+#: ../common/models/controller.py:148
 msgid "ECP VeiL version should be 4.3 or higher. Current version is incompatible."
 msgstr "ECP VeiL version should be 4.3 or higher. Current version is incompatible."
 
-#: ../common/models/controller.py:201
+#: ../common/models/controller.py:180
 msgid "Controller {} added."
 msgstr "Controller {} added."
 
-#: ../common/models/controller.py:255
+#: ../common/models/controller.py:236
 msgid "Controller {} has been successfully updated."
 msgstr "Controller {} has been successfully updated."
 
-#: ../common/models/controller.py:259
+#: ../common/models/controller.py:240
 msgid "Controller {} update failed."
 msgstr "Controller {} update failed."
 
-#: ../common/models/controller.py:288
+#: ../common/models/controller.py:269
 msgid "Controller {} has been removed."
 msgstr "Controller {} has been removed."
 
-#: ../common/models/controller.py:319
+#: ../common/models/controller.py:301
 msgid "Controller {} has been activated."
 msgstr "Controller {} has been activated."
 
-#: ../common/models/controller.py:342 ../common/models/controller.py:369
+#: ../common/models/controller.py:324 ../common/models/controller.py:351
 msgid "Controller {} status has been switched to {}."
 msgstr "Controller {} status has been switched to {}."
 
@@ -379,181 +399,185 @@ msgstr "Count must be more than 1."
 msgid "Journal settings changed."
 msgstr "Journal settings changed."
 
-#: ../common/models/pool.py:215
+#: ../common/models/pool.py:220
 msgid "Incorrect sorting option {}."
 msgstr "Incorrect sorting option {}."
 
-#: ../common/models/pool.py:324 ../common/models/pool.py:1677
+#: ../common/models/pool.py:330 ../common/models/pool.py:1709
 msgid "Pool {} has been updated."
 msgstr "Pool {} has been updated."
 
-#: ../common/models/pool.py:587
+#: ../common/models/pool.py:610
 msgid "User {} has been included to pool {}."
 msgstr "User {} has been included to pool {}."
 
-#: ../common/models/pool.py:595 ../common/models/vm.py:337
+#: ../common/models/pool.py:618 ../common/models/vm.py:339
 msgid "{} already has permission."
 msgstr "{} already has permission."
 
-#: ../common/models/pool.py:616
+#: ../common/models/pool.py:639
 msgid "Removing user {} from pool {}."
 msgstr "Removing user {} from pool {}."
 
-#: ../common/models/pool.py:624
+#: ../common/models/pool.py:647
 msgid "User {} has no direct right to pool {}."
 msgstr "User {} has no direct right to pool {}."
 
-#: ../common/models/pool.py:652
+#: ../common/models/pool.py:675
 msgid "Group {} has been included to pool {}."
 msgstr "Group {} has been included to pool {}."
 
-#: ../common/models/pool.py:660
+#: ../common/models/pool.py:683
 msgid "Pool already has permission."
 msgstr "Pool already has permission."
 
-#: ../common/models/pool.py:673
+#: ../common/models/pool.py:697
 msgid "Removing group {} from pool {}."
 msgstr "Removing group {} from pool {}."
 
-#: ../common/models/pool.py:720
+#: ../common/models/pool.py:742
 msgid "Controller {} not found."
 msgstr "Controller {} not found."
 
-#: ../common/models/pool.py:752
+#: ../common/models/pool.py:774
 msgid "Delete VMs for GuestPool {}."
 msgstr "Delete VMs for GuestPool {}."
 
-#: ../common/models/pool.py:756
+#: ../common/models/pool.py:779
 msgid "Delete VMs for AutomatedPool {}."
 msgstr "Delete VMs for AutomatedPool {}."
 
-#: ../common/models/pool.py:762
+#: ../common/models/pool.py:786
 msgid "VM {} has been removed from ECP VeiL."
 msgstr "VM {} has been removed from ECP VeiL."
 
-#: ../common/models/pool.py:787
+#: ../common/models/pool.py:812
 #, python-brace-format
 msgid "Complete removal pool of desktops {verbose_name} is done."
 msgstr "Complete removal pool of desktops {verbose_name} is done."
 
-#: ../common/models/pool.py:820
+#: ../common/models/pool.py:845
 msgid "Pool {} has been activated."
 msgstr "Pool {} has been activated."
 
-#: ../common/models/pool.py:836
+#: ../common/models/pool.py:862
 msgid "Pool {} status changed to {}."
 msgstr "Pool {} status changed to {}."
 
-#: ../common/models/pool.py:1013 ../web_app/journal/schema.py:284
+#: ../common/models/pool.py:1046 ../web_app/journal/schema.py:284
 msgid "The sort parameter is incorrect."
 msgstr "The sort parameter is incorrect."
 
-#: ../common/models/pool.py:1024
+#: ../common/models/pool.py:1057
 msgid "List of VM should not be empty."
 msgstr "List of VM should not be empty."
 
-#: ../common/models/pool.py:1042
+#: ../common/models/pool.py:1075
 msgid "VM doesn't belong to specified pool."
 msgstr "VM doesn't belong to specified pool."
 
-#: ../common/models/pool.py:1052
+#: ../common/models/pool.py:1086
 msgid "VM {} has been removed from the pool {} and ECP VeiL."
 msgstr "VM {} has been removed from the pool {} and ECP VeiL."
 
-#: ../common/models/pool.py:1056
+#: ../common/models/pool.py:1090
 msgid "VM {} has been removed from the pool {}."
 msgstr "VM {} has been removed from the pool {}."
 
-#: ../common/models/pool.py:1123
+#: ../common/models/pool.py:1157
 #, python-brace-format
 msgid "Tag {name} created for pool {name}."
 msgstr "Tag {name} created for pool {name}."
 
-#: ../common/models/pool.py:1142
+#: ../common/models/pool.py:1177
 msgid "Tag {} removed from ECP VeiL."
 msgstr "Tag {} removed from ECP VeiL."
 
-#: ../common/models/pool.py:1153
+#: ../common/models/pool.py:1189
 #, python-brace-format
 msgid "Tag {name} updated for pool {name} and all vms in pool."
 msgstr "Tag {name} updated for pool {name} and all vms in pool."
 
-#: ../common/models/pool.py:1180
+#: ../common/models/pool.py:1216
 msgid "Tag {} removed from VM {}."
 msgstr "Tag {} removed from VM {}."
 
-#: ../common/models/pool.py:1195 ../common/models/pool.py:1212
+#: ../common/models/pool.py:1231 ../common/models/pool.py:1249
 msgid "Tag {} added to VM {}."
 msgstr "Tag {} added to VM {}."
 
-#: ../common/models/pool.py:1285
+#: ../common/models/pool.py:1323
 msgid "RDS pool {} created."
 msgstr "RDS pool {} created."
 
-#: ../common/models/pool.py:1300
+#: ../common/models/pool.py:1339
 msgid "Connection type {} is not supported."
 msgstr "Connection type {} is not supported."
 
-#: ../common/models/pool.py:1423 ../common/models/pool.py:1426
-#: ../common/models/pool.py:1859
+#: ../common/models/pool.py:1454 ../common/models/pool.py:1457
+#: ../common/models/pool.py:1893
 msgid "VM {} created."
 msgstr "VM {} created."
 
-#: ../common/models/pool.py:1427 ../common/models/pool.py:1860
+#: ../common/models/pool.py:1458 ../common/models/pool.py:1895
 msgid "VM {} created and added to the pool {}."
 msgstr "VM {} created and added to the pool {}."
 
-#: ../common/models/pool.py:1438
+#: ../common/models/pool.py:1469
 msgid "Static pool {} created."
 msgstr "Static pool {} created."
 
-#: ../common/models/pool.py:1587
+#: ../common/models/pool.py:1619
 msgid "Initial_size: {}, total_size: {}, increase_step {}, reserve_size {}."
 msgstr "Initial_size: {}, total_size: {}, increase_step {}, reserve_size {}."
 
-#: ../common/models/pool.py:1591
+#: ../common/models/pool.py:1623
 msgid "GuestPool {} is created."
 msgstr "GuestPool {} is created."
 
-#: ../common/models/pool.py:1598
+#: ../common/models/pool.py:1630
 msgid "AutomatedPool {} is created."
 msgstr "Automated pool {} is created."
 
-#: ../common/models/pool.py:1640 ../common/models/pool.py:1667
+#: ../common/models/pool.py:1672 ../common/models/pool.py:1699
 msgid "Update Pool {} values."
 msgstr "Update Pool {} values."
 
-#: ../common/models/pool.py:1763
+#: ../common/models/pool.py:1795
 msgid "There is no client for pool {}."
 msgstr "There is no client for pool {}."
 
-#: ../common/models/pool.py:1801
+#: ../common/models/pool.py:1834
 msgid "VM creation task {} finished with error."
 msgstr "VM creation task {} finished with error."
 
-#: ../common/models/pool.py:1821
+#: ../common/models/pool.py:1855
 msgid "Fail to cancel VM creation task."
 msgstr "Fail to cancel VM creation task."
 
-#: ../common/models/pool.py:1935
+#: ../common/models/pool.py:1947
 msgid "VM creation error."
 msgstr "VM creation error."
 
-#: ../common/models/pool.py:1947
+#: ../common/models/pool.py:1959
 msgid "{} vm(s) are successfully added in the {} pool."
 msgstr "{} vm(s) are successfully added in the {} pool."
 
-#: ../common/models/pool.py:1952
+#: ../common/models/pool.py:1964
 msgid "Adding VM to the pool {} finished with errors."
 msgstr "Adding VM to the pool {} finished with errors."
 
-#: ../common/models/pool.py:1955
+#: ../common/models/pool.py:1967
 msgid "Required: {}, created: {}."
 msgstr "Required: {}, created: {}."
 
-#: ../common/models/settings.py:34
+#: ../common/models/settings.py:35
 msgid "Settings changed."
 msgstr "Settings changed."
+
+#: ../common/models/settings.py:63
+msgid "Smtp settings are changed."
+msgstr "Smtp settings are changed."
 
 #: ../common/models/task.py:78
 msgid "Creation of pool {}."
@@ -587,49 +611,49 @@ msgstr "Removal of VMs from pool {}."
 msgid "Automatic recreation of VM {} in the guest pool."
 msgstr "Automatic recreation of VM {} in the guest pool."
 
-#: ../common/models/vm.py:157
+#: ../common/models/vm.py:158
 msgid "Create VM {} on VDI DB."
 msgstr "Create VM {} on VDI DB."
 
-#: ../common/models/vm.py:183 ../common/models/vm.py:273
-#: ../web_app/thin_client_api/handlers.py:314
-#: ../web_app/thin_client_api/handlers.py:344
+#: ../common/models/vm.py:184 ../common/models/vm.py:278
+#: ../web_app/thin_client_api/handlers.py:326
+#: ../web_app/thin_client_api/handlers.py:356
 msgid "VM has no api client."
 msgstr "VM has no api client."
 
-#: ../common/models/vm.py:205
+#: ../common/models/vm.py:207
 msgid "Failed to create multi-delete task."
 msgstr "Failed to create multi-delete task."
 
-#: ../common/models/vm.py:224 ../common/models/vm.py:289
+#: ../common/models/vm.py:226 ../common/models/vm.py:291
 msgid "VM deletion task {} finished with error."
 msgstr "VM deletion task {} finished with error."
 
-#: ../common/models/vm.py:237
+#: ../common/models/vm.py:242
 msgid "VM multi-deletion task finished with error. Please see task details on VeiL ECP."
 msgstr "VM multi-deletion task finished with error. Please see task details on VeiL ECP."
 
-#: ../common/models/vm.py:238
+#: ../common/models/vm.py:243
 msgid "VMs: {}."
 msgstr "VMs: {}."
 
-#: ../common/models/vm.py:294
+#: ../common/models/vm.py:296
 msgid "VM {} removed from ECP."
 msgstr "VM {} removed from ECP."
 
-#: ../common/models/vm.py:302
+#: ../common/models/vm.py:304
 msgid "VM {} deletion task finished with error."
 msgstr "VM {} deletion task finished with error."
 
-#: ../common/models/vm.py:329
+#: ../common/models/vm.py:331
 msgid "User {} has been included to VM {}."
 msgstr "User {} has been included to VM {}."
 
-#: ../common/models/vm.py:351 ../common/models/vm.py:884
+#: ../common/models/vm.py:352 ../common/models/vm.py:887
 msgid "VM {} is clear from users."
 msgstr "VM {} is clear from users."
 
-#: ../common/models/vm.py:430 ../common/models/vm.py:662
+#: ../common/models/vm.py:430 ../common/models/vm.py:660
 msgid "There is no client for controller {}."
 msgstr "There is no client for controller {}."
 
@@ -649,44 +673,48 @@ msgstr "VM {} deleting cancelled by timeout."
 msgid "VM multi-deletion task cancelled by timeout. Please see task details on VeiL ECP."
 msgstr "VM multi-deletion task cancelled by timeout. Please see task details on VeiL ECP."
 
-#: ../common/models/vm.py:593 ../web_app/controller/schema.py:479
+#: ../common/models/vm.py:592 ../web_app/controller/schema.py:473
 #: ../web_app/journal/schema.py:306
 msgid "No such event."
 msgstr "No such event."
 
-#: ../common/models/vm.py:693
+#: ../common/models/vm.py:676
+msgid "Remote task finished with error. Check ECP VeiL."
+msgstr "Remote task finished with error. Check ECP VeiL."
+
+#: ../common/models/vm.py:691
 msgid "VM {} is powered."
 msgstr "VM {} is powered."
 
-#: ../common/models/vm.py:705
+#: ../common/models/vm.py:704
 msgid "VM can`t be powered on or already powered."
 msgstr "VM can`t be powered on or already powered."
 
-#: ../common/models/vm.py:712
+#: ../common/models/vm.py:711
 msgid "VM {} already shutdown."
 msgstr "VM {} already shutdown."
 
-#: ../common/models/vm.py:721
+#: ../common/models/vm.py:720
 msgid "VM {} is force shutdown."
 msgstr "VM {} is force shutdown."
 
-#: ../common/models/vm.py:727
+#: ../common/models/vm.py:726
 msgid "VM {} is shutdown."
 msgstr "VM {} is shutdown."
 
-#: ../common/models/vm.py:738 ../common/models/vm.py:773
+#: ../common/models/vm.py:737 ../common/models/vm.py:772
 msgid "VM {} is shutdown. Please power this."
 msgstr "VM {} is shutdown. Please power this."
 
-#: ../common/models/vm.py:748
+#: ../common/models/vm.py:747
 msgid "VM {} was force reboot."
 msgstr "VM {} was force reboot."
 
-#: ../common/models/vm.py:754
+#: ../common/models/vm.py:753
 msgid "VM {} was reboot."
 msgstr "VM {} was reboot."
 
-#: ../common/models/vm.py:766
+#: ../common/models/vm.py:765
 msgid "VM {} is suspended."
 msgstr "VM {} is suspended."
 
@@ -694,96 +722,101 @@ msgstr "VM {} is suspended."
 msgid "Forbid create backup from a thin clone: {}."
 msgstr "Forbid create backup from a thin clone: {}."
 
-#: ../common/models/vm.py:796 ../pool_worker/pool_tasks.py:542
+#: ../common/models/vm.py:797 ../pool_worker/pool_tasks.py:533
 msgid "Creating backup finished with error."
 msgstr "Creating backup finished with error."
 
-#: ../common/models/vm.py:799
+#: ../common/models/vm.py:800
 msgid "Backup for VM {} is created."
 msgstr "Backup for VM {} is created."
 
-#: ../common/models/vm.py:850
+#: ../common/models/vm.py:851
 msgid "Total size of pool {} increased."
 msgstr "Total size of pool {} increased."
 
-#: ../common/models/vm.py:862 ../web_app/pool/schema.py:902
+#: ../common/models/vm.py:865 ../web_app/pool/schema.py:913
 msgid "VM {} has been added to the pool {}."
 msgstr "VM {} has been added to the pool {}."
 
-#: ../common/models/vm.py:894
+#: ../common/models/vm.py:898
 msgid "Backup restore finished with error."
 msgstr "Backup restore finished with error."
 
-#: ../common/models/vm.py:897
+#: ../common/models/vm.py:901
 msgid "Backup from VM {} restored to pool {} as {}."
 msgstr "Backup from VM {} restored to pool {} as {}."
 
-#: ../common/models/vm.py:924
+#: ../common/models/vm.py:928
 msgid "VM {} remote access enabled."
 msgstr "VM {} remote access enabled."
 
-#: ../common/models/vm.py:948
+#: ../common/models/vm.py:952
 msgid "Can`t set verbose name."
 msgstr "Can`t set verbose name."
 
-#: ../common/models/vm.py:984
+#: ../common/models/vm.py:988
 msgid "VM {} hostname setting task failed."
 msgstr "VM {} hostname setting task failed."
 
-#: ../common/models/vm.py:988
+#: ../common/models/vm.py:993
 msgid "VM {} hostname setting success."
 msgstr "VM {} hostname setting success."
 
-#: ../common/models/vm.py:1015
+#: ../common/models/vm.py:1021
 msgid "VM {} failed to receive DHCP ip address ({})."
 msgstr "VM {} failed to receive DHCP ip address ({})."
 
-#: ../common/models/vm.py:1043
+#: ../common/models/vm.py:1049
 msgid "VM {} domain including task failed."
 msgstr "VM {} domain including task failed."
 
-#: ../common/models/vm.py:1045
+#: ../common/models/vm.py:1052
 msgid "VM {} AD inclusion success."
 msgstr "VM {} AD inclusion success."
 
-#: ../common/models/vm.py:1048
+#: ../common/models/vm.py:1055
 msgid "VM {} AD inclusion skipped."
 msgstr "VM {} AD inclusion skipped."
 
-#: ../common/models/vm.py:1070
+#: ../common/models/vm.py:1077
 msgid "VM {} has been prepared."
 msgstr "VM {} has been prepared."
 
-#: ../common/models/vm.py:1087
+#: ../common/models/vm.py:1094
 msgid "{} preparation cancelled by timeout."
 msgstr "{} preparation cancelled by timeout."
 
-#: ../common/models/vm.py:1098
+#: ../common/models/vm.py:1105
 msgid "VM {} preparation error."
 msgstr "VM {} preparation error."
 
-#: ../common/veil/auth/veil_jwt.py:49 ../common/veil/auth/veil_jwt.py:81
+#: ../common/veil/auth/veil_jwt.py:50 ../common/veil/auth/veil_jwt.py:82
 msgid "Token expired."
 msgstr "Token expired."
 
-#: ../common/veil/auth/veil_jwt.py:76
+#: ../common/veil/auth/veil_jwt.py:77
 msgid "Token invalid."
 msgstr "Token invalid."
 
-#: ../common/veil/auth/veil_jwt.py:138
+#: ../common/veil/auth/veil_jwt.py:139
 msgid "Error with JWT decode."
 msgstr "Error with JWT decode."
 
-#: ../common/veil/auth/veil_jwt.py:148 ../common/veil/auth/veil_jwt.py:150
-#: ../common/veil/auth/veil_jwt.py:152
+#: ../common/veil/auth/veil_jwt.py:149 ../common/veil/auth/veil_jwt.py:151
+#: ../common/veil/auth/veil_jwt.py:153
 msgid "Invalid authorization header."
 msgstr "Invalid authorization header."
 
-#: ../common/veil/auth/veil_jwt.py:156
+#: ../common/veil/auth/veil_jwt.py:157
 msgid "Missing authorization header."
 msgstr "Missing authorization header."
 
-#: ../common/veil/veil_api.py:147
+#: ../common/veil/auth/veil_jwt.py:193 ../common/veil/veil_handlers.py:61
+#: ../common/veil/veil_handlers.py:95
+msgid "User {} not found."
+msgstr "User {} not found."
+
+#: ../common/veil/veil_api.py:146
 msgid "Can`t find VM {} on VeiL ECP."
 msgstr "Can`t find VM {} on VeiL ECP."
 
@@ -791,12 +824,12 @@ msgstr "Can`t find VM {} on VeiL ECP."
 msgid "Can`t find Tag {} on VeiL ECP."
 msgstr "Can`t find Tag {} on VeiL ECP."
 
-#: ../common/veil/veil_api.py:179
+#: ../common/veil/veil_api.py:180
 msgid "VeiL ECP {} request error."
 msgstr "VeiL ECP {} request error."
 
 #: ../common/veil/veil_decorators.py:42 ../common/veil/veil_decorators.py:48
-#: ../web_app/auth/license/handlers.py:37 ../web_app/tests/test_auth_v2.py:113
+#: ../web_app/auth/license/handlers.py:36 ../web_app/tests/test_auth_v2.py:113
 msgid "Invalid permissions."
 msgstr "Invalid permissions."
 
@@ -812,23 +845,23 @@ msgstr "Unable to logon to system using these credentials."
 msgid "401: Unauthorized."
 msgstr "401: Unauthorized."
 
-#: ../common/veil/veil_gino.py:82
+#: ../common/veil/veil_gino.py:81
 msgid "Incorrect sort parameter {}."
 msgstr "Incorrect sort parameter {}."
 
-#: ../common/veil/veil_gino.py:93
+#: ../common/veil/veil_gino.py:91
 msgid "Incorrect request parameter {}."
 msgstr "Incorrect request parameter {}."
 
-#: ../common/veil/veil_gino.py:221
+#: ../common/veil/veil_gino.py:220
 msgid "{} {} has been disabled."
 msgstr "{} {} has been disabled."
 
-#: ../common/veil/veil_gino.py:223
+#: ../common/veil/veil_gino.py:222
 msgid "{} {} has`t been found in ECP VeiL. Switched to FAILED."
 msgstr "{} {} has`t been found in ECP VeiL. Switched to FAILED."
 
-#: ../common/veil/veil_gino.py:236
+#: ../common/veil/veil_gino.py:235
 msgid "Group {} has been deleted."
 msgstr "Group {} has been deleted."
 
@@ -836,19 +869,15 @@ msgstr "Group {} has been deleted."
 msgid "Soft_delete exception: {}."
 msgstr "Soft_delete exception: {}."
 
-#: ../common/veil/veil_handlers.py:61 ../common/veil/veil_handlers.py:95
-msgid "User {} not found."
-msgstr "User {} not found."
-
-#: ../common/veil/veil_handlers.py:99
+#: ../common/veil/veil_handlers.py:100
 msgid "There is no pool with id: {}."
 msgstr "There is no pool with id: {}."
 
-#: ../common/veil/veil_handlers.py:103
+#: ../common/veil/veil_handlers.py:104
 msgid "User {} has no VM on pool {}."
 msgstr "User {} has no VM on pool {}."
 
-#: ../common/veil/veil_handlers.py:145
+#: ../common/veil/veil_handlers.py:146
 msgid "Ws write error."
 msgstr "Ws write error."
 
@@ -860,7 +889,7 @@ msgstr "Redis waiting exception."
 msgid "Redis task waiting exception."
 msgstr "Redis task waiting exception."
 
-#: ../common/veil/veil_validators.py:31
+#: ../common/veil/veil_validators.py:30
 msgid "Field \"{}\" - {}."
 msgstr "Field \"{}\" - {}."
 
@@ -868,15 +897,15 @@ msgstr "Field \"{}\" - {}."
 msgid "Can`t launch task."
 msgstr "Can`t launch task."
 
-#: ../pool_worker/pool_tasks.py:76
+#: ../pool_worker/pool_tasks.py:77
 msgid "Task '{}' started."
 msgstr "Task '{}' started."
 
-#: ../pool_worker/pool_tasks.py:85
+#: ../pool_worker/pool_tasks.py:86
 msgid "Task '{}' finished successfully."
 msgstr "Task '{}' finished successfully."
 
-#: ../pool_worker/pool_tasks.py:91
+#: ../pool_worker/pool_tasks.py:92
 msgid "Task '{}' cancelled."
 msgstr "Task '{}' cancelled."
 
@@ -884,47 +913,47 @@ msgstr "Task '{}' cancelled."
 msgid "Task '{}' failed."
 msgstr "Task '{}' failed."
 
-#: ../pool_worker/pool_tasks.py:164
+#: ../pool_worker/pool_tasks.py:166
 msgid "Pool Creation cancelled."
 msgstr "Pool Creation cancelled."
 
-#: ../pool_worker/pool_tasks.py:169
+#: ../pool_worker/pool_tasks.py:171
 msgid "Failed to init pool."
 msgstr "Failed to init pool."
 
-#: ../pool_worker/pool_tasks.py:189
+#: ../pool_worker/pool_tasks.py:191
 msgid "Pool initialization VM(s) preparation error."
 msgstr "Pool initialization VM(s) preparation error."
 
-#: ../pool_worker/pool_tasks.py:260 ../pool_worker/pool_tasks.py:331
+#: ../pool_worker/pool_tasks.py:262 ../pool_worker/pool_tasks.py:333
 msgid "VM creating error."
 msgstr "VM creating error."
 
-#: ../pool_worker/pool_tasks.py:282 ../pool_worker/pool_tasks.py:353
+#: ../pool_worker/pool_tasks.py:284 ../pool_worker/pool_tasks.py:355
 msgid "VM preparation error."
 msgstr "VM preparation error."
 
-#: ../pool_worker/pool_tasks.py:447
+#: ../pool_worker/pool_tasks.py:445
 msgid "Another task works on this VM."
 msgstr "Another task works on this VM."
 
-#: ../pool_worker/pool_tasks.py:490
+#: ../pool_worker/pool_tasks.py:486
 msgid "ECP VeiL domain request error."
 msgstr "ECP VeiL domain request error."
 
-#: ../pool_worker/pool_tasks.py:493
+#: ../pool_worker/pool_tasks.py:489
 msgid "Task has`t been created."
 msgstr "Task has`t been created."
 
-#: ../pool_worker/pool_tasks.py:513
+#: ../pool_worker/pool_tasks.py:506
 msgid "VM remote access task {} for VM {} finished with error."
 msgstr "VM remote access task {} for VM {} finished with error."
 
-#: ../pool_worker/pool_tasks.py:539
+#: ../pool_worker/pool_tasks.py:530
 msgid "Wrong entity type."
 msgstr "Wrong entity type."
 
-#: ../pool_worker/pool_tasks.py:566
+#: ../pool_worker/pool_tasks.py:557
 msgid "Unsupported pool type."
 msgstr "Unsupported pool type."
 
@@ -997,7 +1026,7 @@ msgstr "DC should not be empty."
 msgid "Specify id."
 msgstr "Specify id."
 
-#: ../web_app/auth/group_schema.py:25 ../web_app/auth/group_schema.py:143
+#: ../web_app/auth/group_schema.py:25 ../web_app/auth/group_schema.py:144
 msgid "No such group."
 msgstr "No such group."
 
@@ -1013,15 +1042,19 @@ msgstr "verbose_name is empty."
 msgid "users list is empty."
 msgstr "users list is empty."
 
-#: ../web_app/auth/group_schema.py:54
+#: ../web_app/auth/group_schema.py:55
 msgid "Last name length must be <= 255 characters."
 msgstr "Last name length must be <= 255 characters."
 
-#: ../web_app/auth/group_schema.py:207
+#: ../web_app/auth/group_schema.py:175
+msgid "Group {} already exists."
+msgstr "Group {} already exists."
+
+#: ../web_app/auth/group_schema.py:217
 msgid "Specify Group.id or Group.ad_guid."
 msgstr "Specify Group.id or Group.ad_guid."
 
-#: ../web_app/auth/group_schema.py:209
+#: ../web_app/auth/group_schema.py:219
 msgid "Specify Group.id or Group.ad_guid. Not both."
 msgstr "Specify Group.id or Group.ad_guid. Not both."
 
@@ -1065,24 +1098,24 @@ msgstr "Authentication failed for user: {}."
 msgid "User {} logged out."
 msgstr "User {} logged out."
 
-#: ../web_app/auth/license/handlers.py:52
+#: ../web_app/auth/license/handlers.py:51
 msgid "Bad extension."
 msgstr "Bad extension."
 
-#: ../web_app/auth/license/handlers.py:63
+#: ../web_app/auth/license/handlers.py:62
 msgid "Fail to open license key file."
 msgstr "Fail to open license key file."
 
-#: ../web_app/auth/license/handlers.py:70
+#: ../web_app/auth/license/handlers.py:69
 msgid "Try to upload invalid license key."
 msgstr "Try to upload invalid license key."
 
-#: ../web_app/auth/license/handlers.py:73
+#: ../web_app/auth/license/handlers.py:72
 msgid "Valid license key is uploaded."
 msgstr "Valid license key is uploaded."
 
-#: ../web_app/auth/user_schema.py:29 ../web_app/auth/user_schema.py:252
-#: ../web_app/thin_client_api/schema.py:243
+#: ../web_app/auth/user_schema.py:29 ../web_app/auth/user_schema.py:253
+#: ../web_app/thin_client_api/schema.py:245
 msgid "No such user."
 msgstr "No such user."
 
@@ -1098,23 +1131,23 @@ msgstr "username must contain >= 3 chars (letters, digits, _, -, +) and can't co
 msgid "Email {} is already busy."
 msgstr "Email {} is already busy."
 
-#: ../web_app/auth/user_schema.py:63
+#: ../web_app/auth/user_schema.py:64
 msgid "Email must contain English characters and/or digits, @ and domain name."
 msgstr "Email must contain English characters and/or digits, @ and domain name."
 
-#: ../web_app/auth/user_schema.py:79
+#: ../web_app/auth/user_schema.py:80
 msgid "First name length must be <= 32 characters."
 msgstr "First name length must be <= 32 characters."
 
-#: ../web_app/auth/user_schema.py:85
+#: ../web_app/auth/user_schema.py:86
 msgid "Last name length must be <= 128 characters."
 msgstr "Last name length must be <= 128 characters."
 
-#: ../web_app/auth/user_schema.py:248
+#: ../web_app/auth/user_schema.py:249
 msgid "Specify id or username."
 msgstr "Specify id or username."
 
-#: ../web_app/auth/user_schema.py:476
+#: ../web_app/auth/user_schema.py:477
 msgid "Can`t remove permission(s) {} because they are granted to groups of user {}."
 msgstr "Can`t remove permission(s) {} because they are granted to groups of user {}."
 
@@ -1122,39 +1155,39 @@ msgstr "Can`t remove permission(s) {} because they are granted to groups of user
 msgid "{} is unreachable on ECP VeiL."
 msgstr "{} is unreachable on ECP VeiL."
 
-#: ../web_app/controller/resource_schema.py:560 ../web_app/pool/schema.py:1614
+#: ../web_app/controller/resource_schema.py:560 ../web_app/pool/schema.py:1640
 msgid "Cant create CD-ROM for powered domain {}."
 msgstr "Cant create CD-ROM for powered domain {}."
 
-#: ../web_app/controller/resource_schema.py:568 ../web_app/pool/schema.py:1622
+#: ../web_app/controller/resource_schema.py:569 ../web_app/pool/schema.py:1649
 msgid "Creating a CD-ROM on the virtual machine {}."
 msgstr "Creating a CD-ROM on the virtual machine {}."
 
-#: ../web_app/controller/schema.py:29
+#: ../web_app/controller/schema.py:34
 msgid "name can`t be empty."
 msgstr "name can`t be empty."
 
-#: ../web_app/controller/schema.py:39
+#: ../web_app/controller/schema.py:43
 msgid "name `{}` is busy."
 msgstr "name `{}` is busy."
 
-#: ../web_app/controller/schema.py:47
+#: ../web_app/controller/schema.py:51
 msgid "address can`t be empty."
 msgstr "address can`t be empty."
 
-#: ../web_app/controller/schema.py:57
+#: ../web_app/controller/schema.py:60
 msgid "address `{}` is busy."
 msgstr "address `{}` is busy."
 
-#: ../web_app/controller/schema.py:64
+#: ../web_app/controller/schema.py:67
 msgid "token can`t be empty."
 msgstr "token can`t be empty."
 
-#: ../web_app/controller/schema.py:75 ../web_app/pool/schema.py:67
+#: ../web_app/controller/schema.py:77 ../web_app/pool/schema.py:65
 msgid "No such controller."
 msgstr "No such controller."
 
-#: ../web_app/controller/schema.py:519 ../web_app/controller/schema.py:552
+#: ../web_app/controller/schema.py:513 ../web_app/controller/schema.py:546
 msgid "Connection to ECP has been failed."
 msgstr "Connection to ECP has been failed."
 
@@ -1182,44 +1215,44 @@ msgstr "Already subscribed."
 msgid "Not subscribed."
 msgstr "Not subscribed."
 
-#: ../web_app/journal/schema.py:426
+#: ../web_app/journal/schema.py:427
 msgid "Journal is exported."
 msgstr "Journal is exported."
 
-#: ../web_app/pool/schema.py:240
+#: ../web_app/pool/schema.py:239
 msgid "Missing connection spice data."
 msgstr "Missing connection spice data."
 
-#: ../web_app/pool/schema.py:254
+#: ../web_app/pool/schema.py:253
 msgid "Missing connection vnc data."
 msgstr "Missing connection vnc data."
 
-#: ../web_app/pool/schema.py:274 ../web_app/pool/schema.py:675
-#: ../web_app/pool/schema.py:696
+#: ../web_app/pool/schema.py:273 ../web_app/pool/schema.py:687
+#: ../web_app/pool/schema.py:708
 msgid "No such pool."
 msgstr "No such pool."
 
-#: ../web_app/pool/schema.py:285
+#: ../web_app/pool/schema.py:284
 msgid "Pool name must contain only characters, digits and -."
 msgstr "Pool name must contain only characters, digits and -."
 
-#: ../web_app/pool/schema.py:301
+#: ../web_app/pool/schema.py:300
 msgid "Template name of VM must contain only characters, digits, -. Template name length must be in [{} {}] interval."
 msgstr "Template name of VM must contain only characters, digits, -. Template name length must be in [{} {}] interval."
 
-#: ../web_app/pool/schema.py:312
+#: ../web_app/pool/schema.py:311
 msgid "Initial number of VM must be in {}-{} interval."
 msgstr "Initial number of VM must be in {}-{} interval."
 
-#: ../web_app/pool/schema.py:336
+#: ../web_app/pool/schema.py:335
 msgid "Reserve size of VMs can not be more than maximal number of Vms."
 msgstr "Reserve size of VMs can not be more than maximal number of Vms."
 
-#: ../web_app/pool/schema.py:341
+#: ../web_app/pool/schema.py:340
 msgid "Reserve size of VM must be in {}-{} interval."
 msgstr "Reserve size of VM must be in {}-{} interval."
 
-#: ../web_app/pool/schema.py:370
+#: ../web_app/pool/schema.py:369
 msgid "Maximal number of created VM can not be less than initial number of VM."
 msgstr "Maximal number of created VM can not be less than initial number of VM."
 
@@ -1231,107 +1264,115 @@ msgstr "Maximal number of created VM must be in [{} {}] interval."
 msgid "Maximal number of created VMs can not be less than current amount of Vms."
 msgstr "Maximal number of created VMs can not be less than current amount of Vms."
 
-#: ../web_app/pool/schema.py:400
+#: ../web_app/pool/schema.py:401
 msgid "Increase step must be positive and less or equal to total_size."
 msgstr "Increase step must be positive and less or equal to total_size."
 
-#: ../web_app/pool/schema.py:404
+#: ../web_app/pool/schema.py:405
 msgid "Increase step must be less than {}."
 msgstr "Increase step must be less than {}."
 
-#: ../web_app/pool/schema.py:412
+#: ../web_app/pool/schema.py:413
 msgid "Connection type cannot be empty."
 msgstr "Connection type cannot be empty."
 
-#: ../web_app/pool/schema.py:564 ../web_app/thin_client_api/handlers.py:157
+#: ../web_app/pool/schema.py:576 ../web_app/thin_client_api/handlers.py:144
 msgid "VM is unreachable on ECP VeiL."
 msgstr "VM is unreachable on ECP VeiL."
 
-#: ../web_app/pool/schema.py:723
+#: ../web_app/pool/schema.py:735
 msgid "Pool {} has been restored."
 msgstr "Pool {} has been restored."
 
-#: ../web_app/pool/schema.py:728
+#: ../web_app/pool/schema.py:741
 msgid "Pool {} is in service mode."
 msgstr "Pool {} is in service mode."
 
-#: ../web_app/pool/schema.py:731
+#: ../web_app/pool/schema.py:745
 msgid "Pool {} is already active."
 msgstr "Pool {} is already active."
 
-#: ../web_app/pool/schema.py:802
+#: ../web_app/pool/schema.py:815
 msgid "Failed to create static pool {}."
 msgstr "Failed to create static pool {}."
 
-#: ../web_app/pool/schema.py:885
+#: ../web_app/pool/schema.py:896
 msgid "VM {} is already in one of pools."
 msgstr "VM {} is already in one of pools."
 
-#: ../web_app/pool/schema.py:945
+#: ../web_app/pool/schema.py:956
 msgid "Failed to update static pool {}. Name must be unique."
 msgstr "Failed to update static pool {}. Name must be unique."
 
-#: ../web_app/pool/schema.py:979
+#: ../web_app/pool/schema.py:990
 msgid "Failed to update RDS pool {}. Name must be unique."
 msgstr "Failed to update RDS pool {}. Name must be unique."
 
-#: ../web_app/pool/schema.py:1012
+#: ../web_app/pool/schema.py:1024
 msgid "Can not expand pool {} because it reached its total_size."
 msgstr "Can not expand pool {} because it reached its total_size."
 
-#: ../web_app/pool/schema.py:1022
+#: ../web_app/pool/schema.py:1035
 msgid "Another task works on pool {}."
 msgstr "Another task works on pool {}."
 
-#: ../web_app/pool/schema.py:1029
+#: ../web_app/pool/schema.py:1042
 msgid "Increase_step {}."
 msgstr "Increase_step {}."
 
-#: ../web_app/pool/schema.py:1031
+#: ../web_app/pool/schema.py:1044
 msgid "Expansion of pool {} requested."
 msgstr "Expansion of pool {} requested."
 
-#: ../web_app/pool/schema.py:1124
+#: ../web_app/pool/schema.py:1135
 msgid "Failed to create pool {}."
 msgstr "Failed to create pool {}."
 
-#: ../web_app/pool/schema.py:1213
+#: ../web_app/pool/schema.py:1187
+msgid "Failed to update total_size. Task status is {}. Check journal for more info."
+msgstr "Failed to update total_size. Task status is {}. Check journal for more info."
+
+#: ../web_app/pool/schema.py:1225
 msgid "Failed to update pool {}. Name must be unique."
 msgstr "Failed to update pool {}. Name must be unique."
 
-#: ../web_app/pool/schema.py:1348
+#: ../web_app/pool/schema.py:1368
 msgid "There is no VM {}."
 msgstr "There is no VM {}."
 
-#: ../web_app/pool/schema.py:1366
+#: ../web_app/pool/schema.py:1377
+msgid "Provide user_id or username."
+msgstr "Provide user_id or username."
+
+#: ../web_app/pool/schema.py:1391
 msgid "User does not have the right to use pool, which has VM."
 msgstr "User does not have the right to use pool, which has VM."
 
-#: ../web_app/pool/schema.py:1410
+#: ../web_app/pool/schema.py:1436
 msgid "Another task works on VM {}."
 msgstr "Another task works on VM {}."
 
-#: ../web_app/pool/schema.py:1567
+#: ../web_app/pool/schema.py:1593
 msgid "Only VM with Windows OS can be in domain."
 msgstr "Only VM with Windows OS can be in domain."
 
-#: ../web_app/pool/schema.py:1644 ../web_app/pool/schema.py:1678
+#: ../web_app/pool/schema.py:1672 ../web_app/pool/schema.py:1709
 msgid "VM {} is powered. Please shutdown this."
 msgstr "VM {} is powered. Please shutdown this."
 
-#: ../web_app/pool/schema.py:1649 ../web_app/pool/schema.py:1707
+#: ../web_app/pool/schema.py:1679 ../web_app/pool/schema.py:1737
 msgid "VeiL ECP error: {}."
 msgstr "VeiL ECP error: {}."
 
-#: ../web_app/pool/schema.py:1652
+#: ../web_app/pool/schema.py:1683
 msgid "The template {} change and distribute this changes to thin clones."
 msgstr "The template {} change and distribute this changes to thin clones."
 
-#: ../web_app/pool/schema.py:1689
+#: ../web_app/pool/schema.py:1721
 msgid "Prohibited creating template from the thin clone."
 msgstr "Prohibited creating template from the thin clone."
 
-#: ../web_app/pool/schema.py:1710
+#: ../web_app/pool/schema.py:1740
 msgid "Vm {} has converted to template {}."
 msgstr "Vm {} has converted to template {}."
 
@@ -1347,87 +1388,91 @@ msgstr "No such task or status of task {} is not {}."
 msgid "User {} requested pools data."
 msgstr "User {} requested pools data."
 
-#: ../web_app/thin_client_api/handlers.py:70
+#: ../web_app/thin_client_api/handlers.py:68
 msgid "Thin client limit exceeded."
 msgstr "Thin client limit exceeded."
 
-#: ../web_app/thin_client_api/handlers.py:78
+#: ../web_app/thin_client_api/handlers.py:76
 msgid "Pool not found."
 msgstr "Pool not found."
 
-#: ../web_app/thin_client_api/handlers.py:89
-msgid "The pool doesnt support connection type {}."
-msgstr "The pool doesnt support connection type {}."
-
-#: ../web_app/thin_client_api/handlers.py:122
+#: ../web_app/thin_client_api/handlers.py:110
 msgid "The pool doesn`t have free machines. Try again after 5 minutes."
 msgstr "The pool doesn`t have free machines. Try again after 5 minutes."
 
-#: ../web_app/thin_client_api/handlers.py:134
+#: ../web_app/thin_client_api/handlers.py:122
 msgid "The pool doesn`t have free machines."
 msgstr "The pool doesn`t have free machines."
 
-#: ../web_app/thin_client_api/handlers.py:165
+#: ../web_app/thin_client_api/handlers.py:151
+msgid "Controller did not reply. Check if it is available."
+msgstr "Controller did not reply. Check if it is available."
+
+#: ../web_app/thin_client_api/handlers.py:159
 msgid "User {} connected to pool {}."
 msgstr "User {} connected to pool {}."
 
-#: ../web_app/thin_client_api/handlers.py:170
+#: ../web_app/thin_client_api/handlers.py:164
 msgid "User {} connected to VM {}."
 msgstr "User {} connected to VM {}."
 
-#: ../web_app/thin_client_api/handlers.py:182
+#: ../web_app/thin_client_api/handlers.py:175
 msgid "The remote controller is unavailable."
 msgstr "The remote controller is unavailable."
 
-#: ../web_app/thin_client_api/handlers.py:201
+#: ../web_app/thin_client_api/handlers.py:192
 msgid "VM does not support RDP. The controller didn`t provide a VM address."
 msgstr "VM does not support RDP. The controller didn`t provide a VM address."
 
-#: ../web_app/thin_client_api/handlers.py:225
+#: ../web_app/thin_client_api/handlers.py:216
 msgid "Unable to get list of published applications. {}."
 msgstr "Unable to get list of published applications. {}."
 
-#: ../web_app/thin_client_api/handlers.py:281
+#: ../web_app/thin_client_api/handlers.py:244
+msgid "The pool doesnt support connection type {}."
+msgstr "The pool doesnt support connection type {}."
+
+#: ../web_app/thin_client_api/handlers.py:293
 msgid "User {} executed action {} on VM {}."
 msgstr "User {} executed action {} on VM {}."
 
-#: ../web_app/thin_client_api/handlers.py:283
+#: ../web_app/thin_client_api/handlers.py:295
 msgid "User {} failed to execute action {} on VM {}."
 msgstr "User {} failed to execute action {} on VM {}."
 
-#: ../web_app/thin_client_api/handlers.py:368
+#: ../web_app/thin_client_api/handlers.py:380
 msgid "Message can not be empty."
 msgstr "Message can not be empty."
 
-#: ../web_app/thin_client_api/handlers.py:389
+#: ../web_app/thin_client_api/handlers.py:401
 msgid "Wrong message format."
 msgstr "Wrong message format."
 
-#: ../web_app/thin_client_api/schema.py:234
+#: ../web_app/thin_client_api/schema.py:236
 msgid "All connections."
 msgstr "All connections."
 
-#: ../web_app/thin_client_api/schema.py:237
+#: ../web_app/thin_client_api/schema.py:239
 msgid "Connection id: {}."
 msgstr "Connection id: {}."
 
-#: ../web_app/thin_client_api/schema.py:244
+#: ../web_app/thin_client_api/schema.py:246
 msgid "Connections of user: {}."
 msgstr "Connections of user: {}."
 
-#: ../web_app/thin_client_api/schema.py:248
+#: ../web_app/thin_client_api/schema.py:250
 msgid "Thin client disconnect requested."
 msgstr "Thin client disconnect requested."
 
-#: ../web_app/thin_client_api/schema.py:284
+#: ../web_app/thin_client_api/schema.py:287
 msgid "User {} does not exist."
 msgstr "User {} does not exist."
 
-#: ../ws_listener_worker/resources_monitor.py:103
+#: ../ws_listener_worker/resources_monitor.py:101
 msgid "{} is connected: {}."
 msgstr "{} is connected: {}."
 
-#: ../ws_listener_worker/resources_monitor.py:163
+#: ../ws_listener_worker/resources_monitor.py:161
 msgid "Resource monitor can`t connect to controller {}."
 msgstr "Resource monitor can`t connect to controller {}."
 
@@ -1444,117 +1489,117 @@ msgstr "{cls}: connected controllers -- {controllers}."
 msgid "{}: Started."
 msgstr "{}: Started."
 
-#: ../ws_listener_worker/resources_monitor_manager.py:87
+#: ../ws_listener_worker/resources_monitor_manager.py:88
 #, python-brace-format
 msgid "{cls}: Controller {name} is already monitored."
 msgstr "{cls}: Controller {name} is already monitored."
 
-#: ../ws_listener_worker/resources_monitor_manager.py:94
+#: ../ws_listener_worker/resources_monitor_manager.py:96
 #, python-brace-format
 msgid "{cls}: resource monitor for controller {name} connected."
 msgstr "{cls}: resource monitor for controller {name} connected."
 
-#~ msgid "Another task works on pool {} before creating new blank VM."
-#~ msgstr "Another task works on pool {} before creating new blank VM."
-
-#~ msgid "Expansion of guest pool {} requested."
-#~ msgstr "Expansion of guest pool {} requested."
-
-#~ msgid "Active directory object has no service username or password. Including skipped."
-#~ msgstr "Active directory object has no service username or password. Including skipped."
-
-#~ msgid "VM {} active directory group including error."
-#~ msgstr "VM {} active directory group including error."
-
-#~ msgid "VM {} AD group including successful."
-#~ msgstr "VM {} AD group including successful."
-
-#~ msgid "Demo version."
-#~ msgstr "Demo version."
-
-#~ msgid "StaticPool: Create Pool."
-#~ msgstr "StaticPool: Create Pool."
-
-#~ msgid "StaticPool: Create StaticPool."
-#~ msgstr "StaticPool: Create StaticPool."
-
-#~ msgid "StaticPool: Create VMs."
-#~ msgstr "StaticPool: Create VMs."
-
-#~ msgid "Can`t connect to {}."
-#~ msgstr "Can`t connect to {}."
-
-#~ msgid "Pool {} has been deactivated."
-#~ msgstr "Pool {} has been deactivated."
-
-#~ msgid "Controller has not free space for creating new VM."
-#~ msgstr "Controller has not free space for creating new VM."
-
-#~ msgid "Something went wrong. Interrupt while."
-#~ msgstr "Something went wrong. Interrupt while."
-
-#~ msgid "Pool already has role."
-#~ msgstr "Pool already has role."
-
-#~ msgid "Role {} has been set to pool {}."
-#~ msgstr "Role {} has been set to pool {}."
-
-#~ msgid "  Duration: {}."
-#~ msgstr "  Duration: {}."
-
-#~ msgid "Roles: {} was deleted to pool {}."
-#~ msgstr "Roles: {} was deleted to pool {}."
-
-#~ msgid "Can`t enable remote access. Check VeiL ECP."
-#~ msgstr "Can`t enable remote access. Check VeiL ECP."
-
-#~ msgid "Active directory sync successful."
-#~ msgstr "Active directory sync successful."
-
-#~ msgid "Removing {} from domain."
-#~ msgstr "Removing {} from domain."
-
-#~ msgid " for user {username}."
-#~ msgstr " for user {username}."
-
-#~ msgid ". IP: {ip}."
-#~ msgstr ". IP: {ip}."
-
-#~ msgid "Number of created VM must be in {}-{} interval."
-#~ msgstr "Number of created VM must be in {}-{} interval."
-
-#~ msgid "VM {} AD group inclusion skipped."
-#~ msgstr "VM {} AD group inclusion skipped."
-
-#~ msgid "VM {} domain container including task failed."
-#~ msgstr "VM {} domain container including task failed."
-
-#~ msgid "Assigning veil groups to {}."
-#~ msgstr "Assigning veil groups to {}."
-
-#~ msgid "Controller can`t create VM. Unknown node."
-#~ msgstr "Controller can`t create VM. Unknown node."
-
-#~ msgid "Unknown node {}."
-#~ msgstr "Unknown node {}."
-
-#~ msgid "Attempts to create VM {} have been exhausted."
-#~ msgstr "Attempts to create VM {} have been exhausted."
-
-#~ msgid "User {} created with role {}."
-#~ msgstr "User {} created with role {}."
-
-#~ msgid "Critical controller error."
-#~ msgstr "Critical controller error."
-
-#~ msgid "ECP VeiL controller {} error."
-#~ msgstr "ECP VeiL controller {} error."
-
-#~ msgid "Failed to update automated pool {}. Name must be unique."
-#~ msgstr "Failed to update automated pool {}. Name must be unique."
+#~ msgid "Update Pool values for AutomatedPool {}."
+#~ msgstr "Update Pool values for AutomatedPool {}."
 
 #~ msgid "Failed to create automated pool {}."
 #~ msgstr "Failed to create automated pool {}."
 
-#~ msgid "Update Pool values for AutomatedPool {}."
-#~ msgstr "Update Pool values for AutomatedPool {}."
+#~ msgid "Failed to update automated pool {}. Name must be unique."
+#~ msgstr "Failed to update automated pool {}. Name must be unique."
+
+#~ msgid "ECP VeiL controller {} error."
+#~ msgstr "ECP VeiL controller {} error."
+
+#~ msgid "Critical controller error."
+#~ msgstr "Critical controller error."
+
+#~ msgid "User {} created with role {}."
+#~ msgstr "User {} created with role {}."
+
+#~ msgid "Attempts to create VM {} have been exhausted."
+#~ msgstr "Attempts to create VM {} have been exhausted."
+
+#~ msgid "Unknown node {}."
+#~ msgstr "Unknown node {}."
+
+#~ msgid "Controller can`t create VM. Unknown node."
+#~ msgstr "Controller can`t create VM. Unknown node."
+
+#~ msgid "Assigning veil groups to {}."
+#~ msgstr "Assigning veil groups to {}."
+
+#~ msgid "VM {} domain container including task failed."
+#~ msgstr "VM {} domain container including task failed."
+
+#~ msgid "VM {} AD group inclusion skipped."
+#~ msgstr "VM {} AD group inclusion skipped."
+
+#~ msgid "Number of created VM must be in {}-{} interval."
+#~ msgstr "Number of created VM must be in {}-{} interval."
+
+#~ msgid ". IP: {ip}."
+#~ msgstr ". IP: {ip}."
+
+#~ msgid " for user {username}."
+#~ msgstr " for user {username}."
+
+#~ msgid "Removing {} from domain."
+#~ msgstr "Removing {} from domain."
+
+#~ msgid "Active directory sync successful."
+#~ msgstr "Active directory sync successful."
+
+#~ msgid "Can`t enable remote access. Check VeiL ECP."
+#~ msgstr "Can`t enable remote access. Check VeiL ECP."
+
+#~ msgid "Roles: {} was deleted to pool {}."
+#~ msgstr "Roles: {} was deleted to pool {}."
+
+#~ msgid "  Duration: {}."
+#~ msgstr "  Duration: {}."
+
+#~ msgid "Role {} has been set to pool {}."
+#~ msgstr "Role {} has been set to pool {}."
+
+#~ msgid "Pool already has role."
+#~ msgstr "Pool already has role."
+
+#~ msgid "Something went wrong. Interrupt while."
+#~ msgstr "Something went wrong. Interrupt while."
+
+#~ msgid "Controller has not free space for creating new VM."
+#~ msgstr "Controller has not free space for creating new VM."
+
+#~ msgid "Pool {} has been deactivated."
+#~ msgstr "Pool {} has been deactivated."
+
+#~ msgid "Can`t connect to {}."
+#~ msgstr "Can`t connect to {}."
+
+#~ msgid "StaticPool: Create VMs."
+#~ msgstr "StaticPool: Create VMs."
+
+#~ msgid "StaticPool: Create StaticPool."
+#~ msgstr "StaticPool: Create StaticPool."
+
+#~ msgid "StaticPool: Create Pool."
+#~ msgstr "StaticPool: Create Pool."
+
+#~ msgid "Demo version."
+#~ msgstr "Demo version."
+
+#~ msgid "VM {} AD group including successful."
+#~ msgstr "VM {} AD group including successful."
+
+#~ msgid "VM {} active directory group including error."
+#~ msgstr "VM {} active directory group including error."
+
+#~ msgid "Active directory object has no service username or password. Including skipped."
+#~ msgstr "Active directory object has no service username or password. Including skipped."
+
+#~ msgid "Expansion of guest pool {} requested."
+#~ msgstr "Expansion of guest pool {} requested."
+
+#~ msgid "Another task works on pool {} before creating new blank VM."
+#~ msgstr "Another task works on pool {} before creating new blank VM."

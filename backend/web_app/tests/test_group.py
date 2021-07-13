@@ -90,7 +90,7 @@ class TestGroupSchema:
         try:
             await execute_scheme(group_schema, query, context=fixt_auth_context)
         except ExecError as E:
-            assert "Group test_group_1 already exists." in str(E)
+            assert "Группа test_group_1 уже существует." in str(E)
         else:
             raise AssertionError
 

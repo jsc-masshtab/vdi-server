@@ -1185,7 +1185,7 @@ class UpdateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
 
                 if status is None or status != TaskStatus.FINISHED.name:
                     error_msg = _local_("Failed to update total_size. Task status is {}. "
-                                        "Check journal for more info").format(status)
+                                        "Check journal for more info.").format(status)
                     entity = {"entity_type": EntityType.POOL, "entity_uuid": None}
                     raise SimpleError(error_msg, user=creator, entity=entity)
 

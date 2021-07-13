@@ -1,8 +1,14 @@
 # -*- coding: utf-8 -*-
 import inspect
 import logging
+import ssl
 import sys
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 
+import aiosmtplib as smtp
+
+from common.languages import _local_
 from common.models.event import Event
 from common.settings import DEBUG
 from common.veil.veil_gino import EntityType
@@ -179,6 +185,10 @@ class Log:
         self.__log_info(message)
         event_type = self.__TYPE_INFO
         await self.__event(message, description, user, entity, event_type)
+        await send_mail_async(event_type=event_type,
+                              subject=_local_("INFO message from VeiL Broker."),
+                              message=message,
+                              description=description)
 
     @check_parameters
     async def warning(
@@ -192,6 +202,10 @@ class Log:
         self.__log_warning(message)
         event_type = self.__TYPE_WARNING
         await self.__event(message, description, user, entity, event_type)
+        await send_mail_async(event_type=event_type,
+                              subject=_local_("Warning message from VeiL Broker."),
+                              message=message,
+                              description=description)
 
     @check_parameters
     async def error(
@@ -205,6 +219,85 @@ class Log:
         self.__log_error(message)
         event_type = self.__TYPE_ERROR
         await self.__event(message, description, user, entity, event_type)
+        await send_mail_async(event_type=event_type,
+                              subject=_local_("Error message from VeiL Broker."),
+                              message=message,
+                              description=description)
 
+
+async def send_mail_async(event_type, subject, message, description=None, text_type="plain"):
+    """Отправляет письмо, если настроен smtp сервер.
+
+    :param event_type: Уровень сообщения.
+    :type subject: int
+
+    :param subject: Тема письма.
+    :type subject: str
+
+    :param message: Текст сообщения внутри письма
+    :type message: str
+
+    :param description: Текст описания внутри письма.
+    :type description: str
+
+    :param text_type: Подтип текста Mime, по умолчанию: "plain" (может быть "html").
+    :type text_type: str
+
+    """
+    from common.models.auth import User
+    from common.models.settings import Settings
+
+    smtp_params = await Settings.select("smtp_settings").gino.first()
+    # если level 2 - только error, 1 - warning и error, 0 - все, 4 - выключены оповещения. 3 не надо ставить!!!
+    if event_type < smtp_params[0]["level"]:
+        return
+
+    if not smtp_params[0]["hostname"] and not smtp_params[0]["from_address"]:
+        await system_logger.debug(_local_("SMTP server is not configured."))
+        return
+
+    emails = await User.select("email").where(
+        User.is_superuser & User.is_active).gino.all()
+
+    recipient_emails = list()
+    for email in emails:
+        if email[0]:
+            if len(email[0]) > 1:
+                recipient_emails.append(email[0])
+    if len(recipient_emails) < 1:
+        return
+
+    recipients = ", ".join(recipient_emails)
+    text = "Text: {}\n\nDescription: {}".format(message, description)
+
+    try:
+        msg = MIMEMultipart()
+        msg.add_header("From", smtp_params[0].get("from_address", "veil@mashtab.org"))
+        msg.add_header("To", recipients)
+        msg.add_header("Subject", subject)
+        msg.attach(MIMEText(text, text_type, "utf-8"))
+
+        hostname = smtp_params[0].get("hostname", "localhost")
+        is_ssl = smtp_params[0].get("SSL", False)
+        is_tls = smtp_params[0].get("TLS", False)
+        port = smtp_params[0].get("port", 465 if is_ssl else 25)
+        server = smtp.SMTP(hostname=hostname, port=port, use_tls=is_ssl)
+        await server.connect()
+
+        # нужно, т.к. вылезает ошибка: "ssl.CertificateError: hostname '192.168.10.7' doesn't match 'mail.mashtab.org'"
+        ssl.match_hostname = lambda cert, hostname: True
+        if is_tls:
+            await server.starttls()
+        else:
+            await server.ehlo()
+        if "user" in smtp_params[0]:
+            await server.login(smtp_params[0]["user"], smtp_params[0]["password"])
+        await server.send_message(msg)
+        await server.quit()
+        return True
+    except (smtp.SMTPException, smtp.SMTPConnectError, ValueError) as e:
+        error_msg = _local_("Error in smtp server: {}.".format(e))
+        await system_logger.debug(error_msg)
+        return False
 
 system_logger = Log()
