@@ -1,6 +1,6 @@
 import { EventsService } from './events.service';
 import { WaitService } from '../../../common/components/single/wait/wait.service';
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, Input } from '@angular/core';
 import { map } from 'rxjs/operators';
 import { MatDialog } from '@angular/material/dialog';
 import { InfoEventComponent } from '../info-event/info-event.component';
@@ -27,13 +27,15 @@ interface Event {
 
 export class EventsComponent implements OnInit, OnDestroy {
 
+  @Input() controls: boolean = true;
+
   private socketSub: Subscription;
 
   public limit = 100;
   public count = 0;
   public offset = 0;
 
-  start_date = new FormControl(new Date());
+  start_date = new FormControl(0);
   end_date = new FormControl(new Date());
   event_type = new FormControl('all');
   entity_type = new FormControl('all');

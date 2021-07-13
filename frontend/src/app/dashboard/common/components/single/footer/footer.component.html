@@ -1,4 +1,37 @@
+<div class="log" *ngIf="openedLog">
+  <div class="log-header">
+    <span *ngIf="log == 'events'">События</span>
+    <span *ngIf="log == 'tasks'">Задачи</span>
+
+    <button class="log-close" (click)="closeLog()">
+      <fa-icon [icon]="['fas','times-circle']"></fa-icon>
+    </button>
+  </div>
+  
+  <div class="log-container">
+    <vdi-events *ngIf="log == 'events'" [controls]="false"></vdi-events>
+    <vdi-tasks *ngIf="log == 'tasks'" [controls]="false"></vdi-tasks>
+  </div>
+</div>
+
 <footer>
+  <div class="footer-log">
+    <button class="footer-log-button" (click)="openLog('events')">
+      <fa-icon [icon]="['fas', 'exclamation-triangle']" class="extra-icon" [style.color]="'rgb(231, 186, 8)'" title="Предупреждение"></fa-icon>
+      <span>{{ countEvents.warning || 0 }}</span>
+      
+    </button>
+
+    <button class="footer-log-button" (click)="openLog('events')">
+      <fa-icon [icon]="['fas', 'times-circle']" class="extra-icon" [style.color]="'rgb(208, 61, 61)'" title="Ошибка"></fa-icon>
+      <span>{{ countEvents.error || 0 }}</span>
+    </button>
+
+    <button class="footer-log-button" (click)="openLog('tasks')">
+      <fa-icon title="События" [icon]="['fas','gavel']" class="extra-icon" [style.color]="'rgb(103, 161, 203)'" title="Задачи"></fa-icon>
+    </button>
+  </div>
+
   <div class="license">
     <span *ngIf="license.remaining_days < 100" [class.warning]="!license.remaining_days"> Дней до окончания лицензии: {{ license.remaining_days || 0 }}</span>
     <span *ngIf="license.support_remaining_days < 100" [class.warning]="!license.support_remaining_days"> Дней до окончания сервисной поддержки: {{ license.support_remaining_days || 0 }}</span>

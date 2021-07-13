@@ -1,4 +1,4 @@
-<div class="control-panel flexable-height">
+<div class="control-panel flexable-height" *ngIf="controls">
 
     <div class="crumb">
         <fa-icon [icon]="['fas','gavel']"></fa-icon>
@@ -67,7 +67,7 @@
     </mat-form-field>
 </div>
 
-<div class="components-info">
+<div class="components-info" [style.height]="controls ? 'inherit' : '100%'">
     <div class="component-list">
         <vdi-table-component cursor="true" class="table-with-pagination" [data]="tasks" [collection]="collection" (sortListNow)="sortList($event)" (clickRowData)="clickRow($event)" entity="tasks"></vdi-table-component>
         <vdi-pagination [count]="count" [limit]="limit" [offset]="offset" (action)="toPage($event)"></vdi-pagination>

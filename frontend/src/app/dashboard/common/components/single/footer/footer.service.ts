@@ -2,6 +2,8 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { AuthStorageService } from 'src/app/login/authStorage.service';
 import { Subject } from 'rxjs';
+import { Apollo, QueryRef } from 'apollo-angular';
+import gql from 'graphql-tag';
 
 @Injectable({
   providedIn: 'root'
@@ -11,7 +13,7 @@ export class FooterService {
   private channel = new Subject();
   channel$ = this.channel.asObservable();
 
-  constructor(private http: HttpClient, private authStorageService: AuthStorageService) { }
+  constructor(private http: HttpClient, private authStorageService: AuthStorageService, private service: Apollo) { }
 
   public getInfo(): any {
     return this.http.get('/api/version/');
@@ -27,5 +29,18 @@ export class FooterService {
 
   reload() {
     this.channel.next();
+  }
+
+  public countEvents(): QueryRef<any, any> {
+    return this.service.watchQuery({
+      query: gql`
+        query
+          events {
+            count
+            warning: count(event_type: 1),
+            error: count(event_type: 0)
+          }
+        `
+    });
   }
 }

@@ -21,11 +21,6 @@ body {
     justify-content: center;
     align-items: center;
     position: fixed;
-    min-width: 320px;
-
-    .icon-spin {
-        margin-right: 200px;
-    }
 }
 
 .mat-dialog-container {
@@ -80,32 +75,3 @@ body {
 .mat-primary .mat-pseudo-checkbox-checked, .mat-primary .mat-pseudo-checkbox-indeterminate {
     background: #00abff;
 }
-
-@media screen and (not handheld) and (max-width: 750px) { 
-    .cdk-overlay-container {
-        left: 70px;
-    
-        .icon-spin {
-            margin-right: 70px;
-        }
-    }
-
-    .cdk-overlay-pane {
-        margin-right: 70px;
-    }
-  }
-
-@media screen  and (min-width: 750px) { 
-    .cdk-overlay-container {
-        left: 200px;
-    
-        .icon-spin {
-            margin-right: 200px;
-        }
-    }
-
-    .cdk-overlay-pane {
-        margin-right: 200px;
-    }
-}
-
