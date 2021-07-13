@@ -1,6 +1,6 @@
 # Обновление VeiL Broker 3.0.X
 
-## Обновление 3.0
+## Обновление 3.0 с использованием iso-образа
 
 !!! note "Примечание"
     Проверить текущую версию VeiL Broker и его компонентов можно командой `dpkg -l | grep veil`
@@ -33,6 +33,55 @@
     sudo bash /media/cdrom0/install.sh > vdi_update.log
     ```
  
+## Обновление 3.0 с использованием внешнего репозитория
+
+!!! note "Примечание"
+    Проверить текущую версию VeiL Broker и его компонентов можно командой `dpkg -l | grep veil`
+
+!!! warning "Предупреждение"
+    Во время обновления сервис будет недоступен. Выбрать допустимое время и выполнить резервное копирование ВМ.
+
+1. Войти в систему, указав значение **Integrity level** равное **_63_** или 
+   **Уровень целостности** - **_Высокий_** (для графического режима).
+   
+    !!! note "Стандартные репозитории пакетов"
+        Если при установке были пропущены шаги по копированию стандартных дистрибутивов Astra Linux, 
+        следует ознакомиться с шагами по копированию **_основного_** и **_devel_** дисков 
+        в разделе [Установка системы](./install_v3.md).
+
+1. В директории /etc/apt/sources.list.d/ создать файл vdi.list и привести его к виду:
+    
+    ```bash
+    deb https://veil-update.mashtab.org/veil-broker-prod-31 smolensk main
+    ```
+    где указана свежая версия репозитория с [сайта доступных версий](https://veil-update.mashtab.org/).
+ 
+1. Выполнить команды для обновления:
+
+    ```bash
+    sudo mv /etc/apt/sources.list.d/media_cdrom_repo.list /etc/apt/sources.list.d/media_cdrom_repo.back
+    sudo apt-get update
+    ```
+
+    !!! note "Примечание"
+        Команда очистки старого репозитория актуальна для 3.0.
+
+1. Остановить сервисы VeiL Broker:
+
+    ```bash
+    sudo service vdi-pool_worker stop
+    sudo service vdi-web stop
+    sudo service vdi-ws_listener stop
+    ```
+ 
+1. Выполнить и запустить сервисы VeiL Broker обратно:
+
+    ```bash
+    sudo apt-get upgrade
+    sudo service vdi-pool_worker start
+    sudo service vdi-web start
+    sudo service vdi-ws_listener start
+    ```
 
 ## Миграция данных VeiL Broker 2.0 на версию 3.0.0
 
