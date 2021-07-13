@@ -1048,7 +1048,7 @@ msgstr "Фамилия должна быть <= 255 символам."
 
 #: ../web_app/auth/group_schema.py:175
 msgid "Group {} already exists."
-msgstr "Группа {} уже имеет существует."
+msgstr "Группа {} уже существует."
 
 #: ../web_app/auth/group_schema.py:217
 msgid "Specify Group.id or Group.ad_guid."
