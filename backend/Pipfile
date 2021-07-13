@@ -4,17 +4,17 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 
 [dev-packages]
-pytest = "==5.2.2"
-pytest-asyncio = "==0.10.0"
-pytest-cov = "==2.8.1"
-wasmer = "==0.3.0"
-snapshottest = "==0.5.1"
-flake8 = "==3.7.9"
-flake8-builtins = "==1.5.2"
-flake8-bugbear = "==19.8.0"
-requests = "==2.23.0"
-sqlalchemy-utils = "==0.36.*"
-async_generator = "==1.10"  # classy_async
+pytest = "*"
+pytest-asyncio = "*"
+pytest-cov = "*"
+wasmer = "*"
+snapshottest = "*"
+flake8 = "*"
+flake8-builtins = "*"
+flake8-bugbear = "*"
+requests = "*"
+sqlalchemy-utils = "*"
+async_generator = "*"  # classy_async
 
 [packages]
 pyjwt = "==1.7.1"  # JWTTokens
@@ -35,6 +35,7 @@ pymemcache = "==3.2.*"
 uvloop = "==0.14.*"
 veil-api-client = "==2.2.*"
 veil-aio-au = "==0.1.*"
+aiosmtplib = "==1.1.6"
 
 [requires]
 python_version = "3.5"

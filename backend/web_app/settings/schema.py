@@ -25,14 +25,32 @@ class SettingsType(graphene.ObjectType):
     VEIL_MAX_VM_CREATE_ATTEMPTS = graphene.Int()
 
 
+class SmtpSettingsType(graphene.ObjectType):
+    hostname = graphene.String()
+    port = graphene.Int()
+    TLS = graphene.Boolean()
+    SSL = graphene.Boolean()
+    password = graphene.String()
+    user = graphene.String()
+    from_address = graphene.String()
+    level = graphene.Int()
+
+
 class SettingsQuery(graphene.ObjectType):
     settings = graphene.Field(SettingsType)
+    smtp_settings = graphene.Field(SmtpSettingsType)
 
     @administrator_required
     async def resolve_settings(self, _info, **kwargs):
         settings = await Settings.get_settings()
         settings_list = SettingsType(**settings)
         return settings_list
+
+    @administrator_required
+    async def resolve_smtp_settings(self, _info, **kwargs):
+        smtp_settings = await Settings.get_smtp_settings()
+        smtp_settings_list = SmtpSettingsType(**smtp_settings)
+        return smtp_settings_list
 
 
 class ChangeSettingsMutation(graphene.Mutation):
@@ -63,8 +81,28 @@ class ChangeSettingsMutation(graphene.Mutation):
         return ChangeSettingsMutation(ok=ok)
 
 
+class ChangeSmtpSettingsMutation(graphene.Mutation):
+    class Arguments:
+        hostname = graphene.String()
+        port = graphene.Int()
+        TLS = graphene.Boolean()
+        SSL = graphene.Boolean()
+        password = graphene.String()
+        user = graphene.String()
+        from_address = graphene.String()
+        level = graphene.Int()
+
+    ok = graphene.Boolean()
+
+    @administrator_required
+    async def mutate(self, _info, **kwargs):
+        ok = await Settings.change_smtp_settings(**kwargs)
+        return ChangeSmtpSettingsMutation(ok=ok)
+
+
 class SettingsMutations(graphene.ObjectType):
     changeSettings = ChangeSettingsMutation.Field()
+    changeSmtpSettings = ChangeSmtpSettingsMutation.Field()
 
 
 settings_schema = graphene.Schema(

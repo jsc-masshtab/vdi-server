@@ -148,7 +148,7 @@ class PoolGetVm(BaseHttpHandler, ABC):
         except asyncio.TimeoutError:
             response = {
                 "errors": [
-                    {"message": _local_("Controller did not reply. Check if it is available"), "code": "005"}
+                    {"message": _local_("Controller did not reply. Check if it is available."), "code": "005"}
                 ]
             }
             return await self.log_finish(response)
