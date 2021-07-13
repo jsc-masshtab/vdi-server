@@ -178,12 +178,13 @@ nav:
       - Настройки Spice: connect/settings/spice_settings.md
       - Настройки RDP: connect/settings/rdp_settings.md
       - Служебные настройки: connect/settings/service_settings.md
-    - Запуск в режиме доступа одного приложения: connect/one_app_mode.md
     - Возможные ошибки:
       - Общие ошибки: connect/possible_errors/common.md
       - Ошибки RDP: connect/possible_errors/rdp.md
       - Ошибки Spice: connect/possible_errors/spice.md
     - Cписок изменений:
+      - 1.6.7: connect/changelog/1.6.7.md
+      - 1.6.6: connect/changelog/1.6.6.md
       - 1.6.5: connect/changelog/1.6.5.md
       - 1.6.4: connect/changelog/1.6.4.md
       - 1.6.3: connect/changelog/1.6.3.md
