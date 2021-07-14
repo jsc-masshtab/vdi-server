@@ -23,8 +23,8 @@ import { EventsModule } from './log/events/events.module';
 import { TasksModule } from './log/tasks/tasks.module';
 
 
-import {  HttpLink } from 'apollo-angular-link-http';
-import {  Apollo  } from 'apollo-angular';
+import { HttpLink } from 'apollo-angular-link-http';
+import { Apollo } from 'apollo-angular';
 import { ApolloLink, from } from 'apollo-link';
 import { HttpHeaders, HttpClientModule } from '@angular/common/http';
 

@@ -19,7 +19,7 @@ interface Event {
 }
 
 @Component({
-  selector: 'vdi-events',
+  selector: 'veil-events',
   templateUrl: './events.component.html',
   styleUrls: ['./events.component.scss']
 })

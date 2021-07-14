@@ -1,17 +1,36 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FooterService } from './footer.service';
+
+import { Subscription } from 'rxjs';
+import { WebsocketService } from '../../../classes/websock.service';
+
+interface ICountEvents {
+  warning: number;
+  error: number;
+  count: number;
+}
 
 @Component({
   selector: 'vdi-footer',
   templateUrl: './footer.component.html',
   styleUrls: ['./footer.component.scss']
 })
-export class FooterComponent implements OnInit {
+export class FooterComponent implements OnInit, OnDestroy {
+
+  socketSub: Subscription;
 
   info: any = {};
   license: any = {};
 
-  constructor(private service: FooterService) { }
+  openedLog: boolean = false;
+  log: string = '';
+
+  countEvents: ICountEvents;
+
+  constructor(
+    private service: FooterService,
+    private ws: WebsocketService
+  ) {}
 
   ngOnInit() {
     this.service.getInfo().subscribe((res) => {
@@ -22,13 +41,54 @@ export class FooterComponent implements OnInit {
 
     this.service.channel$.subscribe(() => {
       this.getLicense();
-    })
+    });
+
+    this.service.countEvents().valueChanges.subscribe(res => {
+      this.countEvents = { ...res.data };
+    });
+
+    this.listenSockets();
   }
 
+  private listenSockets() {
+    if (this.socketSub) {
+      this.socketSub.unsubscribe();
+    }
+
+    this.socketSub = this.ws.stream('/events/').subscribe((message: any) => {
+      if (message.event_type === 1) { this.countEvents.warning++ }
+      if (message.event_type === 2) { this.countEvents.error++ }
+    });
+  }
+
+  openLog(log) {
+    if (log !== this.log) {
+      this.openedLog = false;
+      this.log = log;
+
+      setTimeout(() => {
+        this.openedLog = true;
+      })
+    } else {
+      this.closeLog();
+    }
+  }
+
+  closeLog() {
+    this.log = '';
+    this.openedLog = false;
+  }
+
+ 
   getLicense() {
     this.service.getLicence().subscribe((res) => {
       this.license = res.data;
     });
   }
 
+  ngOnDestroy() {
+    if (this.socketSub) {
+      this.socketSub.unsubscribe();
+    }
+  }
 }

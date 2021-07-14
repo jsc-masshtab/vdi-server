@@ -1,4 +1,46 @@
+.log {
+    display: flex;
+    flex-direction: column;
+    height: 250px;
+
+    &-header {
+        background-color: white;
+        display: flex;
+        border-top: 1px solid gainsboro;
+        align-items: center;
+        justify-content: space-between;
+        
+        > span {
+            padding: 10px;
+        }
+    }
+
+    &-close {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        outline: 0;
+        border: 1px solid rgba(0, 0, 0, 0.2);
+        border-radius: 4px;
+        background-color: white;
+        color: rgba(0, 0, 0, 0.6);
+        cursor: pointer;
+        transition: all 150ms;
+        width: 25px;
+        height: 23px;
+        margin: 5px;
+    }
+
+    &-container {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        overflow: hidden;
+    }
+}
+
 footer {  
+    position: relative;
     height: 30px;
     background: #FFF;
     display: flex;
@@ -8,13 +50,31 @@ footer {
     font-size: 12px;
     color: rgba(255,255,255,0.9);
     overflow: hidden;
-    position: fixed;
-    bottom: 0px;
     width: 100%;
-    z-index: 4;
-    left: 0px;
-    right: 0px;
     min-width: 320px;
+
+    .footer-log {
+        position: relative;
+        display: flex;
+        flex-direction: row;
+
+        &-button {
+            position: relative;
+            background-color: white;
+            white-space: nowrap;
+            border-radius: 3px;
+            padding: 0;
+            margin: 5px;
+            border: 0;
+
+            > span {
+                position: relative;
+                top: 2px;
+                left: 2px;
+                font-size: 90%;
+            }
+        }
+    }
 
     .license {
         display: flex;
@@ -27,6 +87,7 @@ footer {
             font-size: 11px;
             line-height: 11px;
             padding: 3px;
+            min-width: 150px;
         }
     
         .warning {
@@ -39,6 +100,8 @@ footer {
         align-items: center;
         margin-left: auto;
         font-size: 13px;   
+        min-width: 230px;
+        white-space: nowrap;
         height: 100%;
         padding: 6px;
         padding-right: 25px;

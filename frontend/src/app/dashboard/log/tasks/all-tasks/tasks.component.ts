@@ -1,6 +1,6 @@
 import { TasksService } from './tasks.service';
 import { WaitService } from '../../../common/components/single/wait/wait.service';
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, Input } from '@angular/core';
 import { map } from 'rxjs/operators';
 import { MatDialog } from '@angular/material/dialog';
 import { InfoTaskComponent } from '../info-tasks/info-tasks.component';
@@ -17,6 +17,8 @@ import { Subscription } from 'rxjs';
 
 export class TasksComponent implements OnInit, OnDestroy {
 
+  @Input() controls: boolean = true;
+  
   private socketSub: Subscription;
 
   public limit = 100;

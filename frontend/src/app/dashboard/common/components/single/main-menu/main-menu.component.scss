@@ -1,4 +1,5 @@
 .top-menu {
+    position: relative;
     display: flex;
     flex-direction: column;
     height: 100%;
@@ -11,9 +12,6 @@
     font-size: 13px;
     font-family: Arial, Helvetica, sans-serif;
 
-    position: fixed;
-    z-index: 3;
-  
     &-item {
       display: flex;
       width: calc(100% + 1px);
