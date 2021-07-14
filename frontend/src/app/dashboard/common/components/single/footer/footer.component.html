@@ -1,6 +1,7 @@
 <div class="log" *ngIf="openedLog">
   <div class="log-header">
-    <span *ngIf="log == 'events'">События</span>
+    <span *ngIf="log == 'events-warning'">События предупреждения</span>
+    <span *ngIf="log == 'events-error'">События ошибки</span>
     <span *ngIf="log == 'tasks'">Задачи</span>
 
     <button class="log-close" (click)="closeLog()">
@@ -9,22 +10,23 @@
   </div>
   
   <div class="log-container">
-    <vdi-events *ngIf="log == 'events'" [controls]="false"></vdi-events>
+    <vdi-events *ngIf="log == 'events-warning'" [type]="1" [controls]="false"></vdi-events>
+    <vdi-events *ngIf="log == 'events-error'" [type]="2" [controls]="false"></vdi-events>
     <vdi-tasks *ngIf="log == 'tasks'" [controls]="false"></vdi-tasks>
   </div>
 </div>
 
 <footer>
   <div class="footer-log">
-    <button class="footer-log-button" (click)="openLog('events')">
+    <button class="footer-log-button" (click)="openLog('events-warning')">
       <fa-icon [icon]="['fas', 'exclamation-triangle']" class="extra-icon" [style.color]="'rgb(231, 186, 8)'" title="Предупреждение"></fa-icon>
-      <span>{{ countEvents.warning || 0 }}</span>
+      <span>{{ countEvents?.warning || 0 }}</span>
       
     </button>
 
-    <button class="footer-log-button" (click)="openLog('events')">
+    <button class="footer-log-button" (click)="openLog('events-error')">
       <fa-icon [icon]="['fas', 'times-circle']" class="extra-icon" [style.color]="'rgb(208, 61, 61)'" title="Ошибка"></fa-icon>
-      <span>{{ countEvents.error || 0 }}</span>
+      <span>{{ countEvents?.error || 0 }}</span>
     </button>
 
     <button class="footer-log-button" (click)="openLog('tasks')">

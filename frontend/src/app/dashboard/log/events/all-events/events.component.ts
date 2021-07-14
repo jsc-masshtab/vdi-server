@@ -28,6 +28,9 @@ interface Event {
 export class EventsComponent implements OnInit, OnDestroy {
 
   @Input() controls: boolean = true;
+  @Input() set type(value) {
+    this.event_type.setValue(value);
+  }
 
   private socketSub: Subscription;
 

@@ -35,12 +35,16 @@ export class FooterService {
     return this.service.watchQuery({
       query: gql`
         query
-          events {
-            count
-            warning: count(event_type: 1),
-            error: count(event_type: 0)
+          events($start_date: DateTime, $end_date: DateTime) {
+            warning: count(event_type: 1, start_date: $start_date, end_date: $end_date),
+            error: count(event_type: 0, start_date: $start_date, end_date: $end_date)
           }
-        `
+        `,
+        variables: {
+            method: 'GET',
+            start_date: new Date(0).toISOString(),
+            end_date: new Date().toISOString()
+        }
     });
   }
 }
