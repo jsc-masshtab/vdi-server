@@ -14,8 +14,8 @@ theme:
   language: 'ru'
   palette:
     scheme: 'default'
-    primary: 'light blue'
-    accent: 'blue'
+    primary: 'blue grey'
+    accent: 'deep purple'
   font:
     text: 'Roboto'
     code: 'Roboto Mono'
