@@ -17,6 +17,7 @@ sqlalchemy-utils = "*"
 async_generator = "*"  # classy_async
 
 [packages]
+yaaredis = "==2.0.3" # aioredis и aredis имеют баги. aioredis не дает создать больше одного подписчика на канал. aredis не пробрасывает asyncio.CancelledError
 pyjwt = "==1.7.1"  # JWTTokens
 tornado = "==6.0.*"
 graphene = "==2.1.8"
@@ -30,7 +31,6 @@ python2-secrets = "==1.0.5"  # Django-secrets
 cryptography = "==2.8"  # controller password encryption
 python-ldap = "==3.3.*"  # ldap integration
 ldap3 = "==2.8.*"  # ldap integration
-redis = "==3.4.1"
 pymemcache = "==3.2.*"
 uvloop = "==0.14.*"
 veil-api-client = "==2.2.*"

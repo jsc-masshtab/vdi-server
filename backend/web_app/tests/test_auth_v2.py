@@ -7,6 +7,7 @@ from tornado.httpclient import HTTPClientError
 from web_app.tests.utils import VdiHttpTestCase
 from web_app.tests.fixtures import (
     fixt_db,
+    fixt_redis_client,
     fixt_user_locked,
     fixt_user,
     fixt_user_admin,

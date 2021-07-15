@@ -5,7 +5,7 @@ from common.database import start_gino, stop_gino
 from common.log.journal import system_logger
 from common.settings import DEBUG
 from common.utils import init_exit_handler
-from common.veil.veil_redis import REDIS_POOL
+from common.veil.veil_redis import redis_deinit, redis_init
 
 from pool_worker.pool_task_manager import PoolTaskManager
 from pool_worker.vm_manager import VmManager
@@ -15,6 +15,8 @@ def main():
     init_exit_handler()
     loop = asyncio.get_event_loop()
     loop.set_debug(DEBUG)  # debug mode
+
+    redis_init()
 
     # init gino
     loop.run_until_complete(start_gino())
@@ -29,8 +31,9 @@ def main():
 
     system_logger._debug("Pool worker stopped")
 
-    REDIS_POOL.disconnect()
     loop.run_until_complete(stop_gino())
+
+    redis_deinit()
 
 
 if __name__ == "__main__":

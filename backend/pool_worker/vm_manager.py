@@ -2,7 +2,7 @@
 import asyncio
 import json
 
-import redis
+from yaaredis.exceptions import RedisError
 
 from common.database import db
 from common.languages import _local_
@@ -18,7 +18,7 @@ from common.settings import (
 )
 from common.subscription_sources import WsMessageType
 from common.veil.veil_gino import EntityType, Status
-from common.veil.veil_redis import REDIS_CLIENT, a_redis_get_message
+from common.veil.veil_redis import redis_block_get_message, redis_get_pubsub
 
 
 class VmManager:
@@ -106,12 +106,12 @@ class VmManager:
 
     async def _synchronize_vm_data_task(self):
         """Если на контроллере меняется имя ВМ, то обновляем его на VDI."""
-        redis_subscriber = REDIS_CLIENT.pubsub()
-        redis_subscriber.subscribe(WS_MONITOR_CHANNEL_OUT)
+        pubsub = redis_get_pubsub()
+        await pubsub.subscribe(WS_MONITOR_CHANNEL_OUT)
 
         while True:
             try:
-                redis_message = await a_redis_get_message(redis_subscriber)
+                redis_message = await redis_block_get_message(pubsub)
 
                 if redis_message["type"] == "message":
                     redis_message_data = redis_message["data"].decode()
@@ -134,13 +134,11 @@ class VmManager:
                                 # await vm.soft_update(verbose_name=fresh_name, creator='system')
                                 await vm.update(verbose_name=fresh_name).apply()
 
-            except redis.ConnectionError as ex:
-                await system_logger.debug(
-                    message="Redis connection error.", description=str(ex)
-                )
+            except RedisError as ex:
+                await system_logger.debug(message="Redis connection error.", description=str(ex))
                 await asyncio.sleep(REDIS_TIMEOUT)
             except asyncio.CancelledError:
-                break
+                raise
             except Exception as ex:
                 await system_logger.debug(
                     message=_local_("Synchronize vm data task error."),

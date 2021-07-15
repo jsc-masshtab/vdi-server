@@ -158,11 +158,11 @@ class License:
             return self.veil_pem_path if os.path.exists(self.veil_pem_path) else None
 
         @property
-        def expiration_date(self) -> bool:
+        def expiration_date(self):
             return self.license_data.expiration_date
 
         @property
-        def support_expiration_date(self) -> bool:
+        def support_expiration_date(self):
             return self.license_data.support_expiration_date
 
         @property
@@ -189,13 +189,12 @@ class License:
         def take_verbose_name(self):
             return self.license_data.verbose_name
 
-        @property
-        def license_data(self):
-            return LicenseData(**read_license_dict(dict_name="license_dict"))
+        async def get_license_data(self):
+            license_dict = await read_license_dict(dict_name="license_dict")
+            return LicenseData(**license_dict)
 
-        @license_data.setter
-        def license_data(self, license_data: LicenseData):
-            return save_license_dict(
+        async def set_license_data(self, license_data: LicenseData):
+            await save_license_dict(
                 dict_name="license_dict", data=license_data.new_license_attrs_dict
             )
 
@@ -261,5 +260,5 @@ class License:
     def __getattr__(self, name):
         return getattr(self.instance, name)
 
-    def __setattr__(self, name):
-        return setattr(self.instance, name)
+    def __setattr__(self, name, value):
+        return setattr(self.instance, name, value)

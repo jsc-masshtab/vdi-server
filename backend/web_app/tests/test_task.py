@@ -6,6 +6,7 @@ from web_app.task.schema import task_schema
 from web_app.tests.utils import execute_scheme
 from web_app.tests.fixtures import (
     fixt_db,
+    fixt_redis_client,
     fixt_controller,
     fixt_create_automated_pool,
     fixt_create_static_pool,  # noqa

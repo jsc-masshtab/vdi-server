@@ -23,7 +23,7 @@ from common.subscription_sources import (
 )
 from common.veil.auth.veil_jwt import jwtauth_ws
 from common.veil.veil_handlers import BaseWsHandler
-from common.veil.veil_redis import REDIS_CLIENT, a_redis_get_message
+from common.veil.veil_redis import redis_block_get_message, redis_get_pubsub
 
 
 @jwtauth_ws
@@ -113,14 +113,13 @@ class VdiFrontWsHandler(BaseWsHandler):  # noqa
     async def _send_messages_co(self):
         """Wait for message and send it to front client."""
         # subscribe to channels  INTERNAL_EVENTS_CHANNEL and WS_MONITOR_CHANNEL_OUT
-        redis_subscriber = REDIS_CLIENT.pubsub()
-        redis_subscriber.subscribe(
-            INTERNAL_EVENTS_CHANNEL, WS_MONITOR_CHANNEL_OUT, REDIS_TEXT_MSG_CHANNEL
-        )
+
+        pubsub = redis_get_pubsub()
+        await pubsub.subscribe(INTERNAL_EVENTS_CHANNEL, WS_MONITOR_CHANNEL_OUT, REDIS_TEXT_MSG_CHANNEL)
 
         while True:
             try:
-                redis_message = await a_redis_get_message(redis_subscriber)
+                redis_message = await redis_block_get_message(pubsub)
 
                 if redis_message["type"] == "message":
                     redis_message_data = redis_message["data"].decode()

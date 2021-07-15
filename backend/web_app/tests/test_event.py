@@ -2,7 +2,7 @@ import pytest
 
 from datetime import datetime, timedelta
 
-from web_app.tests.fixtures import fixt_db, fixt_auth_context, fixt_user  # noqa
+from web_app.tests.fixtures import fixt_db, fixt_redis_client, fixt_auth_context, fixt_user  # noqa
 from web_app.tests.utils import execute_scheme
 from web_app.journal.schema import event_schema
 from common.models.auth import Group, Role

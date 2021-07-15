@@ -3,8 +3,6 @@ import asyncio
 
 from asyncpg.exceptions._base import PostgresError
 
-import redis
-
 from tornado.websocket import WebSocketClosedError
 from tornado.websocket import websocket_connect
 
@@ -15,7 +13,7 @@ from common.settings import WS_MONITOR_CHANNEL_OUT, WS_PING_INTERVAL, WS_PING_TI
 from common.subscription_sources import CONTROLLER_SUBSCRIPTIONS_LIST, SubscriptionCmd
 from common.utils import cancel_async_task
 from common.veil.veil_gino import Status
-from common.veil.veil_redis import REDIS_CLIENT
+from common.veil.veil_redis import publish_to_redis
 
 
 class ResourcesMonitor:
@@ -180,11 +178,7 @@ class ResourcesMonitor:
 
     async def _on_message_received(self, message):
         # await system_logger.debug('_on_message_received: message ' + message)
-        try:
-            REDIS_CLIENT.publish(WS_MONITOR_CHANNEL_OUT, message)
-        except redis.RedisError as ex:
-            await system_logger.error(message="Resource monitor ws. Redis error.",
-                                      description=str(ex))
+        await publish_to_redis(WS_MONITOR_CHANNEL_OUT, message)
 
     async def _close_connection(self):
         if self._ws_connection:

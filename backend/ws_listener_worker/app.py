@@ -5,7 +5,7 @@ from common.database import start_gino, stop_gino
 from common.log.journal import system_logger
 from common.settings import DEBUG
 from common.utils import init_exit_handler
-from common.veil.veil_redis import REDIS_POOL
+from common.veil.veil_redis import redis_deinit, redis_init
 
 from ws_listener_worker.resources_monitor_manager import ResourcesMonitorManager
 from ws_listener_worker.thin_client_conn_monitor import ThinClientConnMonitor
@@ -16,6 +16,8 @@ def main():
 
     loop = asyncio.get_event_loop()
     loop.set_debug(DEBUG)  # debug mode
+
+    redis_init()
 
     # init gino
     loop.run_until_complete(start_gino())
@@ -31,8 +33,8 @@ def main():
     system_logger._debug("Ws listener worker stopped")
     # free resources
     loop.run_until_complete(resources_monitor_manager.stop())
-    REDIS_POOL.disconnect()
     loop.run_until_complete(stop_gino())
+    redis_deinit()
 
 
 if __name__ == "__main__":

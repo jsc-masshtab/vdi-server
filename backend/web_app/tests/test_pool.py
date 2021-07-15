@@ -19,6 +19,7 @@ from web_app.auth.license.utils import License, LicenseData
 
 from web_app.tests.fixtures import (
     fixt_db,
+    fixt_redis_client,
     fixt_controller,
     fixt_create_automated_pool,  # noqa
     fixt_create_static_pool,

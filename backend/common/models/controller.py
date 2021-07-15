@@ -174,7 +174,7 @@ class Controller(AbstractSortableStatusModel, VeilModel):
         # Отправляем команду на добавляление контроллера в монитор (После завершения транзакции
         # чтоб запись точно была в бд)
         if connection_is_ok:
-            send_cmd_to_ws_monitor(controller.id, WsMonitorCmd.ADD_CONTROLLER)
+            await send_cmd_to_ws_monitor(controller.id, WsMonitorCmd.ADD_CONTROLLER)
 
         # Логгируем результат операции
         msg = _local_("Controller {} added.").format(verbose_name)
@@ -220,7 +220,7 @@ class Controller(AbstractSortableStatusModel, VeilModel):
             updated_controller = await Controller.get(self.id)
         controller_is_ok = await updated_controller.check_controller()
         # На случай смены токена или адреса
-        send_cmd_to_ws_monitor(self.id, WsMonitorCmd.RESTART_MONITOR)
+        await send_cmd_to_ws_monitor(self.id, WsMonitorCmd.RESTART_MONITOR)
         if controller_is_ok:
             await updated_controller.activate()
             # Получаем, сохраняем и проверяем допустимость версии
@@ -256,7 +256,7 @@ class Controller(AbstractSortableStatusModel, VeilModel):
             controller_id=self.id, wait_for_result=True
         )
         # Удаляем контроллер из монитора
-        send_cmd_to_ws_monitor(self.id, WsMonitorCmd.REMOVE_CONTROLLER)
+        await send_cmd_to_ws_monitor(self.id, WsMonitorCmd.REMOVE_CONTROLLER)
         # Переключаем статус
         await self.set_status(Status.DELETING)
         # Удаляем зависимые пулы
@@ -296,7 +296,7 @@ class Controller(AbstractSortableStatusModel, VeilModel):
         # Активация ВМ происходит внутри пулов.
 
         # Возобновляем задачи связанные с контроллером
-        send_cmd_to_resume_tasks_associated_with_controller(self.id)
+        await send_cmd_to_resume_tasks_associated_with_controller(self.id)
         await system_logger.info(
             _local_("Controller {} has been activated.").format(self.verbose_name),
             entity=self.entity,

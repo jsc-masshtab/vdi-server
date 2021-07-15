@@ -22,7 +22,7 @@ from common.subscription_sources import WsMessageDirection, WsMessageType
 from common.utils import extract_ordering_data
 from common.veil.veil_decorators import administrator_required
 from common.veil.veil_errors import SilentError, ValidationError
-from common.veil.veil_redis import REDIS_CLIENT, ThinClientCmd
+from common.veil.veil_redis import ThinClientCmd, publish_to_redis
 
 ConnectionTypesGraphene = graphene.Enum.from_enum(Pool.PoolConnectionTypes)
 
@@ -245,7 +245,7 @@ class DisconnectThinClientMutation(graphene.Mutation):
                 raise ValidationError(_local_("No such user."))
             add_message = _local_("Connections of user: {}.").format(user.username)
 
-        REDIS_CLIENT.publish(REDIS_THIN_CLIENT_CMD_CHANNEL, json.dumps(cmd_dict))
+        await publish_to_redis(REDIS_THIN_CLIENT_CMD_CHANNEL, json.dumps(cmd_dict))
 
         base_message = _local_("Thin client disconnect requested.")
         await system_logger.info(base_message + " " + add_message, user=creator)
@@ -287,7 +287,7 @@ class SendMessageToThinClientMutation(graphene.Mutation):
                     _local_("User {} does not exist.").format(recipient_id))
             message_data_dict.update(recipient_id=str(recipient_id))
 
-        REDIS_CLIENT.publish(REDIS_TEXT_MSG_CHANNEL, json.dumps(message_data_dict))
+        await publish_to_redis(REDIS_TEXT_MSG_CHANNEL, json.dumps(message_data_dict))
 
         return SendMessageToThinClientMutation(ok=True)
 

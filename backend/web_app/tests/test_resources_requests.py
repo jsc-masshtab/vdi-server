@@ -5,6 +5,7 @@ from graphene.test import Client  # noqa
 from web_app.tests.utils import execute_scheme
 from web_app.tests.fixtures import (
     fixt_db,
+    fixt_redis_client,
     fixt_controller,
     fixt_user_admin,  # noqa: F401
     fixt_create_automated_pool,

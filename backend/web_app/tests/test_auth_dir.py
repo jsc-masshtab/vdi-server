@@ -7,6 +7,7 @@ import pytest
 
 from web_app.tests.fixtures import (
     fixt_db,  # noqa
+    fixt_redis_client,
     fixt_auth_context,  # noqa
     fixt_group,  # noqa
     fixt_local_group,  # noqa

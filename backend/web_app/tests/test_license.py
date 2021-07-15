@@ -3,7 +3,7 @@
 import pytest
 from tornado.testing import gen_test
 from web_app.tests.utils import VdiHttpTestCase
-from web_app.tests.fixtures import fixt_db, fixt_user_admin  # noqa
+from web_app.tests.fixtures import fixt_db, fixt_redis_client, fixt_user_admin  # noqa
 from common.settings import PAM_AUTH
 
 pytestmark = [

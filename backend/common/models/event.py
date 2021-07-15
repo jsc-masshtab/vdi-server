@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
 # TODO: удалять зависимые записи журнала событий, возможно через ON_DELETE
 #  при удалении родительской сущности (нет явной связи, сами не удалятся).
+
 import csv
 import json
 import uuid
 from datetime import datetime, timedelta
 from pathlib import Path
-
-import redis
 
 from sqlalchemy import and_, between
 from sqlalchemy.dialects.postgresql import UUID
@@ -18,7 +17,7 @@ from common.languages import _local_
 from common.settings import INTERNAL_EVENTS_CHANNEL
 from common.subscription_sources import EVENTS_SUBSCRIPTION, WsMessageType
 from common.utils import gino_model_to_json_serializable_dict
-from common.veil.veil_redis import REDIS_CLIENT
+from common.veil.veil_redis import publish_to_redis
 
 
 class Event(db.Model):
@@ -176,8 +175,8 @@ class Event(db.Model):
         msg_dict.update(gino_model_to_json_serializable_dict(event_obj))
 
         try:
-            REDIS_CLIENT.publish(INTERNAL_EVENTS_CHANNEL, json.dumps(msg_dict))
-        except (TypeError, redis.RedisError):  # Can`t serialize
+            await publish_to_redis(INTERNAL_EVENTS_CHANNEL, json.dumps(msg_dict))
+        except (TypeError):  # Can`t serialize
             pass
 
 

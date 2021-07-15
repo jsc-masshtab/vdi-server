@@ -2,12 +2,14 @@
 import asyncio
 import json
 
+from yaaredis.exceptions import RedisError
+
 from common.languages import _local_
 from common.log.journal import system_logger
 from common.models.controller import Controller
-from common.settings import WS_MONITOR_CMD_QUEUE
+from common.settings import REDIS_TIMEOUT, WS_MONITOR_CMD_QUEUE
 from common.veil.veil_gino import EntityType
-from common.veil.veil_redis import WsMonitorCmd, a_redis_lpop
+from common.veil.veil_redis import WsMonitorCmd, redis_blpop
 
 from ws_listener_worker.resources_monitor import ResourcesMonitor
 
@@ -25,7 +27,7 @@ class ResourcesMonitorManager:
         while True:
             try:
                 # wait for message
-                redis_data = await a_redis_lpop(WS_MONITOR_CMD_QUEUE)
+                redis_data = await redis_blpop(WS_MONITOR_CMD_QUEUE)
 
                 # get data from message
                 data_dict = json.loads(redis_data.decode())
@@ -43,15 +45,17 @@ class ResourcesMonitorManager:
 
             except asyncio.CancelledError:
                 raise
+            except RedisError as ex:
+                await system_logger.debug(
+                    message="Redis connection error.", description=str(ex)
+                )
+                await asyncio.sleep(REDIS_TIMEOUT)
             except Exception as ex:
                 entity = {"entity_type": EntityType.SECURITY, "entity_uuid": None}
                 await system_logger.error("exception:" + str(ex), entity=entity)
 
     async def start(self):
-        """Start monitors.
-
-        :return:
-        """
+        """Start monitors."""
         # system_logger.debug('{}: Startup...'.format(__class__.__name__))
         # get all controllers
         controllers = await Controller.query.gino.all()

@@ -33,7 +33,7 @@ from common.veil.veil_gino import (
     Role,
     VeilModel,
 )
-from common.veil.veil_redis import REDIS_CLIENT, ThinClientCmd
+from common.veil.veil_redis import ThinClientCmd, publish_to_redis
 
 
 class Entity(db.Model):
@@ -447,7 +447,7 @@ class User(AbstractSortableStatusModel, VeilModel):
 
         # Разорвать соединение ТК, если присутствуют
         cmd_dict = dict(command=ThinClientCmd.DISCONNECT.name, user_id=str(self.id))
-        REDIS_CLIENT.publish(REDIS_THIN_CLIENT_CMD_CHANNEL, json.dumps(cmd_dict))
+        await publish_to_redis(REDIS_THIN_CLIENT_CMD_CHANNEL, json.dumps(cmd_dict))
 
         return operation_status
 

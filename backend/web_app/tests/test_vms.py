@@ -5,6 +5,7 @@ from tornado.testing import gen_test
 from web_app.tests.utils import execute_scheme, VdiHttpTestCase
 from web_app.tests.fixtures import (
     fixt_db,  # noqa: F401
+    fixt_redis_client,
     fixt_auth_context,  # noqa: F401
     fixt_user,  # noqa: F401
     fixt_user_admin,  # noqa: F401
