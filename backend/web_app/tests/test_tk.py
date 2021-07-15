@@ -21,6 +21,7 @@ from web_app.thin_client_api.schema import thin_client_schema
 from common.settings import PAM_AUTH
 from web_app.tests.fixtures import (
     fixt_db,  # noqa: F401
+    fixt_redis_client,
     fixt_user_locked,  # noqa: F401
     fixt_user,  # noqa: F401
     fixt_user_admin,  # noqa: F401

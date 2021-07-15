@@ -31,9 +31,10 @@ from common.subscription_sources import (
 from common.veil.auth.veil_jwt import jwtauth, jwtauth_ws
 from common.veil.veil_handlers import BaseHttpHandler, BaseWsHandler
 from common.veil.veil_redis import (
-    REDIS_CLIENT,
     ThinClientCmd,
-    a_redis_get_message,
+    publish_to_redis,
+    redis_block_get_message,
+    redis_get_pubsub,
     request_to_execute_pool_task,
 )
 
@@ -392,7 +393,7 @@ class SendTextMsgHandler(BaseHttpHandler, ABC):
                 resource=USERS_SUBSCRIPTION,
             )
 
-            REDIS_CLIENT.publish(REDIS_TEXT_MSG_CHANNEL, json.dumps(msg_data_dict))
+            await publish_to_redis(REDIS_TEXT_MSG_CHANNEL, json.dumps(msg_data_dict))
 
             response = {"data": "success"}
             return await self.log_finish(response)
@@ -485,7 +486,6 @@ class ThinClientWsHandler(BaseWsHandler):
             await self.write_msg(json.dumps(response))
 
     def on_close(self):
-        # print("!!!WebSocket closed", flush=True)
         loop = asyncio.get_event_loop()
         loop.create_task(self.on_async_close())
 
@@ -510,12 +510,12 @@ class ThinClientWsHandler(BaseWsHandler):
 
     async def _send_messages_co(self):
         """Отсылка сообщений на ТК. Сообщения достаются из редис каналов."""
-        redis_subscriber = REDIS_CLIENT.pubsub()
-        redis_subscriber.subscribe(WS_MONITOR_CHANNEL_OUT, REDIS_TEXT_MSG_CHANNEL)
+        pubsub = redis_get_pubsub()
+        await pubsub.subscribe(WS_MONITOR_CHANNEL_OUT, REDIS_TEXT_MSG_CHANNEL)
 
         while True:
             try:
-                redis_message = await a_redis_get_message(redis_subscriber)
+                redis_message = await redis_block_get_message(pubsub)
 
                 if redis_message["type"] == "message":
                     redis_message_data = redis_message["data"].decode()
@@ -557,12 +557,12 @@ class ThinClientWsHandler(BaseWsHandler):
 
     async def _listen_for_cmd(self):
         """Команды от админа."""
-        redis_subscriber = REDIS_CLIENT.pubsub()
-        redis_subscriber.subscribe(REDIS_THIN_CLIENT_CMD_CHANNEL)
+        pubsub = redis_get_pubsub()
+        await pubsub.subscribe(REDIS_THIN_CLIENT_CMD_CHANNEL)
 
         while True:
             try:
-                redis_message = await a_redis_get_message(redis_subscriber)
+                redis_message = await redis_block_get_message(pubsub)
 
                 if redis_message["type"] == "message":
                     redis_message_data = redis_message["data"].decode()

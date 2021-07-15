@@ -134,7 +134,7 @@ class CancelTaskMutation(graphene.Mutation):
 
         # send cmd
         task_id_str_list = [str(task)]
-        send_cmd_to_cancel_tasks(task_id_str_list)
+        await send_cmd_to_cancel_tasks(task_id_str_list)
         return CancelTaskMutation(ok=True)
 
 

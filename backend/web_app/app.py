@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+
 import ssl
 
 from tornado.httpserver import HTTPServer
@@ -23,7 +24,7 @@ from common.settings import (
 from common.utils import init_signals
 from common.veil.veil_api import get_veil_client, stop_veil_client
 from common.veil.veil_handlers import VdiTornadoGraphQLHandler
-from common.veil.veil_redis import REDIS_POOL
+from common.veil.veil_redis import redis_deinit, redis_init
 
 from web_app.auth.authentication_directory.auth_dir_schema import auth_dir_schema
 from web_app.auth.group_schema import group_schema
@@ -118,10 +119,10 @@ def exit_handler(sig, frame):  # noqa
     io_loop = IOLoop.current()
 
     async def shutdown():
-        REDIS_POOL.disconnect()
         await stop_veil_client()
         await system_logger.info(_local_("VDI broker stopped."))
         await stop_gino()
+        redis_deinit()
         io_loop.stop()
 
     io_loop.add_callback_from_signal(shutdown)
@@ -152,6 +153,9 @@ async def startup_server():
     # signals
     init_signals(exit_handler)
     app = make_app()
+
+    # Инициализация редис
+    redis_init()
     # Инициализация клиента
     get_veil_client()
     # Запуск tornado

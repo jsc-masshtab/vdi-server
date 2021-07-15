@@ -12,7 +12,7 @@ from common.database import start_gino, stop_gino
 from common.veil.veil_gino import Role
 from common.veil.auth.veil_jwt import encode_jwt
 from common.veil.veil_api import get_veil_client, stop_veil_client
-from common.veil.veil_redis import REDIS_CLIENT, wait_for_task_result
+from common.veil.veil_redis import redis_flushall, wait_for_task_result
 
 from common.models.controller import Controller
 from common.models.pool import Pool
@@ -20,6 +20,8 @@ from common.models.vm import Vm
 from common.models.auth import Group, User
 from common.models.authentication_directory import AuthenticationDirectory, Mapping
 from common.models.task import Task, TaskStatus
+
+from common.veil.veil_redis import redis_init, redis_deinit
 
 from web_app.controller.schema import controller_schema
 from web_app.pool.schema import pool_schema
@@ -53,9 +55,17 @@ def get_test_pool_name():
 
 @pytest.fixture
 @async_generator
-async def fixt_launch_workers():
+async def fixt_redis_client():
+    redis_init()
+    await yield_()
+    redis_deinit()
 
-    REDIS_CLIENT.flushall()
+
+@pytest.fixture
+@async_generator
+async def fixt_launch_workers(fixt_redis_client):
+
+    await redis_flushall()
 
     file_path = os.path.dirname(__file__)
     pool_worker_path = os.path.join(file_path, "../../pool_worker/app.py")
@@ -78,7 +88,7 @@ async def fixt_launch_workers():
 
 @pytest.fixture
 @async_generator
-async def fixt_db():
+async def fixt_db(fixt_redis_client):
     """Actual fixture for requests working with db."""
     await start_gino()
     await yield_()
