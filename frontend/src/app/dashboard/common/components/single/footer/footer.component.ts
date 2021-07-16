@@ -7,7 +7,7 @@ import { WebsocketService } from '../../../classes/websock.service';
 interface ICountEvents {
   warning: number;
   error: number;
-  count: number;
+  all: number;
 }
 
 @Component({
@@ -22,8 +22,8 @@ export class FooterComponent implements OnInit, OnDestroy {
   info: any = {};
   license: any = {};
 
-  openedLog: boolean = false;
-  log: string = '';
+  openedLog: boolean = true;
+  log: string = 'events';
 
   countEvents: ICountEvents;
 
@@ -56,8 +56,11 @@ export class FooterComponent implements OnInit, OnDestroy {
     }
 
     this.socketSub = this.ws.stream('/events/').subscribe((message: any) => {
-      if (message.event_type === 1) { this.countEvents.warning++ }
-      if (message.event_type === 2) { this.countEvents.error++ }
+      if (message.msg_type === 'data') {
+        if (message.event_type === 1) { this.countEvents.warning++ }
+        if (message.event_type === 2) { this.countEvents.error++ }
+        this.countEvents.all++;
+      }
     });
   }
 

@@ -60,11 +60,11 @@ footer {
 
         &-button {
             position: relative;
-            background-color: white;
+            background-color: transparent;
             white-space: nowrap;
             border-radius: 3px;
-            padding: 0;
-            margin: 5px;
+            margin: 0 1px;
+            padding: 5px 7px;
             border: 0;
 
             > span {
@@ -73,6 +73,18 @@ footer {
                 left: 2px;
                 font-size: 90%;
             }
+
+            &:hover {
+                background-color: #4c4c4c;
+                color: #c4e582;
+            }
+        }
+
+        .log-group-types {
+            border: 1px solid #d1d1d1;
+            border-radius: 5px;
+            background: #faf6f6;
+            overflow: hidden;
         }
     }
 

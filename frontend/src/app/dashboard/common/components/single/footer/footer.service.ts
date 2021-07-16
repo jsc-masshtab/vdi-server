@@ -36,8 +36,9 @@ export class FooterService {
       query: gql`
         query
           events($start_date: DateTime, $end_date: DateTime) {
+            all: count(start_date: $start_date, end_date: $end_date),
             warning: count(event_type: 1, start_date: $start_date, end_date: $end_date),
-            error: count(event_type: 0, start_date: $start_date, end_date: $end_date)
+            error: count(event_type: 2, start_date: $start_date, end_date: $end_date)
           }
         `,
         variables: {
