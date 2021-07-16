@@ -157,8 +157,8 @@ nav:
     - Назначение программы: connect/operator_guide/general_info.md
     - Условия выполнения программы: connect/operator_guide/program_condition.md
     - Установка и удаление программы:
-      - Проверка целостности программы: connect/operator_guide/integrity_check.md
-      - Установка с физического носителя: connect/operator_guide/install.md
+      - Проверка целостности VeiL Connect: connect/operator_guide/integrity_check.md
+      - Установка VeiL Connect: connect/operator_guide/install.md
       - Процедура установки VeiL Connect: connect/operator_guide/process_install.md
       - Процедура удаления VeiL Connect: connect/operator_guide/delete.md
     - Выполнение программы:

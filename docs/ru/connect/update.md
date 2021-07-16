@@ -30,9 +30,8 @@ deb https://veil-update.mashtab.org/veil-connect/linux/apt bionic main
 wget -qO - https://veil-update.mashtab.org/veil-repo-key.gpg | sudo apt-key add -
 ```
 - После этого выполните в терминале команду: `sudo apt-get update`
-### RHEL-based OS
-- Создайте файл `/etc/yum.repos.d/veil-connect.repo` (от имени суперпользователя) и добавьте в него следующие строки:
-- Для Centos 7 / Centos 8:
+
+- Для Centos 7 / Centos 8 cоздайте файл `/etc/yum.repos.d/veil-connect.repo` (от имени суперпользователя) и добавьте в него следующие строки:
 ```markdown
 name=VeiL Connect repository
 baseurl=https://veil-update.mashtab.org/veil-connect/linux/yum/el$releasever/$basearch
@@ -48,14 +47,14 @@ enabled=1
 в случае если была обнаружена новая версия
 
 !!! example ""
-    ![image](../../_assets/vdi/thin_client/new_version_available.png)
+    ![image](../_assets/vdi/thin_client/new_version_available.png)
 
 - Нажмите **Настройки** -> **Служебные** -> **Получить обновления**.
 
 - В открывшемся окне введите пароль sudo
 
 !!! example ""
-    ![image](../../_assets/vdi/thin_client/sudo_pass_window.png)
+    ![image](../_assets/vdi/thin_client/sudo_pass_window.png)
 
 - Нажмите **Ок**. После этого в случае наличия новой версии произойдет ее загрузка и установка
 
@@ -71,7 +70,7 @@ enabled=1
 - Впишите путь к Windows хранилищу обновлений: `https://veil-update.mashtab.org/veil-connect/windows/latest/`
 
 !!! example ""
-    ![image](../../_assets/vdi/thin_client/windows_updates_url.png)
+    ![image](../_assets/vdi/thin_client/windows_updates_url.png)
 
 - Нажмите кнопку **Получить обновления**. После этого в случае наличия новой версии произойдет ее загрузка и
 запуск установщика приложения
