@@ -1,0 +1,31 @@
+<div class="control-panel">
+
+  <div class="crumb" [style.marginRight]="'15px'">
+    <fa-icon [icon]="['fas','comment']"></fa-icon>
+    <span class="crumb-name">Статистика подключений</span>
+  </div>
+
+  <button (click)="getStatictic()" class="btn-refresh" title="Обновить">
+    <fa-icon [icon]="['fas','sync-alt']"></fa-icon>
+  </button>
+
+</div>
+
+<div class="components-info">
+  <div class="component-list">
+    <vdi-table-component 
+      class="table-with-pagination"
+      [collection]="collection" 
+      [entity]="data"
+      [data]="data"
+      (sortListNow)="sortList($event)">
+    </vdi-table-component>
+
+    <vdi-pagination 
+      [count]="count" 
+      [limit]="limit" 
+      [offset]="offset" 
+      (action)="toPage($event)">
+    </vdi-pagination>
+  </div>
+</div>

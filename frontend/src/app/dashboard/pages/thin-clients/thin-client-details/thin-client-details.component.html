@@ -1,0 +1,77 @@
+<div class="details-wrap">
+
+  <div class="details-header">
+    <div class="title">
+      <fa-icon [icon]="['fas','user']" size="s"></fa-icon>
+      <span class="name">
+        Тонкий клиент <span>{{entity?.username}}</span>
+      </span>
+    </div>
+
+    <div class="btns-part">
+      <button class="btn-close" (click)="close()">
+        <fa-icon [icon]="['fas','times-circle']"></fa-icon>
+      </button>
+    </div>
+  </div>
+
+  <div class="details-control-panel">
+    <button class="btn-control" type="button" (click)="disconnect()">
+      <fa-icon [icon]="['fas','power-off']"></fa-icon>
+      <span class="name">Отключить клиент</span>
+    </button>
+  </div>
+
+  <div class="details-row">
+    <ul class="details-menu">
+      <li (click)="routeTo('info')" [class.active]="menuActive === 'info'" title="Информация">
+        <fa-icon [icon]="['fas','chart-bar']"></fa-icon><span class="name">Информация</span>
+      </li>
+
+      <li (click)="routeTo('messenger')" [class.active]="menuActive === 'messenger'" title="Чат">
+        <fa-icon [icon]="['fas','comment-dots']"></fa-icon><span class="name">Диалоги</span>
+      </li>
+    </ul>
+
+    <div class="details-slide">
+      <div class="details-slide-header">
+        <ng-container *ngIf="menuActive === 'info'">Информация</ng-container>
+        <ng-container *ngIf="menuActive === 'messenger'">Диалог с клиентом</ng-container>
+      </div>
+
+      <div class="details-slide-into">
+        <vdi-table-into
+          *ngIf="menuActive === 'info'"
+          [item]="entity"
+          [collection]="collection"
+          (edit)="edit($event)">
+        </vdi-table-into>
+
+        <ng-container *ngIf="menuActive === 'messenger'">
+          <div class="messenger-container">
+            <div class="messenger">
+              <div #messenger class="messenger-messages">
+
+                <div class="messenger-message" *ngFor="let message of messages" [class.message-justify]="message.self">
+                  <div class="message-content">
+                    <span class="message-sender">{{ message.sender }}:</span>
+                    <span>{{ message.text }}</span>
+                    <span class="message-time">{{ message.time }}</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="messenger-controls">
+                <textarea [formControl]="message" (keydown)="keyEvent($event)" [focusMe]="true"></textarea>
+                <button type="button" (click)="sendMessage()">
+                  <span>Отправить</span> 
+                  <small>(Ctrl + Enter)</small>
+                </button>
+              </div>
+            </div>
+          </div>
+        </ng-container>
+      </div>
+    </div>
+  </div>
+</div>
