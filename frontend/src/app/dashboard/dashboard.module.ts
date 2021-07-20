@@ -11,14 +11,10 @@ import { MainMenuComponent } from './common/components/single/main-menu/main-men
 import { WaitComponent } from './common/components/single/wait/wait.component';
 import { UsersModule } from './settings/users/users.module';
 import { AuthenticationDirectoryModule } from './settings/auth-directory/auth-directory.module';
-import { ControllersModule } from './controllers/controllers.module';
-import { TemplatesModule } from './resourses/templates/templates.module';
-import { NodesModule } from './resourses/nodes/nodes.module';
-import { DatapoolsModule } from './resourses/datapools/datapools.module';
-import { ClustersModule } from './resourses/clusters/clusters.module';
-import { ResourcePoolsModule } from './resourses/resource_pools/resource_pools.module';
-import { PoolsModule } from './pools/pools.module';
-import { VmsModule } from './resourses/vms/vms.module';
+import { ControllersModule } from './pages/controllers/controllers.module';
+
+import { PoolsModule } from './pages/pools/pools.module';
+
 import { EventsModule } from './log/events/events.module';
 import { TasksModule } from './log/tasks/tasks.module';
 
@@ -45,6 +41,12 @@ import { throwError } from 'rxjs';
 import { ThinClientsModule } from './thin-clients/thin-clients.module';
 import { LogSettingModule } from './log/log-setting/log-setting.module';
 import { VeilEventsModule } from './log/veil-events/veil-events.module';
+import { ClustersModule } from './resourses/clusters/clusters.module';
+import { DatapoolsModule } from './resourses/datapools/datapools.module';
+import { NodesModule } from './resourses/nodes/nodes.module';
+import { ResourcePoolsModule } from './resourses/resource_pools/resource_pools.module';
+import { TemplatesModule } from './resourses/templates/templates.module';
+import { VmsModule } from './resourses/vms/vms.module';
 
 
 @NgModule({
