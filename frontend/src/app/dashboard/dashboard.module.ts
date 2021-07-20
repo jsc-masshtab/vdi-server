@@ -1,4 +1,4 @@
-import { GroupsModule } from './settings/groups/groups.module';
+import { GroupsModule } from './pages/settings/groups/groups.module';
 import { HeaderUserComponent } from './common/components/single/header-user/header-user.component';
 import { AuthStorageService } from './../login/authStorage.service';
 import { DashboardRoutingModule } from './dashboard-routing.module';
@@ -9,8 +9,8 @@ import { DashboardComponent } from './dashboard.component';
 import { FooterComponent } from './common/components/single/footer/footer.component';
 import { MainMenuComponent } from './common/components/single/main-menu/main-menu.component';
 import { WaitComponent } from './common/components/single/wait/wait.component';
-import { UsersModule } from './settings/users/users.module';
-import { AuthenticationDirectoryModule } from './settings/auth-directory/auth-directory.module';
+import { UsersModule } from './pages/settings/users/users.module';
+import { AuthenticationDirectoryModule } from './pages/settings/auth-directory/auth-directory.module';
 import { ControllersModule } from './pages/controllers/controllers.module';
 
 import { PoolsModule } from './pages/pools/pools.module';
@@ -36,7 +36,7 @@ import { MAT_DIALOG_DEFAULT_OPTIONS } from '@angular/material/dialog';
 import { onError } from 'apollo-link-error';
 import { InMemoryCache } from 'apollo-cache-inmemory';
 import { environment } from 'src/environments/environment';
-import { LicenseModule } from './settings/license/license.module';
+import { LicenseModule } from './pages/settings/license/license.module';
 import { throwError } from 'rxjs';
 import { ThinClientsModule } from './thin-clients/thin-clients.module';
 import { LogSettingModule } from './log/log-setting/log-setting.module';
