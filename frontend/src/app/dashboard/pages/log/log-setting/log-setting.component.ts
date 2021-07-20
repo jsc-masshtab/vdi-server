@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { LogSettingService } from './log-setting.service';
 import { map } from 'rxjs/operators';
-import { FormForEditComponent } from '../../common/forms-dinamic/change-form/form-edit.component';
+import { FormForEditComponent } from '../../../common/forms-dinamic/change-form/form-edit.component';
 import { MatDialog } from '@angular/material/dialog';
 
 @Component({

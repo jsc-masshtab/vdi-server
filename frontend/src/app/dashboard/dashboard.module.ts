@@ -15,8 +15,8 @@ import { ControllersModule } from './pages/controllers/controllers.module';
 
 import { PoolsModule } from './pages/pools/pools.module';
 
-import { EventsModule } from './log/events/events.module';
-import { TasksModule } from './log/tasks/tasks.module';
+import { EventsModule } from './pages/log/events/events.module';
+import { TasksModule } from './pages/log/tasks/tasks.module';
 
 
 import { HttpLink } from 'apollo-angular-link-http';
@@ -39,8 +39,8 @@ import { environment } from 'src/environments/environment';
 import { LicenseModule } from './pages/settings/license/license.module';
 import { throwError } from 'rxjs';
 import { ThinClientsModule } from './pages/thin-clients/thin-clients.module';
-import { LogSettingModule } from './log/log-setting/log-setting.module';
-import { VeilEventsModule } from './log/veil-events/veil-events.module';
+import { LogSettingModule } from './pages/log/log-setting/log-setting.module';
+import { VeilEventsModule } from './pages/log/veil-events/veil-events.module';
 import { ClustersModule } from './resourses/clusters/clusters.module';
 import { DatapoolsModule } from './resourses/datapools/datapools.module';
 import { NodesModule } from './resourses/nodes/nodes.module';

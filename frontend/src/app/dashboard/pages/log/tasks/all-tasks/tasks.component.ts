@@ -1,5 +1,5 @@
 import { TasksService } from './tasks.service';
-import { WaitService } from '../../../common/components/single/wait/wait.service';
+import { WaitService } from '../../../../common/components/single/wait/wait.service';
 import { Component, OnInit, OnDestroy, Input } from '@angular/core';
 import { map } from 'rxjs/operators';
 import { MatDialog } from '@angular/material/dialog';

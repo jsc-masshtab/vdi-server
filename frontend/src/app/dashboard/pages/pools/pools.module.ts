@@ -26,7 +26,7 @@ import { MatCheckboxModule, MAT_CHECKBOX_DEFAULT_OPTIONS, MatCheckboxDefaultOpti
 import { RemoveGroupComponent } from './pool-details/remove-group/remove-group.component';
 import { AddGropComponent } from './pool-details/add-group/add-group.component';
 import { PrepareVmPoolComponent } from './pool-details/prepare-vm/prepare-vm.component';
-import { EventsModule } from '../../log/events/events.module';
+import { EventsModule } from '../log/events/events.module';
 import { InfoBackupComponent } from './pool-details/vm-details-popup/info-backup/info-backup.component';
 import { SpiceComponent } from './pool-details/vm-details-popup/spice/spice.component';
 import { VmDetailsPopupService } from './pool-details/vm-details-popup/vm-details-popup.service';

@@ -5,7 +5,7 @@ import { Subscription } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { WaitService } from 'src/app/dashboard/common/components/single/wait/wait.service';
 import { ControllerEventsService } from './controller-events.service';
-import { InfoEventComponent } from 'src/app/dashboard/log/events/info-event/info-event.component'
+import { InfoEventComponent } from 'src/app/dashboard/pages/log/events/info-event/info-event.component'
 
 
 @Component({

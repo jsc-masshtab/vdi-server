@@ -1,7 +1,7 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { LogSettingComponent } from './log-setting.component';
-import { SharedModule } from '../../common/shared.module';
+import { SharedModule } from '../../../common/shared.module';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { AppRoutingModule } from 'src/app/app-routing.module';
 import { MatCheckboxModule } from '@angular/material/checkbox';

@@ -1,11 +1,11 @@
-import { VeilEventsComponent } from './veil-all-events/events.component';
-import { VeilEventsService } from './veil-all-events/events.service';
-import { AppRoutingModule } from '../../../app-routing.module';
-import { SharedModule } from '../../common/shared.module';
+import { TasksComponent } from './all-tasks/tasks.component';
+import { TasksService } from './all-tasks/tasks.service';
+import { AppRoutingModule } from '../../../../app-routing.module';
+import { SharedModule } from '../../../common/shared.module';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { VeilInfoEventComponent } from './veil-info-event/info-event.component';
+import { InfoTaskComponent } from './info-tasks/info-tasks.component';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatNativeDateModule } from '@angular/material/core';
@@ -18,8 +18,8 @@ import { faTimesCircle } from '@fortawesome/free-solid-svg-icons';
 
 @NgModule({
   declarations: [
-    VeilEventsComponent,
-    VeilInfoEventComponent
+    TasksComponent,
+    InfoTaskComponent
   ],
   imports: [
     SharedModule,
@@ -34,14 +34,12 @@ import { faTimesCircle } from '@fortawesome/free-solid-svg-icons';
     MatSelectModule,
     MatCheckboxModule
   ],
-  providers: [
-    VeilEventsService
-  ],
+  providers: [TasksService],
   exports: [
-    VeilEventsComponent
+    TasksComponent
   ]
 })
-export class VeilEventsModule {
+export class TasksModule {
   constructor() {
     library.add(faTimesCircle);
   }

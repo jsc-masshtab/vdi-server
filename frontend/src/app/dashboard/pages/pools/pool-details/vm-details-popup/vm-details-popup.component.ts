@@ -5,7 +5,7 @@ import { RemoveUserVmComponent } from './remove-user/remove-user.component';
 import { YesNoFormComponent } from 'src/app/dashboard/common/forms-dinamic/yes-no-form/yes-no-form.component';
 import { PoolDetailsService } from '../pool-details.service';
 import { InfoBackupComponent } from './info-backup/info-backup.component';
-import { InfoEventComponent } from '../../../../log/events/info-event/info-event.component';
+import { InfoEventComponent } from '../../../log/events/info-event/info-event.component';
 import { DomSanitizer } from '@angular/platform-browser';
 import { WaitService } from 'src/app/dashboard/common/components/single/wait/wait.service';
 import { ConvertToTemaplteComponent } from './convert-to-template/convert-to-template.component';

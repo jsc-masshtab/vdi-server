@@ -1,12 +1,11 @@
-import { EventsService } from './events.service';
-import { WaitService } from '../../../common/components/single/wait/wait.service';
-import { Component, OnInit, OnDestroy, Input } from '@angular/core';
+import { VeilEventsService } from './events.service';
+import { WaitService } from '../../../../common/components/single/wait/wait.service';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { map } from 'rxjs/operators';
 import { MatDialog } from '@angular/material/dialog';
-import { InfoEventComponent } from '../info-event/info-event.component';
+import { VeilInfoEventComponent } from '../veil-info-event/info-event.component';
 import { FormControl } from '@angular/forms';
 import { IParams } from 'types';
-import { AddExportComponent } from '../add-exports/add-exports.component';
 import { Subscription } from 'rxjs';
 import { WebsocketService } from 'src/app/dashboard/common/classes/websock.service';
 
@@ -20,17 +19,12 @@ interface Event {
 }
 
 @Component({
-  selector: 'vdi-events',
+  selector: 'veil-events',
   templateUrl: './events.component.html',
   styleUrls: ['./events.component.scss']
 })
 
-export class EventsComponent implements OnInit, OnDestroy {
-
-  @Input() controls: boolean = true;
-  @Input() set type(value) {
-    this.event_type.setValue(value);
-  }
+export class VeilEventsComponent implements OnInit, OnDestroy {
 
   private socketSub: Subscription;
 
@@ -38,16 +32,10 @@ export class EventsComponent implements OnInit, OnDestroy {
   public count = 0;
   public offset = 0;
 
-  start_date = new FormControl(0);
-  end_date = new FormControl(new Date());
   event_type = new FormControl('all');
-  entity_type = new FormControl('all');
-  user = new FormControl('all');
-  readed = new FormControl(false);
+  controller = new FormControl('all');
 
-  users = [];
-  entity_types = [];
-  selected_user: string = '';
+  controllers = [];
 
   public collection: object[] = [
     {
@@ -58,18 +46,18 @@ export class EventsComponent implements OnInit, OnDestroy {
       icon: 'comment'
     },
     {
-      title: 'Создатель',
+      title: 'Cоздатель',
       property: 'user',
       type: 'string',
       class: 'name-end',
-      sort: true
+      // sort: true
     },
     {
       title: 'Дата создания',
       property: 'created',
       type: 'time',
       class: 'name-end',
-      sort: true
+      // sort: true
     }
   ];
 
@@ -78,7 +66,7 @@ export class EventsComponent implements OnInit, OnDestroy {
   public queryset: any;
 
   constructor(
-    private service: EventsService,
+    private service: VeilEventsService,
     private waitService: WaitService,
     public dialog: MatDialog,
     private ws: WebsocketService
@@ -88,42 +76,20 @@ export class EventsComponent implements OnInit, OnDestroy {
     this.refresh();
     this.listenSockets();
 
-    this.start_date.valueChanges.subscribe(() => {
-      this.getEvents();
-    });
-
-    this.end_date.valueChanges.subscribe(() => {
-      this.getEvents();
-    });
-
     this.event_type.valueChanges.subscribe(() => {
       this.getEvents();
     });
 
-    this.entity_type.valueChanges.subscribe(() => {
+
+    this.controller.valueChanges.subscribe(() => {
       this.getEvents();
     });
 
-    this.user.valueChanges.subscribe((user) => {
-
-      const id = this.users.findIndex(found => found.username ? found.username === user : false);
-
-      if (id !== -1) {
-        this.selected_user = this.users[id].id;
-      } else {
-        this.selected_user = '';
-      }
-
-      this.getEvents();
-    });
-
-    this.readed.valueChanges.subscribe(() => {
-      this.getEvents();
-    });
   }
 
   public refresh(): void {
     this.getEvents();
+    this.getAllControllers();
   }
 
   public clickRow(event): void {
@@ -141,35 +107,30 @@ export class EventsComponent implements OnInit, OnDestroy {
     this.getEvents();
   }
 
+  public getAllControllers() {
+    this.service.getAllControllers().valueChanges.pipe(map(data => data.data))
+      .subscribe((data) => {
+        this.controllers = data.controllers
+      });
+  }
+
   public getEvents(): void {
 
-    const start_date = new Date(this.start_date.value).setHours(0, 0, 0);
-    const end_date = new Date(this.end_date.value).setHours(23, 59, 59);
 
     const queryset = {
       offset: this.offset,
       limit: this.limit,
-      start_date: new Date(start_date).toISOString(),
-      end_date: new Date(end_date).toISOString(),
-      event_type: this.event_type.value,
-      entity_type: this.entity_type.value,
-      user: this.user.value
+      controller: this.controller.value,
+      event_type: this.event_type.value
     };
 
-    if (this.readed.value && this.selected_user) {
-      queryset['read_by'] = this.selected_user;
-    }
-
-    if (this.user.value === 'all') {
-      delete queryset['user'];
-    }
 
     if (this.event_type.value === 'all') {
       delete queryset['event_type'];
     }
 
-    if (this.entity_type.value === 'all') {
-      delete queryset['entity_type'];
+    if (this.controller.value === 'all') {
+      delete queryset['controller'];
     }
 
     this.queryset = queryset;
@@ -177,11 +138,9 @@ export class EventsComponent implements OnInit, OnDestroy {
     this.waitService.setWait(true);
     this.service.getAllEvents(queryset).valueChanges.pipe(map(data => data.data))
       .subscribe((data) => {
-        this.events = [...data.events];
-        this.entity_types = [...data.entity_types];
-        this.count = data.count;
+        this.events = [...data.veil_events];
+        this.count = data.veil_events_count;
         this.waitService.setWait(false);
-        this.users = [...data.users];
       });
   }
 
@@ -196,21 +155,11 @@ export class EventsComponent implements OnInit, OnDestroy {
   }
 
   public openEventDetails(event: Event): void {
-    this.dialog.open(InfoEventComponent, {
+    this.dialog.open(VeilInfoEventComponent, {
       disableClose: true,
       width: '700px',
       data: {
         event
-      }
-    });
-  }
-
-  public openExports(): void {
-    this.dialog.open(AddExportComponent, {
-      disableClose: true,
-      width: '700px',
-      data: {
-        queryset: this.queryset
       }
     });
   }
