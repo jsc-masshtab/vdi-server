@@ -11,7 +11,7 @@ import { MainMenuComponent } from './common/components/single/main-menu/main-men
 import { WaitComponent } from './common/components/single/wait/wait.component';
 import { UsersModule } from './settings/users/users.module';
 import { AuthenticationDirectoryModule } from './settings/auth-directory/auth-directory.module';
-import { ControllersModule } from './settings/controllers/controllers.module';
+import { ControllersModule } from './controllers/controllers.module';
 import { TemplatesModule } from './resourses/templates/templates.module';
 import { NodesModule } from './resourses/nodes/nodes.module';
 import { DatapoolsModule } from './resourses/datapools/datapools.module';

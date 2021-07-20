@@ -14,7 +14,7 @@ import { ClustersComponent } from './resourses/clusters/all-clusters/clusters.co
 import { ResourcePoolsComponent } from './resourses/resource_pools/all-resource_pools/resource_pools.component';
 import { NgModule } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
-import { ControllersComponent } from './settings/controllers/all-controllers/controllers.component';
+import { ControllersComponent } from './controllers/all-controllers/controllers.component';
 import { NodesComponent } from './resourses/nodes/all-nodes/nodes.component';
 import { DatapoolsComponent } from './resourses/datapools/all-datapools/datapools.component';
 import { ClusterDetailsComponent } from './resourses/clusters/cluster-details/cluster-details.component';
@@ -27,7 +27,7 @@ import { DashboardComponent } from './dashboard.component';
 import { AuthenticationDirectoryComponent } from './settings/auth-directory/all-auth-directory/all-auth-directory.component';
 import { AuthenticationDirectoryDetailsComponent } from './settings/auth-directory/auth-directory-details/auth-directory-details.component';
 import { UserDetailsComponent } from './settings/users/user-details/user-details.component';
-import { ControllerDetailsComponent } from './settings/controllers/controller-details/controller-details.component';
+import { ControllerDetailsComponent } from './controllers/controller-details/controller-details.component';
 import { LicenseComponent } from './settings/license/license.component';
 import { TasksComponent } from './log/tasks/all-tasks/tasks.component';
 import { ThinClientsComponent } from './thin-clients/thin-clients.component';
