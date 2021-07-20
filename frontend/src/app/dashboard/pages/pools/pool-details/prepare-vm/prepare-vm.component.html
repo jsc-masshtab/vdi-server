@@ -1,0 +1,27 @@
+<div class="form">
+
+  <div class="form-header">
+    <h1>Подготовка виртуальных машин в пуле {{data?.namePool}}</h1>
+    <button [mat-dialog-close]="true" class="form-close"><fa-icon [icon]="['fas','times-circle']"></fa-icon></button>
+  </div>
+
+  <div class="form-fields">
+    <label class="field">
+      <mat-form-field>
+        <mat-label *ngIf="pendingVms">Загрузка ...</mat-label>
+        <mat-label *ngIf="vms?.length && !pendingVms">Выберите ВМ</mat-label>
+        <mat-label *ngIf="!vms?.length && !pendingVms">- нет виртуальных машин -</mat-label>
+        <mat-select (selectionChange)="selectVm($event)">
+          <mat-option *ngFor="let vm of vms" [value]="vm">
+            {{vm.verbose_name}}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+    </label>
+  </div>
+
+  <div class="form-actions">
+    <button (click)="send()" class="form-btn"><fa-icon [icon]="['fas','plus-circle']" size="xs"></fa-icon><span class="action-name">Готово</span></button>
+  </div>
+
+</div>
