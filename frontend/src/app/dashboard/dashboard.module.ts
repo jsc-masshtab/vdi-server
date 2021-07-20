@@ -41,12 +41,12 @@ import { throwError } from 'rxjs';
 import { ThinClientsModule } from './pages/thin-clients/thin-clients.module';
 import { LogSettingModule } from './pages/log/log-setting/log-setting.module';
 import { VeilEventsModule } from './pages/log/veil-events/veil-events.module';
-import { ClustersModule } from './resourses/clusters/clusters.module';
-import { DatapoolsModule } from './resourses/datapools/datapools.module';
-import { NodesModule } from './resourses/nodes/nodes.module';
-import { ResourcePoolsModule } from './resourses/resource_pools/resource_pools.module';
-import { TemplatesModule } from './resourses/templates/templates.module';
-import { VmsModule } from './resourses/vms/vms.module';
+import { ClustersModule } from './pages/resourses/clusters/clusters.module';
+import { DatapoolsModule } from './pages/resourses/datapools/datapools.module';
+import { NodesModule } from './pages/resourses/nodes/nodes.module';
+import { ResourcePoolsModule } from './pages/resourses/resource_pools/resource_pools.module';
+import { TemplatesModule } from './pages/resourses/templates/templates.module';
+import { VmsModule } from './pages/resourses/vms/vms.module';
 
 
 @NgModule({

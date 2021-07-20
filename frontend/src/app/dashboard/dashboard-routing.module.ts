@@ -24,18 +24,18 @@ import { ThinClientsComponent } from './pages/thin-clients/thin-clients.componen
 import { ThinClientDetailsComponent } from './pages/thin-clients/thin-client-details/thin-client-details.component';
 import { LogSettingComponent } from './pages/log/log-setting/log-setting.component';
 import { VeilEventsComponent } from './pages/log/veil-events/veil-all-events/events.component';
-import { ClustersComponent } from './resourses/clusters/all-clusters/clusters.component';
-import { ClusterDetailsComponent } from './resourses/clusters/cluster-details/cluster-details.component';
-import { DatapoolsComponent } from './resourses/datapools/all-datapools/datapools.component';
-import { DatapoolDetailsComponent } from './resourses/datapools/datapool-details/datapool-details.component';
-import { NodesComponent } from './resourses/nodes/all-nodes/nodes.component';
-import { NodeDetailsComponent } from './resourses/nodes/node-details/node-details.component';
-import { ResourcePoolsComponent } from './resourses/resource_pools/all-resource_pools/resource_pools.component';
-import { ResourcePoolDetailsComponent } from './resourses/resource_pools/resource_pool-details/resource_pool-details.component';
-import { TemplatesComponent } from './resourses/templates/all-templates/templates.component';
-import { TemplateDetailsComponent } from './resourses/templates/template-details/template-details.component';
-import { VmsComponent } from './resourses/vms/all-vms/vms.component';
-import { VmDetailsComponent } from './resourses/vms/vms-details/vm-details.component';
+import { ClustersComponent } from './pages/resourses/clusters/all-clusters/clusters.component';
+import { ClusterDetailsComponent } from './pages/resourses/clusters/cluster-details/cluster-details.component';
+import { DatapoolsComponent } from './pages/resourses/datapools/all-datapools/datapools.component';
+import { DatapoolDetailsComponent } from './pages/resourses/datapools/datapool-details/datapool-details.component';
+import { NodesComponent } from './pages/resourses/nodes/all-nodes/nodes.component';
+import { NodeDetailsComponent } from './pages/resourses/nodes/node-details/node-details.component';
+import { ResourcePoolsComponent } from './pages/resourses/resource_pools/all-resource_pools/resource_pools.component';
+import { ResourcePoolDetailsComponent } from './pages/resourses/resource_pools/resource_pool-details/resource_pool-details.component';
+import { TemplatesComponent } from './pages/resourses/templates/all-templates/templates.component';
+import { TemplateDetailsComponent } from './pages/resourses/templates/template-details/template-details.component';
+import { VmsComponent } from './pages/resourses/vms/all-vms/vms.component';
+import { VmDetailsComponent } from './pages/resourses/vms/vms-details/vm-details.component';
 import { UsersComponent } from './pages/settings/users/all-users/users.component';
 
 

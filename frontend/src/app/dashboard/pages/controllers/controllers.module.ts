@@ -15,12 +15,12 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { ControllerDetailsComponent } from './controller-details/controller-details.component';
 
 import { ControllerEventsComponent } from './controller-details/controller-events/controller-events.component';
-import { ClustersModule } from '../../resourses/clusters/clusters.module';
-import { DatapoolsModule } from '../../resourses/datapools/datapools.module';
-import { NodesModule } from '../../resourses/nodes/nodes.module';
-import { ResourcePoolsModule } from '../../resourses/resource_pools/resource_pools.module';
-import { TemplatesModule } from '../../resourses/templates/templates.module';
-import { VmsModule } from '../../resourses/vms/vms.module';
+import { ClustersModule } from '../resourses/clusters/clusters.module';
+import { DatapoolsModule } from '../resourses/datapools/datapools.module';
+import { NodesModule } from '../resourses/nodes/nodes.module';
+import { ResourcePoolsModule } from '../resourses/resource_pools/resource_pools.module';
+import { TemplatesModule } from '../resourses/templates/templates.module';
+import { VmsModule } from '../resourses/vms/vms.module';
 
 @NgModule({
   declarations: [
