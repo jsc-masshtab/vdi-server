@@ -38,7 +38,7 @@ import { InMemoryCache } from 'apollo-cache-inmemory';
 import { environment } from 'src/environments/environment';
 import { LicenseModule } from './pages/settings/license/license.module';
 import { throwError } from 'rxjs';
-import { ThinClientsModule } from './thin-clients/thin-clients.module';
+import { ThinClientsModule } from './pages/thin-clients/thin-clients.module';
 import { LogSettingModule } from './log/log-setting/log-setting.module';
 import { VeilEventsModule } from './log/veil-events/veil-events.module';
 import { ClustersModule } from './resourses/clusters/clusters.module';

@@ -20,8 +20,8 @@ import { UserDetailsComponent } from './pages/settings/users/user-details/user-d
 import { ControllerDetailsComponent } from './pages/controllers/controller-details/controller-details.component';
 import { LicenseComponent } from './pages/settings/license/license.component';
 import { TasksComponent } from './log/tasks/all-tasks/tasks.component';
-import { ThinClientsComponent } from './thin-clients/thin-clients.component';
-import { ThinClientDetailsComponent } from './thin-clients/thin-client-details/thin-client-details.component';
+import { ThinClientsComponent } from './pages/thin-clients/thin-clients.component';
+import { ThinClientDetailsComponent } from './pages/thin-clients/thin-client-details/thin-client-details.component';
 import { LogSettingComponent } from './log/log-setting/log-setting.component';
 import { VeilEventsComponent } from './log/veil-events/veil-all-events/events.component';
 import { ClustersComponent } from './resourses/clusters/all-clusters/clusters.component';
