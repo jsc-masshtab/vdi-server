@@ -1,0 +1,40 @@
+<div class="form">
+
+  <div class="form-header">
+    <h1>Добавление контроллера ECP VeiL</h1>
+    <button [mat-dialog-close]="true" class="form-close"><fa-icon [icon]="['fas','times-circle']"></fa-icon></button>
+  </div>
+
+  <ng-template #errorTemp>
+    <div class="error">Поле обязательно для заполения</div>
+  </ng-template>
+
+  <div class="form-fields" [formGroup]="createForm">
+    <label class="field">
+      <p class="field-name">IP адрес</p>
+      <input type="text" formControlName="address" [focusMe]="true">
+      <ng-container *ngIf="createForm.hasError('required', 'address') && checkValid"><ng-container *ngTemplateOutlet="errorTemp"></ng-container></ng-container>
+    </label>
+    <label class="field">
+      <p class="field-name">Название</p>
+      <input type="text" formControlName="verbose_name">
+      <ng-container *ngIf="createForm.hasError('required', 'verbose_name') && checkValid"><ng-container *ngTemplateOutlet="errorTemp"></ng-container></ng-container>
+    </label>
+    <label class="field">
+      <p class="field-name">Токен</p>
+      <input type="text" formControlName="token">
+      <ng-container *ngIf="createForm.hasError('required', 'token') && checkValid">
+        <ng-container *ngTemplateOutlet="errorTemp"></ng-container>
+      </ng-container>
+    </label>
+    <label class="field">
+      <p class="field-name">Описание</p>
+      <textarea formControlName="description"></textarea>
+    </label>
+  </div>
+
+  <div class="form-actions">
+    <button (click)="send()" class="form-btn"><fa-icon [icon]="['fas','plus-circle']" size="xs"></fa-icon><span class="action-name">Добавить</span></button>
+  </div>
+
+</div>
