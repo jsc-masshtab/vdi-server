@@ -11,7 +11,7 @@ from common.settings import REDIS_TIMEOUT, WS_MONITOR_CMD_QUEUE
 from common.veil.veil_gino import EntityType
 from common.veil.veil_redis import WsMonitorCmd, redis_blpop
 
-from ws_listener_worker.resources_monitor import ResourcesMonitor
+from monitor_worker.resources_monitor import ResourcesMonitor
 
 
 class ResourcesMonitorManager:

@@ -58,7 +58,7 @@ configure_logs()
 configure_systemd()
 {
 	systemctl daemon-reload
-	systemctl enable vdi-web vdi-pool_worker vdi-ws_listener
+	systemctl enable vdi-web vdi-pool_worker vdi-monitor_worker
 }
 
 configure_crontab()
@@ -92,14 +92,14 @@ configure_apache2()
 
 db_migrations()
 {
-	systemctl stop vdi-web vdi-pool_worker vdi-ws_listener
+	systemctl stop vdi-web vdi-pool_worker vdi-monitor_worker
 
 	echo "Apply database migrations..."
 	export PYTHONPATH=/opt/veil-vdi/app
 	cd /opt/veil-vdi/app/common/migrations
 	/opt/veil-vdi/env/bin/python /opt/veil-vdi/env/bin/alembic upgrade head
 
-	systemctl start vdi-web vdi-pool_worker vdi-ws_listener
+	systemctl start vdi-web vdi-pool_worker vdi-monitor_worker
 }
 
 case "$1" in

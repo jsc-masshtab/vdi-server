@@ -101,3 +101,14 @@ def convert_gino_model_to_graphene_type(model, graphene_custom_type):
             data_dict[model_atr_key] = val
 
     return graphene_custom_type(**data_dict)
+
+
+async def create_subprocess(cmd):
+    process = await asyncio.create_subprocess_shell(
+        cmd,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE)
+
+    stdout, stderr = await process.communicate()
+
+    return process.returncode, stdout, stderr

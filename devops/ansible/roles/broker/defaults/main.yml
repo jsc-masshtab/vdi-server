@@ -19,6 +19,6 @@ broker_packages_list:
 broker_services_list:
   - vdi-web
   - vdi-pool_worker
-  - vdi-ws_listener
+  - vdi-monitor_worker
 
 broker_pg_ext_list: [uuid-ossp]

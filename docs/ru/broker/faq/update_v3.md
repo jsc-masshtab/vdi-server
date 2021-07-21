@@ -71,7 +71,7 @@
     ```bash
     sudo service vdi-pool_worker stop
     sudo service vdi-web stop
-    sudo service vdi-ws_listener stop
+    sudo service vdi-monitor_worker stop
     ```
  
 1. Выполнить и запустить сервисы VeiL Broker обратно:
@@ -80,7 +80,7 @@
     sudo apt-get upgrade
     sudo service vdi-pool_worker start
     sudo service vdi-web start
-    sudo service vdi-ws_listener start
+    sudo service vdi-monitor_worker start
     ```
 
 ## Миграция данных VeiL Broker 2.0 на версию 3.0.0
