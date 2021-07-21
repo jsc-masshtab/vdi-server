@@ -1,5 +1,5 @@
 import { Component, OnInit, ViewChild, ElementRef, OnDestroy } from '@angular/core';
-import { DetailsMove } from '../../common/classes/details-move';
+import { DetailsMove } from '../../shared/classes/details-move';
 import { Subscription } from 'rxjs';
 import { FormControl } from '@angular/forms';
 import { ThinClientsService } from './thin-clients.service';
@@ -8,7 +8,7 @@ import { WaitService } from '../../core/components/wait/wait.service';
 import { Router } from '@angular/router';
 import { map } from 'rxjs/operators';
 import { IParams } from 'types';
-import { WebsocketService } from '../../common/classes/websock.service';
+import { WebsocketService } from '../../shared/classes/websock.service';
 
 @Component({
   selector: 'vdi-thin-clients',

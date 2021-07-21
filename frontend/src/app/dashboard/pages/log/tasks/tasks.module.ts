@@ -1,7 +1,7 @@
 import { TasksComponent } from './all-tasks/tasks.component';
 import { TasksService } from './all-tasks/tasks.service';
 import { AppRoutingModule } from '../../../../app-routing.module';
-import { SharedModule } from '../../../common/shared.module';
+import { SharedModule } from '../../../shared/shared.module';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';

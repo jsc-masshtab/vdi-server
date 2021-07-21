@@ -41,7 +41,7 @@ import {
           faCommentDots,
           faWrench
         } from '@fortawesome/free-solid-svg-icons';
-import { AuthInterceptor } from './dashboard/common/classes/auth.Interceptor.http';
+import { AuthInterceptor } from './login/auth.Interceptor.http';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 /*  -----------------------------------   icons   --------------------------------------*/
 

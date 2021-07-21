@@ -1,12 +1,12 @@
 import { IParams } from '../../../../../../../types';
-import { DetailsMove } from '../../../../common/classes/details-move';
+import { DetailsMove } from '../../../../shared/classes/details-move';
 import { WaitService } from '../../../../core/components/wait/wait.service';
 import { Component, OnInit, ViewChild, ElementRef, OnDestroy, Input } from '@angular/core';
 import { ClustersService } from './clusters.service';
 import { map } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
-import { WebsocketService } from 'src/app/dashboard/common/classes/websock.service';
+import { WebsocketService } from 'src/app/dashboard/shared/classes/websock.service';
 
 @Component({
   selector: 'vdi-clusters',

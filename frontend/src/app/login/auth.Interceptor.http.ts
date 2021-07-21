@@ -1,4 +1,4 @@
-import { AuthStorageService } from './../../../login/authStorage.service';
+import { AuthStorageService } from './authStorage.service';
 import { Observable } from 'rxjs';
 
 import { HttpInterceptor, HttpRequest, HttpHandler, HttpEvent, HttpErrorResponse, HttpResponse } from '@angular/common/http';

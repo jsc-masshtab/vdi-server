@@ -8,7 +8,7 @@ import { FormControl } from '@angular/forms';
 import { IParams } from 'types';
 import { AddExportComponent } from '../add-exports/add-exports.component';
 import { Subscription } from 'rxjs';
-import { WebsocketService } from 'src/app/dashboard/common/classes/websock.service';
+import { WebsocketService } from 'src/app/dashboard/shared/classes/websock.service';
 
 interface Event {
   event: {

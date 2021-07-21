@@ -2,7 +2,7 @@ import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FooterService } from './footer.service';
 
 import { Subscription } from 'rxjs';
-import { WebsocketService } from '../../../common/classes/websock.service';
+import { WebsocketService } from '../../../shared/classes/websock.service';
 
 interface ICountEvents {
   warning: number;

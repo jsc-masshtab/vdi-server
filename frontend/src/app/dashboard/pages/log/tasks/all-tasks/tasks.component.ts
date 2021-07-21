@@ -6,7 +6,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { InfoTaskComponent } from '../info-tasks/info-tasks.component';
 import { FormControl } from '@angular/forms';
 import { IParams } from 'types';
-import { WebsocketService } from 'src/app/dashboard/common/classes/websock.service';
+import { WebsocketService } from 'src/app/dashboard/shared/classes/websock.service';
 import { Subscription } from 'rxjs';
 
 @Component({

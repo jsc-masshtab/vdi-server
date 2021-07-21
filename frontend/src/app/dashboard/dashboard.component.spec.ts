@@ -4,7 +4,7 @@ import { RouterTestingModule } from '@angular/router/testing';
 import { MatDialog } from '@angular/material/dialog';
 
 import { DashboardComponent } from './dashboard.component';
-import { WebsocketService } from './common/classes/websock.service';
+import { WebsocketService } from './shared/classes/websock.service';
 
 describe('DashboardComponent', () => {
   let component: DashboardComponent;

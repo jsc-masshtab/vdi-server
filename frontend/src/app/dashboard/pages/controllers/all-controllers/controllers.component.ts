@@ -1,4 +1,4 @@
-import { DetailsMove } from '../../../common/classes/details-move';
+import { DetailsMove } from '../../../shared/classes/details-move';
 import { Router } from '@angular/router';
 import { IParams } from '../../../../../../types';
 import { WaitService } from '../../../core/components/wait/wait.service';
@@ -9,7 +9,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { AddControllerComponent } from '../add-controller/add-controller.component';
 import { RemoveControllerComponent } from '../remove-controller/remove-controller.component';
 import { Subscription } from 'rxjs';
-import { WebsocketService } from 'src/app/dashboard/common/classes/websock.service';
+import { WebsocketService } from 'src/app/dashboard/shared/classes/websock.service';
 
 @Component({
   selector: 'vdi-servers',

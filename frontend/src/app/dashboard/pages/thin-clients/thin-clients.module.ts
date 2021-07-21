@@ -1,7 +1,7 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ThinClientsComponent } from './thin-clients.component';
-import { SharedModule } from '../../common/shared.module';
+import { SharedModule } from '../../shared/shared.module';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { ThinClientsService } from './thin-clients.service';
 import { ThinClientDetailsComponent } from './thin-client-details/thin-client-details.component';

@@ -6,7 +6,7 @@ import { AuthenticationDirectoryService   } from '../auth-directory.service';
 import { map } from 'rxjs/operators';
 import { MatDialog } from '@angular/material/dialog';
 import { Subscription } from 'rxjs';
-import { DetailsMove } from '../../../../common/classes/details-move';
+import { DetailsMove } from '../../../../shared/classes/details-move';
 import { Router } from '@angular/router';
 
 

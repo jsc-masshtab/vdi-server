@@ -1,7 +1,7 @@
 import { VeilEventsComponent } from './veil-all-events/events.component';
 import { VeilEventsService } from './veil-all-events/events.service';
 import { AppRoutingModule } from '../../../../app-routing.module';
-import { SharedModule } from '../../../common/shared.module';
+import { SharedModule } from '../../../shared/shared.module';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';

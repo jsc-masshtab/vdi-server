@@ -2,7 +2,7 @@ import { AddUserVmComponent } from './add-user/add-user.component';
 import { Component, Inject, OnInit } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialog } from '@angular/material/dialog';
 import { RemoveUserVmComponent } from './remove-user/remove-user.component';
-import { YesNoFormComponent } from 'src/app/dashboard/common/forms-dinamic/yes-no-form/yes-no-form.component';
+import { YesNoFormComponent } from 'src/app/dashboard/shared/forms-dinamic/yes-no-form/yes-no-form.component';
 import { PoolDetailsService } from '../pool-details.service';
 import { InfoBackupComponent } from './info-backup/info-backup.component';
 import { InfoEventComponent } from '../../../log/events/info-event/info-event.component';

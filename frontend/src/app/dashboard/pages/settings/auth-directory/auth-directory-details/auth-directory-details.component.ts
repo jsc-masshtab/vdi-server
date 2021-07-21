@@ -4,7 +4,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { AuthenticationDirectoryService } from '../auth-directory.service';
 import { Subscription } from 'rxjs';
 import { ParamMap, ActivatedRoute, Router } from '@angular/router';
-import { FormForEditComponent } from 'src/app/dashboard/common/forms-dinamic/change-form/form-edit.component';
+import { FormForEditComponent } from 'src/app/dashboard/shared/forms-dinamic/change-form/form-edit.component';
 import { MatDialog } from '@angular/material/dialog';
 import { RemoveAuthenticationDirectoryComponent } from './remove-auth-directory/remove-auth-directory.component';
 import { map } from 'rxjs/operators';

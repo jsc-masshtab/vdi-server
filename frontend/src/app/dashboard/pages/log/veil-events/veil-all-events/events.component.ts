@@ -7,7 +7,7 @@ import { VeilInfoEventComponent } from '../veil-info-event/info-event.component'
 import { FormControl } from '@angular/forms';
 import { IParams } from 'types';
 import { Subscription } from 'rxjs';
-import { WebsocketService } from 'src/app/dashboard/common/classes/websock.service';
+import { WebsocketService } from 'src/app/dashboard/shared/classes/websock.service';
 
 interface Event {
   event: {

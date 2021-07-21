@@ -1,6 +1,6 @@
 import { RemoveGroupComponent } from '../remove-groups/remove-group.component';
 import { RemoveUserGroupComponent } from './remove-user/remove-user.component';
-import { FormForEditComponent } from '../../../../common/forms-dinamic/change-form/form-edit.component';
+import { FormForEditComponent } from '../../../../shared/forms-dinamic/change-form/form-edit.component';
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { GroupsService} from '../groups.service';

@@ -1,5 +1,5 @@
 import { RemoveControllerComponent } from '../remove-controller/remove-controller.component';
-import { FormForEditComponent } from '../../../common/forms-dinamic/change-form/form-edit.component';
+import { FormForEditComponent } from '../../../shared/forms-dinamic/change-form/form-edit.component';
 import { MatDialog } from '@angular/material/dialog';
 import { map } from 'rxjs/operators';
 import { Subscription } from 'rxjs';
@@ -9,7 +9,7 @@ import { ActivatedRoute, Router, ParamMap } from '@angular/router';
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { IEditFormObj } from 'types';
 import {FormControl} from '@angular/forms';
-import { YesNoFormComponent } from 'src/app/dashboard/common/forms-dinamic/yes-no-form/yes-no-form.component';
+import { YesNoFormComponent } from 'src/app/dashboard/shared/forms-dinamic/yes-no-form/yes-no-form.component';
 
 
 @Component({

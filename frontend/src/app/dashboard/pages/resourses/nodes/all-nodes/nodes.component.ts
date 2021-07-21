@@ -4,9 +4,9 @@ import { Component, OnInit, ViewChild, ElementRef, OnDestroy, Input } from '@ang
 import { NodesService } from './nodes.service';
 import { map } from 'rxjs/operators';
 import { Router } from '@angular/router';
-import { DetailsMove } from 'src/app/dashboard/common/classes/details-move';
+import { DetailsMove } from 'src/app/dashboard/shared/classes/details-move';
 import { Subscription } from 'rxjs';
-import { WebsocketService } from 'src/app/dashboard/common/classes/websock.service';
+import { WebsocketService } from 'src/app/dashboard/shared/classes/websock.service';
 
 @Component({
   selector: 'vdi-nodes',

@@ -7,7 +7,7 @@ import { map } from 'rxjs/operators';
 import { MatDialog } from '@angular/material/dialog';
 import { Subscription } from 'rxjs';
 import { Router } from '@angular/router';
-import { DetailsMove } from '../../../../common/classes/details-move';
+import { DetailsMove } from '../../../../shared/classes/details-move';
 import { FormControl } from '@angular/forms';
 
 

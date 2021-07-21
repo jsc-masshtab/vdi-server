@@ -3,7 +3,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { DisconnectThinClientComponent } from './disconnect-thin-client/disconnect-thin-client.component';
 import { ActivatedRoute, ParamMap, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
-import { WebsocketService } from '../../../common/classes/websock.service';
+import { WebsocketService } from '../../../shared/classes/websock.service';
 import { FormControl } from '@angular/forms';
 import { ThinClientsService } from '../thin-clients.service';
 

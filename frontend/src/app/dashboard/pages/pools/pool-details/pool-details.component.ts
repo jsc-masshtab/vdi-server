@@ -10,11 +10,11 @@ import { ActivatedRoute, ParamMap, Router } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import { RemovePoolComponent } from './remove-pool/remove-pool.component';
 import { PoolDetailsService } from './pool-details.service';
-import { FormForEditComponent } from 'src/app/dashboard/common/forms-dinamic/change-form/form-edit.component';
+import { FormForEditComponent } from 'src/app/dashboard/shared/forms-dinamic/change-form/form-edit.component';
 import { map } from 'rxjs/operators';
 import { RemoveGroupComponent } from './remove-group/remove-group.component';
 import { AddGropComponent } from './add-group/add-group.component';
-import { YesNoFormComponent } from '../../../common/forms-dinamic/yes-no-form/yes-no-form.component';
+import { YesNoFormComponent } from '../../../shared/forms-dinamic/yes-no-form/yes-no-form.component';
 import { FormControl } from '@angular/forms';
 
 @Component({

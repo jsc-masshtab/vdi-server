@@ -3,7 +3,7 @@ import { UsersComponent } from './all-users/users.component';
 import { MatSelectModule } from '@angular/material/select';
 import { MatDialogModule } from '@angular/material/dialog';
 import { AppRoutingModule } from '../../../../app-routing.module';
-import { SharedModule } from '../../../common/shared.module';
+import { SharedModule } from '../../../shared/shared.module';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';

@@ -2,7 +2,7 @@ import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { LicenseComponent } from './license.component';
 import { LicenseService } from './license.service';
-import { SharedModule } from '../../../common/shared.module';
+import { SharedModule } from '../../../shared/shared.module';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 
 @NgModule({

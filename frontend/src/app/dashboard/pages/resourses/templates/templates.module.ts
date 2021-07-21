@@ -3,7 +3,7 @@ import { TemplatesService } from './all-templates/templates.service';
 import { TemplatesComponent } from './all-templates/templates.component';
 
 import { AppRoutingModule } from '../../../../app-routing.module';
-import { SharedModule } from '../../../common/shared.module';
+import { SharedModule } from '../../../shared/shared.module';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';

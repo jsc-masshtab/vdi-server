@@ -3,7 +3,7 @@ import { Component, OnInit, ViewChild, ElementRef, OnDestroy, Input } from '@ang
 import { TemplatesService } from './templates.service';
 import { map } from 'rxjs/operators';
 import { Router } from '@angular/router';
-import { DetailsMove } from 'src/app/dashboard/common/classes/details-move';
+import { DetailsMove } from 'src/app/dashboard/shared/classes/details-move';
 import { Subscription } from 'rxjs';
 import { IParams } from 'types';
 

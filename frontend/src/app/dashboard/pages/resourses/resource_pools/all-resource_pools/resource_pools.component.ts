@@ -1,5 +1,5 @@
 import { IParams } from '../../../../../../../types';
-import { DetailsMove } from '../../../../common/classes/details-move';
+import { DetailsMove } from '../../../../shared/classes/details-move';
 import { WaitService } from '../../../../core/components/wait/wait.service';
 import { Component, OnInit, ViewChild, ElementRef, OnDestroy, Input } from '@angular/core';
 import { ResourcePoolsService } from './resource_pools.service';

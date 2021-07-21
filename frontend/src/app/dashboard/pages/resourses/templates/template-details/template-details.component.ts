@@ -5,7 +5,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute, ParamMap } from '@angular/router';
 import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
-import {YesNoFormComponent} from '../../../../common/forms-dinamic/yes-no-form/yes-no-form.component';
+import {YesNoFormComponent} from '../../../../shared/forms-dinamic/yes-no-form/yes-no-form.component';
 
 interface ICollection {
   [index: string]: string;

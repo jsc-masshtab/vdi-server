@@ -1,7 +1,7 @@
 import { DashboardRoutingModule } from '../../../dashboard-routing.module';
 import { ClustersService } from './all-clusters/clusters.service';
 import { ClustersComponent } from './all-clusters/clusters.component';
-import { SharedModule } from '../../../common/shared.module';
+import { SharedModule } from '../../../shared/shared.module';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';

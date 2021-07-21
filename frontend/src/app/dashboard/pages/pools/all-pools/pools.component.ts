@@ -7,10 +7,10 @@ import { PoolsService } from './pools.service';
 import { Router } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import { Subscription } from 'rxjs';
-import { DetailsMove } from 'src/app/dashboard/common/classes/details-move';
+import { DetailsMove } from 'src/app/dashboard/shared/classes/details-move';
 import { map } from 'rxjs/operators';
 import { WaitService } from '../../../core/components/wait/wait.service';
-import { WebsocketService } from '../../../common/classes/websock.service';
+import { WebsocketService } from '../../../shared/classes/websock.service';
 
 
 @Component({
