@@ -7,8 +7,8 @@ from common.settings import DEBUG
 from common.utils import init_exit_handler
 from common.veil.veil_redis import redis_deinit, redis_init
 
-from ws_listener_worker.resources_monitor_manager import ResourcesMonitorManager
-from ws_listener_worker.thin_client_conn_monitor import ThinClientConnMonitor
+from monitor_worker.resources_monitor_manager import ResourcesMonitorManager
+from monitor_worker.thin_client_conn_monitor import ThinClientConnMonitor
 
 
 def main():

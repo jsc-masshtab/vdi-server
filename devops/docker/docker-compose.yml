@@ -56,11 +56,11 @@ services:
     network_mode: "host"
     depends_on:
       - vdi-tornado
-  vdi-ws-listener-worker:
+  vdi-monitor-worker:
     build:
       context: ../../
       dockerfile: ./devops/docker/python/Dockerfile
-    container_name: vdi-ws-listener-worker
+    container_name: vdi-monitor-worker
     environment:
       - PYTHONPATH=/opt/veil-vdi/app
       - PYTHONDONTWRITEBYTECODE=1
@@ -68,7 +68,7 @@ services:
     working_dir: /opt/veil-vdi/app
     volumes:
       - ../../backend:/opt/veil-vdi/app
-    command: sh -c "sleep 15 && pip install -U veil_api_client veil_aio_au && python ws_listener_worker/app.py"
+    command: sh -c "sleep 15 && pip install -U veil_api_client veil_aio_au && python monitor_worker/app.py"
     network_mode: "host"
     depends_on:
       - vdi-tornado

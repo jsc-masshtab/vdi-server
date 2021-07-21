@@ -83,7 +83,7 @@ migrate_from_2(){
   sudo /etc/init.d/nginx stop
   sudo supervisorctl stop vdi-pool_worker
   sudo supervisorctl stop vdi-server-8888
-  sudo supervisorctl stop vdi-ws_listener_worker
+  sudo supervisorctl stop vdi-monitor_worker
 
   echo "Начинаем процесс переноса данных из версии 2..."
   update_python_req
@@ -101,7 +101,7 @@ migrate_from_3(){
   sudo /etc/init.d/apache2 stop
   sudo service vdi-pool_worker stop
   sudo service vdi-web stop
-  sudo service vdi-ws_listener stop
+  sudo service vdi-monitor_worker stop
 
   echo "Начинаем процесс переноса данных из версии 2 на версию 3..."
   echo "Убедитесь, что файлы broker_pt_1.sql, broker_pt_2.sql, broker_pt_3.sql находятся в каталоге /tmp"
@@ -112,7 +112,7 @@ migrate_from_3(){
   echo "Процесс подготовки данных завершен."
   sudo service vdi-pool_worker start
   sudo service vdi-web start
-  sudo service vdi-ws_listener start
+  sudo service vdi-monitor_worker start
   sudo /etc/init.d/apache2 start
 
 }

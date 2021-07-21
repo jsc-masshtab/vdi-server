@@ -1,5 +1,5 @@
 [Unit]
-Description=vdi-ws_listener
+Description=vdi-monitor_worker
 After=syslog.target
 After=network.target
 #After=postgresql.service
@@ -12,7 +12,7 @@ WorkingDirectory=/opt/veil-vdi/app
 User=vdiadmin
 Environment=PYTHONPATH=/opt/veil-vdi/app
 OOMScoreAdjust=-1000
-ExecStart=/opt/veil-vdi/env/bin/python /opt/veil-vdi/app/ws_listener_worker/app.py
+ExecStart=/opt/veil-vdi/env/bin/python /opt/veil-vdi/app/monitor_worker/app.py
 TimeoutSec=30
 Restart=on-failure
 KillMode=process

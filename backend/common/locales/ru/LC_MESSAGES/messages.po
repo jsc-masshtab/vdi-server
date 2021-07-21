@@ -1468,33 +1468,33 @@ msgstr "Запрошено отключение тонкого клиента."
 msgid "User {} does not exist."
 msgstr "Не существует пользователя {}."
 
-#: ../ws_listener_worker/resources_monitor.py:101
+#: ../monitor_worker/resources_monitor.py:101
 msgid "{} is connected: {}."
 msgstr "{} подключен: {}."
 
-#: ../ws_listener_worker/resources_monitor.py:161
+#: ../monitor_worker/resources_monitor.py:161
 msgid "Resource monitor can`t connect to controller {}."
 msgstr "Монитор ресурсов не может подключиться к контроллеру {}."
 
-#: ../ws_listener_worker/resources_monitor.py:192
+#: ../monitor_worker/resources_monitor.py:192
 msgid "Closing ws connection {}."
 msgstr "Закрываем WS соединение {}."
 
-#: ../ws_listener_worker/resources_monitor_manager.py:60
+#: ../monitor_worker/resources_monitor_manager.py:60
 #, python-brace-format
 msgid "{cls}: connected controllers -- {controllers}."
 msgstr "{cls}: подключенные контроллеры -- {controllers}."
 
-#: ../ws_listener_worker/resources_monitor_manager.py:71
+#: ../monitor_worker/resources_monitor_manager.py:71
 msgid "{}: Started."
 msgstr "{}: Запущен."
 
-#: ../ws_listener_worker/resources_monitor_manager.py:88
+#: ../monitor_worker/resources_monitor_manager.py:88
 #, python-brace-format
 msgid "{cls}: Controller {name} is already monitored."
 msgstr "{cls}: Контроллер {name} уже отслеживается."
 
-#: ../ws_listener_worker/resources_monitor_manager.py:96
+#: ../monitor_worker/resources_monitor_manager.py:96
 #, python-brace-format
 msgid "{cls}: resource monitor for controller {name} connected."
 msgstr "{cls}: монитор ресурсов для контроллера {name} подключен."

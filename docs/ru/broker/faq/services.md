@@ -38,13 +38,13 @@
 | запуск     | systemctl start vdi-pool_worker       |
 
 
-### Обработчик WSS-соединений
+### Монитор состояния компонентов
 
 | Тип        | Команда
 |------------|---------------------------------------|
-| статус     | systemctl status vdi-ws_listener      |
-| остановка  | systemctl stop vdi-ws_listener        |
-| запуск     | systemctl start vdi-ws_listener       |
+| статус     | systemctl status vdi-monitor_worker      |
+| остановка  | systemctl stop vdi-monitor_worker        |
+| запуск     | systemctl start vdi-monitor_worker       |
 
 
 ## Postgresql

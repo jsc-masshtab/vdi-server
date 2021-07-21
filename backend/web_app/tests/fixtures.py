@@ -82,7 +82,7 @@ async def fixt_launch_workers(fixt_redis_client):
             pass
         worker.kill()
 
-    # stop_worker(ws_listener_worker)
+    # stop_worker(monitor_worker)
     stop_worker(pool_worker)
 
 
