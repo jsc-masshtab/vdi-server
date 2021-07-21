@@ -1,6 +1,5 @@
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
-import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatSelectModule } from '@angular/material/select';
@@ -22,15 +21,13 @@ import { WaitComponent } from './components/wait/wait.component';
     MainMenuComponent,
     FooterComponent,
     HeaderUserComponent],
-  imports: [     
-    CommonModule,
+  imports: [
+    CommonModule,     
     FontAwesomeModule,
-    MatDialogModule,
-    ReactiveFormsModule,
+    MatDialogModule,  
     MatCheckboxModule,
     MatSelectModule,
     AppRoutingModule,
-    FormsModule,
     EventsModule,
   ],
   providers: [],
