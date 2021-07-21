@@ -1,6 +1,6 @@
 import { Component, Inject, OnDestroy } from '@angular/core';
 import { Subject, of } from 'rxjs';
-import { WaitService } from 'src/app/dashboard/common/components/single/wait/wait.service';
+import { WaitService } from 'src/app/dashboard/core/components/wait/wait.service';
 import { ThinClientsService } from '../../thin-clients.service';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { Router } from '@angular/router';

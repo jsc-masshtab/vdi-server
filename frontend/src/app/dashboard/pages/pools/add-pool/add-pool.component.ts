@@ -1,4 +1,4 @@
-import { WaitService } from '../../../common/components/single/wait/wait.service';
+import { WaitService } from '../../../core/components/wait/wait.service';
 
 import { AddPoolService } from './add-pool.service';
 

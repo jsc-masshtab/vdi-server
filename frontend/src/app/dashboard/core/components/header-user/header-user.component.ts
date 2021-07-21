@@ -1,6 +1,6 @@
-import { WebsocketService } from './../../../classes/websock.service';
-import { LoginService } from './../../../../../login/login.service';
-import { AuthStorageService } from './../../../../../login/authStorage.service';
+import { WebsocketService } from '../../../common/classes/websock.service';
+import { LoginService } from '../../../../login/login.service';
+import { AuthStorageService } from '../../../../login/authStorage.service';
 import { Component, OnInit } from '@angular/core';
 
 

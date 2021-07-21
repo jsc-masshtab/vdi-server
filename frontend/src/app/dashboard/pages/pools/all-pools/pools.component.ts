@@ -9,7 +9,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { Subscription } from 'rxjs';
 import { DetailsMove } from 'src/app/dashboard/common/classes/details-move';
 import { map } from 'rxjs/operators';
-import { WaitService } from '../../../common/components/single/wait/wait.service';
+import { WaitService } from '../../../core/components/wait/wait.service';
 import { WebsocketService } from '../../../common/classes/websock.service';
 
 

@@ -1,7 +1,7 @@
 import { Component, OnInit, ViewChild, ElementRef, OnDestroy, Input } from '@angular/core';
 import { VmsService } from './vms.service';
 import { map } from 'rxjs/operators';
-import { WaitService } from '../../../../common/components/single/wait/wait.service';
+import { WaitService } from '../../../../core/components/wait/wait.service';
 import { Router } from '@angular/router';
 import { DetailsMove } from 'src/app/dashboard/common/classes/details-move';
 import { Subscription } from 'rxjs';

@@ -1,6 +1,6 @@
 import { IParams } from '../../../../../../../types';
 import { DetailsMove } from '../../../../common/classes/details-move';
-import { WaitService } from '../../../../common/components/single/wait/wait.service';
+import { WaitService } from '../../../../core/components/wait/wait.service';
 import { Component, OnInit, ViewChild, ElementRef, OnDestroy, Input } from '@angular/core';
 import { ClustersService } from './clusters.service';
 import { map } from 'rxjs/operators';

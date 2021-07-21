@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ThinClientsService } from '../thin-clients.service';
 import { MatDialog } from '@angular/material/dialog';
-import { WaitService } from '../../../common/components/single/wait/wait.service';
+import { WaitService } from '../../../core/components/wait/wait.service';
 import { map } from 'rxjs/operators';
 import { IParams } from 'types';
 import { Subscription } from 'rxjs';

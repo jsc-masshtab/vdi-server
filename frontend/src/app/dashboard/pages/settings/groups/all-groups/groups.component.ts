@@ -1,5 +1,5 @@
 import { IParams } from '../../../../../../../types';
-import { WaitService } from '../../../../common/components/single/wait/wait.service';
+import { WaitService } from '../../../../core/components/wait/wait.service';
 import { AddGroupComponent } from '../add-groups/add-groups.component';
 import { Component, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
 import { GroupsService   } from '../groups.service';

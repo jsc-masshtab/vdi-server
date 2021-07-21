@@ -7,7 +7,7 @@ import { PoolDetailsService } from '../pool-details.service';
 import { InfoBackupComponent } from './info-backup/info-backup.component';
 import { InfoEventComponent } from '../../../log/events/info-event/info-event.component';
 import { DomSanitizer } from '@angular/platform-browser';
-import { WaitService } from 'src/app/dashboard/common/components/single/wait/wait.service';
+import { WaitService } from 'src/app/dashboard/core/components/wait/wait.service';
 import { ConvertToTemaplteComponent } from './convert-to-template/convert-to-template.component';
 
 interface Backup {

@@ -5,7 +5,7 @@ import { Component, Inject, OnDestroy } from '@angular/core';
 import { MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
-import { WaitService } from 'src/app/dashboard/common/components/single/wait/wait.service';
+import { WaitService } from 'src/app/dashboard/core/components/wait/wait.service';
 
 @Component({
   selector: 'vdi-add-group',

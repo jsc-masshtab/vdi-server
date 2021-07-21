@@ -1,5 +1,5 @@
 import { IParams } from '../../../../../../../types';
-import { WaitService } from '../../../../common/components/single/wait/wait.service';
+import { WaitService } from '../../../../core/components/wait/wait.service';
 import { Component, OnInit, ViewChild, ElementRef, OnDestroy, Input } from '@angular/core';
 import { NodesService } from './nodes.service';
 import { map } from 'rxjs/operators';

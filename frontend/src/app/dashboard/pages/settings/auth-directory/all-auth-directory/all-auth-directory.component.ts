@@ -1,5 +1,5 @@
 import { IParams } from '../../../../../../../types';
-import { WaitService } from '../../../../common/components/single/wait/wait.service';
+import { WaitService } from '../../../../core/components/wait/wait.service';
 import { AddAuthenticationDirectoryComponent } from '../add-auth-directory/add-auth-directory.component';
 import { Component, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
 import { AuthenticationDirectoryService   } from '../auth-directory.service';

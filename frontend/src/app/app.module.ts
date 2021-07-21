@@ -42,6 +42,7 @@ import {
           faWrench
         } from '@fortawesome/free-solid-svg-icons';
 import { AuthInterceptor } from './dashboard/common/classes/auth.Interceptor.http';
+import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 /*  -----------------------------------   icons   --------------------------------------*/
 
 
@@ -55,6 +56,7 @@ import { AuthInterceptor } from './dashboard/common/classes/auth.Interceptor.htt
     BrowserModule,
     BrowserAnimationsModule,
     AppRoutingModule,
+    FontAwesomeModule,
     ApolloModule,
     HttpLinkModule,
     HttpClientModule,

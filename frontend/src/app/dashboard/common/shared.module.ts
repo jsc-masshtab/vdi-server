@@ -3,10 +3,10 @@ import { AppRoutingModule } from '../../app-routing.module';
 
 
 import { MatDialogModule } from '@angular/material/dialog';
-import { StatusPipe, StatusIconPipe } from './pipes/statusEntity.pipes';
-import { AssignmentTypePipe } from './pipes/assignmentType.pipes';
-import { PoolTypePipe } from './pipes/poolType.pipes';
-import { TaskTypePipe } from './pipes/taskType.pipes';
+import { StatusPipe, StatusIconPipe } from './pipes/statusEntity.pipe';
+
+import { PoolTypePipe } from './pipes/poolType.pipe';
+import { TaskTypePipe } from './pipes/taskType.pipe';
 import { CommonModule } from '@angular/common';
 import { FocusMeDirective } from './directives/focusMe.directive';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
@@ -18,9 +18,11 @@ import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatSelectModule } from '@angular/material/select';
 import { PaginationComponent } from './components/shared/pagination/pagination.component';
-import { FooterService } from './components/single/footer/footer.service';
+import { FooterService } from '../core/components/footer/footer.service';
 import { YesNoFormComponent } from './forms-dinamic/yes-no-form/yes-no-form.component';
 import { TranslatePipe } from './pipes/translate.pipe';
+import { AssignmentTypePipe } from './pipes/assignmentType.pipe';
+
 
 
 const COMPONENTS = [

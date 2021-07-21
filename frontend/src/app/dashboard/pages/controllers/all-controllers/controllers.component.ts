@@ -1,7 +1,7 @@
 import { DetailsMove } from '../../../common/classes/details-move';
 import { Router } from '@angular/router';
 import { IParams } from '../../../../../../types';
-import { WaitService } from '../../../common/components/single/wait/wait.service';
+import { WaitService } from '../../../core/components/wait/wait.service';
 import { Component, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
 import { ControllersService } from './controllers.service';
 import { map } from 'rxjs/operators';

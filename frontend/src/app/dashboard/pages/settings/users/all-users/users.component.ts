@@ -1,5 +1,5 @@
 import { IParams } from '../../../../../../../types';
-import { WaitService } from '../../../../common/components/single/wait/wait.service';
+import { WaitService } from '../../../../core/components/wait/wait.service';
 import { AddUserComponent } from '../add-user/add-user.component';
 import { Component, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
 import { UsersService   } from '../users.service';

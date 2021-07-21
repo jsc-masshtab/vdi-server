@@ -3,7 +3,7 @@ import { FormControl } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { Subscription } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { WaitService } from 'src/app/dashboard/common/components/single/wait/wait.service';
+import { WaitService } from 'src/app/dashboard/core/components/wait/wait.service';
 import { ControllerEventsService } from './controller-events.service';
 import { InfoEventComponent } from 'src/app/dashboard/pages/log/events/info-event/info-event.component'
 

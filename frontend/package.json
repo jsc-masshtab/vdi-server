@@ -41,7 +41,7 @@
     "graphql-typescript": "^0.3.0",
     "moment": "^2.24.0",
     "rxjs": "~6.6.6",
-    "tslib": "^2.0.0",
+    "tslib": "^2.3.0",
     "zone.js": "~0.10.2"
   },
   "devDependencies": {

@@ -1,14 +1,11 @@
 import { GroupsModule } from './pages/settings/groups/groups.module';
-import { HeaderUserComponent } from './common/components/single/header-user/header-user.component';
+
 import { AuthStorageService } from './../login/authStorage.service';
 import { DashboardRoutingModule } from './dashboard-routing.module';
 import { CommonModule } from '@angular/common';
 import { ErrorsService } from './../errors/errors.service';
-import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { DashboardComponent } from './dashboard.component';
-import { FooterComponent } from './common/components/single/footer/footer.component';
-import { MainMenuComponent } from './common/components/single/main-menu/main-menu.component';
-import { WaitComponent } from './common/components/single/wait/wait.component';
+
 import { UsersModule } from './pages/settings/users/users.module';
 import { AuthenticationDirectoryModule } from './pages/settings/auth-directory/auth-directory.module';
 import { ControllersModule } from './pages/controllers/controllers.module';
@@ -27,7 +24,7 @@ import { HttpHeaders, HttpClientModule } from '@angular/common/http';
 import { NgModule } from '@angular/core';
 
 
-import { WaitService } from './common/components/single/wait/wait.service';
+import { WaitService } from './core/components/wait/wait.service';
 
 /*  -----------------------------------   material   --------------------------------------*/
 import { MAT_DIALOG_DEFAULT_OPTIONS } from '@angular/material/dialog';
@@ -47,20 +44,18 @@ import { NodesModule } from './pages/resourses/nodes/nodes.module';
 import { ResourcePoolsModule } from './pages/resourses/resource_pools/resource_pools.module';
 import { TemplatesModule } from './pages/resourses/templates/templates.module';
 import { VmsModule } from './pages/resourses/vms/vms.module';
+import { CoreModule } from './core/core.module';
 
 
 @NgModule({
   declarations: [
     DashboardComponent,
-    WaitComponent,
-    MainMenuComponent,
-    FooterComponent,
-    HeaderUserComponent
+
   ],
   imports: [
     CommonModule,
+    CoreModule,
     DashboardRoutingModule,
-    FontAwesomeModule,
     HttpClientModule,
     PoolsModule,
     ClustersModule,

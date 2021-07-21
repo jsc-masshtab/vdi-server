@@ -35,7 +35,8 @@ import { VmsModule } from '../resourses/vms/vms.module';
     CommonModule,
     FontAwesomeModule,
     AppRoutingModule,
-    
+    MatDialogModule,
+    MatSelectModule,
     ReactiveFormsModule,
     MatCheckboxModule,
     ClustersModule,

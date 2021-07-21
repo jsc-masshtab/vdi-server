@@ -1,5 +1,5 @@
 import { takeUntil, map } from 'rxjs/operators';
-import { WaitService } from '../../../../../common/components/single/wait/wait.service';
+import { WaitService } from '../../../../../core/components/wait/wait.service';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { Component, OnInit, Inject, OnDestroy } from '@angular/core';
 import { AuthenticationDirectoryService } from '../../auth-directory.service';
