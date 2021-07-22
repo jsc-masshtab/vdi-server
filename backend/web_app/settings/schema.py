@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 from collections import OrderedDict
+from datetime import datetime, timezone
 from enum import Enum
+
+from dateutil.tz import tzlocal
 
 import graphene
 
@@ -60,11 +63,24 @@ class ServiceGrapheneType(graphene.ObjectType):
     status = graphene.String()
 
 
+class NetworkGrapheneType(graphene.ObjectType):
+    name = graphene.String()
+    ipv4 = graphene.String()
+
+
+class SysInfoGrapheneType(graphene.ObjectType):
+    networks_list = graphene.List(NetworkGrapheneType)
+    local_time = graphene.DateTime()
+    time_zone = graphene.String()
+
+
 class SettingsQuery(graphene.ObjectType):
     settings = graphene.Field(SettingsType)
     smtp_settings = graphene.Field(SmtpSettingsType)
 
     services = graphene.List(ServiceGrapheneType)
+
+    system_info = graphene.Field(SysInfoGrapheneType)
 
     @administrator_required
     async def resolve_settings(self, _info, **kwargs):
@@ -87,7 +103,7 @@ class SettingsQuery(graphene.ObjectType):
 
         if stderr:
             raise SimpleError(
-                _local_("Unable to get services info. {}.").format(stderr.decode()),
+                _local_("Unable to get services information. {}.").format(stderr.decode()),
                 user=creator
             )
         if not stdout:
@@ -102,7 +118,7 @@ class SettingsQuery(graphene.ObjectType):
             try:
                 service_name, service_status = service_str.split(":", 2)
                 current_services[service_name] = service_status
-            except Exception as ex:
+            except (IndexError, TypeError, KeyError) as ex:
                 raise SimpleError(
                     _local_("Output parsing error. {}.").format(str(ex)),
                     user=creator
@@ -121,6 +137,54 @@ class SettingsQuery(graphene.ObjectType):
             service_graphene_type_list.append(service_graphene_type)
 
         return service_graphene_type_list
+
+    @administrator_required
+    async def resolve_system_info(self, _info, creator):
+        """Get some system information."""
+        sys_info_graphene_type = SysInfoGrapheneType()
+
+        # get network data
+        cmd = "ip -o -4 a|awk '{print $2\":\"$4}' | cut -f1  -d'/'"
+        _, stdout, stderr = await create_subprocess(cmd)
+
+        if stderr:
+            await system_logger.error(
+                message="Error during ip addresses checking.",
+                description=stderr.decode(),
+                user=creator
+            )
+
+        if stdout:
+            stdout_str = stdout.decode()
+            networks_list = []
+            for item_str in stdout_str.splitlines():
+                try:
+                    net_interface_name, ip_addr = item_str.split(":", 2)
+                    if ip_addr.strip() == "127.0.0.1":
+                        continue
+
+                    network_graphene_type = NetworkGrapheneType()
+                    network_graphene_type.name = net_interface_name
+                    network_graphene_type.ipv4 = ip_addr
+
+                    networks_list.append(network_graphene_type)
+
+                except (IndexError, TypeError, KeyError) as ex:
+                    await system_logger.error(
+                        message="Error during ip addresses parsing.",
+                        description=str(ex),
+                        user=creator
+                    )
+
+            sys_info_graphene_type.networks_list = networks_list
+
+        # get time related data
+        sys_info_graphene_type.local_time = datetime.now(timezone.utc)
+        tz_name = datetime.now(tzlocal()).tzname()
+        tz_offset = datetime.now(tzlocal()).utcoffset()
+        sys_info_graphene_type.time_zone = "{}  {}".format(tz_name, tz_offset)
+
+        return sys_info_graphene_type
 
     @staticmethod
     def _get_app_services_dict():
