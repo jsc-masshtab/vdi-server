@@ -45,7 +45,8 @@ export class UsersService  {
                         date_updated,
                         last_login,
                         is_superuser,
-                        is_active
+                        is_active,
+                        two_factor
                     }
                 }
             `,
@@ -72,6 +73,7 @@ export class UsersService  {
                         last_login,
                         is_superuser,
                         is_active,
+                        two_factor,
                         assigned_roles,
                         possible_roles,
                         assigned_permissions,

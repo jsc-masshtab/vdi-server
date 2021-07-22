@@ -69,6 +69,15 @@ export class UsersComponent extends DetailsMove implements OnInit, OnDestroy {
       sort: true
     },
     {
+      title: 'Двухфакторная аутентификация',
+      property: 'two_factor',
+      type: {
+        typeDepend: 'boolean',
+        propertyDepend: ['Включена', 'Выключена']
+      },
+      sort: true
+    },
+    {
       title: 'Состояние',
       property: 'is_active',
       type: {

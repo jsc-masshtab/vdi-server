@@ -24,6 +24,12 @@
 				<input type="password" placeholder="Введите пароль" formControlName="password" (keydown.enter)="send()">
 			</label>
 
+      <label class="field" title="Используется, если включена двухфакторная аутентификация">
+        <input type="checkbox" name="exercheckbox" id="exercheckbox">Одноразовый пароль
+
+        <input type="text" name="reps" id="reps" placeholder="Введите 6-значный код" formControlName="code">
+      </label>
+
 			<label class="field-inline">
 				<mat-checkbox [color]="'warn'" formControlName="ldap"></mat-checkbox>
 				<p class="description">LDAP</p>

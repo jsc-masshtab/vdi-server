@@ -50,6 +50,7 @@ export class LoginComponent implements OnInit {
       this.loginForm = this.fb.group({
         username: '' ,
         password: '',
+        code: '',
         ldap: false
       });
     } else {

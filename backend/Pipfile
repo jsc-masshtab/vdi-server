@@ -36,6 +36,9 @@ uvloop = "==0.14.*"
 veil-api-client = "==2.2.*"
 veil-aio-au = "==0.1.*"
 aiosmtplib = "==1.1.6"
+qrcode = "*"
+pyotp = "*"
+pillow = "*"
 
 [requires]
 python_version = "3.5"

@@ -79,6 +79,21 @@ export class UserDetailsComponent implements OnInit, OnDestroy {
       }
     },
     {
+      title: 'Двухфакторная аутентификация',
+      property: 'two_factor',
+      type: {
+        typeDepend: 'boolean',
+        propertyDepend: ['Включена', 'Выключена']
+      },
+      // edit: 'openEditForm',
+      // form: {
+      //   tag: 'input',
+      //   type: 'checkbox',
+      //   description: 'Двухфакторная аутентификация',
+      //   gqlType: 'Boolean'
+      // }
+    },
+    {
       title: 'Дата создания',
       property: 'date_joined',
       type: 'time'
