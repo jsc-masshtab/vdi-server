@@ -50,3 +50,21 @@ async def test_execute_service_action(fixt_db, fixt_auth_context):
         """
     executed = await execute_scheme(settings_schema, qu, context=fixt_auth_context)
     assert executed["doServiceAction"]["ok"]
+
+
+@pytest.mark.asyncio
+async def test_request_system_info(snapshot, fixt_db, fixt_auth_context):
+    qu = """{
+             system_info{
+                 networks_list{
+                     name
+                     ipv4
+                 }
+                 
+                 time_zone
+                 local_time
+                 }
+    }"""
+    executed = await execute_scheme(settings_schema, qu, context=fixt_auth_context)
+    assert executed["system_info"]["time_zone"]
+    assert executed["system_info"]["local_time"]
