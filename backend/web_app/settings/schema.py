@@ -261,10 +261,12 @@ class DoServiceAction(graphene.Mutation):
         check_errors = graphene.Boolean()
 
     ok = graphene.Boolean()
+    service_status = graphene.String()
 
     @administrator_required
     async def mutate(self, _info, sudo_password, service_name, service_action,
                      check_errors=True, creator="system"):
+        # Do action
         cmd = "echo {} | sudo -S timeout 50s systemctl {} {}".format(
             sudo_password, service_action, service_name)
 
@@ -280,7 +282,27 @@ class DoServiceAction(graphene.Mutation):
         await system_logger.info(_local_("Executed action {} for service {}").
                                  format(service_action, service_name), user=creator)
 
-        return DoServiceAction(ok=True)
+        # Try to get status of the service
+        service_status = None
+        try:
+            cmd = """timeout 50s systemctl list-units --no-pager --no-legend --type=service"""\
+                  """ | awk '{print $1\":\"$4}' | grep %s""" % service_name
+
+            _, stdout, stderr = await create_subprocess(cmd)
+            if stderr:
+                raise RuntimeError(stderr.decode())
+            if stdout:
+                stdout_str = stdout.decode()
+                _, service_status = stdout_str.split(":", 2)
+                service_status = service_status.strip()
+
+        except Exception as ex:
+            await system_logger.debug(
+                _local_("Unable to check status of service {}.").format(service_name),
+                description=str(ex)
+            )
+
+        return DoServiceAction(ok=True, service_status=service_status)
 
 
 class SettingsMutations(graphene.ObjectType):
