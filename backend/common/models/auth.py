@@ -811,15 +811,24 @@ class User(AbstractSortableStatusModel, VeilModel):
         await system_logger.info(info_message, entity=user.entity)
         return True
 
-    async def generate_qr(self, creator="system"):
-        secret = pyotp.random_base32()
-        await self.update(secret=secret).apply()
+    async def generate_qr(self, creator="system", repeat=False):
+        if repeat:
+            secret_set = await User.select("secret").where(User.username == self.username).gino.first()
+            secret = secret_set[0]
+        else:
+            secret = pyotp.random_base32()
+            await self.update(secret=secret).apply()
         data = pyotp.totp.TOTP(secret).provisioning_uri(name=self.username, issuer_name="VeiL VDI")
         qr_img = qrcode.make(data)  # generate QR image
         # qr_img.save("qr.png")
-        await system_logger.info(
-            _local_("New QR code and secret code of 2fa were generated for user {}.").format(self.username),
-            user=creator, entity=self.entity)
+        if repeat:
+            await system_logger.info(
+                _local_("QR code and secret code of 2fa were repeated for user {}.").format(self.username),
+                user=creator, entity=self.entity)
+        else:
+            await system_logger.info(
+                _local_("New QR code and secret code of 2fa were generated for user {}.").format(self.username),
+                user=creator, entity=self.entity)
         return {"qr_img": qr_img, "secret": secret}
 
     @staticmethod
