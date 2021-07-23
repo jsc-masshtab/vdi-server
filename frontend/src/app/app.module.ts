@@ -1,12 +1,12 @@
-import { AuthStorageService } from './login/authStorage.service';
-import { DashboardModule } from './dashboard/dashboard.module';
-import { LoginModule } from './login/login.module';
+import { AuthStorageService } from './pages/login/authStorage.service';
+import { DashboardModule } from './pages/dashboard/dashboard.module';
+import { LoginModule } from './pages/login/login.module';
 import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
-import { ErrorsModule } from './errors/errors.module';
+import { ErrorsModule } from './core/components/errors/errors.module';
 import { HttpLinkModule } from 'apollo-angular-link-http';
 import { ApolloModule  } from 'apollo-angular';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
@@ -41,7 +41,7 @@ import {
           faCommentDots,
           faWrench
         } from '@fortawesome/free-solid-svg-icons';
-import { AuthInterceptor } from './login/auth.Interceptor.http';
+import { AuthInterceptor } from './pages/login/auth.Interceptor.http';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 /*  -----------------------------------   icons   --------------------------------------*/
 
