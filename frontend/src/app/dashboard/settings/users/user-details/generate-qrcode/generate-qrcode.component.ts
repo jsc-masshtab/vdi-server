@@ -38,7 +38,7 @@ export class GenerateQrcodeComponent implements OnInit, OnDestroy {
       }
     });
 
-    this.qr_accept.valueChanges.pipe(takeUntil(this.destroy)).subscribe((qr_accept) => {
+    this.qr_accept.valueChanges.pipe(takeUntil(this.destroy)).subscribe(() => {
       this.valid = true;
     });
 
