@@ -11,7 +11,11 @@
     </label>
   </div>
 
-  <div *ngIf="qr_uri" class="form-fields field-center">
+  <div class="form-fields" *ngIf="!qr_uri && qr.value">
+    <button class="form-btn field-button" (click)="generateUserQrcode()">Сгенерировать новый код</button>
+  </div>
+
+  <div class="form-fields field-center" *ngIf="qr_uri">
     <ngx-qrcode [value]="qr_uri"></ngx-qrcode>
     <span>{{ qr_secret }}</span>
   </div>
@@ -28,9 +32,12 @@
       <mat-checkbox [color]="'warn'" [formControl]="qr_accept"></mat-checkbox>
       <p class="description">Указанный ключ добавлен в аутентификатор</p>
     </label>
-
-    <div class="error" *ngIf="!valid">Выполнены не все условия!</div>
   </div>
+
+  <div class="form-fields" *ngIf="!valid">
+    <div class="error">Выполнены не все условия!</div>
+  </div>
+  
 
   <div class="form-actions">
     <button class="form-btn" (click)="send()">

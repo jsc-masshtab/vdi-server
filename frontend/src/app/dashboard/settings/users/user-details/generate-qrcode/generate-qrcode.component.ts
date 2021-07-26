@@ -32,19 +32,15 @@ export class GenerateQrcodeComponent implements OnInit, OnDestroy {
   ngOnInit() {
     
     this.qr.valueChanges.pipe(takeUntil(this.destroy)).subscribe((qr) => {
-      if (qr) {
-        this.generateUserQrcode();
-      } else {
+      if (!qr) {
         this.qr_uri = '';
         this.qr_accept.setValue(false);
       }
-    })
+    });
 
     this.qr_accept.valueChanges.pipe(takeUntil(this.destroy)).subscribe((qr_accept) => {
-      if (qr_accept) {
-        this.valid = true;
-      }
-    })
+      this.valid = true;
+    });
 
     this.qr.setValue(this.data.two_factor);
   }
