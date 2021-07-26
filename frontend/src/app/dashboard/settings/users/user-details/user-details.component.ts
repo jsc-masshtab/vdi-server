@@ -12,6 +12,7 @@ import { RemoveRoleComponent } from './remove-role/remove-role.component';
 import { map } from 'rxjs/operators';
 import { RemovePermissionComponent } from './remove-permission/remove-permission.component';
 import { AddPermissionComponent } from './add-permission/add-permission.component';
+import { GenerateQrcodeComponent } from './generate-qrcode/generate-qrcode.component';
 
 @Component({
   selector: 'user-details',
@@ -85,13 +86,7 @@ export class UserDetailsComponent implements OnInit, OnDestroy {
         typeDepend: 'boolean',
         propertyDepend: ['Включена', 'Выключена']
       },
-      // edit: 'openEditForm',
-      // form: {
-      //   tag: 'input',
-      //   type: 'checkbox',
-      //   description: 'Двухфакторная аутентификация',
-      //   gqlType: 'Boolean'
-      // }
+      edit: 'openGenerateQrcode'
     },
     {
       title: 'Дата создания',
@@ -287,6 +282,8 @@ export class UserDetailsComponent implements OnInit, OnDestroy {
     });
   }
 
+  public 
+
   public close() {
     this.router.navigate(['pages/settings/users']);
   }
@@ -356,6 +353,17 @@ export class UserDetailsComponent implements OnInit, OnDestroy {
         id: this.id,
         username: this.entity['username'],
         permissions: this.entity['assigned_permissions']
+      }
+    });
+  }
+
+  public openGenerateQrcode() {
+    this.dialog.open(GenerateQrcodeComponent, {
+      disableClose: true,
+      width: '500px',
+      data: {
+        id: this.id,
+        two_factor: this.entity['two_factor']
       }
     });
   }

@@ -19,6 +19,8 @@ import { RemoveRoleComponent } from './user-details/remove-role/remove-role.comp
 import { RemoveGroupComponent } from './user-details/remove-group/remove-group.component';
 import { RemovePermissionComponent } from './user-details/remove-permission/remove-permission.component';
 import { AddPermissionComponent } from './user-details/add-permission/add-permission.component';
+import { GenerateQrcodeComponent } from './user-details/generate-qrcode/generate-qrcode.component';
+import { NgxQRCodeModule } from '@techiediaries/ngx-qrcode';
 
 @NgModule({
    declarations: [
@@ -31,7 +33,8 @@ import { AddPermissionComponent } from './user-details/add-permission/add-permis
       MutateUserComponent,
       RemoveRoleComponent,
       RemoveGroupComponent,
-      RemovePermissionComponent
+      RemovePermissionComponent,
+      GenerateQrcodeComponent
    ],
    imports: [
       SharedModule,
@@ -42,7 +45,8 @@ import { AddPermissionComponent } from './user-details/add-permission/add-permis
       MatSelectModule,
       ReactiveFormsModule,
       MatCheckboxModule,
-      MatInputModule
+      MatInputModule,
+      NgxQRCodeModule
    ],
    providers: [
       UsersService

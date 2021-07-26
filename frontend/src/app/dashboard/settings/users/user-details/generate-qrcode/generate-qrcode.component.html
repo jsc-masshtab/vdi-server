@@ -1,0 +1,41 @@
+<div class="form">
+  <div class="form-header">
+    <h1>Изменение двухвакторной аутентификации</h1>
+    <button [mat-dialog-close]="true" class="form-close"><fa-icon [icon]="['fas','times-circle']"></fa-icon></button>
+  </div>
+
+  <div class="form-fields">
+    <label class="field-inline">
+      <mat-checkbox [color]="'primary'" [formControl]="qr"></mat-checkbox>
+      <p class="description">Двухвакторная аутентификация</p>
+    </label>
+  </div>
+
+  <div *ngIf="qr_uri" class="form-fields field-center">
+    <ngx-qrcode [value]="qr_uri"></ngx-qrcode>
+    <span>{{ qr_secret }}</span>
+  </div>
+
+  <div class="form-description" *ngIf="qr_uri">
+    <p class="description-warning field-flexable">
+      <span>Отсканируйте QR-код или введите ключ c помощью аутентификатора</span>
+      <span>(пример Яндекс.Ключ, Google Authenticator)</span>
+    </p>
+  </div>
+
+  <div class="form-fields field-center" *ngIf="qr_uri">
+    <label class="field-inline">
+      <mat-checkbox [color]="'warn'" [formControl]="qr_accept"></mat-checkbox>
+      <p class="description">Указанный ключ добавлен в аутентификатор</p>
+    </label>
+
+    <div class="error" *ngIf="!valid">Выполнены не все условия!</div>
+  </div>
+
+  <div class="form-actions">
+    <button class="form-btn" (click)="send()">
+      <fa-icon [icon]="['fas','edit']" size="xs"></fa-icon>
+      <span class="action-name">Изменить</span>
+    </button>
+  </div>
+</div>
