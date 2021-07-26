@@ -88,8 +88,7 @@ export class FooterComponent implements OnInit, OnDestroy {
  
   public getLicense(): void {
     this.licenseService.getLicence().subscribe((res) => {
-      console.log(res.data);
-      
+    
       this.license = res.data;
     });
   }
