@@ -1,9 +1,10 @@
-import { AuthStorageService } from './authStorage.service';
 import { Injectable } from '@angular/core';
 import {
   CanActivate,
   CanActivateChild
 } from '@angular/router';
+
+import { AuthStorageService } from './authStorage.service';
 
 
 @Injectable({

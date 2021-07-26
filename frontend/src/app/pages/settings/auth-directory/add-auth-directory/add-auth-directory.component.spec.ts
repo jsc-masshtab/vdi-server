@@ -3,8 +3,8 @@ import { waitForAsync, ComponentFixture, TestBed } from '@angular/core/testing';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatDialogRef } from '@angular/material/dialog';
 
-import { AddAuthenticationDirectoryComponent } from './add-auth-directory.component';
 import { AuthenticationDirectoryService } from '../auth-directory.service';
+import { AddAuthenticationDirectoryComponent } from './add-auth-directory.component';
 
 describe('AddAuthenticationDirectoryComponent', () => {
   let component: AddAuthenticationDirectoryComponent;

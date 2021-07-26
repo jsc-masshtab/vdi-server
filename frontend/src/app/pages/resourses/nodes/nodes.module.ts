@@ -1,14 +1,15 @@
-import { NodeDetailsComponent } from './node-details/node-details.component';
+import { CommonModule } from '@angular/common';
+import { NgModule } from '@angular/core';
+import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
+
 import { AppRoutingModule } from '../../../app-routing.module';
 import { SharedModule } from '../../../shared/shared.module';
-import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
-import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { DatapoolsModule } from '../datapools/datapools.module';
+import { TemplatesModule } from '../templates/templates.module';
+import { VmsModule } from '../vms/vms.module';
 import { NodesComponent } from './all-nodes/nodes.component';
 import { NodesService } from './all-nodes/nodes.service';
-import { DatapoolsModule } from '../datapools/datapools.module';
-import { VmsModule } from '../vms/vms.module';
-import { TemplatesModule } from '../templates/templates.module';
+import { NodeDetailsComponent } from './node-details/node-details.component';
 
 
 @NgModule({

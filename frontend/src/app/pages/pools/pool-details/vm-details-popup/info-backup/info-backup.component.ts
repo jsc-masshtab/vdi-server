@@ -1,8 +1,9 @@
 import { Component, Inject } from '@angular/core';
 import { MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatDialog } from '@angular/material/dialog';
-import { PoolDetailsService } from '../../pool-details.service';
+
 import {YesNoFormComponent} from '../../../../../shared/forms-dinamic/yes-no-form/yes-no-form.component';
+import { PoolDetailsService } from '../../pool-details.service';
 
 // interface IData {
 //   file_id: string;

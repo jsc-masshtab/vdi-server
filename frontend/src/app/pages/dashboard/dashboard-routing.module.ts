@@ -1,29 +1,15 @@
-import { GroupsDetailsComponent } from '../settings/groups/groups-details/groups-details.component';
-import { GroupsComponent } from '../settings/groups/all-groups/groups.component';
-import { LoginGuard } from '../login/login.guard';
-
-
-
-import { PoolDetailsComponent } from '../pools/pool-details/pool-details.component';
-import { PoolsComponent } from '../pools/all-pools/pools.component';
-
-
 import { NgModule } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
-import { ControllersComponent } from '../controllers/all-controllers/controllers.component';
 
-import { EventsComponent } from '../log/events/all-events/events.component';
-import { DashboardComponent } from './dashboard.component';
-import { AuthenticationDirectoryComponent } from '../settings/auth-directory/all-auth-directory/all-auth-directory.component';
-import { AuthenticationDirectoryDetailsComponent } from '../settings/auth-directory/auth-directory-details/auth-directory-details.component';
-import { UserDetailsComponent } from '../settings/users/user-details/user-details.component';
+import { ControllersComponent } from '../controllers/all-controllers/controllers.component';
 import { ControllerDetailsComponent } from '../controllers/controller-details/controller-details.component';
-import { LicenseComponent } from '../settings/license/license.component';
-import { TasksComponent } from '../log/tasks/all-tasks/tasks.component';
-import { ThinClientsComponent } from '../thin-clients/thin-clients.component';
-import { ThinClientDetailsComponent } from '../thin-clients/thin-client-details/thin-client-details.component';
+import { EventsComponent } from '../log/events/all-events/events.component';
 import { LogSettingComponent } from '../log/log-setting/log-setting.component';
+import { TasksComponent } from '../log/tasks/all-tasks/tasks.component';
 import { VeilEventsComponent } from '../log/veil-events/veil-all-events/events.component';
+import { LoginGuard } from '../login/login.guard';
+import { PoolsComponent } from '../pools/all-pools/pools.component';
+import { PoolDetailsComponent } from '../pools/pool-details/pool-details.component';
 import { ClustersComponent } from '../resourses/clusters/all-clusters/clusters.component';
 import { ClusterDetailsComponent } from '../resourses/clusters/cluster-details/cluster-details.component';
 import { DatapoolsComponent } from '../resourses/datapools/all-datapools/datapools.component';
@@ -36,7 +22,16 @@ import { TemplatesComponent } from '../resourses/templates/all-templates/templat
 import { TemplateDetailsComponent } from '../resourses/templates/template-details/template-details.component';
 import { VmsComponent } from '../resourses/vms/all-vms/vms.component';
 import { VmDetailsComponent } from '../resourses/vms/vms-details/vm-details.component';
+import { AuthenticationDirectoryComponent } from '../settings/auth-directory/all-auth-directory/all-auth-directory.component';
+import { AuthenticationDirectoryDetailsComponent } from '../settings/auth-directory/auth-directory-details/auth-directory-details.component';
+import { GroupsComponent } from '../settings/groups/all-groups/groups.component';
+import { GroupsDetailsComponent } from '../settings/groups/groups-details/groups-details.component';
+import { LicenseComponent } from '../settings/license/license.component';
 import { UsersComponent } from '../settings/users/all-users/users.component';
+import { UserDetailsComponent } from '../settings/users/user-details/user-details.component';
+import { ThinClientDetailsComponent } from '../thin-clients/thin-client-details/thin-client-details.component';
+import { ThinClientsComponent } from '../thin-clients/thin-clients.component';
+import { DashboardComponent } from './dashboard.component';
 
 
 const routes: Routes = [

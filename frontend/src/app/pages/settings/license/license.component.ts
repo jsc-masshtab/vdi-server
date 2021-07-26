@@ -1,8 +1,9 @@
-import { Component, OnInit } from '@angular/core';
 import { HttpResponse } from '@angular/common/http';
-import { LicenseService } from './license.service';
+import { Component, OnInit } from '@angular/core';
 import { ErrorsService } from 'src/app/core/components/errors/errors.service';
+
 import { FooterService } from '../../../core/components/footer/footer.service';
+import { LicenseService } from './license.service';
 
 @Component({
   selector: 'vdi-license',

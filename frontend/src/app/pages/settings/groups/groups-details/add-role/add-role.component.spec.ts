@@ -2,8 +2,8 @@ import { CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA } from '@angular/core';
 import { waitForAsync, ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 
-import { AddRoleComponent } from './add-role.component';
 import { GroupsService } from '../../groups.service';
+import { AddRoleComponent } from './add-role.component';
 
 describe('AddRoleComponent', () => {
   let component: AddRoleComponent;

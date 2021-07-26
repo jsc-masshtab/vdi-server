@@ -1,6 +1,7 @@
 /* tslint:disable:no-unused-variable */
 
 import { TestBed, async, inject } from '@angular/core/testing';
+
 import { VmDetailsPopupService } from './vm-details-popup.service';
 
 describe('Service: VmDetailsPopup', () => {

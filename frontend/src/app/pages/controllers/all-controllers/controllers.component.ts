@@ -1,15 +1,16 @@
-import { DetailsMove } from '../../../shared/classes/details-move';
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
+import { MatDialog } from '@angular/material/dialog';
 import { Router } from '@angular/router';
+import { Subscription } from 'rxjs';
+import { map } from 'rxjs/operators';
+import { WebsocketService } from 'src/app/shared/classes/websock.service';
+
 import { IParams } from '../../../../../types';
 import { WaitService } from '../../../core/components/wait/wait.service';
-import { Component, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
-import { ControllersService } from './controllers.service';
-import { map } from 'rxjs/operators';
-import { MatDialog } from '@angular/material/dialog';
+import { DetailsMove } from '../../../shared/classes/details-move';
 import { AddControllerComponent } from '../add-controller/add-controller.component';
 import { RemoveControllerComponent } from '../remove-controller/remove-controller.component';
-import { Subscription } from 'rxjs';
-import { WebsocketService } from 'src/app/shared/classes/websock.service';
+import { ControllersService } from './controllers.service';
 
 @Component({
   selector: 'vdi-servers',

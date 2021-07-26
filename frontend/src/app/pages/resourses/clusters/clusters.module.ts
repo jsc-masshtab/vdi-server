@@ -1,16 +1,17 @@
-import { DashboardRoutingModule } from '../../dashboard/dashboard-routing.module';
-import { ClustersService } from './all-clusters/clusters.service';
-import { ClustersComponent } from './all-clusters/clusters.component';
-import { SharedModule } from '../../../shared/shared.module';
-import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
-import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ClusterDetailsComponent } from './cluster-details/cluster-details.component';
-import { ResourcePoolsModule} from '../resource_pools/resource_pools.module';
-import { NodesModule } from '../nodes/nodes.module';
+import { NgModule } from '@angular/core';
+import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
+
+import { SharedModule } from '../../../shared/shared.module';
+import { DashboardRoutingModule } from '../../dashboard/dashboard-routing.module';
 import { DatapoolsModule } from '../datapools/datapools.module';
-import { VmsModule } from '../vms/vms.module';
+import { NodesModule } from '../nodes/nodes.module';
+import { ResourcePoolsModule} from '../resource_pools/resource_pools.module';
 import { TemplatesModule } from '../templates/templates.module';
+import { VmsModule } from '../vms/vms.module';
+import { ClustersComponent } from './all-clusters/clusters.component';
+import { ClustersService } from './all-clusters/clusters.service';
+import { ClusterDetailsComponent } from './cluster-details/cluster-details.component';
 
 
 @NgModule({

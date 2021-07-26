@@ -1,14 +1,13 @@
-import { WaitService } from '../../../core/components/wait/wait.service';
-
-import { AddPoolService } from './add-pool.service';
-
-import { MatDialogRef } from '@angular/material/dialog';
+import { trigger, style, animate, transition } from '@angular/animations';
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Validators } from '@angular/forms';
-import { map } from 'rxjs/operators';
-import { trigger, style, animate, transition } from '@angular/animations';
 import { FormBuilder, FormGroup } from '@angular/forms';
+import { MatDialogRef } from '@angular/material/dialog';
 import { Subscription } from 'rxjs';
+import { map } from 'rxjs/operators';
+
+import { WaitService } from '../../../core/components/wait/wait.service';
+import { AddPoolService } from './add-pool.service';
 
 @Component({
   selector: 'vdi-add-pool',

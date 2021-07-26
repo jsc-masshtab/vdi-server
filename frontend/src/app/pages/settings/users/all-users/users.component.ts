@@ -1,14 +1,16 @@
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
+import { FormControl } from '@angular/forms';
+import { MatDialog } from '@angular/material/dialog';
+import { Router } from '@angular/router';
+import { Subscription } from 'rxjs';
+import { map } from 'rxjs/operators';
+
 import { IParams } from '../../../../../../types';
 import { WaitService } from '../../../../core/components/wait/wait.service';
-import { AddUserComponent } from '../add-user/add-user.component';
-import { Component, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
-import { UsersService   } from '../users.service';
-import { map } from 'rxjs/operators';
-import { MatDialog } from '@angular/material/dialog';
-import { Subscription } from 'rxjs';
-import { Router } from '@angular/router';
 import { DetailsMove } from '../../../../shared/classes/details-move';
-import { FormControl } from '@angular/forms';
+import { AddUserComponent } from '../add-user/add-user.component';
+import { UsersService   } from '../users.service';
+
 
 
 @Component({

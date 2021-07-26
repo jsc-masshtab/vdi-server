@@ -1,8 +1,10 @@
 import { Component, OnInit } from '@angular/core';
-import { LogSettingService } from './log-setting.service';
-import { map } from 'rxjs/operators';
-import { FormForEditComponent } from '../../../shared/forms-dinamic/change-form/form-edit.component';
 import { MatDialog } from '@angular/material/dialog';
+import { map } from 'rxjs/operators';
+
+import { FormForEditComponent } from '../../../shared/forms-dinamic/change-form/form-edit.component';
+import { LogSettingService } from './log-setting.service';
+
 
 @Component({
   selector: 'vdi-log-setting',

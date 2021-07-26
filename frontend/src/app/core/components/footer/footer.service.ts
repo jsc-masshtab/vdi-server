@@ -1,9 +1,9 @@
-import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { AuthStorageService } from 'src/app/pages/login/authStorage.service';
-import { Subject } from 'rxjs';
+import { Injectable } from '@angular/core';
 import { Apollo, QueryRef } from 'apollo-angular';
 import gql from 'graphql-tag';
+import { Subject } from 'rxjs';
+import { AuthStorageService } from 'src/app/pages/login/authStorage.service';
 
 @Injectable({
   providedIn: 'root'

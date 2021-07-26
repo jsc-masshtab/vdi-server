@@ -1,20 +1,20 @@
-import { TasksComponent } from './all-tasks/tasks.component';
-import { TasksService } from './all-tasks/tasks.service';
-import { AppRoutingModule } from '../../../app-routing.module';
-import { SharedModule } from '../../../shared/shared.module';
-import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
-import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { InfoTaskComponent } from './info-tasks/info-tasks.component';
-import { MatDatepickerModule } from '@angular/material/datepicker';
+import { NgModule } from '@angular/core';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatNativeDateModule } from '@angular/material/core';
+import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatSelectModule } from '@angular/material/select';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-
+import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { faTimesCircle } from '@fortawesome/free-solid-svg-icons';
+
+import { AppRoutingModule } from '../../../app-routing.module';
+import { SharedModule } from '../../../shared/shared.module';
+import { TasksComponent } from './all-tasks/tasks.component';
+import { TasksService } from './all-tasks/tasks.service';
+import { InfoTaskComponent } from './info-tasks/info-tasks.component';
 
 @NgModule({
   declarations: [

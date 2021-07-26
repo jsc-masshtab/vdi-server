@@ -1,10 +1,10 @@
 import { CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA } from '@angular/core';
 import { waitForAsync, ComponentFixture, TestBed } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
-
-import { DatapoolDetailsComponent } from './datapool-details.component';
-import { DatapoolsService } from '../all-datapools/datapools.service';
 import { of } from 'rxjs';
+
+import { DatapoolsService } from '../all-datapools/datapools.service';
+import { DatapoolDetailsComponent } from './datapool-details.component';
 
 describe('DatapoolDetailsComponent', () => {
   let component: DatapoolDetailsComponent;

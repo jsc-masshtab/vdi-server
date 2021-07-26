@@ -1,6 +1,7 @@
 import { Component, Inject } from '@angular/core';
-import { WaitService } from '../../../../../core/components/wait/wait.service';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+
+import { WaitService } from '../../../../../core/components/wait/wait.service';
 import { UsersService } from '../../users.service';
 
 @Component({

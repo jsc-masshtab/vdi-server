@@ -1,5 +1,6 @@
 import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { waitForAsync, ComponentFixture, TestBed } from '@angular/core/testing';
+
 import { PaginationComponent } from './pagination.component';
 
 describe('PaginationComponent', () => {

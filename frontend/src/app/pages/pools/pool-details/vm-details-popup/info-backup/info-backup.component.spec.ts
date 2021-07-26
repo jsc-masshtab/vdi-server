@@ -2,8 +2,8 @@ import { CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA } from '@angular/core';
 import { waitForAsync, ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatDialog, MAT_DIALOG_DATA } from '@angular/material/dialog';
 
-import { InfoBackupComponent } from './info-backup.component';
 import { PoolDetailsService } from '../../pool-details.service';
+import { InfoBackupComponent } from './info-backup.component';
 
 describe('InfoBackupComponent', () => {
   let component: InfoBackupComponent;

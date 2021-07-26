@@ -1,13 +1,15 @@
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
+import { MatDialog } from '@angular/material/dialog';
+import { Router } from '@angular/router';
+import { Subscription } from 'rxjs';
+import { map } from 'rxjs/operators';
+
 import { IParams } from '../../../../../../types';
 import { WaitService } from '../../../../core/components/wait/wait.service';
-import { AddAuthenticationDirectoryComponent } from '../add-auth-directory/add-auth-directory.component';
-import { Component, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
-import { AuthenticationDirectoryService   } from '../auth-directory.service';
-import { map } from 'rxjs/operators';
-import { MatDialog } from '@angular/material/dialog';
-import { Subscription } from 'rxjs';
 import { DetailsMove } from '../../../../shared/classes/details-move';
-import { Router } from '@angular/router';
+import { AddAuthenticationDirectoryComponent } from '../add-auth-directory/add-auth-directory.component';
+import { AuthenticationDirectoryService   } from '../auth-directory.service';
+
 
 
 @Component({

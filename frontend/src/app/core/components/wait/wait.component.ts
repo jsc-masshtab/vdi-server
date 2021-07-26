@@ -1,13 +1,13 @@
-import { WaitService } from './wait.service';
-import { Component, OnDestroy, OnInit } from '@angular/core';
-import { Subscription } from 'rxjs';
-
 import {
   trigger,
   style,
   transition,
   animate
 } from '@angular/animations';
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Subscription } from 'rxjs';
+
+import { WaitService } from './wait.service';
 
 
 @Component({

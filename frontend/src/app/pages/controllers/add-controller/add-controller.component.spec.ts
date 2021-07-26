@@ -1,10 +1,10 @@
 import { CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA } from '@angular/core';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { waitForAsync, ComponentFixture, TestBed } from '@angular/core/testing';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatDialogRef } from '@angular/material/dialog';
 
-import { AddControllerComponent } from './add-controller.component';
 import { ControllersService } from '../all-controllers/controllers.service';
+import { AddControllerComponent } from './add-controller.component';
 
 describe('AddControllerComponent', () => {
   let component: AddControllerComponent;

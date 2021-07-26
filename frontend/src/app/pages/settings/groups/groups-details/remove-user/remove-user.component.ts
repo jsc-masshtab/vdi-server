@@ -1,11 +1,12 @@
-import { GroupsService } from '../../groups.service';
 
-import { WaitService } from '../../../../../core/components/wait/wait.service';
-import { MatDialogRef } from '@angular/material/dialog';
 import { Component, Inject, OnDestroy } from '@angular/core';
+import { MatDialogRef } from '@angular/material/dialog';
 import { MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
+
+import { WaitService } from '../../../../../core/components/wait/wait.service';
+import { GroupsService } from '../../groups.service';
 
 interface IData {
   id: string;

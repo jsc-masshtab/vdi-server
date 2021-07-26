@@ -1,9 +1,10 @@
-import { WaitService } from '../../../../core/components/wait/wait.service';
-import { MatDialogRef } from '@angular/material/dialog';
 import { Component, OnDestroy } from '@angular/core';
-import { AuthenticationDirectoryService } from '../auth-directory.service';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { MatDialogRef } from '@angular/material/dialog';
 import { Subscription } from 'rxjs';
+
+import { WaitService } from '../../../../core/components/wait/wait.service';
+import { AuthenticationDirectoryService } from '../auth-directory.service';
 
 
 @Component({

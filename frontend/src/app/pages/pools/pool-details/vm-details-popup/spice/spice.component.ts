@@ -11,7 +11,6 @@ import {
   OnChanges,
   OnDestroy
 } from '@angular/core';
-
 import * as SpiceHtml5 from 'src/spice/src/main.js'
 
 @Component({

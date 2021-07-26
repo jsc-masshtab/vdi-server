@@ -1,8 +1,8 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
-import { FooterService } from './footer.service';
-
 import { Subscription } from 'rxjs';
+
 import { WebsocketService } from '../../../shared/classes/websock.service';
+import { FooterService } from './footer.service';
 
 interface ICountEvents {
   warning: number;

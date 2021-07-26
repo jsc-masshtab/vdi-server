@@ -3,8 +3,8 @@ import { waitForAsync, ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { of } from 'rxjs';
 
-import { AddUsersPoolComponent } from './add-users.component';
 import { PoolDetailsService } from '../pool-details.service';
+import { AddUsersPoolComponent } from './add-users.component';
 
 describe('AddUsersPoolComponent', () => {
   let component: AddUsersPoolComponent;

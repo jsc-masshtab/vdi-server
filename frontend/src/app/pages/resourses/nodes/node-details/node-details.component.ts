@@ -1,10 +1,10 @@
-
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { map } from 'rxjs/operators';
 import { ActivatedRoute, ParamMap } from '@angular/router';
 import { Router } from '@angular/router';
-import { NodesService } from '../all-nodes/nodes.service';
 import { Subscription } from 'rxjs';
+import { map } from 'rxjs/operators';
+
+import { NodesService } from '../all-nodes/nodes.service';
 
 interface TypeNode {
   [key: string]: any

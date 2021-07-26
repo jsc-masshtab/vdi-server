@@ -1,10 +1,10 @@
 import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { waitForAsync, ComponentFixture, TestBed } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
+import { of } from 'rxjs';
 
 import { ClustersComponent } from './clusters.component';
 import { ClustersService } from './clusters.service';
-import { of } from 'rxjs';
 
 describe('ClustersComponent', () => {
   let component: ClustersComponent;

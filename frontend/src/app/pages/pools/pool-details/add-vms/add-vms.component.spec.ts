@@ -3,8 +3,8 @@ import { waitForAsync, ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { of } from 'rxjs';
 
-import { AddVMStaticPoolComponent } from './add-vms.component';
 import { PoolDetailsService } from '../pool-details.service';
+import { AddVMStaticPoolComponent } from './add-vms.component';
 
 describe('AddVMStaticPoolComponent', () => {
   let component: AddVMStaticPoolComponent;

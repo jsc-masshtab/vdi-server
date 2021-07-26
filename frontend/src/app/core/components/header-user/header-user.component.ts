@@ -1,7 +1,9 @@
-import { WebsocketService } from '../../../shared/classes/websock.service';
-import { LoginService } from '../../../pages/login/login.service';
-import { AuthStorageService } from '../../../pages/login/authStorage.service';
 import { Component, OnInit } from '@angular/core';
+
+import { AuthStorageService } from '../../../pages/login/authStorage.service';
+import { LoginService } from '../../../pages/login/login.service';
+import { WebsocketService } from '../../../shared/classes/websock.service';
+
 
 
 @Component({

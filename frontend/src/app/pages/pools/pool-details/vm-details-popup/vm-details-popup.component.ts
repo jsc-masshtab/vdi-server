@@ -1,14 +1,16 @@
-import { AddUserVmComponent } from './add-user/add-user.component';
 import { Component, Inject, OnInit } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialog } from '@angular/material/dialog';
-import { RemoveUserVmComponent } from './remove-user/remove-user.component';
-import { YesNoFormComponent } from 'src/app/shared/forms-dinamic/yes-no-form/yes-no-form.component';
-import { PoolDetailsService } from '../pool-details.service';
-import { InfoBackupComponent } from './info-backup/info-backup.component';
-import { InfoEventComponent } from '../../../log/events/info-event/info-event.component';
 import { DomSanitizer } from '@angular/platform-browser';
 import { WaitService } from 'src/app/core/components/wait/wait.service';
+import { YesNoFormComponent } from 'src/app/shared/forms-dinamic/yes-no-form/yes-no-form.component';
+
+
+import { InfoEventComponent } from '../../../log/events/info-event/info-event.component';
+import { PoolDetailsService } from '../pool-details.service';
+import { AddUserVmComponent } from './add-user/add-user.component';
 import { ConvertToTemaplteComponent } from './convert-to-template/convert-to-template.component';
+import { InfoBackupComponent } from './info-backup/info-backup.component';
+import { RemoveUserVmComponent } from './remove-user/remove-user.component';
 
 interface Backup {
   backup: {

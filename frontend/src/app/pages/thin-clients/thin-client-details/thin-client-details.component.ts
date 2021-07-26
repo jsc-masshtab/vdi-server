@@ -1,13 +1,13 @@
 import { Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
-import { MatDialog } from '@angular/material/dialog';
-import { DisconnectThinClientComponent } from './disconnect-thin-client/disconnect-thin-client.component';
-import { ActivatedRoute, ParamMap, Router } from '@angular/router';
-import { Subscription } from 'rxjs';
-import { WebsocketService } from '../../../shared/classes/websock.service';
 import { FormControl } from '@angular/forms';
-import { ThinClientsService } from '../thin-clients.service';
-
+import { MatDialog } from '@angular/material/dialog';
+import { ActivatedRoute, ParamMap, Router } from '@angular/router';
 import * as moment from 'moment';
+import { Subscription } from 'rxjs';
+
+import { WebsocketService } from '../../../shared/classes/websock.service';
+import { ThinClientsService } from '../thin-clients.service';
+import { DisconnectThinClientComponent } from './disconnect-thin-client/disconnect-thin-client.component';
 
 @Component({
   selector: 'vdi-thin-client-details',

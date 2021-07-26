@@ -1,9 +1,10 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { ResourcePoolsService } from '../all-resource_pools/resource_pools.service';
-import { map } from 'rxjs/operators';
 import { ActivatedRoute, ParamMap } from '@angular/router';
 import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
+import { map } from 'rxjs/operators';
+
+import { ResourcePoolsService } from '../all-resource_pools/resource_pools.service';
 
 interface ICollection {
   [index: string]: string;

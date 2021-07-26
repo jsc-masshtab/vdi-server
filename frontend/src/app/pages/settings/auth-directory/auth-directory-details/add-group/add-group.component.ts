@@ -1,10 +1,10 @@
-import { WaitService } from '../../../../../core/components/wait/wait.service';
-import { MatDialogRef } from '@angular/material/dialog';
 import { Component, Inject, OnDestroy, OnInit } from '@angular/core';
+import { MatDialogRef } from '@angular/material/dialog';
 import { MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { Subject } from 'rxjs';
 import { takeUntil, map } from 'rxjs/operators';
 
+import { WaitService } from '../../../../../core/components/wait/wait.service';
 import { AuthenticationDirectoryService } from '../../auth-directory.service';
 
 @Component({
