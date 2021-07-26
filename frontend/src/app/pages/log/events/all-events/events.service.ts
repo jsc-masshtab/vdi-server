@@ -88,5 +88,23 @@ export class EventsService {
             }
         });
     }
+
+    public countEvents(): QueryRef<any, any> {
+        return this.service.watchQuery({
+          query: gql`
+            query
+              events($start_date: DateTime, $end_date: DateTime) {
+                all: count(start_date: $start_date, end_date: $end_date),
+                warning: count(event_type: 1, start_date: $start_date, end_date: $end_date),
+                error: count(event_type: 2, start_date: $start_date, end_date: $end_date)
+              }
+            `,
+            variables: {
+                method: 'GET',
+                start_date: new Date(0).toISOString(),
+                end_date: new Date().toISOString()
+            }
+        });
+      }
 }
 

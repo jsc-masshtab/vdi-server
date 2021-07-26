@@ -1,5 +1,3 @@
-
-
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
@@ -9,7 +7,6 @@ import { MatSelectModule } from '@angular/material/select';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 
 import { AppRoutingModule } from '../app-routing.module';
-import { FooterService } from '../core/components/footer/footer.service';
 import { AddSelectComponent } from './components/add-select/add-select';
 import { PaginationComponent } from './components/pagination/pagination.component';
 import { TableComponentComponent } from './components/table-component/table-component.component';
@@ -74,9 +71,6 @@ const FORMS_DINAMIC = [
     MatSelectModule,
     AppRoutingModule,
     FormsModule
-  ],
-  providers: [
-    FooterService
   ]
 })
 

@@ -47,7 +47,7 @@
     <span *ngIf="license.support_remaining_days < 100" [class.warning]="!license.support_remaining_days"> Дней до окончания сервисной поддержки: {{ license.support_remaining_days || 0 }}</span>
   </div>
 
-  <div class="copyright">
+  <div class="copyright" *ngIf="(info$ | async) as info"> 
     {{ info.comment }} &nbsp;
     <a href="{{ info.url }}" target="_blank">{{ info.copyright }}</a>
     <span>, {{ info.year }} версия {{ info.version }}</span>
