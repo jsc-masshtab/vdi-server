@@ -7,7 +7,7 @@ import {
   transition,
   animate
 } from '@angular/animations';
-import { FormBuilder, FormGroup } from '@angular/forms';
+import { FormBuilder, FormControl, FormGroup } from '@angular/forms';
 
 import { Component, OnInit } from '@angular/core';
 import { LoginService } from './login.service';
@@ -34,6 +34,8 @@ export class LoginComponent implements OnInit {
 
   public loaded: boolean = false;
   public loginForm: FormGroup;
+
+  public useCode = new FormControl(false)
 
   constructor(private fb: FormBuilder,
               private authStorageService: AuthStorageService,
