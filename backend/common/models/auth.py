@@ -626,18 +626,23 @@ class User(AbstractSortableStatusModel, VeilModel):
                     if not pam_result.success and pam_result.return_code != 969:
                         raise PamError(pam_result)
                     elif pam_result.return_code == 969:
-                        msg = _local_("User {} password setting error.").format(
+                        msg = _local_("User {} password setting error. Check journal message.").format(
                             username)
-                        await system_logger.warning(
-                            message=msg,
-                            entity={
-                                "entity_type": EntityType.USER,
-                                "entity_uuid": None,
-                            },
-                            user=creator,
-                            description=pam_result,
-                        )
-                        await user_obj.deactivate(creator)
+                        entity = {
+                            "entity_type": EntityType.USER,
+                            "entity_uuid": None,
+                        }
+                        # await system_logger.warning(
+                        #     message=msg,
+                        #     entity={
+                        #         "entity_type": EntityType.USER,
+                        #         "entity_uuid": None,
+                        #     },
+                        #     user=creator,
+                        #     description=pam_result,
+                        # )
+                        # await user_obj.deactivate(creator)
+                        raise SimpleError(message=msg, description=pam_result, user=creator, entity=entity)
         except (PamError, UniqueViolationError) as err_msg:
             msg = _local_("User {} creation error.").format(username)
             await system_logger.error(
