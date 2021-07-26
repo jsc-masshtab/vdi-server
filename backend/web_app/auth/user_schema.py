@@ -427,7 +427,7 @@ class GenerateUserQrcodeMutation(graphene.Mutation):
     class Arguments:
         id = graphene.UUID(required=True)
 
-    qr_img = graphene.String()
+    qr_uri = graphene.String()
     secret = graphene.String()
 
     @classmethod
@@ -435,7 +435,7 @@ class GenerateUserQrcodeMutation(graphene.Mutation):
     async def mutate(cls, root, info, creator, **kwargs):
         user = await User.get(kwargs["id"])
         data_dict = await user.generate_qr(creator=creator)
-        return GenerateUserQrcodeMutation(qr_img=data_dict["qr_img"], secret=data_dict["secret"])
+        return GenerateUserQrcodeMutation(qr_uri=data_dict["qr_uri"], secret=data_dict["secret"])
 
 
 # permissions

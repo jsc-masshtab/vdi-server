@@ -818,8 +818,7 @@ class User(AbstractSortableStatusModel, VeilModel):
         else:
             secret = pyotp.random_base32()
             await self.update(secret=secret).apply()
-        data = pyotp.totp.TOTP(secret).provisioning_uri(name=self.username, issuer_name="VeiL VDI")
-        qr_img = data  # data like a link totp for frontend
+        qr_uri = pyotp.totp.TOTP(secret).provisioning_uri(name=self.username, issuer_name="VeiL VDI")
         # qr_img = qrcode.make(data)  # generate QR image
         # qr_img.save("qr.png")
         if repeat:
@@ -830,7 +829,7 @@ class User(AbstractSortableStatusModel, VeilModel):
             await system_logger.info(
                 _local_("New QR code and secret code of 2fa were generated for user {}.").format(self.username),
                 user=creator, entity=self.entity)
-        return {"qr_img": qr_img, "secret": secret}
+        return {"qr_uri": qr_uri, "secret": secret}
 
     @staticmethod
     async def check_2fa(username, code):
