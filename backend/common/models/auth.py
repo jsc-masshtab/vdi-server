@@ -4,6 +4,8 @@ import uuid
 
 from asyncpg.exceptions import UniqueViolationError
 
+import pyotp
+
 from sqlalchemy import Enum as AlchemyEnum, Index
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func, text
@@ -26,7 +28,7 @@ from common.settings import (
 )
 from common.veil.auth import hashers
 from common.veil.auth.veil_pam import veil_auth_class
-from common.veil.veil_errors import PamError, SimpleError
+from common.veil.veil_errors import PamError, SilentError, SimpleError
 from common.veil.veil_gino import (
     AbstractSortableStatusModel,
     EntityType,
@@ -122,6 +124,8 @@ class User(AbstractSortableStatusModel, VeilModel):
         db.Boolean(), default=False
     )  # Атрибут локальной авторизации
     is_active = db.Column(db.Boolean(), default=True)
+    two_factor = db.Column(db.Boolean(), default=False)
+    secret = db.Column(db.Unicode(length=32), nullable=True)
 
     # ----- ----- ----- ----- ----- ----- -----
     # Properties and getters:
@@ -595,6 +599,8 @@ class User(AbstractSortableStatusModel, VeilModel):
         id=None,
         groups=None,
         is_active=True,
+        two_factor=False,
+        secret=None
     ):
         """Если password будет None, то make_password вернет unusable password."""
         encoded_password = hashers.make_password(password, salt=SECRET_KEY)
@@ -603,6 +609,8 @@ class User(AbstractSortableStatusModel, VeilModel):
             "password": encoded_password,
             "is_active": is_active,
             "is_superuser": is_superuser,
+            "two_factor": two_factor,
+            "secret": secret
         }
         if email:
             user_kwargs["email"] = email
@@ -674,6 +682,7 @@ class User(AbstractSortableStatusModel, VeilModel):
         last_name: str = None,
         first_name: str = None,
         is_superuser: str = None,
+        two_factor: bool = None
     ):
         try:
             async with db.transaction():
@@ -683,6 +692,7 @@ class User(AbstractSortableStatusModel, VeilModel):
                     last_name=last_name,
                     first_name=first_name,
                     is_superuser=is_superuser,
+                    two_factor=two_factor,
                     creator=creator,
                 )
                 if PAM_AUTH:
@@ -798,6 +808,40 @@ class User(AbstractSortableStatusModel, VeilModel):
         )
         await system_logger.info(info_message, entity=user.entity)
         return True
+
+    async def generate_qr(self, creator="system", repeat=False):
+        if repeat:
+            secret_set = await User.select("secret").where(User.username == self.username).gino.first()
+            secret = secret_set[0]
+        else:
+            secret = pyotp.random_base32()
+            await self.update(secret=secret).apply()
+        qr_uri = pyotp.totp.TOTP(secret).provisioning_uri(name=self.username, issuer_name="VeiL VDI")
+
+        if repeat:
+            await system_logger.info(
+                _local_("QR code and secret code of 2fa were repeated for user {}.").format(self.username),
+                user=creator, entity=self.entity)
+        else:
+            await system_logger.info(
+                _local_("New QR code and secret code of 2fa were generated for user {}.").format(self.username),
+                user=creator, entity=self.entity)
+        return {"qr_uri": qr_uri, "secret": secret}
+
+    @staticmethod
+    async def check_2fa(username, code):
+        try:
+            two_factor = await User.select("two_factor").where(User.username == username).gino.first()
+            if two_factor[0]:
+                secret = await User.select("secret").where(User.username == username).gino.first()
+                totp = pyotp.TOTP(secret[0])
+                if totp.now() == code:
+                    return True
+                raise SilentError(_local_("One-time password does not match or is out of date."))
+        except Exception:
+            raise SimpleError(_local_(
+                "User {} do not have a secret code for 2fa auth. Please generate this in settings of user.").format(
+                username))
 
 
 class UserJwtInfo(db.Model):

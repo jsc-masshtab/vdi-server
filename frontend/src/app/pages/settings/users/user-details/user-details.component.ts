@@ -3,6 +3,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute, Router, ParamMap } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { GenerateQrcodeComponent } from 'src/app/dashboard/settings/users/user-details/generate-qrcode/generate-qrcode.component';
 import { FormForEditComponent } from 'src/app/shared/forms-dinamic/change-form/form-edit.component';
 
 import { UsersService } from '../users.service';
@@ -12,7 +13,6 @@ import { AddRoleComponent } from './add-role/add-role.component';
 import { MutateUserComponent } from './mutate-user/mutate-user.component';
 import { RemovePermissionComponent } from './remove-permission/remove-permission.component';
 import { RemoveRoleComponent } from './remove-role/remove-role.component';
-
 
 
 @Component({
@@ -79,6 +79,15 @@ export class UserDetailsComponent implements OnInit, OnDestroy {
         description: 'Администратор',
         gqlType: 'Boolean'
       }
+    },
+    {
+      title: 'Двухфакторная аутентификация',
+      property: 'two_factor',
+      type: {
+        typeDepend: 'boolean',
+        propertyDepend: ['Включена', 'Выключена']
+      },
+      edit: 'openGenerateQrcode'
     },
     {
       title: 'Дата создания',
@@ -347,10 +356,20 @@ export class UserDetailsComponent implements OnInit, OnDestroy {
     });
   }
 
+  public openGenerateQrcode() {
+    this.dialog.open(GenerateQrcodeComponent, {
+      disableClose: true,
+      width: '500px',
+      data: {
+        id: this.id,
+        two_factor: this.entity['two_factor']
+      }
+    });
+  }
+
   ngOnDestroy() {
     if (this.sub) {
       this.sub.unsubscribe();
     }
   }
-
 }

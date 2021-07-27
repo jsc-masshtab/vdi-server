@@ -21,17 +21,27 @@
 
 			<label class="field">
 				<p class="field-name">Пароль</p>
-				<input type="password" placeholder="Введите пароль" formControlName="password" (keydown.enter)="send()">
+				<input type="password" placeholder="Введите пароль" formControlName="password">
 			</label>
 
+			<label class="field-inline" [style.marginBottom]="'15px'">
+				<mat-checkbox [color]="'primary'" [formControl]="useCode"></mat-checkbox>
+				<p class="description">Одноразовый пароль</p>
+			</label>
+
+			<label class="field" *ngIf="useCode.value">
+				
+				<input type="text" placeholder="Введите 6-значный код" formControlName="code">
+			</label>
+			
 			<label class="field-inline">
-				<mat-checkbox [color]="'warn'" formControlName="ldap"></mat-checkbox>
+				<mat-checkbox [color]="'primary'" formControlName="ldap"></mat-checkbox>
 				<p class="description">LDAP</p>
 			</label>
 		</div>
 
 		<div class="form-actions">
-			<button type="button" (click)="send()" class="form-btn">Войти</button>
+			<button type="submit" (click)="send()" class="form-btn">Войти</button>
 		</div>
 	</form>
 </div>

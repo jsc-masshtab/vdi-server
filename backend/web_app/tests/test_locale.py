@@ -19,7 +19,7 @@ class AuthTestLocale(VdiHttpTestCase):
     @gen_test
     def test_locale_auth_without_password(self):
         body = (
-            '{"username": "test_user","password": "!", "ldap": true}'
+            '{"username": "test_user","password": "!", "ldap": true, "code": ""}'
         )  # Пропущен пароль!
         response_dict = yield self.get_response(body=body)
         error_message = response_dict["errors"][0]["message"]

@@ -1,6 +1,5 @@
 -i https://pypi.org/simple
 aiohttp==3.6.3
-yaaredis==2.0.3
 aiosmtplib==1.1.6
 alembic==1.2.1
 aniso8601==7.0.0
@@ -26,6 +25,7 @@ ldap3==2.8.1
 mako==1.1.4
 markupsafe==1.1.1
 multidict==4.7.6
+pillow==7.2.0
 promise==2.3
 psycopg2-binary==2.8.4
 pyasn1-modules==0.2.8
@@ -33,7 +33,8 @@ pyasn1==0.4.8
 pycparser==2.20
 pyjwt==1.7.1
 pymemcache==3.2.0
-python-dateutil==2.8.1
+pyotp==2.6.0
+python-dateutil==2.8.2
 python-editor==1.0.4
 python-ldap==3.3.1
 python-pam==1.8.4
@@ -48,5 +49,6 @@ uvloop==0.14.0
 veil-aio-au==0.1.4
 veil-api-client==2.2.14
 werkzeug==0.12.2
+yaaredis==2.0.3
 yarl==1.5.1
 zipp==1.2.0

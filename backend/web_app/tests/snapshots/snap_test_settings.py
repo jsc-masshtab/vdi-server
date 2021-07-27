@@ -11,27 +11,27 @@ snapshots['test_request_services 1'] = {
     'services': [
         {
             'status': 'running',
-            'verbose_name': 'Apache server'
+            'verbose_name': 'Сервер Apache.'
         },
         {
             'status': 'running',
-            'verbose_name': 'Database'
+            'verbose_name': 'База данных.'
         },
         {
             'status': 'running',
-            'verbose_name': 'Redis'
+            'verbose_name': 'Redis.'
         },
         {
             'status': 'running',
-            'verbose_name': 'Monitor worker'
+            'verbose_name': 'Монитор состояния компонентов.'
         },
         {
             'status': 'running',
-            'verbose_name': 'Task worker'
+            'verbose_name': 'Обработчик задач.'
         },
         {
             'status': 'running',
-            'verbose_name': 'Web application'
+            'verbose_name': 'Веб-приложение.'
         }
     ]
 }

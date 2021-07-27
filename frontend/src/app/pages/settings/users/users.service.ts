@@ -46,7 +46,8 @@ export class UsersService  {
                         date_updated,
                         last_login,
                         is_superuser,
-                        is_active
+                        is_active,
+                        two_factor
                     }
                 }
             `,
@@ -73,6 +74,7 @@ export class UsersService  {
                         last_login,
                         is_superuser,
                         is_active,
+                        two_factor,
                         assigned_roles,
                         possible_roles,
                         assigned_permissions,
@@ -121,7 +123,7 @@ export class UsersService  {
         });
     }
 
-    public updateUser(params, fields) {
+    public updateUser(params, fields?) {
         return this.service.mutate<any>({
             mutation: gql`
                 mutation users(${params.args}) {
@@ -311,6 +313,22 @@ export class UsersService  {
                 method: 'GET',
                 ordering: this.paramsForGetUsers.nameSort,
                 ...queryset
+            }
+        });
+    }
+
+    public generateUserQrcode(id): any {
+        return this.service.mutate<any>({
+            mutation: gql`
+            mutation users($id: UUID!){
+                generateUserQrcode(id: $id) {
+                    qr_uri
+                    secret
+                }
+            }`,
+            variables: {
+                method: 'POST',
+                id
             }
         });
     }

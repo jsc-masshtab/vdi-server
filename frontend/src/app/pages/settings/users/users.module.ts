@@ -6,6 +6,8 @@ import { MatDialogModule } from '@angular/material/dialog';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
+import { NgxQRCodeModule } from '@techiediaries/ngx-qrcode';
+import { GenerateQrcodeComponent } from 'src/app/dashboard/settings/users/user-details/generate-qrcode/generate-qrcode.component';
 
 import { AppRoutingModule } from '../../../app-routing.module';
 import { SharedModule } from '../../../shared/shared.module';
@@ -21,6 +23,7 @@ import { RemoveRoleComponent } from './user-details/remove-role/remove-role.comp
 import { UserDetailsComponent } from './user-details/user-details.component';
 import { UsersService } from './users.service';
 
+
 @NgModule({
    declarations: [
       UsersComponent,
@@ -32,7 +35,8 @@ import { UsersService } from './users.service';
       MutateUserComponent,
       RemoveRoleComponent,
       RemoveGroupComponent,
-      RemovePermissionComponent
+      RemovePermissionComponent,
+      GenerateQrcodeComponent
    ],
    imports: [
       SharedModule,
@@ -43,7 +47,8 @@ import { UsersService } from './users.service';
       MatSelectModule,
       ReactiveFormsModule,
       MatCheckboxModule,
-      MatInputModule
+      MatInputModule,
+      NgxQRCodeModule
    ],
    providers: [
       UsersService

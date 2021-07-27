@@ -128,6 +128,9 @@ class UserType(graphene.ObjectType):
     is_superuser = graphene.Boolean()
     is_active = graphene.Boolean()
 
+    two_factor = graphene.Boolean()
+    secret = graphene.String()
+
     assigned_groups = graphene.List(UserGroupType)
     possible_groups = graphene.List(UserGroupType)
 
@@ -153,6 +156,8 @@ class UserType(graphene.ObjectType):
             date_updated=model_instance.date_updated,
             last_login=model_instance.last_login,
             is_active=model_instance.is_active,
+            two_factor=model_instance.two_factor,
+            secret=model_instance.secret
         )
 
     async def resolve_is_superuser(self, _info):
@@ -316,6 +321,7 @@ class UpdateUserMutation(graphene.Mutation, UserValidator):
         last_name = graphene.String()
         first_name = graphene.String()
         is_superuser = graphene.Boolean()
+        two_factor = graphene.Boolean()
 
     user = graphene.Field(lambda: UserType)
     ok = graphene.Boolean(default_value=False)
@@ -417,6 +423,21 @@ class RemoveUserRoleMutation(graphene.Mutation, UserValidator):
         return RemoveUserRoleMutation(user=UserType(**user.__values__), ok=True)
 
 
+class GenerateUserQrcodeMutation(graphene.Mutation):
+    class Arguments:
+        id = graphene.UUID(required=True)
+
+    qr_uri = graphene.String()
+    secret = graphene.String()
+
+    @classmethod
+    @security_administrator_required
+    async def mutate(cls, root, info, creator, **kwargs):
+        user = await User.get(kwargs["id"])
+        data_dict = await user.generate_qr(creator=creator)
+        return GenerateUserQrcodeMutation(qr_uri=data_dict["qr_uri"], secret=data_dict["secret"])
+
+
 # permissions
 class AddUserPermissionMutation(graphene.Mutation, UserValidator):
     class Arguments:
@@ -490,6 +511,7 @@ class UserMutations(graphene.ObjectType):
     changeUserPassword = ChangeUserPasswordMutation.Field()
     addUserRole = AddUserRoleMutation.Field()
     removeUserRole = RemoveUserRoleMutation.Field()
+    generateUserQrcode = GenerateUserQrcodeMutation.Field()
 
     addUserPermission = AddUserPermissionMutation.Field()
     removeUserPermission = RemoveUserPermissionMutation.Field()

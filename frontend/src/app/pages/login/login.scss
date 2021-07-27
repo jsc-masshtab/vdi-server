@@ -34,3 +34,15 @@
     background-color: white;
     border-bottom: 1px solid #e8e8e8;
 }
+
+#exercheckbox{
+  margin-right: 8px;
+  cursor: pointer;
+}
+
+#reps{
+    display: none;
+}
+ #exercheckbox:checked ~ #reps{
+    display: block;
+}

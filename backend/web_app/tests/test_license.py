@@ -17,7 +17,7 @@ class LicenseTestCase(VdiHttpTestCase):
     @pytest.mark.usefixtures("fixt_db", "fixt_user_admin")
     @gen_test
     def test_license_info(self):
-        body = '{"username": "test_user_admin","password": "veil"}'
+        body = '{"username": "test_user_admin","password": "veil","code": ""}'
         response_dict = yield self.get_response(body=body, method="POST")
         access_token = response_dict["data"]["access_token"]
         self.assertTrue(access_token)

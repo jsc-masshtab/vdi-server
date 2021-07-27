@@ -5,7 +5,7 @@ import {
   animate
 } from '@angular/animations';
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup } from '@angular/forms';
+import { FormBuilder, FormControl, FormGroup } from '@angular/forms';
 import { Router } from '@angular/router';
 
 import { ErrorsService } from '../../core/components/errors/errors.service';
@@ -35,6 +35,8 @@ export class LoginComponent implements OnInit {
   public loaded: boolean = false;
   public loginForm: FormGroup;
 
+  public useCode = new FormControl(false)
+
   constructor(private fb: FormBuilder,
               private authStorageService: AuthStorageService,
               private loginService: LoginService,
@@ -50,6 +52,7 @@ export class LoginComponent implements OnInit {
       this.loginForm = this.fb.group({
         username: '' ,
         password: '',
+        code: '',
         ldap: false
       });
     } else {
