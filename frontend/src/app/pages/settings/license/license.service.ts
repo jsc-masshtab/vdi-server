@@ -53,6 +53,6 @@ export class LicenseService {
   }
 
   public getCopyrightInfo(): Observable<ICopyrightData> {
-    return this.http.get<ICopyrightResponse>('/api/version/').pipe(map(res=> res.data));
+    return this.http.get<ICopyrightResponse>('/api/version/').pipe(map((res: any) => res.data));
   }
 }
