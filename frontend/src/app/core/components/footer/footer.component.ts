@@ -37,7 +37,7 @@ export class FooterComponent implements OnInit, OnDestroy {
 
   public ngOnInit(): void {
   
-   this.info$ = this.licenseService.getCopyrightInfo();
+    this.info$ = this.licenseService.getCopyrightInfo();
 
     this.getLicense();
 
@@ -46,7 +46,6 @@ export class FooterComponent implements OnInit, OnDestroy {
     });
 
     this.eventsService.countEvents().valueChanges.subscribe(res => {
-    
       this.countEvents = { ...res.data };
     });
 
