@@ -271,7 +271,7 @@ class ExpandPoolTask(AbstractTask):
                     await asyncio.gather(
                         *[
                             vm_object.prepare_with_timeout(
-                                active_directory_object, automated_pool.ad_cn_pattern
+                                active_directory_object, automated_pool.ad_ou
                             )
                             for vm_object in vm_list
                         ],
@@ -342,7 +342,7 @@ class RecreationGuestVmTask(AbstractTask):
                     await asyncio.gather(
                         *[
                             vm_object.prepare_with_timeout(
-                                active_directory_object, automated_pool.ad_cn_pattern
+                                active_directory_object, automated_pool.ad_ou
                             )
                             for vm_object in vm_list
                         ],
@@ -455,7 +455,7 @@ class PrepareVmTask(AbstractTask):
     async def _do_full_preparation(self, vm):
         """Full preparation."""
         active_directory_object = None
-        ad_cn_pattern = None
+        ad_ou = None
 
         pool = await Pool.get(vm.pool_id)
 
@@ -465,9 +465,9 @@ class PrepareVmTask(AbstractTask):
             active_directory_object = await AuthenticationDirectory.query.where(
                 AuthenticationDirectory.status == Status.ACTIVE
             ).gino.first()
-            ad_cn_pattern = auto_pool.ad_cn_pattern
+            ad_ou = auto_pool.ad_ou
 
-        await vm.prepare_with_timeout(active_directory_object, ad_cn_pattern)
+        await vm.prepare_with_timeout(active_directory_object, ad_ou)
 
     async def _do_light_preparation(self, vm):
         """Only remote access."""
