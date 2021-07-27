@@ -839,7 +839,7 @@ class User(AbstractSortableStatusModel, VeilModel):
                     return True
                 raise SilentError(_local_("One-time password does not match or is out of date."))
         except Exception:
-            raise SilentError(_local_(
+            raise SimpleError(_local_(
                 "User {} do not have a secret code for 2fa auth. Please generate this in settings of user.").format(
                 username))
 

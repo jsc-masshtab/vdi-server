@@ -194,13 +194,13 @@ class SettingsQuery(graphene.ObjectType):
         """
         app_services = OrderedDict([
             # external services
-            ("apache2.service", _local_("Apache server")),
-            ("postgresql.service", _local_("Database")),
-            ("redis-server.service", "Redis"),
+            ("apache2.service", _local_("Apache server.")),
+            ("postgresql.service", _local_("Database.")),
+            ("redis-server.service", "Redis."),
             # app services
-            ("vdi-monitor_worker.service", _local_("Monitor worker")),
-            ("vdi-pool_worker.service", _local_("Task worker")),
-            ("vdi-web.service", _local_("Web application")),
+            ("vdi-monitor_worker.service", _local_("Monitor worker.")),
+            ("vdi-pool_worker.service", _local_("Task worker.")),
+            ("vdi-web.service", _local_("Web application.")),
         ])
 
         return app_services
@@ -279,7 +279,7 @@ class DoServiceAction(graphene.Mutation):
                 user=creator
             )
 
-        await system_logger.info(_local_("Executed action {} for service {}").
+        await system_logger.info(_local_("Executed action {} for service {}.").
                                  format(service_action, service_name), user=creator)
 
         # Try to get status of the service
