@@ -6,8 +6,6 @@ from asyncpg.exceptions import UniqueViolationError
 
 import pyotp
 
-# import qrcode
-
 from sqlalchemy import Enum as AlchemyEnum, Index
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func, text
@@ -819,8 +817,7 @@ class User(AbstractSortableStatusModel, VeilModel):
             secret = pyotp.random_base32()
             await self.update(secret=secret).apply()
         qr_uri = pyotp.totp.TOTP(secret).provisioning_uri(name=self.username, issuer_name="VeiL VDI")
-        # qr_img = qrcode.make(data)  # generate QR image
-        # qr_img.save("qr.png")
+
         if repeat:
             await system_logger.info(
                 _local_("QR code and secret code of 2fa were repeated for user {}.").format(self.username),
@@ -842,7 +839,7 @@ class User(AbstractSortableStatusModel, VeilModel):
                     return True
                 raise SilentError(_local_("One-time password does not match or is out of date."))
         except Exception:
-            raise SilentError(_local_(
+            raise SimpleError(_local_(
                 "User {} do not have a secret code for 2fa auth. Please generate this in settings of user.").format(
                 username))
 
