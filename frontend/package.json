@@ -9,8 +9,7 @@
     "lint": "ng lint",
     "eslint": "eslint --ext .ts src/app",
     "eslint:fix": "eslint --ext .ts src/app --fix",
-    "e2e": "ng e2e",
-    "play": "ng serve --watch=true --host 192.168.8.73 --port 8000"
+    "e2e": "ng e2e"
   },
   "private": true,
   "dependencies": {
@@ -42,7 +41,7 @@
     "graphql-typescript": "^0.3.0",
     "moment": "^2.24.0",
     "rxjs": "~6.6.6",
-    "tslib": "^2.0.0",
+    "tslib": "^2.3.0",
     "zone.js": "~0.10.2"
   },
   "devDependencies": {
