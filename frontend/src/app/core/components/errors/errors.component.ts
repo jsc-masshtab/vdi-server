@@ -1,14 +1,14 @@
-import { ErrorsService } from './errors.service';
-import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
-import { Subscription } from 'rxjs';
-
 import {
   trigger,
   style,
   transition,
   animate
 } from '@angular/animations';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Subscription } from 'rxjs';
 import { filter } from 'rxjs/operators';
+
+import { ErrorsService } from './errors.service';
 
 
 

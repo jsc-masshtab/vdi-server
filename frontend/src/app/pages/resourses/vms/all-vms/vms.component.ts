@@ -1,13 +1,14 @@
 import { Component, OnInit, ViewChild, ElementRef, OnDestroy, Input } from '@angular/core';
-import { VmsService } from './vms.service';
-import { map } from 'rxjs/operators';
-import { WaitService } from '../../../../core/components/wait/wait.service';
-import { Router } from '@angular/router';
-import { DetailsMove } from 'src/app/shared/classes/details-move';
-import { Subscription } from 'rxjs';
-import { IParams } from 'types';
 import {FormControl} from '@angular/forms';
+import { Router } from '@angular/router';
+import { Subscription } from 'rxjs';
+import { map } from 'rxjs/operators';
+import { DetailsMove } from 'src/app/shared/classes/details-move';
 import { WebsocketService } from 'src/app/shared/classes/websock.service';
+import { IParams } from 'types';
+
+import { WaitService } from '../../../../core/components/wait/wait.service';
+import { VmsService } from './vms.service';
 
 @Component({
   selector: 'vdi-vms',

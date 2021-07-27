@@ -1,9 +1,10 @@
-import { DatapoolsService } from '../all-datapools/datapools.service';
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { map } from 'rxjs/operators';
 import { ActivatedRoute, ParamMap } from '@angular/router';
 import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
+import { map } from 'rxjs/operators';
+
+import { DatapoolsService } from '../all-datapools/datapools.service';
 
 interface ICollection {
   [index: string]: string;

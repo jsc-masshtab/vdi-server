@@ -1,8 +1,8 @@
-import { AuthStorageService } from './authStorage.service';
-import { Observable } from 'rxjs';
-
 import { HttpInterceptor, HttpRequest, HttpHandler, HttpEvent, HttpErrorResponse, HttpResponse } from '@angular/common/http';
+import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
+
+import { AuthStorageService } from './authStorage.service';
 
 export class AuthInterceptor implements HttpInterceptor {
 

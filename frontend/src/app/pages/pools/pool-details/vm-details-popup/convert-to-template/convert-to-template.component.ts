@@ -1,9 +1,11 @@
-import { WaitService } from '../../../../../core/components/wait/wait.service';
 import { Component, Inject } from '@angular/core';
+import { FormControl } from '@angular/forms';
 import { MatDialog, MAT_DIALOG_DATA } from '@angular/material/dialog';
+
+import { WaitService } from '../../../../../core/components/wait/wait.service';
 import { PoolDetailsService } from '../../pool-details.service';
 import { VmDetailsPopupService } from '../vm-details-popup.service';
-import { FormControl } from '@angular/forms';
+
 
 
 @Component({

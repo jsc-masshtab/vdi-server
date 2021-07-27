@@ -1,15 +1,16 @@
-import { RemoveControllerComponent } from '../remove-controller/remove-controller.component';
-import { FormForEditComponent } from '../../../shared/forms-dinamic/change-form/form-edit.component';
-import { MatDialog } from '@angular/material/dialog';
-import { map } from 'rxjs/operators';
-import { Subscription } from 'rxjs';
-import { ControllersService } from '../all-controllers/controllers.service';
-import { ActivatedRoute, Router, ParamMap } from '@angular/router';
 
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { IEditFormObj } from 'types';
 import {FormControl} from '@angular/forms';
-import { YesNoFormComponent } from 'src/app/shared/forms-dinamic/yes-no-form/yes-no-form.component';
+import { MatDialog } from '@angular/material/dialog';
+import { ActivatedRoute, Router, ParamMap } from '@angular/router';
+import { Subscription } from 'rxjs';
+import { map } from 'rxjs/operators';
+import { IEditFormObj } from 'types';
+
+import { FormForEditComponent } from '../../../shared/forms-dinamic/change-form/form-edit.component';
+import { YesNoFormComponent } from '../../../shared/forms-dinamic/yes-no-form/yes-no-form.component';
+import { ControllersService } from '../all-controllers/controllers.service';
+import { RemoveControllerComponent } from '../remove-controller/remove-controller.component';
 
 
 @Component({

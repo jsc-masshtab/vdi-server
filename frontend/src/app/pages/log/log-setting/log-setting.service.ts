@@ -1,7 +1,8 @@
-import { IParams } from '../../../../../types';
 import { Injectable } from '@angular/core';
 import { Apollo, QueryRef } from 'apollo-angular';
 import gql from 'graphql-tag';
+
+import { IParams } from '../../../../../types';
 
 @Injectable({
   providedIn: 'root'

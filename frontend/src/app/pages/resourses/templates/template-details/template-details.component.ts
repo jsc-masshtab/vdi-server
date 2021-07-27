@@ -1,11 +1,12 @@
-import { TemplatesService } from '../all-templates/templates.service';
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { map } from 'rxjs/operators';
 import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute, ParamMap } from '@angular/router';
 import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
+import { map } from 'rxjs/operators';
+
 import {YesNoFormComponent} from '../../../../shared/forms-dinamic/yes-no-form/yes-no-form.component';
+import { TemplatesService } from '../all-templates/templates.service';
 
 interface ICollection {
   [index: string]: string;

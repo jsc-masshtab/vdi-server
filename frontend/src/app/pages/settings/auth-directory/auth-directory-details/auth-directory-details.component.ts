@@ -1,14 +1,15 @@
-import { MappingComponent } from './mapping/mapping.component';
-import { AddMappingComponent } from './add-mapping/add-mapping.component';
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { AuthenticationDirectoryService } from '../auth-directory.service';
-import { Subscription } from 'rxjs';
-import { ParamMap, ActivatedRoute, Router } from '@angular/router';
-import { FormForEditComponent } from 'src/app/shared/forms-dinamic/change-form/form-edit.component';
 import { MatDialog } from '@angular/material/dialog';
-import { RemoveAuthenticationDirectoryComponent } from './remove-auth-directory/remove-auth-directory.component';
+import { ParamMap, ActivatedRoute, Router } from '@angular/router';
+import { Subscription } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { FormForEditComponent } from 'src/app/shared/forms-dinamic/change-form/form-edit.component';
+
+import { AuthenticationDirectoryService } from '../auth-directory.service';
 import { AddGropComponent } from './add-group/add-group.component';
+import { AddMappingComponent } from './add-mapping/add-mapping.component';
+import { MappingComponent } from './mapping/mapping.component';
+import { RemoveAuthenticationDirectoryComponent } from './remove-auth-directory/remove-auth-directory.component';
 import { RemoveGroupComponent } from './remove-group/remove-group.component';
 import { SyncGroupComponent } from './sync-group/sync-group.component';
 

@@ -1,10 +1,10 @@
-import { waitForAsync, ComponentFixture, TestBed } from '@angular/core/testing';
 import { CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA } from '@angular/core';
+import { waitForAsync, ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { of } from 'rxjs';
 
-import { AddGropComponent } from './add-group.component';
 import { AuthenticationDirectoryService } from '../../auth-directory.service';
+import { AddGropComponent } from './add-group.component';
 
 describe('AddGropComponent', () => {
   let component: AddGropComponent;

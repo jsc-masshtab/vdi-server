@@ -1,8 +1,10 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
-import { FooterService } from './footer.service';
+import { Observable, Subscription } from 'rxjs';
+import { EventsService } from 'src/app/pages/log/events/all-events/events.service';
+import { ICopyrightData, LicenseService } from 'src/app/pages/settings/license/license.service';
 
-import { Subscription } from 'rxjs';
 import { WebsocketService } from '../../../shared/classes/websock.service';
+
 
 interface ICountEvents {
   warning: number;
@@ -17,40 +19,41 @@ interface ICountEvents {
 })
 export class FooterComponent implements OnInit, OnDestroy {
 
-  socketSub: Subscription;
+  public socketSub: Subscription;
 
-  info: any = {};
-  license: any = {};
+  public info$: Observable<ICopyrightData>;
+  public license: any = {};
 
-  openedLog: boolean = true;
-  log: string = 'events';
+  public openedLog: boolean = true;
+  public log: string = 'events';
 
-  countEvents: ICountEvents;
+  public countEvents: ICountEvents;
 
   constructor(
-    private service: FooterService,
+    private licenseService: LicenseService,
+    private eventsService: EventsService,
     private ws: WebsocketService
   ) {}
 
-  ngOnInit() {
-    this.service.getInfo().subscribe((res) => {
-      this.info = res.data;
-    });
+  public ngOnInit(): void {
+  
+   this.info$ = this.licenseService.getCopyrightInfo();
 
     this.getLicense();
 
-    this.service.channel$.subscribe(() => {
+    this.licenseService.channel$.subscribe(() => {
       this.getLicense();
     });
 
-    this.service.countEvents().valueChanges.subscribe(res => {
+    this.eventsService.countEvents().valueChanges.subscribe(res => {
+    
       this.countEvents = { ...res.data };
     });
 
     this.listenSockets();
   }
 
-  private listenSockets() {
+  private listenSockets(): void {
     if (this.socketSub) {
       this.socketSub.unsubscribe();
     }
@@ -64,7 +67,7 @@ export class FooterComponent implements OnInit, OnDestroy {
     });
   }
 
-  openLog(log) {
+  public openLog(log: string): void {
     if (log !== this.log) {
       this.openedLog = false;
       this.log = log;
@@ -77,19 +80,20 @@ export class FooterComponent implements OnInit, OnDestroy {
     }
   }
 
-  closeLog() {
+  public closeLog(): void {
     this.log = '';
     this.openedLog = false;
   }
 
  
-  getLicense() {
-    this.service.getLicence().subscribe((res) => {
+  public getLicense(): void {
+    this.licenseService.getLicence().subscribe((res) => {
+    
       this.license = res.data;
     });
   }
 
-  ngOnDestroy() {
+  public ngOnDestroy(): void {
     if (this.socketSub) {
       this.socketSub.unsubscribe();
     }

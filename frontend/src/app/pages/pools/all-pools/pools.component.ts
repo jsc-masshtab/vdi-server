@@ -1,16 +1,15 @@
-import { IParams } from '../../../../../types';
-import { PoolAddComponent } from '../add-pool/add-pool.component';
-
 import { Component, OnInit, ViewChild, ElementRef, OnDestroy } from '@angular/core';
-import { PoolsService } from './pools.service';
-
-import { Router } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
+import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
-import { DetailsMove } from 'src/app/shared/classes/details-move';
 import { map } from 'rxjs/operators';
+
+import { IParams } from '../../../../../types';
 import { WaitService } from '../../../core/components/wait/wait.service';
+import { DetailsMove } from '../../../shared/classes/details-move';
 import { WebsocketService } from '../../../shared/classes/websock.service';
+import { PoolAddComponent } from '../add-pool/add-pool.component';
+import { PoolsService } from './pools.service';
 
 
 @Component({

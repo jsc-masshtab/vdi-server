@@ -2,8 +2,8 @@ import { CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA } from '@angular/core';
 import { waitForAsync, ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 
-import { AddUserGroupComponent } from './add-user.component';
 import { GroupsService } from '../../groups.service';
+import { AddUserGroupComponent } from './add-user.component';
 
 describe('AddUserGroupComponent', () => {
   let component: AddUserGroupComponent;

@@ -1,8 +1,9 @@
-import { WaitService } from '../../../../../core/components/wait/wait.service';
-import { MatDialogRef } from '@angular/material/dialog';
 import { Component, Inject } from '@angular/core';
-import { Router } from '@angular/router';
+import { MatDialogRef } from '@angular/material/dialog';
 import { MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { Router } from '@angular/router';
+
+import { WaitService } from '../../../../../core/components/wait/wait.service';
 import { AuthenticationDirectoryService } from '../../auth-directory.service';
 
 @Component({

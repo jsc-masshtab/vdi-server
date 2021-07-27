@@ -1,21 +1,23 @@
-import { Subscription } from 'rxjs';
-import { IPool, IPoolVms } from './definitions/pool';
-import { VmDetalsPopupComponent } from './vm-details-popup/vm-details-popup.component';
-import { RemoveUsersPoolComponent } from './remove-users/remove-users.component';
-import { AddUsersPoolComponent } from './add-users/add-users.component';
-import { RemoveVMStaticPoolComponent } from './remove-vms/remove-vms.component';
-import { AddVMStaticPoolComponent } from './add-vms/add-vms.component';
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { ActivatedRoute, ParamMap, Router } from '@angular/router';
-import { MatDialog } from '@angular/material/dialog';
-import { RemovePoolComponent } from './remove-pool/remove-pool.component';
-import { PoolDetailsService } from './pool-details.service';
-import { FormForEditComponent } from 'src/app/shared/forms-dinamic/change-form/form-edit.component';
-import { map } from 'rxjs/operators';
-import { RemoveGroupComponent } from './remove-group/remove-group.component';
-import { AddGropComponent } from './add-group/add-group.component';
-import { YesNoFormComponent } from '../../../shared/forms-dinamic/yes-no-form/yes-no-form.component';
 import { FormControl } from '@angular/forms';
+import { MatDialog } from '@angular/material/dialog';
+import { ActivatedRoute, ParamMap, Router } from '@angular/router';
+import { Subscription } from 'rxjs';
+import { map } from 'rxjs/operators';
+
+import { FormForEditComponent } from '../../../shared/forms-dinamic/change-form/form-edit.component';
+import { YesNoFormComponent } from '../../../shared/forms-dinamic/yes-no-form/yes-no-form.component';
+import { AddGropComponent } from './add-group/add-group.component';
+import { AddUsersPoolComponent } from './add-users/add-users.component';
+import { AddVMStaticPoolComponent } from './add-vms/add-vms.component';
+import { IPool, IPoolVms } from './definitions/pool';
+import { PoolDetailsService } from './pool-details.service';
+import { RemoveGroupComponent } from './remove-group/remove-group.component';
+import { RemovePoolComponent } from './remove-pool/remove-pool.component';
+import { RemoveUsersPoolComponent } from './remove-users/remove-users.component';
+import { RemoveVMStaticPoolComponent } from './remove-vms/remove-vms.component';
+import { VmDetalsPopupComponent } from './vm-details-popup/vm-details-popup.component';
+
 
 @Component({
   selector: 'vdi-pool-details',

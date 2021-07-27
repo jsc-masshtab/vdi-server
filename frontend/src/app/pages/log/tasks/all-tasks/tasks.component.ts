@@ -1,13 +1,14 @@
-import { TasksService } from './tasks.service';
-import { WaitService } from '../../../../core/components/wait/wait.service';
 import { Component, OnInit, OnDestroy, Input } from '@angular/core';
-import { map } from 'rxjs/operators';
-import { MatDialog } from '@angular/material/dialog';
-import { InfoTaskComponent } from '../info-tasks/info-tasks.component';
 import { FormControl } from '@angular/forms';
-import { IParams } from 'types';
-import { WebsocketService } from 'src/app/shared/classes/websock.service';
+import { MatDialog } from '@angular/material/dialog';
 import { Subscription } from 'rxjs';
+import { map } from 'rxjs/operators';
+import { WebsocketService } from 'src/app/shared/classes/websock.service';
+import { IParams } from 'types';
+
+import { WaitService } from '../../../../core/components/wait/wait.service';
+import { InfoTaskComponent } from '../info-tasks/info-tasks.component';
+import { TasksService } from './tasks.service';
 
 @Component({
   selector: 'vdi-tasks',

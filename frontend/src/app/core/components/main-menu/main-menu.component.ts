@@ -1,6 +1,6 @@
-import { MatDialog } from '@angular/material/dialog';
-import { Component } from '@angular/core';
 import { trigger, style, animate, transition } from '@angular/animations';
+import { Component } from '@angular/core';
+import { MatDialog } from '@angular/material/dialog';
 import { Router, NavigationEnd} from '@angular/router';
 
 @Component({

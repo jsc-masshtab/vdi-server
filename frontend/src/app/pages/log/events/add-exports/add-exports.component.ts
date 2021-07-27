@@ -1,9 +1,10 @@
-import { WaitService } from '../../../../core/components/wait/wait.service';
-import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { Component, Inject, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, FormControl } from '@angular/forms';
-import { EventsService } from '../all-events/events.service';
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+
+import { WaitService } from '../../../../core/components/wait/wait.service';
 import { LogSettingService } from '../../log-setting/log-setting.service';
+import { EventsService } from '../all-events/events.service';
 
 
 @Component({

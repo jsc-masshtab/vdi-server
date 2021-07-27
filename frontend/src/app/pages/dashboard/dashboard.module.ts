@@ -1,50 +1,39 @@
-import { GroupsModule } from '../settings/groups/groups.module';
 
-import { AuthStorageService } from '../login/authStorage.service';
-import { DashboardRoutingModule } from './dashboard-routing.module';
 import { CommonModule } from '@angular/common';
-import { ErrorsService } from '../../core/components/errors/errors.service';
-import { DashboardComponent } from './dashboard.component';
-
-import { UsersModule } from '../settings/users/users.module';
-import { AuthenticationDirectoryModule } from '../settings/auth-directory/auth-directory.module';
-import { ControllersModule } from '../controllers/controllers.module';
-
-import { PoolsModule } from '../pools/pools.module';
-
-import { EventsModule } from '../log/events/events.module';
-import { TasksModule } from '../log/tasks/tasks.module';
-
-
-import { HttpLink } from 'apollo-angular-link-http';
-import { Apollo } from 'apollo-angular';
-import { ApolloLink, from } from 'apollo-link';
 import { HttpHeaders, HttpClientModule } from '@angular/common/http';
-
 import { NgModule } from '@angular/core';
-
-
-import { WaitService } from '../../core/components/wait/wait.service';
-
-/*  -----------------------------------   material   --------------------------------------*/
 import { MAT_DIALOG_DEFAULT_OPTIONS } from '@angular/material/dialog';
-/*  -----------------------------------   material   --------------------------------------*/
-
-import { onError } from 'apollo-link-error';
+import { Apollo } from 'apollo-angular';
+import { HttpLink } from 'apollo-angular-link-http';
 import { InMemoryCache } from 'apollo-cache-inmemory';
-import { environment } from 'src/environments/environment';
-import { LicenseModule } from '../settings/license/license.module';
+import { ApolloLink, from } from 'apollo-link';
+import { onError } from 'apollo-link-error';
 import { throwError } from 'rxjs';
-import { ThinClientsModule } from '../thin-clients/thin-clients.module';
+import { environment } from 'src/environments/environment';
+
+import { ErrorsService } from '../../core/components/errors/errors.service';
+import { WaitService } from '../../core/components/wait/wait.service';
+import { CoreModule } from '../../core/core.module';
+import { ControllersModule } from '../controllers/controllers.module';
+import { EventsModule } from '../log/events/events.module';
 import { LogSettingModule } from '../log/log-setting/log-setting.module';
+import { TasksModule } from '../log/tasks/tasks.module';
 import { VeilEventsModule } from '../log/veil-events/veil-events.module';
+import { AuthStorageService } from '../login/authStorage.service';
+import { PoolsModule } from '../pools/pools.module';
 import { ClustersModule } from '../resourses/clusters/clusters.module';
 import { DatapoolsModule } from '../resourses/datapools/datapools.module';
 import { NodesModule } from '../resourses/nodes/nodes.module';
 import { ResourcePoolsModule } from '../resourses/resource_pools/resource_pools.module';
 import { TemplatesModule } from '../resourses/templates/templates.module';
 import { VmsModule } from '../resourses/vms/vms.module';
-import { CoreModule } from '../../core/core.module';
+import { AuthenticationDirectoryModule } from '../settings/auth-directory/auth-directory.module';
+import { GroupsModule } from '../settings/groups/groups.module';
+import { LicenseModule } from '../settings/license/license.module';
+import { UsersModule } from '../settings/users/users.module';
+import { ThinClientsModule } from '../thin-clients/thin-clients.module';
+import { DashboardRoutingModule } from './dashboard-routing.module';
+import { DashboardComponent } from './dashboard.component';
 
 
 @NgModule({

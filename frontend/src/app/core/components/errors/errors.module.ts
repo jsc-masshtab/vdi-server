@@ -1,8 +1,10 @@
-import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { CommonModule } from '@angular/common';
-import { ErrorsService } from './errors.service';
-import { ErrorsComponent } from './errors.component';
 import { NgModule } from '@angular/core';
+import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
+
+import { ErrorsComponent } from './errors.component';
+import { ErrorsService } from './errors.service';
+
 
 
 @NgModule({

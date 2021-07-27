@@ -1,17 +1,19 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { Subscription } from 'rxjs';
-import { UsersService } from '../users.service';
-import { ActivatedRoute, Router, ParamMap } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
+import { ActivatedRoute, Router, ParamMap } from '@angular/router';
+import { Subscription } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { FormForEditComponent } from 'src/app/shared/forms-dinamic/change-form/form-edit.component';
-import { MutateUserComponent } from './mutate-user/mutate-user.component';
+
+import { UsersService } from '../users.service';
 import { AddGropComponent } from './add-group/add-group.component';
+import { AddPermissionComponent } from './add-permission/add-permission.component';
 import { AddRoleComponent } from './add-role/add-role.component';
+import { MutateUserComponent } from './mutate-user/mutate-user.component';
+import { RemovePermissionComponent } from './remove-permission/remove-permission.component';
 import { RemoveRoleComponent } from './remove-role/remove-role.component';
 
-import { map } from 'rxjs/operators';
-import { RemovePermissionComponent } from './remove-permission/remove-permission.component';
-import { AddPermissionComponent } from './add-permission/add-permission.component';
+
 
 @Component({
   selector: 'user-details',

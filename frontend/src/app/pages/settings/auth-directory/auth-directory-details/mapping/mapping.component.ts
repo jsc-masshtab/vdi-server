@@ -1,10 +1,11 @@
-import { WaitService } from '../../../../../core/components/wait/wait.service';
-import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { Component, Inject, OnDestroy } from '@angular/core';
-import { AuthenticationDirectoryService } from '../../auth-directory.service';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { takeUntil, map } from 'rxjs/operators';
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { Subject } from 'rxjs';
+import { takeUntil, map } from 'rxjs/operators';
+
+import { WaitService } from '../../../../../core/components/wait/wait.service';
+import { AuthenticationDirectoryService } from '../../auth-directory.service';
 
 
 interface IData {

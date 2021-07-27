@@ -1,14 +1,17 @@
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
+import { FormControl } from '@angular/forms';
+import { MatDialog } from '@angular/material/dialog';
+import { Router } from '@angular/router';
+import { Subscription } from 'rxjs';
+import { map } from 'rxjs/operators';
+
 import { IParams } from '../../../../../../types';
 import { WaitService } from '../../../../core/components/wait/wait.service';
-import { AddGroupComponent } from '../add-groups/add-groups.component';
-import { Component, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
-import { GroupsService   } from '../groups.service';
-import { map } from 'rxjs/operators';
-import { MatDialog } from '@angular/material/dialog';
-import { Subscription } from 'rxjs';
-import { Router } from '@angular/router';
 import { DetailsMove } from '../../../../shared/classes/details-move';
-import { FormControl } from '@angular/forms';
+import { AddGroupComponent } from '../add-groups/add-groups.component';
+import { GroupsService   } from '../groups.service';
+
+
 
 
 @Component({

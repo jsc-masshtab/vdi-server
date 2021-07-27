@@ -4,8 +4,9 @@ import { MatDialog } from '@angular/material/dialog';
 import { Subscription } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { WaitService } from 'src/app/core/components/wait/wait.service';
-import { ControllerEventsService } from './controller-events.service';
 import { InfoEventComponent } from 'src/app/pages/log/events/info-event/info-event.component'
+
+import { ControllerEventsService } from './controller-events.service';
 
 
 @Component({

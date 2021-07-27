@@ -1,16 +1,17 @@
-import { RemoveGroupComponent } from '../remove-groups/remove-group.component';
-import { RemoveUserGroupComponent } from './remove-user/remove-user.component';
-import { FormForEditComponent } from '../../../../shared/forms-dinamic/change-form/form-edit.component';
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { Subscription } from 'rxjs';
-import { GroupsService} from '../groups.service';
-import { ActivatedRoute, Router, ParamMap } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
-import { AddRoleComponent } from './add-role/add-role.component';
-import { RemoveRoleComponent } from './remove-role/remove-role.component';
-import { AddUserGroupComponent } from './add-users/add-user.component';
+import { ActivatedRoute, Router, ParamMap } from '@angular/router';
+import { Subscription } from 'rxjs';
+
+import { FormForEditComponent } from '../../../../shared/forms-dinamic/change-form/form-edit.component';
 import { AddPermissionComponent } from '../add-permission/add-permission.component';
+import { GroupsService} from '../groups.service';
+import { RemoveGroupComponent } from '../remove-groups/remove-group.component';
 import { RemovePermissionComponent } from '../remove-permission/remove-permission.component';
+import { AddRoleComponent } from './add-role/add-role.component';
+import { AddUserGroupComponent } from './add-users/add-user.component';
+import { RemoveRoleComponent } from './remove-role/remove-role.component';
+import { RemoveUserGroupComponent } from './remove-user/remove-user.component';
 
 
 @Component({

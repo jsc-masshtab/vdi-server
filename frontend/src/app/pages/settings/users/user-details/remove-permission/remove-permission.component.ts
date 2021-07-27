@@ -1,9 +1,11 @@
 import { Component, Inject, OnDestroy } from '@angular/core';
-import { Subject } from 'rxjs';
-import { UsersService } from '../../users.service';
-import { WaitService } from 'src/app/core/components/wait/wait.service';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
+import { WaitService } from 'src/app/core/components/wait/wait.service';
+
+import { UsersService } from '../../users.service';
+
 
 @Component({
   selector: 'vdi-remove-user-permission',

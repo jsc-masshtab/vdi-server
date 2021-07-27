@@ -1,15 +1,15 @@
-import { ErrorsService } from '../../core/components/errors/errors.service';
-import { Router } from '@angular/router';
-import { AuthStorageService } from './authStorage.service';
 import {
   trigger,
   style,
   transition,
   animate
 } from '@angular/animations';
-import { FormBuilder, FormGroup } from '@angular/forms';
-
 import { Component, OnInit } from '@angular/core';
+import { FormBuilder, FormGroup } from '@angular/forms';
+import { Router } from '@angular/router';
+
+import { ErrorsService } from '../../core/components/errors/errors.service';
+import { AuthStorageService } from './authStorage.service';
 import { LoginService } from './login.service';
 
 @Component({

@@ -1,10 +1,9 @@
 import { Injectable } from '@angular/core';
-import { AuthStorageService } from 'src/app/pages/login/authStorage.service';
-
-import { environment } from 'src/environments/environment';
 import { Router } from '@angular/router';
 import { Subject, Observable, Subscription } from 'rxjs';
 import { filter } from 'rxjs/operators';
+import { AuthStorageService } from 'src/app/pages/login/authStorage.service';
+import { environment } from 'src/environments/environment';
 
 @Injectable({
   providedIn: 'root',

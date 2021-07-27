@@ -1,5 +1,5 @@
-import { Apollo } from 'apollo-angular';
 import { TestBed, inject } from '@angular/core/testing';
+import { Apollo } from 'apollo-angular';
 
 import { LogSettingService } from './log-setting.service';
 

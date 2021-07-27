@@ -1,8 +1,8 @@
-import { Component, OnInit } from '@angular/core';
 import { HttpResponse } from '@angular/common/http';
-import { LicenseService } from './license.service';
+import { Component, OnInit } from '@angular/core';
 import { ErrorsService } from 'src/app/core/components/errors/errors.service';
-import { FooterService } from '../../../core/components/footer/footer.service';
+
+import { LicenseService } from './license.service';
 
 @Component({
   selector: 'vdi-license',
@@ -52,16 +52,15 @@ export class LicenseComponent implements OnInit {
   ];
 
   constructor(
-    private service: LicenseService,
-    private errorService: ErrorsService,
-    private footer: FooterService) { }
+    private licenseService: LicenseService,
+    private errorService: ErrorsService) { }
 
   ngOnInit() {
     this.refresh();
   }
 
   refresh() {
-    this.service.getLicence().subscribe((res) => {
+    this.licenseService.getLicence().subscribe((res) => {
       this.license = res.data;
     });
   }
@@ -78,7 +77,7 @@ export class LicenseComponent implements OnInit {
       formData.append(file.name, file);
       formData.append('keyFile', file.name);
 
-      this.service.upload('/api/license/', formData).subscribe((event: any) => {
+      this.licenseService.uploadFile('/api/license/', formData).subscribe((event: any) => {
         if (event instanceof HttpResponse) {
           this.refresh();
 
@@ -86,7 +85,7 @@ export class LicenseComponent implements OnInit {
             this.errorService.setError(event.body.errors);
           }
 
-          this.footer.reload();
+          this.licenseService.reload();
         }
       });
     }
