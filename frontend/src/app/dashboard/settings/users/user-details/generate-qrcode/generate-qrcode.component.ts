@@ -3,8 +3,9 @@ import { FormControl } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
-import { WaitService } from 'src/app/dashboard/common/components/single/wait/wait.service';
-import { UsersService } from '../../users.service';
+import { WaitService } from 'src/app/core/components/wait/wait.service';
+import { UsersService } from 'src/app/pages/settings/users/users.service';
+
 
 @Component({
   selector: 'vdi-generate-qrcode',

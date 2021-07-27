@@ -5,7 +5,7 @@ import {
   animate
 } from '@angular/animations';
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormControl, FormGroup,  } from '@angular/forms';
+import { FormBuilder, FormControl, FormGroup } from '@angular/forms';
 import { Router } from '@angular/router';
 
 import { ErrorsService } from '../../core/components/errors/errors.service';

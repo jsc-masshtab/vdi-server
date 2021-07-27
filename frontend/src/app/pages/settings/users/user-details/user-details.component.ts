@@ -372,5 +372,4 @@ export class UserDetailsComponent implements OnInit, OnDestroy {
       this.sub.unsubscribe();
     }
   }
-
 }
