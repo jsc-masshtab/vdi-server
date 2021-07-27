@@ -45,11 +45,12 @@ async def test_execute_service_action(fixt_db, fixt_auth_context):
         mutation{
             doServiceAction(sudo_password: "pass", service_name: "postgresql.service", 
                 service_action: RESTART, check_errors:false)
-                {ok}
+                {ok, service_status}
         }
         """
     executed = await execute_scheme(settings_schema, qu, context=fixt_auth_context)
     assert executed["doServiceAction"]["ok"]
+    assert executed["doServiceAction"]["service_status"] == "running"
 
 
 @pytest.mark.asyncio
