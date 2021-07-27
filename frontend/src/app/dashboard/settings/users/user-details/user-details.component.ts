@@ -282,8 +282,6 @@ export class UserDetailsComponent implements OnInit, OnDestroy {
     });
   }
 
-  public 
-
   public close() {
     this.router.navigate(['pages/settings/users']);
   }
