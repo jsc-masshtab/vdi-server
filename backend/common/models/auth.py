@@ -671,10 +671,10 @@ class User(AbstractSortableStatusModel, VeilModel):
         except (PamError, UniqueViolationError) as err_msg:
             msg = _local_("User {} creation error.").format(username)
             await system_logger.error(
-                message=msg,
+                message=str(err_msg),
                 entity={"entity_type": EntityType.USER, "entity_uuid": None},
                 user=creator,
-                description=err_msg,
+                description=msg,
             )
             raise AssertionError(msg)
 
