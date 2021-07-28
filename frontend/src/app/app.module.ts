@@ -1,18 +1,8 @@
-import { AuthStorageService } from './login/authStorage.service';
-import { DashboardModule } from './dashboard/dashboard.module';
-import { LoginModule } from './login/login.module';
-import { BrowserModule } from '@angular/platform-browser';
-import { NgModule } from '@angular/core';
-import { AppRoutingModule } from './app-routing.module';
-import { AppComponent } from './app.component';
 import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
-import { ErrorsModule } from './errors/errors.module';
-import { HttpLinkModule } from 'apollo-angular-link-http';
-import { ApolloModule  } from 'apollo-angular';
+import { NgModule } from '@angular/core';
+import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-
-
-/*  -----------------------------------   icons   --------------------------------------*/
+import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { library } from '@fortawesome/fontawesome-svg-core';
 import {
           faDesktop, faDatabase, faBuilding, faLayerGroup, faPlusCircle, faSpinner, faServer, faCog, faChevronUp, faTimesCircle,
@@ -41,8 +31,16 @@ import {
           faCommentDots,
           faWrench
         } from '@fortawesome/free-solid-svg-icons';
-import { AuthInterceptor } from './dashboard/common/classes/auth.Interceptor.http';
-/*  -----------------------------------   icons   --------------------------------------*/
+import { ApolloModule  } from 'apollo-angular';
+import { HttpLinkModule } from 'apollo-angular-link-http';
+
+import { AppRoutingModule } from './app-routing.module';
+import { AppComponent } from './app.component';
+import { ErrorsModule } from './core/components/errors/errors.module';
+import { DashboardModule } from './pages/dashboard/dashboard.module';
+import { AuthInterceptor } from './pages/login/auth.Interceptor.http';
+import { AuthStorageService } from './pages/login/authStorage.service';
+import { LoginModule } from './pages/login/login.module';
 
 
 
@@ -55,6 +53,7 @@ import { AuthInterceptor } from './dashboard/common/classes/auth.Interceptor.htt
     BrowserModule,
     BrowserAnimationsModule,
     AppRoutingModule,
+    FontAwesomeModule,
     ApolloModule,
     HttpLinkModule,
     HttpClientModule,

@@ -10,7 +10,7 @@ from common.veil.auth.veil_jwt import (
     encode_jwt,
     extract_user_and_token_with_no_expire_check,
 )
-from common.veil.veil_errors import AssertError, ValidationError
+from common.veil.veil_errors import AssertError, SilentError, SimpleError, ValidationError
 from common.veil.veil_gino import EntityType
 from common.veil.veil_handlers import BaseHttpHandler
 
@@ -25,6 +25,7 @@ class AuthHandler(BaseHttpHandler, ABC):
 
             username = self.args["username"]
             password = self.args["password"]
+            two_factor_code = self.args["code"]
             if not username or len(username) < 2:
                 raise ValidationError(_local_("Missing username."))
             if not password or len(password) < 2:
@@ -57,6 +58,8 @@ class AuthHandler(BaseHttpHandler, ABC):
                     _local_("Auth system is disabled. Check broker settings.")
                 )
 
+            await User.check_2fa(username, two_factor_code)
+
             access_token = encode_jwt(account_name, domain=domain_name)
             await User.login(
                 username=account_name,
@@ -70,6 +73,28 @@ class AuthHandler(BaseHttpHandler, ABC):
             error_description = "IP: {}\n{}".format(self.remote_ip, auth_error)
             entity = {"entity_type": EntityType.SECURITY, "entity_uuid": None}
             error_message = _local_("Authentication failed for user: {}.").format(
+                self.args.get("username", "unknown")
+            )
+            await system_logger.warning(
+                message=error_message, entity=entity, description=error_description
+            )
+            response = {"errors": [{"message": error_message}]}
+            self.set_status(200)
+        except SilentError as auth_error:
+            error_description = "IP: {}\n{}".format(self.remote_ip, auth_error)
+            entity = {"entity_type": EntityType.SECURITY, "entity_uuid": None}
+            error_message = _local_("One-time password error for user: {}.").format(
+                self.args.get("username", "unknown")
+            )
+            await system_logger.warning(
+                message=error_message, entity=entity, description=error_description
+            )
+            response = {"errors": [{"message": error_message}]}
+            self.set_status(200)
+        except SimpleError as auth_error:
+            error_description = "IP: {}\n{}".format(self.remote_ip, auth_error)
+            entity = {"entity_type": EntityType.SECURITY, "entity_uuid": None}
+            error_message = _local_("2fa auth error for user: {}.").format(
                 self.args.get("username", "unknown")
             )
             await system_logger.warning(

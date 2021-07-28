@@ -19,7 +19,8 @@
           "options": {
             "allowedCommonJsDependencies": [
               "graphql-tag",
-              "zen-observable"
+              "zen-observable",
+              "qrcode"
             ],
             "aot": true,
             "outputPath": "dist/frontend",
@@ -50,7 +51,7 @@
               "sourceMap": false,
               "extractCss": true,
               "namedChunks": false,
-              "aot": true,
+              "aot": false,
               "extractLicenses": true,
               "vendorChunk": false,
               "buildOptimizer": true,
