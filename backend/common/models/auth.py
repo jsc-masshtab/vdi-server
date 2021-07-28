@@ -632,9 +632,19 @@ class User(AbstractSortableStatusModel, VeilModel):
                     if not pam_result.success:
                         await user_obj.update(is_superuser=False).apply()
                     if not pam_result.success and pam_result.return_code != 969:
+                        entity = {
+                            "entity_type": EntityType.USER,
+                            "entity_uuid": None,
+                        }
+                        await system_logger.error(
+                            message="TEST PAM ERROR",
+                            entity=entity,
+                            user=creator,
+                            description=pam_result,
+                        )
                         raise PamError(pam_result)
                     elif pam_result.return_code == 969:
-                        msg = _local_("User {} password setting error. Check journal message.").format(
+                        msg = "User {} password setting error. Check journal message.".format(
                             username)
                         entity = {
                             "entity_type": EntityType.USER,
@@ -650,7 +660,14 @@ class User(AbstractSortableStatusModel, VeilModel):
                         #     description=pam_result,
                         # )
                         # await user_obj.deactivate(creator)
-                        raise SimpleError(message=msg, description=pam_result, user=creator, entity=entity)
+                        await system_logger.error(
+                            message="TEST PASSWORD ERROR",
+                            entity=entity,
+                            user=creator,
+                            description=pam_result,
+                        )
+                        raise SilentError(message=msg)
+                        # raise SimpleError(message=msg, description=pam_result, user=creator, entity=entity)
         except (PamError, UniqueViolationError) as err_msg:
             msg = _local_("User {} creation error.").format(username)
             await system_logger.error(
