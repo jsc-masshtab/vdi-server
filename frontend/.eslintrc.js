@@ -94,7 +94,7 @@ module.exports = {
     "id-blacklist": "off",
     "id-match": "off",
     "import/no-deprecated": "warn",
-        "import/order":[
+    "import/order":[
       "error",
       {
         "groups": ["builtin", "external", "internal"],
@@ -102,7 +102,23 @@ module.exports = {
           "pattern": "angular",
           "group": "external",
           "position": "before"
-        }],
+        },
+        {
+          "pattern": "@core/**",
+          "group": "external",
+          "position": "after"
+        },
+        {
+          "pattern": "@shared/**",
+          "group": "external",
+          "position": "after"
+        },
+        {
+          "pattern": "@pages/**",
+          "group": "external",
+          "position": "after"
+        }
+      ],
         "pathGroupsExcludedImportTypes": ["angular"],
         "newlines-between": "always",
         "alphabetize": {

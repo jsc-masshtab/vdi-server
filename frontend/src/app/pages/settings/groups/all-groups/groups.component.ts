@@ -5,7 +5,7 @@ import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { map } from 'rxjs/operators';
 
-import { IParams } from '../../../../../../types';
+import { IParams } from '../../../../shared/types';
 import { WaitService } from '../../../../core/components/wait/wait.service';
 import { DetailsMove } from '../../../../shared/classes/details-move';
 import { AddGroupComponent } from '../add-groups/add-groups.component';

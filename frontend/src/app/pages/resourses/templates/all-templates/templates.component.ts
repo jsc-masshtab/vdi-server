@@ -2,10 +2,12 @@ import { Component, OnInit, ViewChild, ElementRef, OnDestroy, Input } from '@ang
 import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { DetailsMove } from 'src/app/shared/classes/details-move';
-import { IParams } from 'types';
 
-import { WaitService } from '../../../../core/components/wait/wait.service';
+import { WaitService } from '@core/components/wait/wait.service';
+
+import { DetailsMove } from '@shared/classes/details-move';
+import { IParams } from '@shared/types';
+
 import { TemplatesService } from './templates.service';
 
 

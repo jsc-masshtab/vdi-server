@@ -3,7 +3,7 @@ import { Apollo, QueryRef } from 'apollo-angular';
 import gql from 'graphql-tag';
 import { map } from 'rxjs/operators';
 
-import { IParams } from '../../../../../types';
+import { IParams } from '../../../shared/types';
 
 @Injectable()
 export class AuthenticationDirectoryService {

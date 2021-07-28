@@ -2,9 +2,9 @@ import { Component, OnInit, ViewChild, ElementRef, OnDestroy } from '@angular/co
 import { FormControl } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { Router } from '@angular/router';
+import { IParams } from '@shared/types';
 import { Subscription } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { IParams } from 'types';
 
 import { WaitService } from '../../core/components/wait/wait.service';
 import { DetailsMove } from '../../shared/classes/details-move';

@@ -4,9 +4,10 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatDialogModule } from '@angular/material/dialog';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
-import { AppRoutingModule } from 'src/app/app-routing.module';
+import { AppRoutingModule } from 'app/app-routing.module';
 
-import { SharedModule } from '../../shared/shared.module';
+import { SharedModule } from '@shared/shared.module';
+
 import { DisconnectThinClientComponent } from './thin-client-details/disconnect-thin-client/disconnect-thin-client.component';
 import { ThinClientDetailsComponent } from './thin-client-details/thin-client-details.component';
 import { ThinClientStatisticComponent } from './thin-client-statistic/thin-client-statistic.component';

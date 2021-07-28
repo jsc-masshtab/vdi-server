@@ -34,9 +34,10 @@ import {
 import { ApolloModule  } from 'apollo-angular';
 import { HttpLinkModule } from 'apollo-angular-link-http';
 
+import { ErrorsModule } from '@core/components/errors/errors.module';
+
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
-import { ErrorsModule } from './core/components/errors/errors.module';
 import { DashboardModule } from './pages/dashboard/dashboard.module';
 import { AuthInterceptor } from './pages/login/auth.Interceptor.http';
 import { AuthStorageService } from './pages/login/authStorage.service';

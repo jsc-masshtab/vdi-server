@@ -3,8 +3,10 @@ import { FormControl } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
-import { WaitService } from 'src/app/core/components/wait/wait.service';
-import { UsersService } from 'src/app/pages/settings/users/users.service';
+
+import { WaitService } from '@core/components/wait/wait.service';
+
+import { UsersService } from '@pages/settings/users/users.service';
 
 
 @Component({

@@ -7,10 +7,11 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { NgxQRCodeModule } from '@techiediaries/ngx-qrcode';
-import { GenerateQrcodeComponent } from 'src/app/dashboard/settings/users/user-details/generate-qrcode/generate-qrcode.component';
+import { AppRoutingModule } from 'app/app-routing.module';
+import { GenerateQrcodeComponent } from 'app/dashboard/settings/users/user-details/generate-qrcode/generate-qrcode.component';
 
-import { AppRoutingModule } from '../../../app-routing.module';
-import { SharedModule } from '../../../shared/shared.module';
+import { SharedModule } from '@shared/shared.module';
+
 import { AddUserComponent } from './add-user/add-user.component';
 import { UsersComponent } from './all-users/users.component';
 import { AddGropComponent } from './user-details/add-group/add-group.component';

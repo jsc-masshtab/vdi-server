@@ -1,8 +1,10 @@
 import { Component, Inject, OnInit } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialog } from '@angular/material/dialog';
 import { DomSanitizer } from '@angular/platform-browser';
-import { WaitService } from 'src/app/core/components/wait/wait.service';
-import { YesNoFormComponent } from 'src/app/shared/forms-dinamic/yes-no-form/yes-no-form.component';
+
+import { WaitService } from '@core/components/wait/wait.service';
+
+import { YesNoFormComponent } from '@shared/forms-dinamic/yes-no-form/yes-no-form.component';
 
 
 import { InfoEventComponent } from '../../../log/events/info-event/info-event.component';

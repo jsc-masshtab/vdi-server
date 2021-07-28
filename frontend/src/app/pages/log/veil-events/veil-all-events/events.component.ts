@@ -1,12 +1,12 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
+import { WaitService } from '@core/components/wait/wait.service';
+import { WebsocketService } from '@shared/classes/websock.service';
+import { IParams } from '@shared/types';
 import { Subscription } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { WebsocketService } from 'src/app/shared/classes/websock.service';
-import { IParams } from 'types';
 
-import { WaitService } from '../../../../core/components/wait/wait.service';
 import { VeilInfoEventComponent } from '../veil-info-event/info-event.component';
 import { VeilEventsService } from './events.service';
 
