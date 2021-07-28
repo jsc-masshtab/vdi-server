@@ -631,11 +631,11 @@ class User(AbstractSortableStatusModel, VeilModel):
                     # снимаем флаг суперпользователя, если создание с ошибкой
                     if not pam_result.success:
                         await user_obj.update(is_superuser=False).apply()
-                    if not pam_result.success and pam_result.return_code != 969:
+                    # if not pam_result.success and pam_result.return_code != 969:
                         raise PamError(pam_result)
-                    elif pam_result.return_code == 969:
-                        msg = "User {} password setting error. Check journal message.".format(
-                            username)
+                    # elif pam_result.return_code == 969:
+                        # msg = "User {} password setting error. Check journal message.".format(
+                        #     username)
                         # entity = {
                         #     "entity_type": EntityType.USER,
                         #     "entity_uuid": None,
@@ -650,8 +650,7 @@ class User(AbstractSortableStatusModel, VeilModel):
                         #     description=pam_result,
                         # )
                         # await user_obj.deactivate(creator)
-                        raise SilentError(message=str(pam_result))
-        except (PamError, UniqueViolationError, SilentError) as err_msg:
+        except (PamError, UniqueViolationError) as err_msg:
             msg = _local_("User {} creation error.").format(username)
             await system_logger.error(
                 message=msg,
