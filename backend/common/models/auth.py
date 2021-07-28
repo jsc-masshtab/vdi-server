@@ -660,7 +660,7 @@ class User(AbstractSortableStatusModel, VeilModel):
                         #     description=pam_result,
                         # )
                         # await user_obj.deactivate(creator)
-                        await system_logger.error(
+                        await system_logger.info(
                             message="TEST PASSWORD ERROR",
                             entity=entity,
                             user=creator,
