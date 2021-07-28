@@ -1,13 +1,8 @@
-def currentDate = new Date().format('yyyyMMddHHmmss')
 def rocketNotify = true
 
 pipeline {
     agent {
         label "${AGENT}"
-    }
-
-    environment {
-        DATE = "$currentDate"
     }
 
     post {
