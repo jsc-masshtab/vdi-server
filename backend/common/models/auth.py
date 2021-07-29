@@ -625,31 +625,34 @@ class User(AbstractSortableStatusModel, VeilModel):
             async with db.transaction():
                 user_obj = await cls.create(**user_kwargs)
                 if PAM_AUTH:
-                    pam_result = await user_obj.pam_create_user(
-                        raw_password=password, superuser=is_superuser
-                    )
-                    # снимаем флаг суперпользователя, если создание с ошибкой
-                    if not pam_result.success:
-                        await user_obj.update(is_superuser=False).apply()
-                    # if not pam_result.success and pam_result.return_code != 969:
-                        raise PamError(pam_result)
-                    # elif pam_result.return_code == 969:
-                        # msg = "User {} password setting error. Check journal message.".format(
-                        #     username)
-                        # entity = {
-                        #     "entity_type": EntityType.USER,
-                        #     "entity_uuid": None,
-                        # }
-                        # await system_logger.warning(
-                        #     message=msg,
-                        #     entity={
-                        #         "entity_type": EntityType.USER,
-                        #         "entity_uuid": None,
-                        #     },
-                        #     user=creator,
-                        #     description=pam_result,
-                        # )
-                        # await user_obj.deactivate(creator)
+                    try:
+                        pam_result = await user_obj.pam_create_user(
+                            raw_password=password, superuser=is_superuser
+                        )
+                        # снимаем флаг суперпользователя, если создание с ошибкой
+                        if not pam_result.success:
+                            await user_obj.update(is_superuser=False).apply()
+                        # if not pam_result.success and pam_result.return_code != 969:
+                            raise PamError(pam_result)
+                        # elif pam_result.return_code == 969:
+                            # msg = "User {} password setting error. Check journal message.".format(
+                            #     username)
+                            # entity = {
+                            #     "entity_type": EntityType.USER,
+                            #     "entity_uuid": None,
+                            # }
+                            # await system_logger.warning(
+                            #     message=msg,
+                            #     entity={
+                            #         "entity_type": EntityType.USER,
+                            #         "entity_uuid": None,
+                            #     },
+                            #     user=creator,
+                            #     description=pam_result,
+                            # )
+                            # await user_obj.deactivate(creator)
+                    except PamError as err_msg:
+                        raise PamError(err_msg)
         except (PamError, UniqueViolationError) as err_msg:
             msg = _local_("User {} creation error.").format(username)
             await system_logger.error(
