@@ -64,5 +64,5 @@ class Settings(db.Model):
                                      entity=entity, user=creator)
             return True
         except Exception as e:
-            print("GGGGGGGGGGGGGGGGGGg ", e)
+            await system_logger.debug(str(e))
             return False
