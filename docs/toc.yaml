@@ -83,6 +83,7 @@ nav:
     - Работа по RDP с пулами ВРС: broker/faq/rdp/example_rdp.md
     - Настройка GPO через RDP для ВМ в домене MS AD: broker/faq/rdp/example_rdp_domain.md
     - nVidia Grid: broker/faq/vm/nvidia.md
+    - Двухфакторная аутентификация: broker/faq/2fa.md
   - VeiL Broker:
     - Руководство системного программиста:
       - Аннотация: broker/engineer_guide/annotate.md
