@@ -5,6 +5,7 @@ import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
 import { WaitService } from '@core/components/wait/wait.service';
+
 import { PoolDetailsService } from '@pages/pools/pool-details/pool-details.service';
 
 

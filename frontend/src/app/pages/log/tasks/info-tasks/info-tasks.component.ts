@@ -1,5 +1,6 @@
 import { Component, Inject } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialog } from '@angular/material/dialog';
+
 import { YesNoFormComponent } from '@shared/forms-dinamic/yes-no-form/yes-no-form.component';
 
 import { TasksService } from '../all-tasks/tasks.service';

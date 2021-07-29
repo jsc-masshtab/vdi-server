@@ -10,7 +10,6 @@ import { DetailsMove } from '@shared/classes/details-move';
 import { WebsocketService } from '@shared/classes/websock.service';
 import { IParams } from '@shared/types';
 
-
 import { AddControllerComponent } from '../add-controller/add-controller.component';
 import { RemoveControllerComponent } from '../remove-controller/remove-controller.component';
 import { ControllersService } from './controllers.service';

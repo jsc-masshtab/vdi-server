@@ -4,7 +4,8 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatDialogModule } from '@angular/material/dialog';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
-import { AppRoutingModule } from 'app/app-routing.module';
+
+import { AppRoutingModule } from '@app/app-routing.module';
 
 import { SharedModule } from '@shared/shared.module';
 

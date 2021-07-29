@@ -1,12 +1,14 @@
 import { Component, OnInit, OnDestroy, Input } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
-import { WebsocketService } from '@shared/classes/websock.service';
-import { IParams } from '@shared/types';
 import { Subscription } from 'rxjs';
 import { map } from 'rxjs/operators';
 
-import { WaitService } from '../../../../core/components/wait/wait.service';
+import { WaitService } from '@core/components/wait/wait.service';
+
+import { WebsocketService } from '@shared/classes/websock.service';
+import { IParams } from '@shared/types';
+
 import { AddExportComponent } from '../add-exports/add-exports.component';
 import { InfoEventComponent } from '../info-event/info-event.component';
 import { EventsService } from './events.service';

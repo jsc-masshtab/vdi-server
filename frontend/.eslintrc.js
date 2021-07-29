@@ -97,29 +97,30 @@ module.exports = {
     "import/order":[
       "error",
       {
-        "groups": ["builtin", "external", "internal"],
-        "pathGroups":[{
-          "pattern": "angular",
-          "group": "external",
+        "groups": ["builtin", "external", "internal" ],
+        "pathGroups":[
+        {
+          "pattern": "@app/**",
+          "group": "internal",
           "position": "before"
         },
         {
           "pattern": "@core/**",
-          "group": "external",
-          "position": "after"
+          "group": "internal",
+          "position": "before"
         },
         {
           "pattern": "@shared/**",
-          "group": "external",
-          "position": "after"
+          "group": "internal",
+          "position": "before"
         },
         {
           "pattern": "@pages/**",
-          "group": "external",
-          "position": "after"
+          "group": "internal",
+          "position": "before"
         }
       ],
-        "pathGroupsExcludedImportTypes": ["angular"],
+        "pathGroupsExcludedImportTypes": ["internal"],
         "newlines-between": "always",
         "alphabetize": {
           "order": "asc",
