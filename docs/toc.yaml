@@ -204,8 +204,8 @@ nav:
     - Описание ini файла настроек: connect/ini_file_description.md
     - Описание логов: connect/log_files_description.md
     - Тонкие клиенты:
-      - Приложение. Установка ОС "Astra Linux Common Edition": connect/thin_clients/operator_guide/application1.md
-      - Приложение. Установка ОС "Astra Linux Special Edition": connect/thin_clients/operator_guide/application2.md
-      - Приложение. Установка ОС "Альт Рабочая станция": connect/thin_clients/operator_guide/application3.md
-      - FAQ ТК: connect/thin_clients.md
+      - FAQ ТК: connect/thin_clients/thin_clients.md
+      - Приложение. Установка ОС "Astra Linux Common Edition": connect/thin_clients/application1.md
+      - Приложение. Установка ОС "Astra Linux Special Edition": connect/thin_clients/application2.md
+      - Приложение. Установка ОС "Альт Рабочая станция": connect/thin_clients/application3.md
   - ECP VeiL: https://veil.mashtab.org/docs/
