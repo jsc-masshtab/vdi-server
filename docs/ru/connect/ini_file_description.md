@@ -37,8 +37,8 @@
 | Параметр                | Описание                                                                       | Возможные значения                                        |
 |-------------------------|--------------------------------------------------------------------------------|-----------------------------------------------------------|
 | rdp_fps                 | Частота обновления картинки (Перерисовки экрана)                               | Число 1-60                                                |
-| is_rdp_h264_used        | Использовать ли h264                                                           | 1/0                                                       |
-| rdp_h264_codec          | Используемый кодек. Учитывается только если is_rdp_h264_used равно 1           | AVC420/AVC444                                             |
+| is_rdp_vid_comp_used    | Использовать ли сжатие видеопотока                                             | 1/0                                                       |
+| rdp_vid_comp_codec      | Используемый кодек. Учитывается только если is_rdp_vid_comp_used равно 1       | AVC420/AVC444/RemoteFX                                             |
 | rdp_shared_folders      | Перенаправляемые папки. Пути, перечисленные через точку с запятой без пробелов | строка                                                    |
 | is_multimon             | Мультимониторность                                                             | 1/0                                                       |
 | redirect_printers       | Перенаправлять ли принтеры                                                     | 1/0                                                       |
@@ -72,9 +72,9 @@ to_save_pswd=1
 is_spice_client_cursor_visible=1
 
 [RDPSettings]
-rdp_fps=60
-is_rdp_h264_used=0
-rdp_h264_codec=AVC420
+rdp_fps=30
+rdp_vid_comp_codec=1
+rdp_vid_comp_codec=AVC420
 rdp_shared_folders=/home/ubuntu/job
 is_multimon=0
 redirect_printers=0
