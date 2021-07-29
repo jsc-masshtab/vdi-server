@@ -661,7 +661,7 @@ class User(AbstractSortableStatusModel, VeilModel):
                 user=creator,
                 description=err_msg,
             )
-            raise AssertionError(msg)
+            raise SimpleError(msg, description=err_msg)
 
         user_role = _local_("Superuser.") if is_superuser else _local_("User.")
         info_message = _local_("{} {} created.").format(user_role[:-1], username)
