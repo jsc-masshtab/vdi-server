@@ -83,7 +83,7 @@ class VdiHttpTestCase(AsyncHTTPTestCase):
         return IOLoop.current()
 
     async def do_login(self, user_name="test_user_admin", password="veil"):
-        body = {"username": user_name, "password": password, "code": ""}
+        body = {"username": user_name, "password": password}
         response_dict = await self.get_response(body=json.dumps(body))
         access_token = response_dict["data"]["access_token"]
         self.assertTrue(access_token)
