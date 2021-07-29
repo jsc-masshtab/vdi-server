@@ -142,7 +142,7 @@ class PoolTestCase(VdiHttpTestCase):
         self.assertEqual(vms_amount, 1)  # Сначала в пуле должна быть 1 VM
 
         # Авторизуемся, чтобы получить токен
-        body = '{"username": "test_user_admin","password": "veil", "code": ""}'
+        body = '{"username": "test_user_admin","password": "veil"}'
         response_dict = yield self.get_response(body=body, url="/auth")
         access_token = response_dict["data"]["access_token"]
         self.assertTrue(access_token)

@@ -832,7 +832,7 @@ class User(AbstractSortableStatusModel, VeilModel):
     async def check_2fa(username, code):
         try:
             two_factor = await User.select("two_factor").where(User.username == username).gino.first()
-            if two_factor[0]:
+            if two_factor[0] and code:
                 secret = await User.select("secret").where(User.username == username).gino.first()
                 totp = pyotp.TOTP(secret[0])
                 if totp.now() == code:
@@ -842,6 +842,7 @@ class User(AbstractSortableStatusModel, VeilModel):
             raise SimpleError(_local_(
                 "User {} do not have a secret code for 2fa auth. Please generate this in settings of user.").format(
                 username))
+        return False
 
 
 class UserJwtInfo(db.Model):
