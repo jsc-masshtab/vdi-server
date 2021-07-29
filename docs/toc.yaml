@@ -126,7 +126,7 @@ nav:
         - События: broker/operator_guide/events.md
         - Задачи: broker/operator_guide/tasks.md
         - Настройка: broker/operator_guide/web_settings.md
-      - Перечень принятых сокращений: broker/operator_guide/reductions.md
+      - Перечень принятых сокращений: broker/operator_guide/abbreviations.md
     - Спецификация:
       - Требования к хост-системе брокера: broker/spec/domain-req.md
       - Порты и протоколы задействованные при обмене с ECP VeiL: broker/spec/ports_info.md
@@ -167,9 +167,9 @@ nav:
       - Включение программы: connect/operator_guide/start.md
       - Окно авторизации пользователя и настройка соединения: connect/operator_guide/interface.md
       - Окно доступных пулов ВМ: connect/operator_guide/pools.md
-      - Окно ВМ: connect/operator_guide/domains.md
+      - Окно ВМ: connect/operator_guide/vm_window.md
     - Сообщения оператору: connect/operator_guide/messages.md
-    - Перечень принятых сокращений: connect/operator_guide/reductions.md
+    - Перечень принятых сокращений: connect/operator_guide/abbreviations.md
     - Обновление: connect/update.md
     - Cоздание локального репозитория: connect/repo_without_inet.md
     - Настройки:
@@ -204,27 +204,8 @@ nav:
     - Описание ini файла настроек: connect/ini_file_description.md
     - Описание логов: connect/log_files_description.md
     - Тонкие клиенты:
-      - Аннотация: connect/thin_clients/operator_guide/annotate.md
-      - Назначение программы: connect/thin_clients/operator_guide/general_info.md
-      - Условия выполнения программы: connect/thin_clients/operator_guide/program_condition.md
-      - Установка и удаление программы:
-        - Общие сведения: connect/thin_clients/operator_guide/info.md
-        - Установка и настройка ОС: connect/thin_clients/operator_guide/install_os.md
-        - Проверка целостности программы: connect/thin_clients/operator_guide/integrity_check.md
-        - Установка VeiL Connect E: connect/thin_clients/operator_guide/install.md
-        - Удаление VeiL Connect E: connect/thin_clients/operator_guide/delete.md
-        - Перевод рабочего стола ОС в режим "киоска": connect/thin_clients/operator_guide/kiosk.md
-      - Выполнение программы:
-        - Подготовка к работе: connect/thin_clients/operator_guide/prepare.md
-        - Общие правила при работе с программой: connect/thin_clients/operator_guide/rules.md
-        - Включение программы: connect/thin_clients/operator_guide/start.md
-        - Окно авторизации пользователя и настройка соединения: connect/thin_clients/operator_guide/interface.md
-        - Окно доступных пулов ВМ: connect/thin_clients/operator_guide/pools.md
-        - Окно ВМ: connect/thin_clients/operator_guide/domains.md
-      - Сообщения оператору: connect/thin_clients/operator_guide/messages.md
-      - Приложение. Установка ОС "Astra Linux Common Edition": connect/thin_clients/operator_guide/application1.md
-      - Приложение. Установка ОС "Astra Linux Special Edition": connect/thin_clients/operator_guide/application2.md
-      - Приложение. Установка ОС "Альт Рабочая станция": connect/thin_clients/operator_guide/application3.md
-      - Перечень принятых сокращений: connect/thin_clients/operator_guide/reductions.md
-      - FAQ ТК: connect/thin_clients.md
+      - FAQ ТК: connect/thin_clients/thin_clients.md
+      - Приложение. Установка ОС "Astra Linux Common Edition": connect/thin_clients/application1.md
+      - Приложение. Установка ОС "Astra Linux Special Edition": connect/thin_clients/application2.md
+      - Приложение. Установка ОС "Альт Рабочая станция": connect/thin_clients/application3.md
   - ECP VeiL: https://veil.mashtab.org/docs/
