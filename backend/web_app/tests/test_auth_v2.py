@@ -39,7 +39,7 @@ class AuthLocalTestCase(VdiHttpTestCase):
     @gen_test
     @pytest.mark.smoke_test
     def test_local_auth_ok(self):
-        body = '{"username": "test_user_admin","password": "veil","code": ""}'
+        body = '{"username": "test_user_admin","password": "veil", "code": ""}'
         response_dict = yield self.get_response(body=body)
         self.check_local_auth(response_dict)
         if LOCAL_AUTH:
@@ -49,7 +49,7 @@ class AuthLocalTestCase(VdiHttpTestCase):
     @pytest.mark.usefixtures("fixt_db")
     @gen_test
     def test_local_auth_bad(self):
-        body = '{"username": "test_user_admin","password": "qwe11","code": ""}'
+        body = '{"username": "test_user_admin","password": "qwe11"}'
         response_dict = yield self.get_response(body=body)
         self.check_local_auth(response_dict)
         if LOCAL_AUTH:
@@ -61,7 +61,7 @@ class AuthLocalTestCase(VdiHttpTestCase):
     @pytest.mark.usefixtures("fixt_db", "fixt_user_locked")
     @gen_test
     def test_locked_user_login(self):
-        body = '{"username": "test_user_locked","password": "qwe","code": ""}'
+        body = '{"username": "test_user_locked","password": "qwe"}'
         response_dict = yield self.get_response(body=body)
         error_message = response_dict["errors"][0]["message"]
         self.assertIn(
@@ -71,7 +71,7 @@ class AuthLocalTestCase(VdiHttpTestCase):
     @pytest.mark.usefixtures("fixt_db")
     @gen_test
     def test_user_login_without_pass(self):
-        body = '{"username": "test_user_admin","password": "","code": ""}'
+        body = '{"username": "test_user_admin","password": ""}'
         response_dict = yield self.get_response(body=body)
         error_message = response_dict["errors"][0]["message"]
         self.assertIn(
@@ -81,7 +81,7 @@ class AuthLocalTestCase(VdiHttpTestCase):
     @pytest.mark.usefixtures("fixt_db", "fixt_user", "fixt_user_admin")
     @gen_test
     def test_blocked_section_admin_access(self):
-        body = '{"username": "test_user_admin","password": "veil","code": ""}'
+        body = '{"username": "test_user_admin","password": "veil"}'
         response_dict = yield self.get_response(body=body)
         self.check_local_auth(response_dict)
         if LOCAL_AUTH:
@@ -97,7 +97,7 @@ class AuthLocalTestCase(VdiHttpTestCase):
             )
             self.assertTrue(response_dict["data"]["users"])
 
-            body = '{"username": "test_user","password": "veil","code": ""}'
+            body = '{"username": "test_user","password": "veil"}'
             response_dict = yield self.get_response(body=body)
             access_token = response_dict["data"]["access_token"]
             self.assertTrue(access_token)
@@ -117,7 +117,7 @@ class AuthLocalTestCase(VdiHttpTestCase):
     @gen_test
     def test_logout(self):
         # Выполняем вход
-        body = '{"username": "test_user","password": "veil","code": ""}'
+        body = '{"username": "test_user","password": "veil"}'
         response_dict = yield self.get_response(body=body)
         self.check_local_auth(response_dict)
         if LOCAL_AUTH:
@@ -154,7 +154,7 @@ class AuthLdapTestCase(VdiHttpTestCase):
     @pytest.mark.usefixtures("fixt_db", "fixt_user")
     @gen_test
     def test_ldap_auth_no_controller(self):
-        body = '{"username": "test_user","password": "veil", "ldap": true, "code": ""}'
+        body = '{"username": "test_user","password": "veil", "ldap": true}'
         response_dict = yield self.get_response(body=body)
         self.check_external_auth(response_dict)
         if EXTERNAL_AUTH:
@@ -164,7 +164,7 @@ class AuthLdapTestCase(VdiHttpTestCase):
     @pytest.mark.usefixtures("fixt_db", "fixt_auth_dir", "fixt_user")
     @gen_test
     def test_ldap_auth_ok(self):
-        body = '{"username": "ad120", "password": "Bazalt1!", "ldap": true, "code": ""}'
+        body = '{"username": "ad120", "password": "Bazalt1!", "ldap": true}'
         response_dict = yield self.get_response(body=body)
         self.check_external_auth(response_dict)
         if EXTERNAL_AUTH:
@@ -174,7 +174,7 @@ class AuthLdapTestCase(VdiHttpTestCase):
     @pytest.mark.usefixtures("fixt_db", "fixt_auth_dir", "fixt_user")
     @gen_test
     def test_ldap_auth_bad(self):
-        body = '{"username": "test_user","password": "veil", "ldap": true, "code": ""}'
+        body = '{"username": "test_user","password": "veil", "ldap": true}'
         response_dict = yield self.get_response(body=body)
         self.check_external_auth(response_dict)
         if EXTERNAL_AUTH:
@@ -187,7 +187,7 @@ class AuthLdapTestCase(VdiHttpTestCase):
     @gen_test
     def test_user_mapping(self):
         """Проверяем назначена ли пользователю группа после входа."""
-        body = '{"username": "ad120", "password": "Bazalt1!", "ldap": true, "code": ""}'
+        body = '{"username": "ad120", "password": "Bazalt1!", "ldap": true}'
         response_dict = yield self.get_response(body=body)
         self.check_external_auth(response_dict)
         if EXTERNAL_AUTH:

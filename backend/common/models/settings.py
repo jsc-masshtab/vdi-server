@@ -64,5 +64,4 @@ class Settings(db.Model):
                                      entity=entity, user=creator)
             return True
         except Exception as e:
-            print("GGGGGGGGGGGGGGGGGGg ", e)
             return False

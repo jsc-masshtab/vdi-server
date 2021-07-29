@@ -842,6 +842,7 @@ class User(AbstractSortableStatusModel, VeilModel):
             raise SimpleError(_local_(
                 "User {} do not have a secret code for 2fa auth. Please generate this in settings of user.").format(
                 username))
+        return False
 
 
 class UserJwtInfo(db.Model):
