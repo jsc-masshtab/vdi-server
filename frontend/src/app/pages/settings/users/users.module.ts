@@ -9,7 +9,7 @@ import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { NgxQRCodeModule } from '@techiediaries/ngx-qrcode';
 
 import { AppRoutingModule } from '@app/app-routing.module';
-import { GenerateQrcodeComponent } from '@app/dashboard/settings/users/user-details/generate-qrcode/generate-qrcode.component';
+import { GenerateQrcodeComponent } from '@app/pages/settings/users/user-details/generate-qrcode/generate-qrcode.component';
 
 import { SharedModule } from '@shared/shared.module';
 

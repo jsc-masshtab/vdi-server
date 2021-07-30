@@ -1,9 +1,10 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute, Router, ParamMap } from '@angular/router';
-import { GenerateQrcodeComponent } from 'app/dashboard/settings/users/user-details/generate-qrcode/generate-qrcode.component';
 import { Subscription } from 'rxjs';
 import { map } from 'rxjs/operators';
+
+import { GenerateQrcodeComponent } from '@app/pages/settings/users/user-details/generate-qrcode/generate-qrcode.component';
 
 import { FormForEditComponent } from '@shared/forms-dinamic/change-form/form-edit.component';
 
