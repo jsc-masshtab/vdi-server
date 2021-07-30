@@ -5,10 +5,12 @@ import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute, Router, ParamMap } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { IEditFormObj } from 'types';
 
-import { FormForEditComponent } from '../../../shared/forms-dinamic/change-form/form-edit.component';
-import { YesNoFormComponent } from '../../../shared/forms-dinamic/yes-no-form/yes-no-form.component';
+
+import { FormForEditComponent } from '@shared/forms-dinamic/change-form/form-edit.component';
+import { YesNoFormComponent } from '@shared/forms-dinamic/yes-no-form/yes-no-form.component';
+import { IEditFormObj } from '@shared/types';
+
 import { ControllersService } from '../all-controllers/controllers.service';
 import { RemoveControllerComponent } from '../remove-controller/remove-controller.component';
 

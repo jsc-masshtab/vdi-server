@@ -1,6 +1,7 @@
 import { HttpResponse } from '@angular/common/http';
 import { Component, OnInit } from '@angular/core';
-import { ErrorsService } from 'src/app/core/components/errors/errors.service';
+
+import { ErrorsService } from '@core/components/errors/errors.service';
 
 import { LicenseService } from './license.service';
 

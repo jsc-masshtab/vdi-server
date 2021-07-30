@@ -3,8 +3,10 @@ import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute, Router, ParamMap } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { GenerateQrcodeComponent } from 'src/app/dashboard/settings/users/user-details/generate-qrcode/generate-qrcode.component';
-import { FormForEditComponent } from 'src/app/shared/forms-dinamic/change-form/form-edit.component';
+
+import { GenerateQrcodeComponent } from '@app/pages/settings/users/user-details/generate-qrcode/generate-qrcode.component';
+
+import { FormForEditComponent } from '@shared/forms-dinamic/change-form/form-edit.component';
 
 import { UsersService } from '../users.service';
 import { AddGropComponent } from './add-group/add-group.component';

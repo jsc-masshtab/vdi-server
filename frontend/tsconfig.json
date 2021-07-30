@@ -1,7 +1,13 @@
 {
   "compileOnSave": false,
   "compilerOptions": {
-    "baseUrl": "./",
+    "baseUrl": "src",
+    "paths": {
+      "@app/*":["app/*"],
+      "@shared/*": ["app/shared/*"],
+      "@pages/*": ["app/pages/*"],
+      "@core/*": ["app/core/*"]
+    },
     "outDir": "./dist/out-tsc",
     "sourceMap": true,
     "declaration": false,
@@ -13,7 +19,7 @@
     "target": "es5",
     "typeRoots": [
       "node_modules/@types",
-      "types"
+      "src/app/shared/types"
     ],
     "downlevelIteration": true,
     "lib": [

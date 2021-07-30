@@ -5,9 +5,11 @@ import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { map } from 'rxjs/operators';
 
-import { IParams } from '../../../../../../types';
-import { WaitService } from '../../../../core/components/wait/wait.service';
-import { DetailsMove } from '../../../../shared/classes/details-move';
+import { WaitService } from '@core/components/wait/wait.service';
+
+import { DetailsMove } from '@shared/classes/details-move';
+import { IParams } from '@shared/types';
+
 import { AddUserComponent } from '../add-user/add-user.component';
 import { UsersService   } from '../users.service';
 

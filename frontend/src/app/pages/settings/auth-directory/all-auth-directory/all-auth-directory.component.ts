@@ -4,9 +4,11 @@ import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { map } from 'rxjs/operators';
 
-import { IParams } from '../../../../../../types';
-import { WaitService } from '../../../../core/components/wait/wait.service';
-import { DetailsMove } from '../../../../shared/classes/details-move';
+import { WaitService } from '@core/components/wait/wait.service';
+
+import { DetailsMove } from '@shared/classes/details-move';
+import { IParams } from '@shared/types';
+
 import { AddAuthenticationDirectoryComponent } from '../add-auth-directory/add-auth-directory.component';
 import { AuthenticationDirectoryService   } from '../auth-directory.service';
 

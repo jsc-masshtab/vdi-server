@@ -2,7 +2,9 @@ import { HttpClient, HttpRequest, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable, Subject } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { AuthStorageService } from 'src/app/pages/login/authStorage.service';
+
+import { AuthStorageService } from '@pages/login/authStorage.service';
+
 
 
 export interface ICopyrightResponse{

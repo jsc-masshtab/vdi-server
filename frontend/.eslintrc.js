@@ -94,16 +94,33 @@ module.exports = {
     "id-blacklist": "off",
     "id-match": "off",
     "import/no-deprecated": "warn",
-        "import/order":[
+    "import/order":[
       "error",
       {
-        "groups": ["builtin", "external", "internal"],
-        "pathGroups":[{
-          "pattern": "angular",
-          "group": "external",
+        "groups": ["builtin", "external", "internal" ],
+        "pathGroups":[
+        {
+          "pattern": "@app/**",
+          "group": "internal",
           "position": "before"
-        }],
-        "pathGroupsExcludedImportTypes": ["angular"],
+        },
+        {
+          "pattern": "@core/**",
+          "group": "internal",
+          "position": "before"
+        },
+        {
+          "pattern": "@shared/**",
+          "group": "internal",
+          "position": "before"
+        },
+        {
+          "pattern": "@pages/**",
+          "group": "internal",
+          "position": "before"
+        }
+      ],
+        "pathGroupsExcludedImportTypes": ["internal"],
         "newlines-between": "always",
         "alphabetize": {
           "order": "asc",

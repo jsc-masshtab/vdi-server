@@ -3,7 +3,8 @@ import { MatDialog } from '@angular/material/dialog';
 import { ParamMap, ActivatedRoute, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { FormForEditComponent } from 'src/app/shared/forms-dinamic/change-form/form-edit.component';
+
+import { FormForEditComponent } from '@shared/forms-dinamic/change-form/form-edit.component';
 
 import { AuthenticationDirectoryService } from '../auth-directory.service';
 import { AddGropComponent } from './add-group/add-group.component';

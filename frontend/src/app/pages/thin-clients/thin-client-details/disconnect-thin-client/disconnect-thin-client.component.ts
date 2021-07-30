@@ -3,7 +3,8 @@ import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { Router } from '@angular/router';
 import { Subject, of } from 'rxjs';
 import { takeUntil, concatMap, delay } from 'rxjs/operators';
-import { WaitService } from 'src/app/core/components/wait/wait.service';
+
+import { WaitService } from '@core/components/wait/wait.service';
 
 import { ThinClientsService } from '../../thin-clients.service';
 

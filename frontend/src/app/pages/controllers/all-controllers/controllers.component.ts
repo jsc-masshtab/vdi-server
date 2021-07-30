@@ -3,11 +3,13 @@ import { MatDialog } from '@angular/material/dialog';
 import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { WebsocketService } from 'src/app/shared/classes/websock.service';
 
-import { IParams } from '../../../../../types';
-import { WaitService } from '../../../core/components/wait/wait.service';
-import { DetailsMove } from '../../../shared/classes/details-move';
+import { WaitService } from '@core/components/wait/wait.service';
+
+import { DetailsMove } from '@shared/classes/details-move';
+import { WebsocketService } from '@shared/classes/websock.service';
+import { IParams } from '@shared/types';
+
 import { AddControllerComponent } from '../add-controller/add-controller.component';
 import { RemoveControllerComponent } from '../remove-controller/remove-controller.component';
 import { ControllersService } from './controllers.service';
