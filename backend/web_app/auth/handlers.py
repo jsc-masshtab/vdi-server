@@ -10,7 +10,7 @@ from common.veil.auth.veil_jwt import (
     encode_jwt,
     extract_user_and_token_with_no_expire_check,
 )
-from common.veil.veil_errors import AssertError, SilentError, SimpleError, ValidationError
+from common.veil.veil_errors import AssertError, SilentError, ValidationError
 from common.veil.veil_gino import EntityType
 from common.veil.veil_handlers import BaseHttpHandler
 
@@ -87,17 +87,6 @@ class AuthHandler(BaseHttpHandler, ABC):
             error_description = "IP: {}\n{}".format(self.remote_ip, auth_error)
             entity = {"entity_type": EntityType.SECURITY, "entity_uuid": None}
             error_message = _local_("One-time password error for user: {}.").format(
-                self.args.get("username", "unknown")
-            )
-            await system_logger.warning(
-                message=error_message, entity=entity, description=error_description
-            )
-            response = {"errors": [{"message": error_message}]}
-            self.set_status(200)
-        except SimpleError as auth_error:
-            error_description = "IP: {}\n{}".format(self.remote_ip, auth_error)
-            entity = {"entity_type": EntityType.SECURITY, "entity_uuid": None}
-            error_message = _local_("2fa auth error for user: {}.").format(
                 self.args.get("username", "unknown")
             )
             await system_logger.warning(
