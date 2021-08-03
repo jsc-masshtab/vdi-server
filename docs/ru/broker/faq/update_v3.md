@@ -18,13 +18,13 @@
 
 1. Проверить статус сервиса apache2:
    
-    ```bash
+    ```
     sudo systemctl status apache2
     ```
    
    Если он не включен, то включить и выполнить:
 
-    ```bash
+    ```
     sudo systemctl start apache2
     sudo chown www-data:adm /var/log/apache2 -R
     ```
@@ -32,7 +32,7 @@
 1. Подключить новый iso-образ **VeiL Broker** и выполнить 
    команды для обновления:
 
-    ```bash
+    ```
     sudo mv /etc/apt/sources.list.d/media_cdrom_repo.list /etc/apt/sources.list.d/media_cdrom_repo.back
     sudo apt update
     ```
@@ -40,7 +40,7 @@
     !!! note "Примечание"
         Команда очистки старого репозитория актуальна для 3.*
 
-    ```bash
+    ```
     sudo mount /media/cdrom
     cd ~
     sudo bash /media/cdrom/install.sh > vdi_update.log
@@ -69,7 +69,7 @@
 
 1. Привести файл /etc/apt/sources.list к виду:
  
-   ``` 
+   ```bash
    # deb cdrom:[OS Astra Linux 1.6 smolensk - amd64 DVD ]/ smolensk contrib main non-free
    # deb file:///opt/basic smolensk contrib main non-free
    # deb file:///opt/devel smolensk contrib main non-free

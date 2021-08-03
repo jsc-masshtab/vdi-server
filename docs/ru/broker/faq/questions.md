@@ -5,7 +5,7 @@
 Проверьте в терминале ВМ, включен ли apache2
 
 ```bash
-    sudo systemctl status apache2
+sudo systemctl status apache2
 ```
    
 Если он не включен, то включить и выполнить:
