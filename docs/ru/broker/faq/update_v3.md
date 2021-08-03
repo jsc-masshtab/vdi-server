@@ -16,22 +16,40 @@
         следует ознакомиться с шагами по копированию **_основного_** и **_devel_** дисков 
         в разделе [Установка системы](./install_v3.md).
 
+1. Проверить статус сервиса apache2:
+   
+    ```bash
+    sudo systemctl status apache2
+    ```
+   
+   Если он не включен, то включить и выполнить:
+
+    ```bash
+    sudo systemctl start apache2
+    sudo chown www-data:adm /var/log/apache2 -R
+    ```
+
 1. Подключить новый iso-образ **VeiL Broker** и выполнить 
    команды для обновления:
 
     ```bash
     sudo mv /etc/apt/sources.list.d/media_cdrom_repo.list /etc/apt/sources.list.d/media_cdrom_repo.back
-    sudo apt-get update
+    sudo apt update
     ```
 
     !!! note "Примечание"
         Команда очистки старого репозитория актуальна для 3.*
 
     ```bash
-    sudo mount /media/cdrom0
+    sudo mount /media/cdrom
     cd ~
-    sudo bash /media/cdrom0/install.sh > vdi_update.log
+    sudo bash /media/cdrom/install.sh > vdi_update.log
+    sudo umount /media/cdrom
     ```
+   
+1. Вернуться в окно управления ECP VeiL и перейти во вкладку **Виртуальная машина** - <имя ВМ> - **CD-ROM**. 
+   В списке приводов нажать на название привода и в открывшемся диалоговом окне размонтировать 
+   iso-образ, нажав кнопку **Извлечь**.
  
 ## Обновление с версии 3.0, используя внешний репозиторий
 
@@ -49,6 +67,25 @@
         следует ознакомиться с шагами по копированию **_основного_** и **_devel_** дисков 
         в разделе [Установка системы](./install_v3.md).
 
+1. Привести файл /etc/apt/sources.list к виду:
+ 
+   ``` 
+   # deb cdrom:[OS Astra Linux 1.6 smolensk - amd64 DVD ]/ smolensk contrib main non-free
+   # deb file:///opt/basic smolensk contrib main non-free
+   # deb file:///opt/devel smolensk contrib main non-free
+   ``` 
+   
+1. Проверить статус сервиса apache2:
+   
+    ```bash
+    sudo systemctl status apache2
+    ```
+   Если он не включен, то включить и выполнить:
+    ```bash
+    sudo systemctl start apache2
+    sudo chown www-data:adm /var/log/apache2 -R
+    ```
+
 1. В директории /etc/apt/sources.list.d/ создать файл vdi.list и привести его к виду:
     
     ```bash
@@ -60,7 +97,7 @@
 
     ```bash
     sudo mv /etc/apt/sources.list.d/media_cdrom_repo.list /etc/apt/sources.list.d/media_cdrom_repo.back
-    sudo apt-get update
+    sudo apt update
     ```
 
     !!! note "Примечание"
@@ -74,10 +111,10 @@
     sudo service vdi-monitor_worker stop
     ```
  
-1. Выполнить и запустить сервисы VeiL Broker обратно:
+1. Выполнить upgrade и запустить сервисы VeiL Broker обратно:
 
     ```bash
-    sudo apt-get upgrade
+    sudo apt upgrade
     sudo service vdi-pool_worker start
     sudo service vdi-web start
     sudo service vdi-monitor_worker start
