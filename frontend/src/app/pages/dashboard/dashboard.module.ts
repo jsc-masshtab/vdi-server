@@ -35,6 +35,7 @@ import { UsersModule } from '../settings/users/users.module';
 import { ThinClientsModule } from '../thin-clients/thin-clients.module';
 import { DashboardRoutingModule } from './dashboard-routing.module';
 import { DashboardComponent } from './dashboard.component';
+import { SystemModule } from '../settings/system/system.module';
 
 
 @NgModule({
@@ -63,7 +64,8 @@ import { DashboardComponent } from './dashboard.component';
     LogSettingModule,
     GroupsModule,
     LicenseModule,
-    ThinClientsModule
+    ThinClientsModule,
+    SystemModule
   ],
   providers:
     [

@@ -1,0 +1,30 @@
+<div class="control-panel">
+    
+  <div class="crumb" [style.marginRight]="'15px'">
+      <fa-icon [icon]="['fas','sliders-h']"></fa-icon>
+      <span class="crumb-name">Система</span>
+  </div>
+
+  <div class="control-btns">
+  </div>
+</div>
+
+<div class="components-info" #view>
+  <vdi-table-into 
+    [item]="dateInfo" 
+    [collection]="intoCollection">
+  </vdi-table-into>
+
+ 
+  <div class="control-panel">
+    <div class="crumb" [style.marginRight]="'15px'">
+        <span class="crumb-name">Сетевые интерфейсы</span>
+    </div>
+    <div class="control-btns">
+    </div>
+  </div>
+  <div class="component-list" [class.page-wrap]="pageRollup&&!pageShow" [class.page-rollup]="pageRollup" [style.height]="pageHeight">
+    <vdi-table-component  [data]="networksList" [collection]="tableCollection" cursor="true" ></vdi-table-component>
+</div>
+
+</div>

@@ -104,6 +104,17 @@
     <fa-icon [icon]="['fas','address-card']" size="s" [style.color]="'rgb(255, 235, 205)'"></fa-icon>
     <span>Службы каталогов</span>
   </a>
+  
+  <a class="top-menu-item item-tree" 
+  [@fadeInOut] 
+  *ngIf="toggleSetting" 
+  (click)="routeTo('settings/system')" 
+  (keydown.enter)="routeTo('settings/system')" 
+  [class.clicked-link]="clickedManage =='users'"  
+  tabindex="0">
+    <fa-icon title="Система" [icon]="['fas','sliders-h']" size="s" [style.color]="'rgb(255, 235, 205)'"></fa-icon>
+  <span>Система</span>
+</a>
 
   <a class="top-menu-item item-hat" (click)="logToggle()"  tabindex="0" (keydown.enter)="logToggle()" [@fadeInOut]>
     <fa-icon title="Журнал" [icon]="['fas','clipboard-list']" size="s" [style.color]="'rgb(94, 185, 161)'"></fa-icon>
