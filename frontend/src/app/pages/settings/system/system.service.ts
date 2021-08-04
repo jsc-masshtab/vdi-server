@@ -1,23 +1,8 @@
 import { Injectable } from '@angular/core';
 import { Apollo, QueryRef } from 'apollo-angular';
-import gql from 'graphql-tag';  
+import gql from 'graphql-tag';
 
-
-
-export interface ISystemResponse{
-  data: ISystemData
-}
-
-export interface ISystemData {
-  networksList: Network[]
-  timezone: string
-  date: Date
-}
-
-type Network = {
-  name: string
-  ip: string
-}
+import { ISystemResponse } from './system.mapper';
 
 
 @Injectable({
@@ -27,7 +12,7 @@ export class SystemService {
 
   constructor(private appolo: Apollo) { }
 
-  public getSystemInfo(): QueryRef<any, any> {
+  public getSystemInfo(): QueryRef<ISystemResponse> {
     return this.appolo.watchQuery({
       query: gql` 
       query settings {

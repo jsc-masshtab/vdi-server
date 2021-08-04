@@ -1,6 +1,8 @@
 import { Component, OnInit } from '@angular/core';
+import { ApolloQueryResult } from 'apollo-client';
 
 import { DetailsMove } from '@shared/classes/details-move';
+import { INetwork, ISystemData, ISystemResponse, SystemMapper } from './system.mapper';
 import { SystemService } from './system.service';
 
 @Component({
@@ -12,8 +14,9 @@ import { SystemService } from './system.service';
 
 export class SystemComponent extends DetailsMove implements OnInit {
 
-  public networksList: any = [];
-  public dateInfo = {};
+  public networksList: INetwork[] = [];
+  public dateInfo: Pick<ISystemData, 'timezone' | 'localTime'>;
+  
   public readonly intoCollection: ReadonlyArray<object> = [
     {
       title: 'Часовой пояс',
@@ -22,7 +25,7 @@ export class SystemComponent extends DetailsMove implements OnInit {
     },
     {
       title: 'Время',
-      property: 'date',
+      property: 'localTime',
       type: 'time'
     },
   ]
@@ -44,11 +47,19 @@ export class SystemComponent extends DetailsMove implements OnInit {
   }
 
   ngOnInit() {
-   this.systemService.getSystemInfo().valueChanges.subscribe((res) => {
-      const result = res.data.system_info;  
-      this.dateInfo = {timezone: result.time_zone, date: result.local_time};
-      this.networksList = res.data.system_info.networks_list.map(item => ({ name:item.name, ip: item.ipv4}));
+   this.systemService.getSystemInfo().valueChanges.subscribe((res: ApolloQueryResult<ISystemResponse>) => {
+      const mapper = new SystemMapper();
+      const result = mapper.serverModelToClientModel(res.data.system_info);      
+
+      this.dateInfo = {timezone: result.timezone, localTime: result.localTime};
+      this.networksList = result.networksList.map( (item: INetwork) => ({ name:item.name, ip: item.ip}));
     });
   }
 
 }
+
+
+
+
+
+
