@@ -637,6 +637,8 @@ class ControllerQuery(graphene.ObjectType, ControllerFetcher):
         controllers = await Controller.get_objects(
             limit, offset, filters=filters, ordering=ordering, include_inactive=True
         )
+        for controller in controllers:
+            await controller.check_jwt_token
         return controllers
 
     @classmethod
