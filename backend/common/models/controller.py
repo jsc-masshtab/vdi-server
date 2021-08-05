@@ -13,6 +13,7 @@ from common.languages import _local_
 from common.log.journal import system_logger
 from common.models.pool import Pool as PoolModel
 from common.subscription_sources import CONTROLLERS_SUBSCRIPTION
+from common.veil.auth.fernet_crypto import decrypt, encrypt
 from common.veil.veil_api import get_veil_client
 from common.veil.veil_errors import ValidationError
 from common.veil.veil_gino import (
@@ -60,12 +61,23 @@ class Controller(AbstractSortableStatusModel, VeilModel):
         return str(self.id)
 
     @property
+    async def check_jwt_token(self):
+        if self.token[0:4] == "jwt ":
+            token = encrypt(self.token)
+            print("TOKEN: ", self.token)
+            await self.update(token=token).apply()
+            return self.token
+        else:
+            return self.token
+
+    @property
     def veil_client(self) -> "VeilClient":
         """Клиент не сломанного контроллера."""
         if self.stopped:
             return
         veil_client = get_veil_client()
-        return veil_client.add_client(server_address=self.address, token=self.token)
+        token = decrypt(self.token)
+        return veil_client.add_client(server_address=self.address, token=token)
 
     @property
     def controller_client(self):
@@ -95,7 +107,8 @@ class Controller(AbstractSortableStatusModel, VeilModel):
     @property
     async def get_veil_user(self):
         """Возвращает имя пользователя на ECP VeiL относительно используемого токена."""
-        data = jwt.decode(self.token[4:], verify=False)
+        token = decrypt(self.token)
+        data = jwt.decode(token[4:], verify=False)
         return data["username"]
 
     async def is_ok(self):
@@ -103,8 +116,9 @@ class Controller(AbstractSortableStatusModel, VeilModel):
         try:
             await self.remove_client()
             veil_client = get_veil_client()
+            token = decrypt(self.token)
             client = veil_client.add_client(
-                server_address=self.address, token=self.token
+                server_address=self.address, token=token
             )
             is_ok = await client.controller(
                 self.id, retry_opts=VeilRetryConfiguration(num_of_attempts=0)
@@ -162,7 +176,7 @@ class Controller(AbstractSortableStatusModel, VeilModel):
                 address=address,
                 description=description,
                 status=Status.CREATING,
-                token=token,
+                token=encrypt(token),
             )
             # Получаем, сохраняем и проверяем допустимость версии
             await controller.get_version()
@@ -205,7 +219,7 @@ class Controller(AbstractSortableStatusModel, VeilModel):
         if description:
             controller_kwargs["description"] = description
         if token:
-            controller_kwargs["token"] = token
+            controller_kwargs["token"] = encrypt(token)
         # Если параметров нет - прерываем редактирование
         if not controller_kwargs:
             return False
@@ -227,7 +241,7 @@ class Controller(AbstractSortableStatusModel, VeilModel):
             await updated_controller.get_version()
         # Мы не хотим видеть токен в логе
         if controller_kwargs.get("token"):
-            controller_kwargs.pop("token")
+            controller_kwargs["token"] = "*" * 12
         # Протоколируем результат операции
         if controller_is_ok:
             await publish_data_in_internal_channel(self.get_resource_type(), "UPDATED",

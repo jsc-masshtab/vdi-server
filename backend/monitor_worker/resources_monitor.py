@@ -12,6 +12,7 @@ from common.models.controller import Controller
 from common.settings import WS_MONITOR_CHANNEL_OUT, WS_PING_INTERVAL, WS_PING_TIMEOUT
 from common.subscription_sources import CONTROLLER_SUBSCRIPTIONS_LIST, SubscriptionCmd
 from common.utils import cancel_async_task
+from common.veil.auth.fernet_crypto import decrypt
 from common.veil.veil_gino import Status
 from common.veil.veil_redis import publish_to_redis
 
@@ -138,11 +139,10 @@ class ResourcesMonitor:
 
         # get token from db
         try:
-            token = controller.token.split()[1]
+            controller_token = decrypt(controller.token)
+            token = controller_token.split()[1]
         except IndexError:
-            await system_logger.warning("{} Cant get token for controller.").format(
-                __class__.__name__
-            )
+            await system_logger.warning("{} Cant get token for controller.".format(__class__.__name__))
             return False
 
         # create ws connection
