@@ -31,6 +31,7 @@ import { VmsModule } from '../resourses/vms/vms.module';
 import { AuthenticationDirectoryModule } from '../settings/auth-directory/auth-directory.module';
 import { GroupsModule } from '../settings/groups/groups.module';
 import { LicenseModule } from '../settings/license/license.module';
+import { ServicePageModule } from '../settings/service-page/service-page.module';
 import { UsersModule } from '../settings/users/users.module';
 import { ThinClientsModule } from '../thin-clients/thin-clients.module';
 import { DashboardRoutingModule } from './dashboard-routing.module';
@@ -63,7 +64,8 @@ import { DashboardComponent } from './dashboard.component';
     LogSettingModule,
     GroupsModule,
     LicenseModule,
-    ThinClientsModule
+    ThinClientsModule,
+    ServicePageModule
   ],
   providers:
     [

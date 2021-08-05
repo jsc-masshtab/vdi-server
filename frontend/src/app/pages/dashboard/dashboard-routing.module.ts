@@ -27,6 +27,7 @@ import { AuthenticationDirectoryDetailsComponent } from '../settings/auth-direct
 import { GroupsComponent } from '../settings/groups/all-groups/groups.component';
 import { GroupsDetailsComponent } from '../settings/groups/groups-details/groups-details.component';
 import { LicenseComponent } from '../settings/license/license.component';
+import { ServicePageComponent } from '../settings/service-page/service-page.component';
 import { UsersComponent } from '../settings/users/all-users/users.component';
 import { UserDetailsComponent } from '../settings/users/user-details/user-details.component';
 import { ThinClientDetailsComponent } from '../thin-clients/thin-client-details/thin-client-details.component';
@@ -109,6 +110,10 @@ const routes: Routes = [
             component: AuthenticationDirectoryDetailsComponent
           }
         ]
+      },
+      {
+        path: 'settings/services',
+        component: ServicePageComponent
       },
       {
         path: 'log/events',
