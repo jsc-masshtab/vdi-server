@@ -52,7 +52,7 @@ export class SystemComponent extends DetailsMove implements OnInit {
       const result = mapper.serverModelToClientModel(res.data.system_info);      
 
       this.dateInfo = {timezone: result.timezone, localTime: result.localTime};
-      this.networksList = result.networksList.map( (item: INetwork) => ({ name:item.name, ip: item.ip}));
+      this.networksList = result.networksList.map( (item: INetwork) => ({ name: item.name, ip: item.ip}));
     });
   }
 

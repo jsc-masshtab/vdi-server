@@ -1,5 +1,5 @@
 /* tslint:disable:no-unused-variable */
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 
 
 import { GenerateQrcodeComponent } from './generate-qrcode.component';
@@ -8,7 +8,7 @@ describe('GenerateQrcodeComponent', () => {
   let component: GenerateQrcodeComponent;
   let fixture: ComponentFixture<GenerateQrcodeComponent>;
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [ GenerateQrcodeComponent ]
     })
