@@ -73,6 +73,15 @@ export class UsersComponent extends DetailsMove implements OnInit, OnDestroy {
       sort: true
     },
     {
+      title: 'Синхронизирован из AD',
+      property: 'by_ad',
+      type: {
+        typeDepend: 'boolean',
+        propertyDepend: ['Да', 'Нет']
+      },
+      sort: true
+    },
+    {
       title: 'Двухфакторная аутентификация',
       property: 'two_factor',
       type: {

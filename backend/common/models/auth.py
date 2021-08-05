@@ -126,6 +126,8 @@ class User(AbstractSortableStatusModel, VeilModel):
     is_active = db.Column(db.Boolean(), default=True)
     two_factor = db.Column(db.Boolean(), default=False)
     secret = db.Column(db.Unicode(length=32), nullable=True)
+    by_ad = db.Column(db.Boolean(), default=False)
+    local_password = db.Column(db.Boolean(), default=True)
 
     # ----- ----- ----- ----- ----- ----- -----
     # Properties and getters:
@@ -553,11 +555,15 @@ class User(AbstractSortableStatusModel, VeilModel):
             .where(User.id == self.id)
             .gino.status()
         )
-
-        info_message = _local_("Password of user {username} has been changed.").format(
-            username=self.username
-        )
-        await system_logger.info(info_message, entity=self.entity, user=creator)
+        if not self.local_password:
+            await self.update(local_password=True).apply()
+            info_message = _local_("Password of user {} has been changed to the local password.").format(self.username)
+            await system_logger.warning(info_message, entity=self.entity, user=creator)
+        else:
+            info_message = _local_("Password of user {username} has been changed.").format(
+                username=self.username
+            )
+            await system_logger.info(info_message, entity=self.entity, user=creator)
 
         return user_status
 
@@ -600,7 +606,9 @@ class User(AbstractSortableStatusModel, VeilModel):
         groups=None,
         is_active=True,
         two_factor=False,
-        secret=None
+        secret=None,
+        by_ad=False,
+        local_password=True
     ):
         """Если password будет None, то make_password вернет unusable password."""
         encoded_password = hashers.make_password(password, salt=SECRET_KEY)
@@ -610,7 +618,9 @@ class User(AbstractSortableStatusModel, VeilModel):
             "is_active": is_active,
             "is_superuser": is_superuser,
             "two_factor": two_factor,
-            "secret": secret
+            "secret": secret,
+            "by_ad": by_ad,
+            "local_password": local_password
         }
         if email:
             user_kwargs["email"] = email

@@ -83,6 +83,22 @@ export class UserDetailsComponent implements OnInit, OnDestroy {
       }
     },
     {
+      title: 'Синхронизирован из AD',
+      property: 'by_ad',
+      type: {
+        typeDepend: 'boolean',
+        propertyDepend: ['Да', 'Нет']
+      }
+    },
+    {
+      title: 'Локальный пароль',
+      property: 'local_password',
+      type: {
+        typeDepend: 'boolean',
+        propertyDepend: ['Да', 'Нет']
+      }
+    },
+    {
       title: 'Двухфакторная аутентификация',
       property: 'two_factor',
       type: {

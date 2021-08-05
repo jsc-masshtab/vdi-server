@@ -66,13 +66,16 @@ class UserValidator(MutationValidation):
 
     @staticmethod
     async def validate_password(obj_dict, value):
-        return value
-        # pass_re = re.compile('^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[@$!%*?&])[A-Za-z0-9@$!%*?&]{8,}$')
-        # template_name = re.match(pass_re, value)
-        # if template_name:
-        #     return value
+        # return value
+        # TODO: СМЕНИТЬ НА ВАЛИДАЦИЮ ОТНОСИТЕЛЬНО ВЫБРАННОЙ БЕЗОПАСНОСТИ В АСТРЕ
+        pass_re = re.compile("^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[@$!%*?&])[A-Za-z0-9@$!%*?&]{8,}$")
+        template_name = re.match(pass_re, value)
+        if template_name:
+            return value
         # raise AssertError(
         #     'Пароль должен быть не меньше 8 символов, содержать буквы, цифры и спец.символы.')
+        raise AssertError(_local_(
+            "Password must contain English characters and/or digits, special characters; also be at least 8 characters."))
 
     @staticmethod
     async def validate_first_name(obj_dict, value):
@@ -131,6 +134,9 @@ class UserType(graphene.ObjectType):
     two_factor = graphene.Boolean()
     secret = graphene.String()
 
+    by_ad = graphene.Boolean()
+    local_password = graphene.Boolean()
+
     assigned_groups = graphene.List(UserGroupType)
     possible_groups = graphene.List(UserGroupType)
 
@@ -157,7 +163,9 @@ class UserType(graphene.ObjectType):
             last_login=model_instance.last_login,
             is_active=model_instance.is_active,
             two_factor=model_instance.two_factor,
-            secret=model_instance.secret
+            secret=model_instance.secret,
+            by_ad=model_instance.by_ad,
+            local_password=model_instance.local_password
         )
 
     async def resolve_is_superuser(self, _info):
