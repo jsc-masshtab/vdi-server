@@ -13,7 +13,8 @@ import { SystemService } from './system.service';
 
 
 export class SystemComponent extends DetailsMove implements OnInit {
-
+  public tabs: string[] = ['Время','Интерфейсы'];
+  public activeTab: string = this.tabs[0];
   public networksList: INetwork[] = [];
   public dateInfo: Pick<ISystemData, 'timezone' | 'localTime'>;
   
@@ -46,8 +47,16 @@ export class SystemComponent extends DetailsMove implements OnInit {
     super()
   }
 
-  ngOnInit() {
-   this.systemService.getSystemInfo().valueChanges.subscribe((res: ApolloQueryResult<ISystemResponse>) => {
+  public ngOnInit(): void {
+    this.getSystemInfo();
+  }
+
+  public changeTab(tab: string): void{
+      this.activeTab = tab;
+  }
+
+  public getSystemInfo(): void {
+    this.systemService.getSystemInfo().valueChanges.subscribe((res: ApolloQueryResult<ISystemResponse>) => {
       const mapper = new SystemMapper();
       const result = mapper.serverModelToClientModel(res.data.system_info);      
 
@@ -55,7 +64,6 @@ export class SystemComponent extends DetailsMove implements OnInit {
       this.networksList = result.networksList.map( (item: INetwork) => ({ name: item.name, ip: item.ip}));
     });
   }
-
 }
 
 
