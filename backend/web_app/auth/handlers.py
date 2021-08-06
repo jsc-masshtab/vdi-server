@@ -29,6 +29,7 @@ class AuthHandler(BaseHttpHandler, ABC):
                 two_factor_code = self.args["code"]
             else:
                 two_factor_code = None
+
             if not username or len(username) < 2:
                 raise ValidationError(_local_("Missing username."))
             if not password or len(password) < 2:

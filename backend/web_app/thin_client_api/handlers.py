@@ -18,6 +18,7 @@ from veil_api_client import DomainTcpUsb, VeilRetryConfiguration
 from common.languages import _local_
 from common.log.journal import system_logger
 from common.models.active_tk_connection import ActiveTkConnection
+from common.models.auth import User
 from common.models.pool import AutomatedPool, Pool as PoolM, RdsPool
 from common.models.task import PoolTaskType, Task, TaskStatus
 from common.settings import (
@@ -608,3 +609,51 @@ class ThinClientWsHandler(BaseWsHandler):
                     message="Thin client ws listening commands error.",
                     description=str(ex),
                 )
+
+
+@jwtauth
+class GenerateUserQrCodeHandler(BaseHttpHandler, ABC):
+    """Генерация данных для qr."""
+
+    async def post(self):
+        user = await self.get_user_model_instance()
+        data_dict = await user.generate_qr(creator=user.username)
+
+        response = {
+            "data": dict(qr_uri=data_dict["qr_uri"], secret=data_dict["secret"])
+        }
+
+        return await self.log_finish(response)
+
+
+@jwtauth
+class GetUserDataHandler(BaseHttpHandler, ABC):
+
+    async def get(self):
+        user = await self.get_user_model_instance()
+
+        response = {
+            "data": dict(user=dict(two_factor=user.two_factor))
+        }
+        return await self.log_finish(response)
+
+
+@jwtauth
+class UpdateUserDataHandler(BaseHttpHandler, ABC):
+
+    async def post(self):
+
+        try:
+            user = await self.get_user_model_instance()  # Проверка что пользователь обновляет свои данные, а не чужие
+
+            two_factor = self.validate_and_get_parameter("two_factor")
+
+            await User.soft_update(id=user.id, creator=user.username, two_factor=two_factor)
+            response = {
+                "data": dict(ok=True,
+                             user=dict(two_factor=two_factor))
+            }
+        except (AssertionError, TypeError) as error:
+            response = {"errors": [{"message": str(error)}]}
+
+        return await self.log_finish(response)
