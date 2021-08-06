@@ -66,7 +66,7 @@ echo "deb https://veil-update.mashtab.org/veil-connect/linux/apt $(lsb_release -
 sudo apt-get update && sudo apt-get install veil-connect -y
 sudo rm -f /etc/apt/sources.list.d/stretch-backports.list && sudo apt-get update
 ```
-### Debian 10 (Buster) / Ubuntu 18.04 (Bionic) / Ubuntu 20.04 (Focal)
+### Debian 10 (Buster) / Ubuntu 16.04 (Xenial) / Ubuntu 18.04 (Bionic) / Ubuntu 20.04 (Focal)
 
 Выполнить команды в терминале:
 ```
