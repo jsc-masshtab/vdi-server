@@ -32,14 +32,14 @@ class UserValidator(MutationValidation):
     async def validate_username(obj_dict, value):
         if not value:
             raise AssertError(_local_("username can`t be empty."))
-        user_name_re = re.compile("^[a-zA-Z0-9.-_+]{3,128}$")
+        user_name_re = re.compile("^[a-zA-Z][a-zA-Z0-9.-_+]{3,128}$")
         template_name = re.match(user_name_re, value.strip())
         if template_name:
             obj_dict["username"] = value
             return value
         raise AssertError(
             _local_(
-                "username must contain >= 3 chars (letters, digits, _, -, +) and can't contain any spaces."
+                "username must contain >= 3 chars (letters, digits, _, -, +), begin from letter and can't contain any spaces."
             )
         )
 
@@ -68,14 +68,14 @@ class UserValidator(MutationValidation):
     async def validate_password(obj_dict, value):
         # return value
         # TODO: СМЕНИТЬ НА ВАЛИДАЦИЮ ОТНОСИТЕЛЬНО ВЫБРАННОЙ БЕЗОПАСНОСТИ В АСТРЕ
-        pass_re = re.compile("^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[@$!%*?&])[A-Za-z0-9@$!%*?&]{8,}$")
+        pass_re = re.compile("^[a-zA-Z0-9@$#^/!<>,`~%*?&._-]{8,32}$")
         template_name = re.match(pass_re, value)
         if template_name:
             return value
         # raise AssertError(
         #     'Пароль должен быть не меньше 8 символов, содержать буквы, цифры и спец.символы.')
         raise AssertError(_local_(
-            "Password must contain English characters and/or digits, special characters; also be at least 8 characters."))
+            "Password must contain letters and/or digits, special characters; also be at least 8 characters."))
 
     @staticmethod
     async def validate_first_name(obj_dict, value):
