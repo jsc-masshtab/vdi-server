@@ -698,7 +698,7 @@ class Vm(VeilModel):
         """Включает и перезапускает ВМ."""
         start_is_success = await self.start(creator=creator)
         if start_is_success:
-            await self.reboot
+            await self.reboot()
         else:
             await system_logger.warning(
                 _local_("VM can`t be powered on or already powered."))
