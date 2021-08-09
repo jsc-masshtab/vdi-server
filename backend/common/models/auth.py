@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*
 import json
+import re
 import uuid
 
 from asyncpg.exceptions import UniqueViolationError
@@ -228,6 +229,21 @@ class User(AbstractSortableStatusModel, VeilModel):
         ]
 
         return pools_list
+
+    @staticmethod
+    async def validate_username(username):
+        # Валидация для синхронизации пользователей из AD
+        if not username:
+            raise SimpleError(_local_("username can`t be empty."))
+        username_re = re.compile("^[a-zA-Z][a-zA-Z0-9.-_+]{3,128}$")
+        template_name = re.match(username_re, username.strip())
+        if template_name:
+            return username
+        raise SimpleError(
+            _local_(
+                "username {} must contain >= 3 chars (letters, digits, _, -, +), begin from letter and can't contain any spaces.").format(
+                username)
+        )
 
     @staticmethod
     async def get_id(username):
@@ -611,6 +627,7 @@ class User(AbstractSortableStatusModel, VeilModel):
         local_password=True
     ):
         """Если password будет None, то make_password вернет unusable password."""
+        username = await cls.validate_username(username)
         encoded_password = hashers.make_password(password, salt=SECRET_KEY)
         user_kwargs = {
             "username": username,
