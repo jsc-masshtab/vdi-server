@@ -29,7 +29,9 @@ import {
           faShareAlt,
           faTerminal,
           faCommentDots,
-          faWrench
+          faWrench,
+          faSlidersH,
+          faClock
         } from '@fortawesome/free-solid-svg-icons';
 import { ApolloModule  } from 'apollo-angular';
 import { HttpLinkModule } from 'apollo-angular-link-http';
@@ -83,7 +85,7 @@ export class AppModule {
       faStopCircle, faPlayCircle, faPauseCircle, faEdit, faQuestionCircle, faCheckSquare, faExclamationTriangle, faHeartbeat,
       faChevronCircleUp, faComment, faClipboardList, faNewspaper, faUserCircle, faSignOutAlt, faChevronCircleLeft, faChevronCircleRight,
       faAddressCard, faCheck, faUsersCog, faCrown, faColumns, faUpload, faIdCard, faSuitcase, faRss, faExpand, faGavel, faStopCircle,
-      faUndo, faPowerOff, faFire, faSearch, faFolder, faLaptop, faCircle, faExchangeAlt, faClone, faFileArchive, faBars, faWindowRestore, faLeaf, faShareAlt,
-      faTerminal, faCommentDots, faWrench);
+      faUndo, faPowerOff, faFire, faSearch, faFolder, faLaptop, faCircle, faSlidersH, faExchangeAlt, faClone, faFileArchive, faBars, faWindowRestore, faLeaf, faShareAlt,
+      faTerminal, faCommentDots, faWrench, faClock);
     }
 }
