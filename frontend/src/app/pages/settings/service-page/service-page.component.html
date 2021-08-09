@@ -1,39 +1,15 @@
 <div class="control-panel">
   <div class="crumb" [style.marginRight]="'15px'">
     <fa-icon [icon]="['fas','cogs']"></fa-icon>
-    <span class="crumb-name">Сесси</span>
+    <span class="crumb-name">Сервисы</span>
   </div>
 
-  <button (click)="getAll()" class="btn-refresh" title="Обновить">
+  <button class="btn-refresh" title="Обновить">
     <fa-icon [icon]="['fas','sync-alt']"></fa-icon>
   </button>
   
-  <div class="control-btns-end">
-    <button *ngIf="pageRollup" class="bars-btn" (click)="toggleShow()">
-      <fa-icon [icon]="['fas','bars']"></fa-icon>
-    </button>
-  </div>
 </div>
 
 <div class="components-info" #view>
-  <div class="component-list" [class.page-wrap]="pageRollup&&!pageShow" [class.page-rollup]="pageRollup" [style.height]="pageHeight">
-    <vdi-table-component cursor="true" 
-      [data]="data" 
-      [collection]="collection"
-      [entity]="'thin'"
-      (sortListNow)="sortList($event)"
-      (clickRowData)="routeTo($event)">
-    </vdi-table-component>
-    
-    <vdi-pagination 
-      [count]="count" 
-      [limit]="limit" 
-      [offset]="offset" 
-      (action)="toPage($event)">
-    </vdi-pagination>
-  </div>
-  
-  <div class="component-details" [class.page-height-min]="pageHeight==pageHeightMin" [class.page-height-max]="pageRollup">
-    <router-outlet (activate)="componentActivate()" (deactivate)="componentDeactivate()"></router-outlet>
-  </div>
+
 </div>
