@@ -10,9 +10,9 @@ export class TabsComponent implements AfterContentInit {
   @ContentChildren(TabComponent) tabs: QueryList<TabComponent>;
 
   public ngAfterContentInit(): void{
-    let activeTabs = this.tabs.filter((tab)=>tab.active);
+    let activeTabs = this.tabs.filter( (tab) => tab.active);
     
-    if(activeTabs.length === 0) {
+    if (activeTabs.length === 0) {
       this.selectTab(this.tabs.first);
     }
   }

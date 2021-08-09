@@ -13,7 +13,7 @@ import { SystemService } from './system.service';
 
 
 export class SystemComponent extends DetailsMove implements OnInit {
-  public tabs: string[] = ['Время','Интерфейсы'];
+  public tabs: string[] = ['Время', 'Интерфейсы'];
   public activeTab: string = this.tabs[0];
   public networksList: INetwork[] = [];
   public dateInfo: Pick<ISystemData, 'timezone' | 'localTime'>;
