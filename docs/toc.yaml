@@ -175,15 +175,17 @@ nav:
     - Обновление: connect/update.md
     - Cоздание локального репозитория: connect/repo_without_inet.md
     - Настройки:
-      - Общие настройки: connect/settings/main_settings.md
+      - Основные настройки: connect/settings/main_settings.md
       - Настройки Spice: connect/settings/spice_settings.md
       - Настройки RDP: connect/settings/rdp_settings.md
       - Служебные настройки: connect/settings/service_settings.md
+      - Настройка двухфакторной аутентификации: connect/settings/thin_client_2fa_settings.md
     - Возможные ошибки:
       - Общие ошибки: connect/possible_errors/common.md
       - Ошибки RDP: connect/possible_errors/rdp.md
       - Ошибки Spice: connect/possible_errors/spice.md
     - Cписок изменений:
+      - 1.7.0: connect/changelog/1.7.0.md
       - 1.6.7: connect/changelog/1.6.7.md
       - 1.6.6: connect/changelog/1.6.6.md
       - 1.6.5: connect/changelog/1.6.5.md
