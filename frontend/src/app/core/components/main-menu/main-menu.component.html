@@ -110,7 +110,7 @@
   *ngIf="toggleSetting" 
   (click)="routeTo('settings/system')" 
   (keydown.enter)="routeTo('settings/system')" 
-  [class.clicked-link]="clickedManage =='users'"  
+  [class.clicked-link]="clickedManage =='system'"  
   tabindex="0">
     <fa-icon title="Система" [icon]="['fas','sliders-h']" size="s" [style.color]="'rgb(255, 235, 205)'"></fa-icon>
   <span>Система</span>
