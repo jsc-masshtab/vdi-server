@@ -192,7 +192,7 @@
       </label>
 
       <label class="field" *ngIf="auth_dirs.length">
-        <p class="field-name">Наименование групп для добавления ВМ в AD</p>
+        <p class="field-name">Наименование организационной единицы для добавления ВМ в AD</p>
         <input type="text" formControlName="ad_ou">
 
         <ng-container *ngIf="dynamicPool.hasError('required', 'ad_ou') && checkValid">
@@ -323,7 +323,7 @@
       </label>
 
       <label class="field" *ngIf="auth_dirs.length">
-        <p class="field-name">Наименование групп для добавления ВМ в AD</p>
+        <p class="field-name">Наименование организационной единицы для добавления ВМ в AD</p>
         <input type="text" formControlName="ad_ou">
 
         <ng-container *ngIf="guestPool.hasError('required', 'ad_ou') && checkValid">

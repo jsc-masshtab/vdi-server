@@ -1075,7 +1075,7 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator, ControllerFe
             default_value=[Pool.PoolConnectionTypes.SPICE.value],
         )
         ad_ou = graphene.String(
-            description="Наименование групп для добавления ВМ в AD"
+            description="Наименование организационной единицы для добавления ВМ в AD"
         )
         is_guest = graphene.Boolean(default_value=False)
 

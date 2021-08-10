@@ -467,6 +467,9 @@ class User(AbstractSortableStatusModel, VeilModel):
         )
         await system_logger.info(info_message, entity=self.entity, user=creator)
 
+        # Удаляем ранее выданный токен
+        await UserJwtInfo.delete.where(UserJwtInfo.user_id == self.id).gino.status()
+
         # Разорвать соединение ТК, если присутствуют
         cmd_dict = dict(command=ThinClientCmd.DISCONNECT.name, user_id=str(self.id))
         await publish_to_redis(REDIS_THIN_CLIENT_CMD_CHANNEL, json.dumps(cmd_dict))
@@ -580,6 +583,9 @@ class User(AbstractSortableStatusModel, VeilModel):
                 username=self.username
             )
             await system_logger.info(info_message, entity=self.entity, user=creator)
+
+        # Удаляем ранее выданный токен
+        await UserJwtInfo.delete.where(UserJwtInfo.user_id == self.id).gino.status()
 
         return user_status
 
