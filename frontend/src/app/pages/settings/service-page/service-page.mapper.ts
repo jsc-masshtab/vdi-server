@@ -6,7 +6,7 @@ enum Status {
 }
 
 export interface IQueryResponse{
-    services: IQueryApiModel
+    services: IQueryApiModel[]
   }
 
 export interface IQueryApiModel {
