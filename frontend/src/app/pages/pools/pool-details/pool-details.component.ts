@@ -183,7 +183,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       edit: 'changeTemplateForVmAutomatedPool'
     },
     {
-      title: 'Наименование групп для добавления ВМ в AD',
+      title: 'Наименование организационной единицы для добавления ВМ в AD',
       property: 'ad_ou',
       type: 'string',
       edit: 'changeAdCnPatternForGroupAutomatedPool'
@@ -298,7 +298,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       edit: 'changeTemplateForVmAutomatedPool'
     },
     {
-      title: 'Наименование групп для добавления ВМ в AD',
+      title: 'Наименование организационной единицы для добавления ВМ в AD',
       property: 'ad_ou',
       type: 'string',
       edit: 'changeAdCnPatternForGroupAutomatedPool'
