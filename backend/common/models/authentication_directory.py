@@ -904,6 +904,8 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
                     last_name=last_name,
                     first_name=first_name,
                     email=email,
+                    by_ad=True,
+                    local_password=False,
                     creator="system",
                 )
                 if user:

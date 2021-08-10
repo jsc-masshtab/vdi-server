@@ -94,23 +94,6 @@ module.exports = {
     "id-blacklist": "off",
     "id-match": "off",
     "import/no-deprecated": "warn",
-        "import/order":[
-      "error",
-      {
-        "groups": ["builtin", "external", "internal"],
-        "pathGroups":[{
-          "pattern": "angular",
-          "group": "external",
-          "position": "before"
-        }],
-        "pathGroupsExcludedImportTypes": ["angular"],
-        "newlines-between": "always",
-        "alphabetize": {
-          "order": "asc",
-          "caseInsensitive":true
-        }
-      }
-    ],
     "max-classes-per-file": "off",
     "max-len": [
       "error",

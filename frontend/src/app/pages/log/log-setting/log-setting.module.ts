@@ -10,9 +10,10 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatSelectModule } from '@angular/material/select';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
-import { AppRoutingModule } from 'src/app/app-routing.module';
+import { AppRoutingModule } from 'app/app-routing.module';
 
-import { SharedModule } from '../../../shared/shared.module';
+import { SharedModule } from '@shared/shared.module';
+
 import { LogSettingComponent } from './log-setting.component';
 import { LogSettingService } from './log-setting.service';
 

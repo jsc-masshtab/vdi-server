@@ -4,12 +4,15 @@ import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { map } from 'rxjs/operators';
 
-import { IParams } from '../../../../../types';
-import { WaitService } from '../../../core/components/wait/wait.service';
-import { DetailsMove } from '../../../shared/classes/details-move';
-import { WebsocketService } from '../../../shared/classes/websock.service';
+import { WaitService } from '@core/components/wait/wait.service';
+
+import { DetailsMove } from '@shared/classes/details-move';
+import { WebsocketService } from '@shared/classes/websock.service';
+import { IParams } from '@shared/types';
+
 import { PoolAddComponent } from '../add-pool/add-pool.component';
 import { PoolsService } from './pools.service';
+
 
 
 @Component({

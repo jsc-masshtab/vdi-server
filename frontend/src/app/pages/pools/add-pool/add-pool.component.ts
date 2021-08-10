@@ -100,7 +100,7 @@ export class PoolAddComponent implements OnInit, OnDestroy {
     this.dynamicPool = this.fb.group({
       template_id: ['', Validators.required],
       vm_name_template: ['', [Validators.required, Validators.pattern(/^([a-zA-Z]+[a-zA-Z0-9-]*){0,63}$/)]],
-      ...this.auth_dirs.length ? { ad_cn_pattern: [''] } : {},
+      ...this.auth_dirs.length ? { ad_ou: [''] } : {},
       increase_step: [1, [Validators.required, Validators.max(100), Validators.min(1)]],
       reserve_size: [1, [Validators.required, Validators.max(200), Validators.min(1)]],
       initial_size: [1, [Validators.required, Validators.max(200), Validators.min(1)]],
@@ -113,7 +113,7 @@ export class PoolAddComponent implements OnInit, OnDestroy {
     this.guestPool = this.fb.group({
       template_id: ['', Validators.required],
       vm_name_template: ['', [Validators.required, Validators.pattern(/^([a-zA-Z]+[a-zA-Z0-9-]*){0,63}$/)]],
-      ...this.auth_dirs.length ? { ad_cn_pattern: [''] } : {},
+      ...this.auth_dirs.length ? { ad_ou: [''] } : {},
       increase_step: [1, [Validators.required, Validators.max(100), Validators.min(1)]],
       reserve_size: [1, [Validators.required, Validators.max(200), Validators.min(1)]],
       initial_size: [1, [Validators.required, Validators.max(200), Validators.min(1)]],

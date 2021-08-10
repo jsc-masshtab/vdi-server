@@ -83,6 +83,8 @@ nav:
     - Работа по RDP с пулами ВРС: broker/faq/rdp/example_rdp.md
     - Настройка GPO через RDP для ВМ в домене MS AD: broker/faq/rdp/example_rdp_domain.md
     - nVidia Grid: broker/faq/vm/nvidia.md
+    - Возможные ошибки: broker/faq/questions.md
+    - Двухфакторная аутентификация: broker/faq/2fa.md
   - VeiL Broker:
     - Руководство системного программиста:
       - Аннотация: broker/engineer_guide/annotate.md
@@ -173,15 +175,17 @@ nav:
     - Обновление: connect/update.md
     - Cоздание локального репозитория: connect/repo_without_inet.md
     - Настройки:
-      - Общие настройки: connect/settings/main_settings.md
+      - Основные настройки: connect/settings/main_settings.md
       - Настройки Spice: connect/settings/spice_settings.md
       - Настройки RDP: connect/settings/rdp_settings.md
       - Служебные настройки: connect/settings/service_settings.md
+      - Настройка двухфакторной аутентификации: connect/settings/thin_client_2fa_settings.md
     - Возможные ошибки:
       - Общие ошибки: connect/possible_errors/common.md
       - Ошибки RDP: connect/possible_errors/rdp.md
       - Ошибки Spice: connect/possible_errors/spice.md
     - Cписок изменений:
+      - 1.7.0: connect/changelog/1.7.0.md
       - 1.6.7: connect/changelog/1.6.7.md
       - 1.6.6: connect/changelog/1.6.6.md
       - 1.6.5: connect/changelog/1.6.5.md

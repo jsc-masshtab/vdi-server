@@ -183,8 +183,8 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       edit: 'changeTemplateForVmAutomatedPool'
     },
     {
-      title: 'Наименование групп для добавления ВМ в AD',
-      property: 'ad_cn_pattern',
+      title: 'Наименование организационной единицы для добавления ВМ в AD',
+      property: 'ad_ou',
       type: 'string',
       edit: 'changeAdCnPatternForGroupAutomatedPool'
     },
@@ -298,8 +298,8 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       edit: 'changeTemplateForVmAutomatedPool'
     },
     {
-      title: 'Наименование групп для добавления ВМ в AD',
-      property: 'ad_cn_pattern',
+      title: 'Наименование организационной единицы для добавления ВМ в AD',
+      property: 'ad_ou',
       type: 'string',
       edit: 'changeAdCnPatternForGroupAutomatedPool'
     },
@@ -1098,9 +1098,9 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
           form: [{
             tag: 'input',
             type: 'text',
-            fieldName: 'ad_cn_pattern',
+            fieldName: 'ad_ou',
             unrequired: true,
-            fieldValue: this.pool.ad_cn_pattern,
+            fieldValue: this.pool.ad_ou,
           }]
         },
         update: {

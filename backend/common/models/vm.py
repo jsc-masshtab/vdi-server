@@ -698,7 +698,7 @@ class Vm(VeilModel):
         """Включает и перезапускает ВМ."""
         start_is_success = await self.start(creator=creator)
         if start_is_success:
-            await self.reboot
+            await self.reboot()
         else:
             await system_logger.warning(
                 _local_("VM can`t be powered on or already powered."))
@@ -843,7 +843,7 @@ class Vm(VeilModel):
                         keep_vms_on=pool.keep_vms_on,
                         create_thin_clones=automated_pool.create_thin_clones,
                         prepare_vms=automated_pool.prepare_vms,
-                        ad_cn_pattern=automated_pool.ad_cn_pattern,
+                        ad_ou=automated_pool.ad_ou,
                         connection_types=pool.connection_types,
                         creator=creator,
                     )
@@ -1004,7 +1004,7 @@ class Vm(VeilModel):
 
     async def include_in_ad(self,
                             active_directory_obj: AuthenticationDirectory,
-                            ad_cn_pattern: str = None):
+                            ad_ou: str = None):
         """Вводит в домен.
 
         Т.к. гостевой агент некорректно показывает hostname ВМ, то одновременное назначение и заведение не отработает.
@@ -1031,8 +1031,8 @@ class Vm(VeilModel):
                               "login": active_directory_obj.service_username,
                               "password": active_directory_obj.password}
             # Если передан параметр группы AD - добавляем
-            if ad_cn_pattern and isinstance(ad_cn_pattern, str):
-                ad_params_dict["oupath"] = ad_cn_pattern
+            if ad_ou and isinstance(ad_ou, str):
+                ad_params_dict["oupath"] = ad_ou
             # Вызываем команду на ECP VeiL
             action_response = await domain_entity.add_to_ad(
                 **ad_params_dict
@@ -1059,7 +1059,7 @@ class Vm(VeilModel):
     async def prepare(
         self,
         active_directory_obj: AuthenticationDirectory = None,
-        ad_cn_pattern: str = None,
+        ad_ou: str = None,
     ):
         """Check that domain remote-access is enabled and domain is powered on.
 
@@ -1071,7 +1071,7 @@ class Vm(VeilModel):
 
         if active_directory_obj:
             await self.include_in_ad(active_directory_obj,
-                                     ad_cn_pattern=ad_cn_pattern)
+                                     ad_ou=ad_ou)
 
         # Протоколируем успех
         msg = _local_("VM {} has been prepared.").format(self.verbose_name)
@@ -1081,12 +1081,12 @@ class Vm(VeilModel):
     async def prepare_with_timeout(
         self,
         active_directory_obj: AuthenticationDirectory = None,
-        ad_cn_pattern: str = None,
+        ad_ou: str = None,
     ):
         """Подготовка ВМ с ограничением по времени."""
         try:
             await asyncio.wait_for(
-                self.prepare(active_directory_obj, ad_cn_pattern),
+                self.prepare(active_directory_obj, ad_ou),
                 VEIL_VM_PREPARE_TIMEOUT,
             )
         except asyncio.TimeoutError as err_msg:

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*
 import json
+import re
 import uuid
 
 from asyncpg.exceptions import UniqueViolationError
@@ -126,6 +127,8 @@ class User(AbstractSortableStatusModel, VeilModel):
     is_active = db.Column(db.Boolean(), default=True)
     two_factor = db.Column(db.Boolean(), default=False)
     secret = db.Column(db.Unicode(length=32), nullable=True)
+    by_ad = db.Column(db.Boolean(), default=False)
+    local_password = db.Column(db.Boolean(), default=True)
 
     # ----- ----- ----- ----- ----- ----- -----
     # Properties and getters:
@@ -226,6 +229,21 @@ class User(AbstractSortableStatusModel, VeilModel):
         ]
 
         return pools_list
+
+    @staticmethod
+    async def validate_username(username):
+        # Валидация для синхронизации пользователей из AD
+        if not username:
+            raise SimpleError(_local_("username can`t be empty."))
+        username_re = re.compile("^[a-zA-Z][a-zA-Z0-9.-_+]{3,128}$")
+        template_name = re.match(username_re, username.strip())
+        if template_name:
+            return username
+        raise SimpleError(
+            _local_(
+                "username {} must contain >= 3 chars (letters, digits, _, -, +), begin from letter and can't contain any spaces.").format(
+                username)
+        )
 
     @staticmethod
     async def get_id(username):
@@ -449,6 +467,9 @@ class User(AbstractSortableStatusModel, VeilModel):
         )
         await system_logger.info(info_message, entity=self.entity, user=creator)
 
+        # Удаляем ранее выданный токен
+        await UserJwtInfo.delete.where(UserJwtInfo.user_id == self.id).gino.status()
+
         # Разорвать соединение ТК, если присутствуют
         cmd_dict = dict(command=ThinClientCmd.DISCONNECT.name, user_id=str(self.id))
         await publish_to_redis(REDIS_THIN_CLIENT_CMD_CHANNEL, json.dumps(cmd_dict))
@@ -553,11 +574,18 @@ class User(AbstractSortableStatusModel, VeilModel):
             .where(User.id == self.id)
             .gino.status()
         )
+        if not self.local_password:
+            await self.update(local_password=True).apply()
+            info_message = _local_("Password of user {} has been changed to the local password.").format(self.username)
+            await system_logger.warning(info_message, entity=self.entity, user=creator)
+        else:
+            info_message = _local_("Password of user {username} has been changed.").format(
+                username=self.username
+            )
+            await system_logger.info(info_message, entity=self.entity, user=creator)
 
-        info_message = _local_("Password of user {username} has been changed.").format(
-            username=self.username
-        )
-        await system_logger.info(info_message, entity=self.entity, user=creator)
+        # Удаляем ранее выданный токен
+        await UserJwtInfo.delete.where(UserJwtInfo.user_id == self.id).gino.status()
 
         return user_status
 
@@ -600,9 +628,12 @@ class User(AbstractSortableStatusModel, VeilModel):
         groups=None,
         is_active=True,
         two_factor=False,
-        secret=None
+        secret=None,
+        by_ad=False,
+        local_password=True
     ):
         """Если password будет None, то make_password вернет unusable password."""
+        username = await cls.validate_username(username)
         encoded_password = hashers.make_password(password, salt=SECRET_KEY)
         user_kwargs = {
             "username": username,
@@ -610,7 +641,9 @@ class User(AbstractSortableStatusModel, VeilModel):
             "is_active": is_active,
             "is_superuser": is_superuser,
             "two_factor": two_factor,
-            "secret": secret
+            "secret": secret,
+            "by_ad": by_ad,
+            "local_password": local_password
         }
         if email:
             user_kwargs["email"] = email
@@ -836,16 +869,15 @@ class User(AbstractSortableStatusModel, VeilModel):
     async def check_2fa(username, code):
         try:
             two_factor = await User.select("two_factor").where(User.username == username).gino.first()
-            if two_factor[0] and code:
-                secret = await User.select("secret").where(User.username == username).gino.first()
-                totp = pyotp.TOTP(secret[0])
-                if totp.now() == code:
-                    return True
+            if two_factor[0]:
+                if isinstance(code, str):
+                    secret = await User.select("secret").where(User.username == username).gino.first()
+                    totp = pyotp.TOTP(secret[0])
+                    if totp.now() == code:
+                        return True
                 raise SilentError(_local_("One-time password does not match or is out of date."))
-        except Exception:
-            raise SimpleError(_local_(
-                "User {} do not have a secret code for 2fa auth. Please generate this in settings of user.").format(
-                username))
+        except AssertionError as e:
+            raise AssertionError(e)
         return False
 
 

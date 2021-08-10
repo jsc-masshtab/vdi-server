@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { Apollo, QueryRef } from 'apollo-angular';
 import gql from 'graphql-tag';
 
-import { IParams } from '../../../../../types';
+import { IParams } from '../../../shared/types';
 
 @Injectable()
 export class UsersService  {
@@ -47,7 +47,9 @@ export class UsersService  {
                         last_login,
                         is_superuser,
                         is_active,
-                        two_factor
+                        two_factor,
+                        by_ad,
+                        local_password
                     }
                 }
             `,
@@ -75,6 +77,8 @@ export class UsersService  {
                         is_superuser,
                         is_active,
                         two_factor,
+                        by_ad,
+                        local_password,
                         assigned_roles,
                         possible_roles,
                         assigned_permissions,

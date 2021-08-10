@@ -8,12 +8,13 @@ import { HttpLink } from 'apollo-angular-link-http';
 import { InMemoryCache } from 'apollo-cache-inmemory';
 import { ApolloLink, from } from 'apollo-link';
 import { onError } from 'apollo-link-error';
+import { environment } from 'environments/environment';
 import { throwError } from 'rxjs';
-import { environment } from 'src/environments/environment';
 
-import { ErrorsService } from '../../core/components/errors/errors.service';
-import { WaitService } from '../../core/components/wait/wait.service';
-import { CoreModule } from '../../core/core.module';
+import { ErrorsService } from '@core/components/errors/errors.service';
+import { WaitService } from '@core/components/wait/wait.service';
+import { CoreModule } from '@core/core.module';
+
 import { ControllersModule } from '../controllers/controllers.module';
 import { EventsModule } from '../log/events/events.module';
 import { LogSettingModule } from '../log/log-setting/log-setting.module';
@@ -34,6 +35,7 @@ import { UsersModule } from '../settings/users/users.module';
 import { ThinClientsModule } from '../thin-clients/thin-clients.module';
 import { DashboardRoutingModule } from './dashboard-routing.module';
 import { DashboardComponent } from './dashboard.component';
+import { SystemModule } from '../settings/system/system.module';
 
 
 @NgModule({
@@ -62,7 +64,8 @@ import { DashboardComponent } from './dashboard.component';
     LogSettingModule,
     GroupsModule,
     LicenseModule,
-    ThinClientsModule
+    ThinClientsModule,
+    SystemModule
   ],
   providers:
     [

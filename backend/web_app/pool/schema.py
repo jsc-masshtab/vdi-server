@@ -457,7 +457,7 @@ class PoolType(graphene.ObjectType):
     total_size = graphene.Int()
     vm_name_template = graphene.String()
     os_type = graphene.String()
-    ad_cn_pattern = graphene.String()
+    ad_ou = graphene.String()
 
     users_count = graphene.Int(entitled=graphene.Boolean())
     users = graphene.List(UserType,
@@ -640,7 +640,7 @@ def pool_obj_to_type(pool_obj: Pool) -> PoolType:
         "vm_name_template": pool_obj.vm_name_template,
         "os_type": pool_obj.os_type,
         "keep_vms_on": pool_obj.keep_vms_on,
-        "ad_cn_pattern": pool_obj.ad_cn_pattern,
+        "ad_ou": pool_obj.ad_ou,
         "create_thin_clones": pool_obj.create_thin_clones,
         "prepare_vms": pool_obj.prepare_vms,
         "controller": pool_obj.controller,
@@ -1074,8 +1074,8 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator, ControllerFe
             graphene.NonNull(ConnectionTypesGraphene),
             default_value=[Pool.PoolConnectionTypes.SPICE.value],
         )
-        ad_cn_pattern = graphene.String(
-            description="Наименование групп для добавления ВМ в AD"
+        ad_ou = graphene.String(
+            description="Наименование организационной единицы для добавления ВМ в AD"
         )
         is_guest = graphene.Boolean(default_value=False)
 
@@ -1101,7 +1101,7 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator, ControllerFe
         create_thin_clones,
         prepare_vms,
         connection_types,
-        ad_cn_pattern: str = None,
+        ad_ou: str = None,
         is_guest: bool = False,
     ):
         """Мутация создания Автоматического(Динамического) пула виртуальных машин."""
@@ -1127,7 +1127,7 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator, ControllerFe
                 create_thin_clones=create_thin_clones,
                 prepare_vms=prepare_vms,
                 connection_types=connection_types,
-                ad_cn_pattern=ad_cn_pattern,
+                ad_ou=ad_ou,
                 tag=tag,
                 is_guest=is_guest,
             )
@@ -1159,7 +1159,7 @@ class UpdateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
         keep_vms_on = graphene.Boolean()
         create_thin_clones = graphene.Boolean()
         prepare_vms = graphene.Boolean()
-        ad_cn_pattern = graphene.String()
+        ad_ou = graphene.String()
         connection_types = graphene.List(graphene.NonNull(ConnectionTypesGraphene))
 
     ok = graphene.Boolean()
@@ -1216,7 +1216,7 @@ class UpdateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
                     keep_vms_on=kwargs.get("keep_vms_on"),
                     create_thin_clones=kwargs.get("create_thin_clones"),
                     prepare_vms=kwargs.get("prepare_vms"),
-                    ad_cn_pattern=kwargs.get("ad_cn_pattern"),
+                    ad_ou=kwargs.get("ad_ou"),
                     connection_types=kwargs.get("connection_types"),
                     creator=creator,
                 )

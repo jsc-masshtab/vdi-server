@@ -246,7 +246,7 @@ class Pool(VeilModel):
                 AutomatedPool.os_type,
                 AutomatedPool.create_thin_clones,
                 AutomatedPool.prepare_vms,
-                AutomatedPool.ad_cn_pattern,
+                AutomatedPool.ad_ou,
                 Pool.pool_type,
                 Pool.connection_types,
             ]
@@ -299,7 +299,7 @@ class Pool(VeilModel):
                 AutomatedPool.os_type,
                 AutomatedPool.create_thin_clones,
                 AutomatedPool.prepare_vms,
-                AutomatedPool.ad_cn_pattern,
+                AutomatedPool.ad_ou,
                 RdsPool.id,
                 Controller.address,
             )
@@ -1518,7 +1518,7 @@ class AutomatedPool(db.Model):
     create_thin_clones = db.Column(db.Boolean(), nullable=False, default=True)
     prepare_vms = db.Column(db.Boolean(), nullable=False, default=True)
     # Группы/Контейнеры в Active Directory для назначения виртуальным машинам пула
-    ad_cn_pattern = db.Column(db.Unicode(length=1000), nullable=True)
+    ad_ou = db.Column(db.Unicode(length=1000), nullable=True)
     is_guest = db.Column(db.Boolean(), nullable=False, default=False)
 
     # ----- ----- ----- ----- ----- ----- -----
@@ -1584,7 +1584,7 @@ class AutomatedPool(db.Model):
         prepare_vms,
         connection_types,
         tag,
-        ad_cn_pattern: str = None,
+        ad_ou: str = None,
         is_guest: bool = False,
     ):
         """Nested transactions are atomic."""
@@ -1611,7 +1611,7 @@ class AutomatedPool(db.Model):
                 vm_name_template=vm_name_template,
                 create_thin_clones=create_thin_clones,
                 prepare_vms=prepare_vms,
-                ad_cn_pattern=ad_cn_pattern,
+                ad_ou=ad_ou,
                 is_guest=is_guest,
             )
             # Записываем событие в журнал
@@ -1647,7 +1647,7 @@ class AutomatedPool(db.Model):
         create_thin_clones: bool,
         prepare_vms: bool,
         connection_types,
-        ad_cn_pattern: str,
+        ad_ou: str,
     ):
         pool_kwargs = dict()
         auto_pool_kwargs = dict()
@@ -1685,10 +1685,10 @@ class AutomatedPool(db.Model):
                 auto_pool_kwargs["increase_step"] = increase_step
             if vm_name_template:
                 auto_pool_kwargs["vm_name_template"] = vm_name_template
-            if not ad_cn_pattern and isinstance(ad_cn_pattern, str):
-                auto_pool_kwargs["ad_cn_pattern"] = None
-            elif ad_cn_pattern:
-                auto_pool_kwargs["ad_cn_pattern"] = ad_cn_pattern
+            if not ad_ou and isinstance(ad_ou, str):
+                auto_pool_kwargs["ad_ou"] = None
+            elif ad_ou:
+                auto_pool_kwargs["ad_ou"] = ad_ou
             if isinstance(create_thin_clones, bool):
                 auto_pool_kwargs["create_thin_clones"] = create_thin_clones
             if isinstance(prepare_vms, bool):
@@ -1985,7 +1985,7 @@ class AutomatedPool(db.Model):
         results_future = await asyncio.gather(
             *[
                 vm_object.prepare_with_timeout(
-                    active_directory_object, self.ad_cn_pattern
+                    active_directory_object, self.ad_ou
                 )
                 for vm_object in vm_objects
             ],

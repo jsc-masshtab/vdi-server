@@ -1,9 +1,11 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Observable, Subscription } from 'rxjs';
-import { EventsService } from 'src/app/pages/log/events/all-events/events.service';
-import { ICopyrightData, LicenseService } from 'src/app/pages/settings/license/license.service';
 
-import { WebsocketService } from '../../../shared/classes/websock.service';
+import { WebsocketService } from '@shared/classes/websock.service';
+
+import { EventsService } from '@pages/log/events/all-events/events.service';
+import { ICopyrightData, LicenseService } from '@pages/settings/license/license.service';
+
 
 
 interface ICountEvents {

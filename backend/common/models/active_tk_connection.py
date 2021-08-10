@@ -179,9 +179,6 @@ class ActiveTkConnection(db.Model, AbstractSortableStatusModel):
                           avg_rtt=avg_rtt,
                           loss_percentage=loss_percentage,
                           data_received=func.now()).apply()
-        # front ws notification
-        await publish_data_in_internal_channel(THIN_CLIENTS_SUBSCRIPTION,
-                                               "UPDATED", self)
 
     async def deactivate(self):
         """Соединение неативно, когда у него выставлено время дисконнекта."""

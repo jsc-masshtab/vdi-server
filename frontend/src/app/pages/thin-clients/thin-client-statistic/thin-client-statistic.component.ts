@@ -2,10 +2,14 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { Subscription } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { IParams } from 'types';
 
-import { WaitService } from '../../../core/components/wait/wait.service';
+
+import { WaitService } from '@core/components/wait/wait.service';
+
+import { IParams } from '@shared/types';
+
 import { ThinClientsService } from '../thin-clients.service';
+
 
 @Component({
   selector: 'vdi-thin-client-statistic',

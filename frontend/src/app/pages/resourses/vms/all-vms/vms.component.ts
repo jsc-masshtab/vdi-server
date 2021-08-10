@@ -3,11 +3,13 @@ import {FormControl} from '@angular/forms';
 import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { DetailsMove } from 'src/app/shared/classes/details-move';
-import { WebsocketService } from 'src/app/shared/classes/websock.service';
-import { IParams } from 'types';
 
-import { WaitService } from '../../../../core/components/wait/wait.service';
+import { WaitService } from '@core/components/wait/wait.service';
+
+import { DetailsMove } from '@shared/classes/details-move';
+import { WebsocketService } from '@shared/classes/websock.service';
+import { IParams } from '@shared/types';
+
 import { VmsService } from './vms.service';
 
 @Component({
