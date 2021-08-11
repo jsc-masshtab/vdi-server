@@ -41,7 +41,7 @@ export class EventsComponent implements OnInit, OnDestroy {
   public count = 0;
   public offset = 0;
 
-  start_date = new FormControl(0);
+  start_date = new FormControl(new Date());
   end_date = new FormControl(new Date());
   event_type = new FormControl('all');
   entity_type = new FormControl('all');
