@@ -661,31 +661,25 @@ class User(AbstractSortableStatusModel, VeilModel):
                     pam_result = await user_obj.pam_create_user(
                         raw_password=password, superuser=is_superuser
                     )
-                    # снимаем флаг суперпользователя, если создание с ошибкой
                     if not pam_result.success:
-                        await user_obj.update(is_superuser=False).apply()
-                    if not pam_result.success and pam_result.return_code != 969:
-                        raise PamError(pam_result)
-                    elif pam_result.return_code == 969:
-                        msg = _local_("User {} password setting error.").format(
+                        # TODO: Добавить pam удаление пользователя на астре
+                        # pam_result.return_code == 969 - ошибка пароля на астре
+                        msg = _local_(
+                            "User {} was created in Astra Linux. Please delete him there before trying to create in Broker again.").format(
                             username)
                         await system_logger.warning(
                             message=msg,
-                            entity={
-                                "entity_type": EntityType.USER,
-                                "entity_uuid": None,
-                            },
+                            entity={"entity_type": EntityType.USER, "entity_uuid": None},
                             user=creator,
-                            description=pam_result,
                         )
-                        await user_obj.deactivate(creator)
+                        raise PamError(pam_result)
         except (PamError, UniqueViolationError) as err_msg:
             msg = _local_("User {} creation error.").format(username)
             await system_logger.error(
                 message=msg,
                 entity={"entity_type": EntityType.USER, "entity_uuid": None},
                 user=creator,
-                description=err_msg,
+                description=str(err_msg),
             )
             raise AssertionError(msg)
 
