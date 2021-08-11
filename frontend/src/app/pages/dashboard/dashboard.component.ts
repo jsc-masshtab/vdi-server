@@ -1,4 +1,4 @@
-import { Component, OnInit, HostListener } from '@angular/core';
+import { Component, OnInit, HostListener, OnDestroy } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 
 import { WebsocketService } from '../../shared/classes/websock.service';
@@ -9,7 +9,7 @@ import { WebsocketService } from '../../shared/classes/websock.service';
   templateUrl: './dashboard.component.html'
 
 })
-export class DashboardComponent implements OnInit {
+export class DashboardComponent implements OnInit, OnDestroy {
 
   constructor(private ws: WebsocketService, public dialog: MatDialog) { }
 
@@ -22,6 +22,10 @@ export class DashboardComponent implements OnInit {
     if (e.keyCode === 27) {
       this.dialog.closeAll();
     }
+  }
+
+  ngOnDestroy() {
+    this.dialog.closeAll();
   }
 }
 
