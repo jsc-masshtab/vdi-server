@@ -75,8 +75,8 @@
 
     <ul class="details-menu">
       <li (click)="routeTo('info')" [class.active]="menuActive === 'info'" title="Информация"> <fa-icon [icon]="['fas','chart-bar']"></fa-icon><span class="name">Информация</span></li>
-      <li *ngIf="data?.vm?.spice_connection" (click)="routeTo('spice')" [class.active]="menuActive === 'spice'" title="Spice"> <fa-icon [icon]="['fas','terminal']"></fa-icon><span class="name">SPICE-консоль</span></li>
-      <li *ngIf="data?.vm?.vnc_connection" (click)="routeTo('vnc')" [class.active]="menuActive === 'vnc'" title="Spice"> <fa-icon [icon]="['fas','terminal']"></fa-icon><span class="name">VNC-консоль</span></li>
+      <!-- <li *ngIf="data?.vm?.spice_connection" (click)="routeTo('spice')" [class.active]="menuActive === 'spice'" title="Spice"> <fa-icon [icon]="['fas','terminal']"></fa-icon><span class="name">SPICE-консоль</span></li>
+      <li *ngIf="data?.vm?.vnc_connection" (click)="routeTo('vnc')" [class.active]="menuActive === 'vnc'" title="Spice"> <fa-icon [icon]="['fas','terminal']"></fa-icon><span class="name">VNC-консоль</span></li> -->
       <li *ngIf="data?.typePool != 'guest'" (click)="routeTo('backups')" [class.active]="menuActive === 'backups'" title="Резервные копии"> <fa-icon [icon]="['fas','clone']"></fa-icon><span class="name">Резервные копии</span></li>
       <li (click)="routeTo('events')" [class.active]="menuActive === 'events'" title="События"> <fa-icon [icon]="['fas','comment']"></fa-icon><span class="name">События</span></li>
     </ul>
