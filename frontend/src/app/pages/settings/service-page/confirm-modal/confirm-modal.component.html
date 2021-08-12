@@ -1,0 +1,22 @@
+
+<div class="form">
+  <div class="form-header">
+    <p>Подтвердите действие</p>
+    <button (click)="close()"  class="form-close"><fa-icon [icon]="['fas','times-circle']" size="s"></fa-icon></button>
+  </div>
+  <div class="form-fields">
+    <label class="field">
+      <p class="field-name">Пароль</p>
+      <input matInput type="password"  (change)="onChange($event.target.value)" required>
+    </label>
+  </div>
+  <div class="form-actions">
+    <button (click)="close()"  type="button" class="form-btn" >
+      <span class="action-name">Отмена</span>
+    </button>
+    <button type="button" class="form-btn" (click)="confirm()">
+      <span class="action-name">Подтвердить</span>
+    </button>
+  </div>
+</div>
+

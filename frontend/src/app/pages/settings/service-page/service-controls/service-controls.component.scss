@@ -1,0 +1,33 @@
+:host {
+  
+        display: flex;
+        border-right: none;
+        &:hover {
+            background-color: #f9f9f9;
+            color:#698f96;
+        }
+
+        &:focus {
+            background-color: #f9f9f9;
+            color:#698f96;
+        }
+}
+
+.btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid transparent;
+    background-color: transparent;
+    padding: 5px;
+    font-size: 13px;
+    margin-left: 5px;
+    margin-right: 5px;
+    color: rgba(0,0,0,0.55);
+    &:hover {
+        transition: all 200ms;
+        border: 1px solid rgba(0,0,0,0.2);
+        overflow: initial;
+        border-radius: 2px;
+    }
+}

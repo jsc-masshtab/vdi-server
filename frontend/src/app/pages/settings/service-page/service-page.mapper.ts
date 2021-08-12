@@ -1,4 +1,4 @@
-enum Status {
+export enum Status {
     Running = 'running',
     Stoped = 'stoped',
     Failed = 'failed',
@@ -38,12 +38,12 @@ export interface IMutationApiModel {
 
 export interface IMutationServiceInfo {
     ok: boolean,
-    serviceStatus: Status
+    status: Status
 }
 
 export class MutationServiceInfo implements IMutationServiceInfo {
     ok: boolean
-    serviceStatus: Status
+    status: Status
 }
 
 export class ServicePageMapper {
@@ -60,7 +60,7 @@ export class ServicePageMapper {
     public serverMutationModelToClientModel(apiModel: IMutationApiModel): MutationServiceInfo {
         const clientModel =  new MutationServiceInfo();     
         clientModel.ok = apiModel.ok;
-        clientModel.serviceStatus = apiModel.service_status;
+        clientModel.status = apiModel.service_status;
         
         return clientModel; 
     }

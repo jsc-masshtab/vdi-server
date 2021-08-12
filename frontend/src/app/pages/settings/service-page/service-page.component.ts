@@ -1,10 +1,31 @@
 import { Component, OnInit } from '@angular/core';
+import { MatDialog } from '@angular/material/dialog';
 import { ApolloQueryResult } from 'apollo-client';
 
 import { WaitService } from '@core/components/wait/wait.service';
 
-import { IQueryApiModel, IQueryResponse, IQueryService, ServicePageMapper } from './service-page.mapper';
+import { ConfirmModalComponent } from './confirm-modal/confirm-modal.component';
+import { IMutationApiModel, IQueryApiModel, IQueryResponse, IQueryService, ServicePageMapper, Status } from './service-page.mapper';
 import { ServicePageService } from './service-page.service';
+
+
+export enum ActionType {
+  Start = 'START',
+  Stop = 'STOP',
+  Restart = 'RESTART'
+}
+
+export interface IEventData {
+  service: IQueryService,
+  actionType: ActionType
+}
+
+export interface IServiceUpdateParams{
+  serviceName: string,
+  password: string,
+  actionType: string
+}
+
 
 @Component({
   selector: 'vdi-service-page',
@@ -15,22 +36,7 @@ export class ServicePageComponent implements OnInit {
 
   public services: IQueryService[];
 
-  public servicesCollection: ReadonlyArray<object> = [
-    {
-      title: 'Название',
-      property: 'verboseName',
-      class: 'name-start',
-      icon: 'desktop',
-      type: 'string',
-      sort: true
-    },
-    {
-      title: 'Cтатус',
-      property: 'status',
-      sort: true
-    }
-  ];
-  constructor(private servicePageService: ServicePageService, private waitService: WaitService) { }
+  constructor(private servicePageService: ServicePageService, private waitService: WaitService, private dialog: MatDialog) { }
 
   public ngOnInit(): void {
 
@@ -49,5 +55,42 @@ export class ServicePageComponent implements OnInit {
   }
 
 
+  public isRunning(status: string): boolean {
+    return status === Status.Running;   
+  }
+  
+  public clickControls(event: IEventData): void  {
+    const dialogRef  = this.dialog.open(ConfirmModalComponent, {
+      autoFocus: true,
+      width: '500px'
+    });
+    
+    dialogRef.afterClosed().subscribe( (result: string | undefined) => {
+      if (!result){
+        return;
+      }
 
+      const params: IServiceUpdateParams = {
+        serviceName: event.service.serviceName,
+        password: result,
+        actionType: event.actionType
+      }
+
+      this.servicePageService.updateService(params).subscribe((res) => {
+        const response: IMutationApiModel = res.data.doServiceAction;
+        const mapper = new ServicePageMapper();
+        const serviceInfo = mapper.serverMutationModelToClientModel(response);
+
+        this.services = this.services.map((service: IQueryService) => {
+
+            if (service.serviceName === params.serviceName){
+
+              service.status = serviceInfo.status
+            }
+
+            return service;
+          })
+      })
+    })
+  }
 }

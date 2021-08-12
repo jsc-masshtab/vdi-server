@@ -2,7 +2,8 @@ import { Injectable } from '@angular/core';
 import { Apollo, QueryRef } from 'apollo-angular';
 import gql from 'graphql-tag';
 
-import { IQueryResponse } from './service-page.mapper';
+import { IServiceUpdateParams } from './service-page.component';
+import { IMutationResponse, IQueryResponse } from './service-page.mapper';
 
 @Injectable({
   providedIn: 'root'
@@ -28,24 +29,23 @@ export class ServicePageService {
     });
   }
 
+  public updateService(data: IServiceUpdateParams) {
+    return this.apollo.mutate<IMutationResponse>({
+      mutation: gql`
+        mutation settings($password: String, $serviceName:String, $actionType: ServiceAction) {
+        doServiceAction(sudo_password:$password, service_name: $serviceName, service_action: $actionType){
+           ok,
+           service_status
+         }
+      }`,
+      variables: {
+        method: 'POST',
+        password: data.password,
+        serviceName: data.serviceName,
+        actionType: data.actionType
 
-  addRdsPool(data) {
-    let query: string = ` mutation
-  settings {
-    doServiceAction(sudo_password:"555", service_name: "apache2.service", service_action: RESTART)
-      {
-          ok,
-          service_status
       }
-}
-    `;
+    })
+  }
 
-    return this.service.mutate<any>({
-        mutation: gql(query),
-        variables: {
-            method: 'POST',
-            ...data
-        }
-    });
-}
 }

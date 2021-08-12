@@ -49,6 +49,8 @@ export class TableComponentComponent implements OnInit, OnChanges {
 
   ngOnInit() {
     this.moment = moment;
+    console.log(this.collection);
+    
   }
 
   ngOnChanges() {
