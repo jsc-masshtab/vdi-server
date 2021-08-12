@@ -46,6 +46,7 @@ export class ServicePageComponent implements OnInit {
   }
 
   public getAllServices(): void {  
+    this.waitService.setWait(true);   
     this.servicePageService.getServicesInfo().valueChanges.subscribe((res: ApolloQueryResult<IQueryResponse>) => {
       const services = res.data.services;
       const mapper = new ServicePageMapper();
