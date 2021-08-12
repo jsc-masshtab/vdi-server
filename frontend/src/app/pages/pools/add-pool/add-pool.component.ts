@@ -6,7 +6,8 @@ import { MatDialogRef } from '@angular/material/dialog';
 import { Subscription } from 'rxjs';
 import { map } from 'rxjs/operators';
 
-import { WaitService } from '../../../core/components/wait/wait.service';
+import { WaitService } from '@core/components/wait/wait.service';
+
 import { AddPoolService } from './add-pool.service';
 
 @Component({

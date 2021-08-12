@@ -6,8 +6,10 @@ import { MatDialogModule } from '@angular/material/dialog';
 import { MatSelectModule } from '@angular/material/select';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 
-import { AppRoutingModule } from '../../app-routing.module';
-import { SharedModule } from '../../shared/shared.module';
+import { AppRoutingModule } from '@app/app-routing.module';
+
+import { SharedModule } from '@shared/shared.module';
+
 import { EventsModule } from '../log/events/events.module';
 import { PoolAddComponent } from './add-pool/add-pool.component';
 import { AddPoolService } from './add-pool/add-pool.service';

@@ -5,8 +5,9 @@ import { ActivatedRoute, ParamMap, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { map } from 'rxjs/operators';
 
-import { FormForEditComponent } from '../../../shared/forms-dinamic/change-form/form-edit.component';
-import { YesNoFormComponent } from '../../../shared/forms-dinamic/yes-no-form/yes-no-form.component';
+import { FormForEditComponent } from '@shared/forms-dinamic/change-form/form-edit.component';
+import { YesNoFormComponent } from '@shared/forms-dinamic/yes-no-form/yes-no-form.component';
+
 import { AddGropComponent } from './add-group/add-group.component';
 import { AddUsersPoolComponent } from './add-users/add-users.component';
 import { AddVMStaticPoolComponent } from './add-vms/add-vms.component';

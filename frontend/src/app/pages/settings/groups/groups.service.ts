@@ -4,7 +4,7 @@ import gql from 'graphql-tag';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
-import { IParams } from '../../../shared/types';
+import { IParams } from '@shared/types';
 
 
 
