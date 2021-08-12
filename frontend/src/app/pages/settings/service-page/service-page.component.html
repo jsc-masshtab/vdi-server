@@ -1,0 +1,45 @@
+<div class="control-panel">
+  <div class="crumb" [style.marginRight]="'15px'">
+    <fa-icon [icon]="['fas','cogs']"></fa-icon>
+    <span class="crumb-name">Сервисы</span>
+  </div>
+
+  <button class="btn-refresh" (click)="refresh()" title="Обновить">
+    <fa-icon [icon]="['fas','sync-alt']"></fa-icon>
+  </button>
+  
+</div>
+
+<div class="components-info" #view>
+  <div class="table">
+    <div class="table-header">
+      <div class="table-heading">
+        Название
+      </div>
+      <div class="table-heading">
+        Статус
+      </div>
+      <div class="table-heading">
+        Управление
+      </div>
+    </div>
+    <div class="table-body">
+      <div class="table-row" *ngFor="let service of services">
+        <div class="table-col">
+          <fa-icon [icon]="['fas','tv']" class="icon" size="xs"></fa-icon>
+          <span>
+            {{service.serviceName}}
+          </span>
+        </div>
+        <div class="table-col">
+          <span>
+            {{service.status}}
+          </span>
+        </div>
+        <div class="table-col controls">
+          <vdi-service-controls [service]="service" (clickControls)="clickControls($event)" ></vdi-service-controls>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

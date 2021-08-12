@@ -31,8 +31,10 @@ import {
           faCommentDots,
           faWrench,
           faSlidersH,
-          faClock
-        } from '@fortawesome/free-solid-svg-icons';
+          faClock,
+          faCogs
+} from '@fortawesome/free-solid-svg-icons';
+
 import { ApolloModule  } from 'apollo-angular';
 import { HttpLinkModule } from 'apollo-angular-link-http';
 
@@ -80,7 +82,7 @@ import { AppComponent } from './app.component';
 
 export class AppModule {
   constructor() {
-    library.add(faDesktop, faDatabase, faLayerGroup, faPlusCircle, faMinusCircle, faSpinner, faServer, faCog, faChevronUp, faTimesCircle,
+    library.add(faDesktop, faDatabase, faLayerGroup, faPlusCircle, faMinusCircle, faSpinner, faServer, faCog, faCogs, faChevronUp, faTimesCircle,
       faFolderOpen, faStar, faTv, faSyncAlt, faBuilding, faTrashAlt, faUsers, faMeh, faChartBar, faUser,
       faStopCircle, faPlayCircle, faPauseCircle, faEdit, faQuestionCircle, faCheckSquare, faExclamationTriangle, faHeartbeat,
       faChevronCircleUp, faComment, faClipboardList, faNewspaper, faUserCircle, faSignOutAlt, faChevronCircleLeft, faChevronCircleRight,

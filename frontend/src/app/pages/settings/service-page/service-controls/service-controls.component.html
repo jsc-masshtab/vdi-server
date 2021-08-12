@@ -1,0 +1,14 @@
+<button *ngIf="isRunning; else stoped" class="btn controls-btn" title="Стоп" (click)="stop()">
+  <fa-icon [icon]="['fas','pause-circle']"></fa-icon>
+
+</button>
+
+<button class="btn controls-btn" title="Рестарт" (click)="restart()">
+    <fa-icon [icon]="['fas','sync-alt']"></fa-icon>
+</button>
+
+<ng-template #stoped>
+  <button class="btn controls-btn" title="Старт" (click)="run()">
+    <fa-icon [icon]="['fas','play-circle']"></fa-icon>
+  </button>
+</ng-template>

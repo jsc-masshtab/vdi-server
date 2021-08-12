@@ -1,5 +1,3 @@
-
-
 <ng-container *ngIf="data && data?.length; else meh">
   <div class="table-component">
 
@@ -57,18 +55,19 @@
     <!-- obj.property === 'status' -->
               <ng-container *ngIf="obj.property === 'status'">
                 <ng-container *ngIf="item[obj.property]; else nothing">
-                <ng-container [ngSwitch]="true">
-                  <fa-icon [icon]="['fas',item[obj.property] | statusIcon]" [style.fontSize]="'12px'" [style.marginRight]="'5px'" [spin]="true"
-                  *ngSwitchCase="item[obj.property] === 'CREATING' || item[obj.property] === 'DELETING' || item[obj.property] === 'PENDING' || item[obj.property] === 'HERMIT' || item[obj.property] === 'IN_PROGRESS' || item[obj.property] === 'STARTING'"></fa-icon> <!-- протестить -->
-
-                  <fa-icon [icon]="['fas',item[obj.property] | statusIcon]" [style.fontSize]="'12px'" [style.marginRight]="'5px'" [spin]="false"
-                  *ngSwitchDefault></fa-icon>
-                </ng-container>
-
+                  <fa-icon [icon]="['fas',item[obj.property] | statusIcon]" [style.fontSize]="'12px'" [style.marginRight]="'5px'" [spin]="false"></fa-icon>
                   <span  class="for-wrap">{{ item[obj.property] | status }}</span>
                 </ng-container>
+                <ng-container *ngIf="obj.property === 'controls'">
+                  <button>
+                    <fa-icon [icon]="['fas', 'play-circle']" [style.fontSize]="'12px'" [style.marginRight]="'5px'" [spin]="false" ></fa-icon>
+                  </button>  
+               </ng-container>
               </ng-container>
 
+      <!-- controls -->
+            
+            
     <!-- obj.property === 'assignment_type' -->
               <ng-container *ngIf="obj.property === 'assignment_type'">
                   <span>{{ item[obj.property] | assignmentType }}</span>
