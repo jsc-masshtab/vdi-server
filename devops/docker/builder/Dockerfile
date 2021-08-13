@@ -5,7 +5,7 @@ COPY pip.conf /root/.pip/
 
 # install build-deps
 RUN apt-get update && \
-    apt-get install python3-dev python3-setuptools python-dev gcc python3-pip \
+    apt-get install iproute2 python3-dev python3-setuptools python-dev gcc python3-pip \
     libsasl2-dev libldap2-dev libssl-dev sudo curl apt-utils rsync genisoimage wget gettext -y -q && \
     rm -f /var/cache/apt/archives/*.deb /var/cache/apt/archives/partial/*.deb /var/cache/apt/*.bin || true
 

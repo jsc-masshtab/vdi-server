@@ -19,6 +19,7 @@ from web_app.auth.license.utils import License, LicenseData
 
 from web_app.tests.fixtures import (
     fixt_db,
+    fixt_redis_client,
     fixt_controller,
     fixt_create_automated_pool,  # noqa
     fixt_create_static_pool,
@@ -133,7 +134,7 @@ class PoolTestCase(VdiHttpTestCase):
     def test_automated_pool_expand(self):
         # Инициализация лицензии происходит в VdiHttpTestCase
         pool = yield Pool.query.gino.first()
-        pool_type = yield pool.pool_type
+        pool_type = pool.pool_type
         self.assertEqual(pool_type, Pool.PoolTypes.AUTOMATED)
         pool_id = pool.id
 

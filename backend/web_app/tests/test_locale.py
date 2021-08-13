@@ -4,7 +4,7 @@ import pytest
 from tornado.testing import gen_test
 
 from web_app.tests.utils import VdiHttpTestCase
-from web_app.tests.fixtures import fixt_db, fixt_user  # noqa
+from web_app.tests.fixtures import fixt_db, fixt_redis_client, fixt_user  # noqa
 from common.settings import LANGUAGE, PAM_AUTH
 
 pytestmark = [

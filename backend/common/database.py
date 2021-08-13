@@ -10,7 +10,6 @@ bind_str = "postgresql://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}".form
 
 
 async def start_gino(app=None):
-    # TODO: ssl connection
     if app:
         return await db.init_app(app, dsn=bind_str)
     return await db.set_bind(bind_str)

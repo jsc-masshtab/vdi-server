@@ -90,7 +90,7 @@ class VdiHttpTestCase(AsyncHTTPTestCase):
 
         return user_name, access_token
 
-    async def get_auth_headers(self, username: str = "test_user_admin",
+    async def do_login_and_get_auth_headers(self, username: str = "test_user_admin",
                                password: str = "veil") -> dict:
         """Заголовки для подключения к брокеру."""
         (user_name, access_token) = await self.do_login(user_name=username,
@@ -120,4 +120,3 @@ class VdiHttpTestCase(AsyncHTTPTestCase):
         response_dict = json_decode(response.body)
         self.assertIsInstance(response_dict, dict)
         return response_dict
-

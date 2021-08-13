@@ -15,58 +15,33 @@ from tornado.web import Application
 
 from veil_api_client import DomainTcpUsb, VeilRetryConfiguration
 
-from common.languages import lang_init
+from common.languages import _local_
 from common.log.journal import system_logger
 from common.models.active_tk_connection import ActiveTkConnection
+from common.models.auth import User
 from common.models.pool import AutomatedPool, Pool as PoolM, RdsPool
 from common.models.task import PoolTaskType, Task, TaskStatus
 from common.settings import (
-    REDIS_DB, REDIS_PASSWORD, REDIS_PORT, REDIS_TEXT_MSG_CHANNEL,
-    REDIS_THIN_CLIENT_CHANNEL, REDIS_THIN_CLIENT_CMD_CHANNEL,
+    REDIS_TEXT_MSG_CHANNEL,
+    REDIS_THIN_CLIENT_CMD_CHANNEL,
     WS_MONITOR_CHANNEL_OUT
 )
 from common.subscription_sources import (
     USERS_SUBSCRIPTION, WsMessageDirection, WsMessageType
 )
-from common.veil.auth.veil_jwt import jwtauth
-from common.veil.veil_handlers import BaseHandler, BaseWsHandler
+from common.veil.auth.veil_jwt import jwtauth, jwtauth_ws
+from common.veil.veil_handlers import BaseHttpHandler, BaseWsHandler
 from common.veil.veil_redis import (
-    REDIS_CLIENT,
     ThinClientCmd,
-    a_redis_get_message,
+    publish_to_redis,
+    redis_block_get_message,
+    redis_get_pubsub,
     request_to_execute_pool_task,
 )
 
-_ = lang_init()
-
 
 @jwtauth
-class RedisInfoHandler(BaseHandler, ABC):
-    """Данные для подключения тонких клиентов к Redis."""
-
-    async def get(self):
-        """  # noqa
-        {
-            "data": {
-                "port": 6379,
-                "password": "veil",
-                "channel": "TC_CHANNEL"
-                "db": 0:
-            }
-        }
-        """
-        redis_info = dict(
-            port=REDIS_PORT,
-            channel=REDIS_THIN_CLIENT_CHANNEL,
-            password=REDIS_PASSWORD,
-            db=REDIS_DB,
-        )
-        response = dict(data=redis_info)
-        return self.finish(response)
-
-
-@jwtauth
-class PoolHandler(BaseHandler, ABC):
+class PoolHandler(BaseHttpHandler, ABC):
     """Возвращает все пулы пользователя."""
 
     async def get(self):
@@ -75,7 +50,7 @@ class PoolHandler(BaseHandler, ABC):
         response = {"data": pools}
 
         await system_logger.info(
-            _("User {} requested pools data.").format(user.username),
+            _local_("User {} requested pools data.").format(user.username),
             entity=user.entity,
             user=user.username,
         )
@@ -83,17 +58,16 @@ class PoolHandler(BaseHandler, ABC):
 
 
 @jwtauth
-class PoolGetVm(BaseHandler, ABC):
+class PoolGetVm(BaseHttpHandler, ABC):
     """Получает конкретную ВМ пользователя."""
 
     async def post(self, pool_id):
-        remote_protocol = self.args.get(
-            "remote_protocol", PoolM.PoolConnectionTypes.SPICE.name
-        )
+        remote_protocol = self.args.get("remote_protocol", PoolM.PoolConnectionTypes.SPICE.name)
         # Проверяем лимит клиентов
-        if PoolM.thin_client_limit_exceeded():
+        thin_client_limit_exceeded = await ActiveTkConnection.thin_client_limit_exceeded()
+        if thin_client_limit_exceeded:
             response = {
-                "errors": [{"message": _("Thin client limit exceeded."),
+                "errors": [{"message": _local_("Thin client limit exceeded."),
                             "code": "001"}]
             }
             return await self.log_finish(response)
@@ -101,25 +75,15 @@ class PoolGetVm(BaseHandler, ABC):
         pool = await PoolM.get(pool_id)
         if not pool:
             response = {
-                "errors": [{"message": _("Pool not found."), "code": "404"}]}
+                "errors": [{"message": _local_("Pool not found."), "code": "404"}]}
             return await self.log_finish(response)
+
         # Проверяем разрешен ли присланный remote_protocol для данного пула
-        con_t = pool.connection_types
-        bad_connection_type = remote_protocol not in PoolM.PoolConnectionTypes.values() or \
-                              PoolM.PoolConnectionTypes[remote_protocol] not in con_t  # noqa: E127
-        if bad_connection_type:
-            response = {
-                "errors": [
-                    {
-                        "message": _(
-                            "The pool doesnt support connection type {}."
-                        ).format(remote_protocol),
-                        "code": "404",
-                    }
-                ]
-            }
+        protocol_allowed, response = self._check_if_protocol_allowed(pool, remote_protocol)
+        if not protocol_allowed:
             return await self.log_finish(response)
-        pool_type = await pool.pool_type
+
+        pool_type = pool.pool_type
         expandable_pool = False  # В данный момент расширится может автоматический (гостевой пул)
         if pool_type == PoolM.PoolTypes.AUTOMATED or pool_type == PoolM.PoolTypes.GUEST:
             # Запрос на расширение пула
@@ -129,7 +93,7 @@ class PoolGetVm(BaseHandler, ABC):
         if not vm:  # ВМ для пользователя не присутствует
             # В случае RDS пула выдаем общий для всех RDS Сервер
             if pool_type == PoolM.PoolTypes.RDS:
-                vms = await pool.vms
+                vms = await pool.get_vms()
                 vm = vms[0]
             else:
                 # Если у пользователя нет VM в пуле, то нужно попытаться назначить ему свободную VM.
@@ -144,7 +108,7 @@ class PoolGetVm(BaseHandler, ABC):
                 response = {
                     "errors": [
                         {
-                            "message": _(
+                            "message": _local_(
                                 "The pool doesn`t have free machines. Try again after 5 minutes."
                             ),
                             "code": "002",
@@ -157,7 +121,7 @@ class PoolGetVm(BaseHandler, ABC):
                 response = {
                     "errors": [
                         {
-                            "message": _("The pool doesn`t have free machines."),
+                            "message": _local_("The pool doesn`t have free machines."),
                             "code": "003",
                         }
                     ]
@@ -166,7 +130,6 @@ class PoolGetVm(BaseHandler, ABC):
 
         elif expandable_pool:  # Даже если у пользователя есть ВМ, то попробовать расшириться все равно нужно
             await self._expand_pool_if_required(pool)
-        # TODO: обработка новых исключений
         # Только включение ВМ.
         try:
             # Дальше запросы начинают уходить на veil
@@ -180,7 +143,14 @@ class PoolGetVm(BaseHandler, ABC):
         except client_exceptions.ServerDisconnectedError:
             response = {
                 "errors": [
-                    {"message": _("VM is unreachable on ECP VeiL."), "code": "004"}
+                    {"message": _local_("VM is unreachable on ECP VeiL."), "code": "004"}
+                ]
+            }
+            return await self.log_finish(response)
+        except asyncio.TimeoutError:
+            response = {
+                "errors": [
+                    {"message": _local_("Controller did not reply. Check if it is available."), "code": "005"}
                 ]
             }
             return await self.log_finish(response)
@@ -188,16 +158,15 @@ class PoolGetVm(BaseHandler, ABC):
         info = await veil_domain.info()
 
         await system_logger.info(
-            _("User {} connected to pool {}.").format(user.username, pool.verbose_name),
+            _local_("User {} connected to pool {}.").format(user.username, pool.verbose_name),
             entity=pool.entity,
             user=user.username,
         )
         await system_logger.info(
-            _("User {} connected to VM {}.").format(user.username, vm.verbose_name),
+            _local_("User {} connected to VM {}.").format(user.username, vm.verbose_name),
             entity=vm.entity,
             user=user.username,
         )
-        # TODO: использовать veil_domain.hostname вместо IP
 
         # Определяем адрес и порт в зависимости от протокола
         vm_controller = await vm.controller
@@ -205,14 +174,12 @@ class PoolGetVm(BaseHandler, ABC):
         veil_client = vm_controller.veil_client
         if not veil_client:
             response = {
-                "errors": [{"message": _("The remote controller is unavailable.")}]
+                "errors": [{"message": _local_("The remote controller is unavailable.")}]
             }
             return await self.log_finish(response)
-        if (
-            remote_protocol == PoolM.PoolConnectionTypes.RDP.name
-            or remote_protocol  # noqa: W503
-            == PoolM.PoolConnectionTypes.NATIVE_RDP.name  # noqa: W503
-        ):
+
+        if (remote_protocol == PoolM.PoolConnectionTypes.RDP.name
+                or remote_protocol == PoolM.PoolConnectionTypes.NATIVE_RDP.name):  # noqa: W503
             try:
                 vm_address = veil_domain.first_ipv4
                 if vm_address is None:
@@ -223,7 +190,7 @@ class PoolGetVm(BaseHandler, ABC):
                 response = {
                     "errors": [
                         {
-                            "message": _(
+                            "message": _local_(
                                 "VM does not support RDP. The controller didn`t provide a VM address."
                             ),
                             "code": "005"
@@ -247,8 +214,8 @@ class PoolGetVm(BaseHandler, ABC):
         try:
             farm_list = await RdsPool.get_farm_list(pool.id, user.username) \
                 if pool_type == PoolM.PoolTypes.RDS else []
-        except (KeyError, JSONDecodeError, RuntimeError) as ex:
-            response = {"errors": [{"message": _("Unable to get list of published applications. {}.").format(str(ex))}]}
+        except (KeyError, IndexError, RuntimeError) as ex:
+            response = {"errors": [{"message": _local_("Unable to get list of published applications. {}.").format(str(ex))}]}
             return await self.log_finish(response)
         response = {
             "data": dict(
@@ -260,10 +227,31 @@ class PoolGetVm(BaseHandler, ABC):
                 vm_id=str(vm.id),
                 permissions=[permission.value for permission in permissions],
                 farm_list=farm_list,
-                pool_type=pool_type
+                pool_type=pool_type.name
             )
         }
         return await self.log_finish(response)
+
+    @staticmethod
+    def _check_if_protocol_allowed(pool, remote_protocol):
+        """Check if protocol allowed."""
+        con_t = pool.connection_types
+        bad_connection_type = remote_protocol not in PoolM.PoolConnectionTypes.values() or \
+                              PoolM.PoolConnectionTypes[remote_protocol] not in con_t  # noqa: E127
+        if bad_connection_type:
+            response = {
+                "errors": [
+                    {
+                        "message": _local_(
+                            "The pool doesnt support connection type {}."
+                        ).format(remote_protocol),
+                        "code": "404",
+                    }
+                ]
+            }
+            return False, response
+        else:
+            return True, None
 
     @staticmethod
     async def _expand_pool_if_required(pool_model):
@@ -285,13 +273,13 @@ class PoolGetVm(BaseHandler, ABC):
 
 
 @jwtauth
-class VmAction(BaseHandler, ABC):
+class VmAction(BaseHttpHandler, ABC):
     """Пересылка действия над ВМ на ECP VeiL."""
 
     async def post(self, pool_id, action):
 
         user = await self.get_user_model_instance()
-        vm = await BaseHandler.validate_and_get_vm(user, pool_id)
+        vm = await self.validate_and_get_vm(user, pool_id)
 
         try:
             force = self.args.get("force", False)
@@ -304,9 +292,9 @@ class VmAction(BaseHandler, ABC):
 
         # log action
         if is_action_successful:
-            msg = _("User {} executed action {} on VM {}.")
+            msg = _local_("User {} executed action {} on VM {}.")
         else:
-            msg = _("User {} failed to execute action {} on VM {}.")
+            msg = _local_("User {} failed to execute action {} on VM {}.")
         await system_logger.info(
             msg.format(user.username, action, vm.verbose_name),
             entity=vm.entity,
@@ -317,7 +305,7 @@ class VmAction(BaseHandler, ABC):
 
 
 @jwtauth
-class AttachUsb(BaseHandler, ABC):
+class AttachUsb(BaseHttpHandler, ABC):
     """Добавить usb tcp редирект девайс."""
 
     async def post(self, pool_id):
@@ -326,7 +314,7 @@ class AttachUsb(BaseHandler, ABC):
         host_port = self.validate_and_get_parameter("host_port")
 
         user = await self.get_user_model_instance()
-        vm = await BaseHandler.validate_and_get_vm(user, pool_id)
+        vm = await self.validate_and_get_vm(user, pool_id)
 
         # attach request
         try:
@@ -337,7 +325,7 @@ class AttachUsb(BaseHandler, ABC):
             )
 
             if not veil_client:
-                raise AssertionError(_("VM has no api client."))
+                raise AssertionError(_local_("VM has no api client."))
             domain_tcp_usb_params = DomainTcpUsb(host=host_address, service=host_port)
             controller_response = await veil_client.attach_usb(
                 action_type="tcp_usb_device",
@@ -352,7 +340,7 @@ class AttachUsb(BaseHandler, ABC):
 
 
 @jwtauth
-class DetachUsb(BaseHandler, ABC):
+class DetachUsb(BaseHttpHandler, ABC):
     """Убрать usb tcp редирект девайс."""
 
     async def post(self, pool_id):
@@ -361,13 +349,13 @@ class DetachUsb(BaseHandler, ABC):
         remove_all = self.args.get("remove_all", False)
 
         user = await self.get_user_model_instance()
-        vm = await BaseHandler.validate_and_get_vm(user, pool_id)
+        vm = await self.validate_and_get_vm(user, pool_id)
 
         # detach request
         try:
             veil_client = await vm.vm_client
             if not veil_client:
-                raise AssertionError(_("VM has no api client."))
+                raise AssertionError(_local_("VM has no api client."))
             controller_response = await veil_client.detach_usb(
                 action_type="tcp_usb_device", usb=usb_uuid, remove_all=remove_all
             )
@@ -379,7 +367,7 @@ class DetachUsb(BaseHandler, ABC):
 
 
 @jwtauth
-class SendTextMsgHandler(BaseHandler, ABC):
+class SendTextMsgHandler(BaseHttpHandler, ABC):
     """Текстовое сообщение от пользователя ТК.
 
     Пользователь ТК ничего не знает об админах, поэтому шлет сообщение всем текущим активным администраторам
@@ -391,7 +379,7 @@ class SendTextMsgHandler(BaseHandler, ABC):
 
         text_message = self.args.get("message")
         if not text_message:
-            response = {"errors": [{"message": _("Message can not be empty.")}]}
+            response = {"errors": [{"message": _local_("Message can not be empty.")}]}
             return await self.log_finish(response)
 
         try:
@@ -406,17 +394,18 @@ class SendTextMsgHandler(BaseHandler, ABC):
                 resource=USERS_SUBSCRIPTION,
             )
 
-            REDIS_CLIENT.publish(REDIS_TEXT_MSG_CHANNEL, json.dumps(msg_data_dict))
+            await publish_to_redis(REDIS_TEXT_MSG_CHANNEL, json.dumps(msg_data_dict))
 
             response = {"data": "success"}
             return await self.log_finish(response)
 
         except (KeyError, JSONDecodeError, TypeError) as ex:
-            message = _("Wrong message format.") + str(ex)
+            message = _local_("Wrong message format.") + str(ex)
             response = {"errors": [{"message": message}]}
             return await self.log_finish(response)
 
 
+@jwtauth_ws
 class ThinClientWsHandler(BaseWsHandler):
     def __init__(
         self,
@@ -431,9 +420,6 @@ class ThinClientWsHandler(BaseWsHandler):
         self._listen_for_cmd_task = None
 
     async def open(self):
-        is_validated = await self._validate_token()
-        if not is_validated:
-            return
 
         try:
             # Сохраняем юзера с инфой
@@ -455,7 +441,7 @@ class ThinClientWsHandler(BaseWsHandler):
                 "error": False,
                 "msg": "Auth success",
             }
-            await self._write_msg(json.dumps(response))
+            await self.write_msg(json.dumps(response))
 
         except Exception as ex:  # noqa
             response = {
@@ -463,7 +449,7 @@ class ThinClientWsHandler(BaseWsHandler):
                 "error": True,
                 "msg": str(ex),
             }
-            await self._write_msg(json.dumps(response))
+            await self.write_msg(json.dumps(response))
             self.close(code=4000)
 
         # start tasks
@@ -498,10 +484,9 @@ class ThinClientWsHandler(BaseWsHandler):
                 "error": True,
                 "msg": "Wrong msg format " + str(ex),
             }
-            await self._write_msg(json.dumps(response))
+            await self.write_msg(json.dumps(response))
 
     def on_close(self):
-        # print("!!!WebSocket closed", flush=True)
         loop = asyncio.get_event_loop()
         loop.create_task(self.on_async_close())
 
@@ -526,12 +511,12 @@ class ThinClientWsHandler(BaseWsHandler):
 
     async def _send_messages_co(self):
         """Отсылка сообщений на ТК. Сообщения достаются из редис каналов."""
-        redis_subscriber = REDIS_CLIENT.pubsub()
-        redis_subscriber.subscribe(WS_MONITOR_CHANNEL_OUT, REDIS_TEXT_MSG_CHANNEL)
+        pubsub = redis_get_pubsub()
+        await pubsub.subscribe(WS_MONITOR_CHANNEL_OUT, REDIS_TEXT_MSG_CHANNEL)
 
         while True:
             try:
-                redis_message = await a_redis_get_message(redis_subscriber)
+                redis_message = await redis_block_get_message(pubsub)
 
                 if redis_message["type"] == "message":
                     redis_message_data = redis_message["data"].decode()
@@ -546,7 +531,7 @@ class ThinClientWsHandler(BaseWsHandler):
                         if redis_message_data_dict["resource"] == "/domains/":
                             vm_id = await ActiveTkConnection.get_vm_id(self.conn_id)
                             if vm_id and redis_message_data_dict["id"] == str(vm_id):
-                                await self._write_msg(redis_message_data)
+                                await self.write_msg(redis_message_data)
 
                     elif (
                         msg_type == WsMessageType.TEXT_MSG.value
@@ -561,7 +546,7 @@ class ThinClientWsHandler(BaseWsHandler):
                         if (recipient_id is None) or (
                             recipient_id == str(self.user_id)
                         ):
-                            await self._write_msg(redis_message_data)
+                            await self.write_msg(redis_message_data)
 
             except asyncio.CancelledError:
                 break
@@ -573,12 +558,12 @@ class ThinClientWsHandler(BaseWsHandler):
 
     async def _listen_for_cmd(self):
         """Команды от админа."""
-        redis_subscriber = REDIS_CLIENT.pubsub()
-        redis_subscriber.subscribe(REDIS_THIN_CLIENT_CMD_CHANNEL)
+        pubsub = redis_get_pubsub()
+        await pubsub.subscribe(REDIS_THIN_CLIENT_CMD_CHANNEL)
 
         while True:
             try:
-                redis_message = await a_redis_get_message(redis_subscriber)
+                redis_message = await redis_block_get_message(pubsub)
 
                 if redis_message["type"] == "message":
                     redis_message_data = redis_message["data"].decode()
@@ -614,7 +599,7 @@ class ThinClientWsHandler(BaseWsHandler):
                                 "error": False,
                                 "msg": "Disconnect requested",
                             }
-                            await self._write_msg(json.dumps(response))
+                            await self.write_msg(json.dumps(response))
                             self.close()
 
             except asyncio.CancelledError:
@@ -624,3 +609,51 @@ class ThinClientWsHandler(BaseWsHandler):
                     message="Thin client ws listening commands error.",
                     description=str(ex),
                 )
+
+
+@jwtauth
+class GenerateUserQrCodeHandler(BaseHttpHandler, ABC):
+    """Генерация данных для qr."""
+
+    async def post(self):
+        user = await self.get_user_model_instance()
+        data_dict = await user.generate_qr(creator=user.username)
+
+        response = {
+            "data": dict(qr_uri=data_dict["qr_uri"], secret=data_dict["secret"])
+        }
+
+        return await self.log_finish(response)
+
+
+@jwtauth
+class GetUserDataHandler(BaseHttpHandler, ABC):
+
+    async def get(self):
+        user = await self.get_user_model_instance()
+
+        response = {
+            "data": dict(user=dict(two_factor=user.two_factor))
+        }
+        return await self.log_finish(response)
+
+
+@jwtauth
+class UpdateUserDataHandler(BaseHttpHandler, ABC):
+
+    async def post(self):
+
+        try:
+            user = await self.get_user_model_instance()  # Проверка что пользователь обновляет свои данные, а не чужие
+
+            two_factor = self.validate_and_get_parameter("two_factor")
+
+            await User.soft_update(id=user.id, creator=user.username, two_factor=two_factor)
+            response = {
+                "data": dict(ok=True,
+                             user=dict(two_factor=two_factor))
+            }
+        except (AssertionError, TypeError) as error:
+            response = {"errors": [{"message": str(error)}]}
+
+        return await self.log_finish(response)

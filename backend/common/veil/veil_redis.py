@@ -1,20 +1,17 @@
 # -*- coding: utf-8 -*-
-
-# import aioredis   # TODO: переехать на aio-redis
 import asyncio
 import json
 import time
 from enum import Enum
 from functools import wraps
 
-import redis
+from yaaredis import StrictRedis
+from yaaredis.exceptions import RedisError
 
 import common.settings as settings
-from common.languages import lang_init
+from common.languages import _local_
 from common.subscription_sources import VDI_TASKS_SUBSCRIPTION, WsMessageType
 from common.utils import gino_model_to_json_serializable_dict
-
-_ = lang_init()
 
 
 class PoolWorkerCmd(Enum):
@@ -34,17 +31,44 @@ class ThinClientCmd(Enum):
     DISCONNECT = "DISCONNECT"
 
 
-REDIS_POOL = redis.ConnectionPool.from_url(
-    getattr(settings, "REDIS_URL", "redis://localhost:6379/0"),
-    socket_connect_timeout=getattr(settings, "REDIS_TIMEOUT", 5),
-)
+# глобальный обьект клиента редис
+A_REDIS_CLIENT = None
 
-REDIS_CLIENT = redis.Redis(connection_pool=REDIS_POOL)
 
-# провряем доступность Redis
-REDIS_CLIENT.info()
-# except ConnectionError:
-#     raise
+def redis_init():
+    global A_REDIS_CLIENT
+    A_REDIS_CLIENT = StrictRedis(host=settings.REDIS_HOST, port=settings.REDIS_PORT,
+                                 db=settings.REDIS_DB, password=settings.REDIS_PASSWORD)
+
+
+def redis_deinit():
+    global A_REDIS_CLIENT
+    del A_REDIS_CLIENT  # В доке не нашел описания способа релиза ресурсов. Судя по всему это происходит автоматом
+    # во время разрушения объекта.
+
+
+def redis_get_pubsub():
+    return A_REDIS_CLIENT.pubsub()
+
+
+async def redis_block_get_message(pubsub):
+    while True:
+        message = await pubsub.get_message()
+        if message:
+            return message
+        await asyncio.sleep(settings.REDIS_ASYNC_TIMEOUT)
+
+
+async def redis_blpop(redis_list_name):
+    while True:
+        data = await A_REDIS_CLIENT.lpop(redis_list_name)
+        if data:
+            return data
+        await asyncio.sleep(settings.REDIS_ASYNC_TIMEOUT)
+
+
+async def redis_flushall():
+    await A_REDIS_CLIENT.flushdb()
 
 
 def redis_error_handle(func):
@@ -56,7 +80,7 @@ def redis_error_handle(func):
         response = None
         try:
             response = func(*args, **kwargs)
-        except redis.RedisError as error:
+        except RedisError as error:
             from common.log.journal import system_logger
 
             system_logger._debug("Redis error ", str(error))
@@ -65,29 +89,14 @@ def redis_error_handle(func):
     return wrapped_function
 
 
-def get_thin_clients_count():
-    numsub = REDIS_CLIENT.pubsub_numsub(settings.REDIS_THIN_CLIENT_CHANNEL)
-
-    if isinstance(numsub, list):
-        channel_count = numsub[0]
-        if isinstance(channel_count, tuple):
-            channel_count = channel_count[1]
-        else:
-            channel_count = 0
-    else:
-        channel_count = 0
-
-    return channel_count
-
-
-def save_license_dict(dict_name, data):
+async def save_license_dict(dict_name, data):
     for value in data:
         data[value] = str(data[value])
-    return REDIS_CLIENT.hmset(dict_name, data)
+    return await A_REDIS_CLIENT.hmset(dict_name, data)
 
 
-def read_license_dict(dict_name):
-    data = REDIS_CLIENT.hgetall(dict_name)
+async def read_license_dict(dict_name):
+    data = await A_REDIS_CLIENT.hgetall(dict_name)
     read_dict = {
         key.decode("utf-8"): value.decode("utf-8") for (key, value) in data.items()
     }
@@ -103,15 +112,6 @@ def read_license_dict(dict_name):
     return read_dict
 
 
-async def a_redis_lpop(list_name):
-    """Asynchronous redis lpop. Wait until non-nill data received."""
-    while True:
-        data = REDIS_CLIENT.lpop(list_name)
-        if data:
-            return data
-        await asyncio.sleep(settings.REDIS_ASYNC_TIMEOUT)
-
-
 async def a_redis_wait_for_message(redis_channel, predicate, timeout):
     """Asynchronously wait for message until timeout reached.
 
@@ -120,14 +120,14 @@ async def a_redis_wait_for_message(redis_channel, predicate, timeout):
     :return bool: return true if awaited message received. Return false if timeuot expired and
      awaited message is not received
     """
-    redis_subscriber = REDIS_CLIENT.pubsub()
-    redis_subscriber.subscribe(redis_channel)
+    p = redis_get_pubsub()
+    await p.subscribe(redis_channel)
 
     try:
         start_time = time.time()  # sec from epoch
         while True:
             # try to receive message
-            redis_message = redis_subscriber.get_message()
+            redis_message = await p.get_message()
             # if redis_message:
             #    print('redis_message ', redis_message)
             if (
@@ -150,20 +150,10 @@ async def a_redis_wait_for_message(redis_channel, predicate, timeout):
         from common.log.journal import system_logger
 
         await system_logger.error(
-            message=_("Redis waiting exception."), description=str(ex)
+            message=_local_("Redis waiting exception."), description=str(ex)
         )
 
     return False
-
-
-async def a_redis_get_message(redis_subscriber):
-    """Asynchronously wait for message from channel."""
-    while True:
-        redis_message = redis_subscriber.get_message()
-        if redis_message:
-            return redis_message
-
-        await asyncio.sleep(settings.REDIS_ASYNC_TIMEOUT)
 
 
 async def a_redis_wait_for_task_completion(task_id):
@@ -174,13 +164,13 @@ async def a_redis_wait_for_task_completion(task_id):
     """
     from common.models.task import TaskStatus
 
-    redis_subscriber = REDIS_CLIENT.pubsub()
-    redis_subscriber.subscribe(settings.INTERNAL_EVENTS_CHANNEL)
+    p = redis_get_pubsub()
+    await p.subscribe(settings.INTERNAL_EVENTS_CHANNEL)
 
     try:
         while True:
             # try to receive message
-            redis_message = redis_subscriber.get_message()
+            redis_message = await p.get_message()
             if redis_message and redis_message["type"] == "message":
 
                 redis_message_data = redis_message["data"].decode()
@@ -211,7 +201,7 @@ async def a_redis_wait_for_task_completion(task_id):
         from common.log.journal import system_logger
 
         await system_logger.error(
-            message=_("Redis task waiting exception."), description=str(ex)
+            message=_local_("Redis task waiting exception."), description=str(ex)
         )
 
 
@@ -233,7 +223,7 @@ async def request_to_execute_pool_task(entity_id, task_type, **additional_data):
     task = await Task.soft_create(entity_id=entity_id, task_type=task_type)
     task_id = str(task.id)
     data = {"task_id": task_id, "task_type": task_type.name, **additional_data}
-    REDIS_CLIENT.rpush(settings.POOL_TASK_QUEUE, json.dumps(data))
+    await A_REDIS_CLIENT.rpush(settings.POOL_TASK_QUEUE, json.dumps(data))
     return task.id
 
 
@@ -258,15 +248,14 @@ async def execute_delete_pool_task(
         return status and (status == TaskStatus.FINISHED.name)
 
 
-@redis_error_handle
-def send_cmd_to_cancel_tasks(task_ids: list, cancel_all=False):
+async def send_cmd_to_cancel_tasks(task_ids: list, cancel_all=False):
     """Send command CANCEL_TASK to pool worker. Чтобы отменить все таски послать пустой список и cancel_all=True."""
     cmd_dict = {
         "command": PoolWorkerCmd.CANCEL_TASK.name,
         "task_ids": task_ids,
         "cancel_all": cancel_all,
     }
-    REDIS_CLIENT.rpush(settings.POOL_WORKER_CMD_QUEUE, json.dumps(cmd_dict))
+    await A_REDIS_CLIENT.rpush(settings.POOL_WORKER_CMD_QUEUE, json.dumps(cmd_dict))
 
 
 async def send_cmd_to_cancel_tasks_associated_with_controller(
@@ -282,7 +271,7 @@ async def send_cmd_to_cancel_tasks_associated_with_controller(
         "controller_id": str(controller_id),
         "resumable": True,
     }
-    REDIS_CLIENT.rpush(settings.POOL_WORKER_CMD_QUEUE, json.dumps(cmd_dict))
+    await A_REDIS_CLIENT.rpush(settings.POOL_WORKER_CMD_QUEUE, json.dumps(cmd_dict))
 
     #  Wait for result
     if wait_for_result:
@@ -304,30 +293,28 @@ async def send_cmd_to_cancel_tasks_associated_with_entity(entity_id):
         "entity_id": str(entity_id),
         "resumable": True,
     }
-    REDIS_CLIENT.rpush(settings.POOL_WORKER_CMD_QUEUE, json.dumps(cmd_dict))
+    await A_REDIS_CLIENT.rpush(settings.POOL_WORKER_CMD_QUEUE, json.dumps(cmd_dict))
 
 
-@redis_error_handle
-def send_cmd_to_resume_tasks_associated_with_controller(controller_id):
+async def send_cmd_to_resume_tasks_associated_with_controller(controller_id):
     """Command to pool worker to resume tasks."""
     cmd_dict = {
         "command": PoolWorkerCmd.RESUME_TASK.name,
         "controller_id": str(controller_id),
     }
-    REDIS_CLIENT.rpush(settings.POOL_WORKER_CMD_QUEUE, json.dumps(cmd_dict))
+    await A_REDIS_CLIENT.rpush(settings.POOL_WORKER_CMD_QUEUE, json.dumps(cmd_dict))
 
 
-@redis_error_handle
-def send_cmd_to_ws_monitor(controller_id, ws_monitor_cmd: WsMonitorCmd):
+async def send_cmd_to_ws_monitor(controller_id, ws_monitor_cmd: WsMonitorCmd):
     """Send command to ws monitor."""
     cmd_dict = {"controller_id": str(controller_id), "command": ws_monitor_cmd.name}
-    REDIS_CLIENT.rpush(settings.WS_MONITOR_CMD_QUEUE, json.dumps(cmd_dict))
+    await A_REDIS_CLIENT.rpush(settings.WS_MONITOR_CMD_QUEUE, json.dumps(cmd_dict))
 
 
-def publish_to_redis(channel, message):
+async def publish_to_redis(channel, message):
     try:
-        REDIS_CLIENT.publish(channel, message)
-    except redis.RedisError as error:
+        await A_REDIS_CLIENT.publish(channel, message)
+    except RedisError as error:
         from common.log.journal import system_logger
         system_logger._debug("Redis error ", str(error))
 
@@ -344,4 +331,4 @@ async def publish_data_in_internal_channel(resource_type: str, event_type: str,
     msg_dict.update(gino_model_to_json_serializable_dict(model))
     if additional_model_to_json_data:
         msg_dict.update(additional_model_to_json_data)
-    publish_to_redis(settings.INTERNAL_EVENTS_CHANNEL, json.dumps(msg_dict))
+    await publish_to_redis(settings.INTERNAL_EVENTS_CHANNEL, json.dumps(msg_dict))

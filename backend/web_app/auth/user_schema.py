@@ -7,16 +7,13 @@ from graphene import Enum as GrapheneEnum
 from sqlalchemy import and_
 
 from common.database import db
-from common.languages import lang_init
+from common.languages import _local_
 from common.models.auth import User
 from common.models.user_tk_permission import TkPermission
 from common.veil.veil_decorators import security_administrator_required
 from common.veil.veil_errors import AssertError, SimpleError, ValidationError
 from common.veil.veil_gino import Role, RoleTypeGraphene
 from common.veil.veil_validators import MutationValidation
-
-_ = lang_init()
-
 
 PermissionTypeGraphene = GrapheneEnum.from_enum(TkPermission)
 
@@ -29,20 +26,20 @@ class UserValidator(MutationValidation):
         user = await User.get_object(id_=value, include_inactive=True)
         if user:
             return value
-        raise ValidationError(_("No such user."))
+        raise ValidationError(_local_("No such user."))
 
     @staticmethod
     async def validate_username(obj_dict, value):
         if not value:
-            raise AssertError(_("username can`t be empty."))
-        user_name_re = re.compile("^[a-zA-Z0-9.-_+]{3,128}$")
+            raise AssertError(_local_("username can`t be empty."))
+        user_name_re = re.compile("^[a-zA-Z][a-zA-Z0-9.-_+]{3,128}$")
         template_name = re.match(user_name_re, value.strip())
         if template_name:
             obj_dict["username"] = value
             return value
         raise AssertError(
-            _(
-                "username must contain >= 3 chars (letters, digits, _, -, +) and can't contain any spaces."
+            _local_(
+                "username must contain >= 3 chars (letters, digits, _, -, +), begin from letter and can't contain any spaces."
             )
         )
 
@@ -51,7 +48,7 @@ class UserValidator(MutationValidation):
         # Проверка на уникальность
         email_is_free = await User.check_email(value)
         if not email_is_free:
-            raise ValidationError(_("Email {} is already busy.").format(value))
+            raise ValidationError(_local_("Email {} is already busy.").format(value))
 
         # Проверка на маску
         email_re = re.compile(
@@ -63,29 +60,33 @@ class UserValidator(MutationValidation):
         elif template_name:
             return value
         raise AssertError(
-            _("Email must contain English characters and/or digits, @ and domain name.")
+            _local_(
+                "Email must contain English characters and/or digits, @ and domain name.")
         )
 
     @staticmethod
     async def validate_password(obj_dict, value):
-        return value
-        # pass_re = re.compile('^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[@$!%*?&])[A-Za-z0-9@$!%*?&]{8,}$')
-        # template_name = re.match(pass_re, value)
-        # if template_name:
-        #     return value
+        # return value
+        # TODO: СМЕНИТЬ НА ВАЛИДАЦИЮ ОТНОСИТЕЛЬНО ВЫБРАННОЙ БЕЗОПАСНОСТИ В АСТРЕ
+        pass_re = re.compile("^[a-zA-Z0-9@$#^/!<>,`~%*?&._-]{8,32}$")
+        template_name = re.match(pass_re, value)
+        if template_name:
+            return value
         # raise AssertError(
         #     'Пароль должен быть не меньше 8 символов, содержать буквы, цифры и спец.символы.')
+        raise AssertError(_local_(
+            "Password must contain letters and/or digits, special characters; also be at least 8 characters."))
 
     @staticmethod
     async def validate_first_name(obj_dict, value):
         if len(value) > 32:
-            raise AssertError(_("First name length must be <= 32 characters."))
+            raise AssertError(_local_("First name length must be <= 32 characters."))
         return value
 
     @staticmethod
     async def validate_last_name(obj_dict, value):
         if len(value) > 128:
-            raise AssertError(_("Last name length must be <= 128 characters."))
+            raise AssertError(_local_("Last name length must be <= 128 characters."))
         return value
 
 
@@ -130,6 +131,12 @@ class UserType(graphene.ObjectType):
     is_superuser = graphene.Boolean()
     is_active = graphene.Boolean()
 
+    two_factor = graphene.Boolean()
+    secret = graphene.String()
+
+    by_ad = graphene.Boolean()
+    local_password = graphene.Boolean()
+
     assigned_groups = graphene.List(UserGroupType)
     possible_groups = graphene.List(UserGroupType)
 
@@ -155,6 +162,10 @@ class UserType(graphene.ObjectType):
             date_updated=model_instance.date_updated,
             last_login=model_instance.last_login,
             is_active=model_instance.is_active,
+            two_factor=model_instance.two_factor,
+            secret=model_instance.secret,
+            by_ad=model_instance.by_ad,
+            local_password=model_instance.local_password
         )
 
     async def resolve_is_superuser(self, _info):
@@ -248,11 +259,11 @@ class UserQuery(graphene.ObjectType):
     @security_administrator_required
     async def resolve_user(self, info, id=None, username=None, **kwargs):
         if not id and not username:
-            raise SimpleError(_("Specify id or username."))
+            raise SimpleError(_local_("Specify id or username."))
 
         user = await User.get_object(id, username, include_inactive=True)
         if not user:
-            raise SimpleError(_("No such user."))
+            raise SimpleError(_local_("No such user."))
         return UserType.instance_to_type(user)
 
     @security_administrator_required
@@ -318,6 +329,7 @@ class UpdateUserMutation(graphene.Mutation, UserValidator):
         last_name = graphene.String()
         first_name = graphene.String()
         is_superuser = graphene.Boolean()
+        two_factor = graphene.Boolean()
 
     user = graphene.Field(lambda: UserType)
     ok = graphene.Boolean(default_value=False)
@@ -419,6 +431,21 @@ class RemoveUserRoleMutation(graphene.Mutation, UserValidator):
         return RemoveUserRoleMutation(user=UserType(**user.__values__), ok=True)
 
 
+class GenerateUserQrcodeMutation(graphene.Mutation):
+    class Arguments:
+        id = graphene.UUID(required=True)
+
+    qr_uri = graphene.String()
+    secret = graphene.String()
+
+    @classmethod
+    @security_administrator_required
+    async def mutate(cls, root, info, creator, **kwargs):
+        user = await User.get(kwargs["id"])
+        data_dict = await user.generate_qr(creator=creator)
+        return GenerateUserQrcodeMutation(qr_uri=data_dict["qr_uri"], secret=data_dict["secret"])
+
+
 # permissions
 class AddUserPermissionMutation(graphene.Mutation, UserValidator):
     class Arguments:
@@ -475,7 +502,7 @@ class RemoveUserPermissionMutation(graphene.Mutation, UserValidator):
         if common_permissions:
             common_permissions_str = ", ".join(common_permissions)
             raise SimpleError(
-                _(
+                _local_(
                     "Can`t remove permission(s) {} because they are granted to groups of user {}."
                 ).format(common_permissions_str, user.username),
                 user=creator,
@@ -492,7 +519,7 @@ class UserMutations(graphene.ObjectType):
     changeUserPassword = ChangeUserPasswordMutation.Field()
     addUserRole = AddUserRoleMutation.Field()
     removeUserRole = RemoveUserRoleMutation.Field()
-    # TODO: добавление групп пользователю
+    generateUserQrcode = GenerateUserQrcodeMutation.Field()
 
     addUserPermission = AddUserPermissionMutation.Field()
     removeUserPermission = RemoveUserPermissionMutation.Field()

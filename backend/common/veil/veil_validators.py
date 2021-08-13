@@ -1,11 +1,8 @@
 # -*- coding: utf-8 -*-
 from graphene.types.structures import NonNull
 
-from common.languages import lang_init
+from common.languages import _local_
 from common.veil.veil_errors import ValidationError
-
-
-_ = lang_init()
 
 
 class MutationValidation:
@@ -16,7 +13,6 @@ class MutationValidation:
 
     @classmethod
     async def validate(cls, **kwargs):
-        # TODO: сделать аналогичный декоратор?
         for argument_name in cls.Arguments.__dict__:
             if argument_name.startswith("_"):
                 continue
@@ -31,5 +27,5 @@ class MutationValidation:
                     if value is not None or isinstance(argument, NonNull):
                         await validator(kwargs, value)
                 except ValidationError as E:
-                    msg = _('Field "{}" - {}.').format(argument_name, E)
+                    msg = _local_('Field "{}" - {}.').format(argument_name, E)
                     raise ValidationError(msg.replace("..", "."))

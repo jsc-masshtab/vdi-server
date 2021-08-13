@@ -5,15 +5,17 @@ import sys
 
 from sqlalchemy import and_
 
+from yaaredis.exceptions import RedisError
+
 from common.database import db
-from common.languages import lang_init
+from common.languages import _local_
 from common.log.journal import system_logger
 from common.models.pool import Pool
 from common.models.task import PoolTaskType, Task, TaskStatus
 from common.models.vm import Vm
-from common.settings import POOL_TASK_QUEUE, POOL_WORKER_CMD_QUEUE
+from common.settings import POOL_TASK_QUEUE, POOL_WORKER_CMD_QUEUE, REDIS_TIMEOUT
 from common.veil.veil_gino import EntityType
-from common.veil.veil_redis import PoolWorkerCmd, a_redis_lpop
+from common.veil.veil_redis import PoolWorkerCmd, redis_blpop
 
 from pool_worker.pool_locks import PoolLocks
 from pool_worker.pool_tasks import (
@@ -27,9 +29,6 @@ from pool_worker.pool_tasks import (
     RecreationGuestVmTask,
     RemoveVmsTask
 )
-
-
-_ = lang_init()
 
 
 class PoolTaskManager:
@@ -62,7 +61,7 @@ class PoolTaskManager:
         while True:
             try:
                 # wait for task message
-                redis_data = await a_redis_lpop(POOL_TASK_QUEUE)
+                redis_data = await redis_blpop(POOL_TASK_QUEUE)
                 await system_logger.debug(
                     "PoolWorker listen_for_work: {}".format(redis_data)
                 )
@@ -74,14 +73,14 @@ class PoolTaskManager:
                 raise
             except Exception as ex:
                 await system_logger.error(
-                    message=_("Can`t launch task."), description=str(ex)
+                    message=_local_("Can`t launch task."), description=str(ex)
                 )
 
     async def listen_for_commands(self):
         while True:
             try:
                 # wait for message
-                redis_data = await a_redis_lpop(POOL_WORKER_CMD_QUEUE)
+                redis_data = await redis_blpop(POOL_WORKER_CMD_QUEUE)
 
                 # get data from message
                 data_dict = json.loads(redis_data.decode())
@@ -119,6 +118,9 @@ class PoolTaskManager:
                         controller_id=controller_id, remove_unresumable_tasks=False
                     )
 
+            except RedisError as ex:
+                await system_logger.debug(message="Redis connection error.", description=str(ex))
+                await asyncio.sleep(REDIS_TIMEOUT)
             except asyncio.CancelledError:
                 raise
             except Exception as ex:
@@ -230,11 +232,13 @@ class PoolTaskManager:
             task.execute_in_async_task(task_id)
 
         elif pool_task == PoolTaskType.VMS_BACKUP.name:
-            task = BackupVmsTask(entity_type=task_data_dict["entity_type"], creator=task_data_dict["creator"])
+            task = BackupVmsTask(entity_type=task_data_dict["entity_type"],
+                                 creator=task_data_dict["creator"])
             task.execute_in_async_task(task_id)
 
         elif pool_task == PoolTaskType.VMS_REMOVE.name:
-            task = RemoveVmsTask(pool_locks=self.pool_locks, vm_ids=task_data_dict["vm_ids"],
+            task = RemoveVmsTask(pool_locks=self.pool_locks,
+                                 vm_ids=task_data_dict["vm_ids"],
                                  creator=task_data_dict["creator"])
             task.execute_in_async_task(task_id)
 

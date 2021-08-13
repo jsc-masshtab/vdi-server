@@ -19,7 +19,8 @@
           "options": {
             "allowedCommonJsDependencies": [
               "graphql-tag",
-              "zen-observable"
+              "zen-observable",
+              "qrcode"
             ],
             "aot": true,
             "outputPath": "dist/frontend",

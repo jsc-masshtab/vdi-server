@@ -7,7 +7,7 @@ from typing import Any
 from tornado import httputil
 from tornado.web import Application
 
-from common.languages import lang_init
+from common.languages import _local_
 from common.log.journal import system_logger
 from common.settings import (
     INTERNAL_EVENTS_CHANNEL,
@@ -21,12 +21,12 @@ from common.subscription_sources import (
     WsMessageDirection,
     WsMessageType
 )
+from common.veil.auth.veil_jwt import jwtauth_ws
 from common.veil.veil_handlers import BaseWsHandler
-from common.veil.veil_redis import REDIS_CLIENT, a_redis_get_message
-
-_ = lang_init()
+from common.veil.veil_redis import redis_block_get_message, redis_get_pubsub
 
 
+@jwtauth_ws
 class VdiFrontWsHandler(BaseWsHandler):  # noqa
     def __init__(
         self,
@@ -42,17 +42,13 @@ class VdiFrontWsHandler(BaseWsHandler):  # noqa
 
     async def open(self):
 
-        is_validated = await self._validate_token()
-        if not is_validated:
-            return
-
         # on success
-        await system_logger.debug(_("WebSocket opened."))
+        await system_logger.debug(_local_("WebSocket opened."))
         loop = asyncio.get_event_loop()
         self._send_messages_task = loop.create_task(self._send_messages_co())
 
     async def on_message(self, message):
-        await system_logger.debug(_("Message: {}.").format(message))
+        await system_logger.debug(_local_("Message: {}.").format(message))
         await self._check_for_subscription_cmd(message)
 
     def on_close(self):
@@ -72,15 +68,15 @@ class VdiFrontWsHandler(BaseWsHandler):  # noqa
             response["resource"] = subscription_source
         except ValueError:
             response["error"] = True
-            await self._write_msg(response)
+            await self.write_msg(response)
             return
         # check if allowed
         if subscription_source not in VDI_FRONT_ALLOWED_SUBSCRIPTIONS_LIST:
-            msg = _("WS listener error.")
-            description = _("Unknown subscription source.")
+            msg = _local_("WS listener error.")
+            description = _local_("Unknown subscription source.")
             await system_logger.error(message=msg, description=description)
             response["error"] = True
-            await self._write_msg(response)
+            await self.write_msg(response)
             return
         # if 'add' cmd and not subscribed  then subscribe
         if (
@@ -94,14 +90,14 @@ class VdiFrontWsHandler(BaseWsHandler):  # noqa
             subscription_cmd == SubscriptionCmd.add
             and subscription_source in self._subscriptions  # noqa: W503
         ):
-            await system_logger.debug(_("Already subscribed."))
+            await system_logger.debug(_local_("Already subscribed."))
             response["error"] = True
         # if 'delete' cmd and not subscribed  then do nothing
         elif (
             subscription_cmd == SubscriptionCmd.delete
             and subscription_source not in self._subscriptions  # noqa: W503
         ):
-            await system_logger.debug(_("Not subscribed."))
+            await system_logger.debug(_local_("Not subscribed."))
             response["error"] = True
         # if 'delete' cmd and subscribed then unsubscribe
         elif (
@@ -112,19 +108,18 @@ class VdiFrontWsHandler(BaseWsHandler):  # noqa
             response["error"] = False
 
         # send response
-        await self._write_msg(response)
+        await self.write_msg(response)
 
     async def _send_messages_co(self):
         """Wait for message and send it to front client."""
         # subscribe to channels  INTERNAL_EVENTS_CHANNEL and WS_MONITOR_CHANNEL_OUT
-        redis_subscriber = REDIS_CLIENT.pubsub()
-        redis_subscriber.subscribe(
-            INTERNAL_EVENTS_CHANNEL, WS_MONITOR_CHANNEL_OUT, REDIS_TEXT_MSG_CHANNEL
-        )
+
+        pubsub = redis_get_pubsub()
+        await pubsub.subscribe(INTERNAL_EVENTS_CHANNEL, WS_MONITOR_CHANNEL_OUT, REDIS_TEXT_MSG_CHANNEL)
 
         while True:
             try:
-                redis_message = await a_redis_get_message(redis_subscriber)
+                redis_message = await redis_block_get_message(pubsub)
 
                 if redis_message["type"] == "message":
                     redis_message_data = redis_message["data"].decode()
@@ -144,11 +139,10 @@ class VdiFrontWsHandler(BaseWsHandler):  # noqa
                                 == WsMessageDirection.USER_TO_ADMIN.value  # noqa: W503
                             ):
                                 # Текстовые сообщения (от пользователей ТК) администратору
-                                await self._write_msg(redis_message_data)
+                                await self.write_msg(redis_message_data)
                         # other resources
                         else:
-                            # print("_send_messages_co: redis_message_data ", redis_message_data)
-                            await self._write_msg(redis_message_data)
+                            await self.write_msg(redis_message_data)
 
             except asyncio.CancelledError:
                 break

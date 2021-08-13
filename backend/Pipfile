@@ -4,19 +4,20 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 
 [dev-packages]
-pytest = "==5.2.2"
-pytest-asyncio = "==0.10.0"
-pytest-cov = "==2.8.1"
-wasmer = "==0.3.0"
-snapshottest = "==0.5.1"
-flake8 = "==3.7.9"
-flake8-builtins = "==1.5.2"
-flake8-bugbear = "==19.8.0"
-requests = "==2.23.0"
-sqlalchemy-utils = "==0.36.*"
-async_generator = "==1.10"  # classy_async
+pytest = "*"
+pytest-asyncio = "*"
+pytest-cov = "*"
+wasmer = "*"
+snapshottest = "*"
+flake8 = "*"
+flake8-builtins = "*"
+flake8-bugbear = "*"
+requests = "*"
+sqlalchemy-utils = "*"
+async_generator = "*"  # classy_async
 
 [packages]
+yaaredis = "==2.0.3" # aioredis и aredis имеют баги. aioredis не дает создать больше одного подписчика на канал. aredis не пробрасывает asyncio.CancelledError
 pyjwt = "==1.7.1"  # JWTTokens
 tornado = "==6.0.*"
 graphene = "==2.1.8"
@@ -30,11 +31,13 @@ python2-secrets = "==1.0.5"  # Django-secrets
 cryptography = "==2.8"  # controller password encryption
 python-ldap = "==3.3.*"  # ldap integration
 ldap3 = "==2.8.*"  # ldap integration
-redis = "==3.4.1"
 pymemcache = "==3.2.*"
 uvloop = "==0.14.*"
 veil-api-client = "==2.2.*"
 veil-aio-au = "==0.1.*"
+aiosmtplib = "==1.1.6"
+pyotp = "*"
+pillow = "*"
 
 [requires]
 python_version = "3.5"

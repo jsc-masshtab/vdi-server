@@ -3,7 +3,6 @@ import uuid
 
 from subprocess import Popen, TimeoutExpired
 import sys
-import asyncio
 import os
 
 from async_generator import async_generator, yield_
@@ -13,7 +12,7 @@ from common.database import start_gino, stop_gino
 from common.veil.veil_gino import Role
 from common.veil.auth.veil_jwt import encode_jwt
 from common.veil.veil_api import get_veil_client, stop_veil_client
-from common.veil.veil_redis import REDIS_CLIENT, wait_for_task_result
+from common.veil.veil_redis import redis_flushall, wait_for_task_result
 
 from common.models.controller import Controller
 from common.models.pool import Pool
@@ -21,6 +20,8 @@ from common.models.vm import Vm
 from common.models.auth import Group, User
 from common.models.authentication_directory import AuthenticationDirectory, Mapping
 from common.models.task import Task, TaskStatus
+
+from common.veil.veil_redis import redis_init, redis_deinit
 
 from web_app.controller.schema import controller_schema
 from web_app.pool.schema import pool_schema
@@ -54,9 +55,17 @@ def get_test_pool_name():
 
 @pytest.fixture
 @async_generator
-async def fixt_launch_workers():
+async def fixt_redis_client():
+    redis_init()
+    await yield_()
+    redis_deinit()
 
-    REDIS_CLIENT.flushall()
+
+@pytest.fixture
+@async_generator
+async def fixt_launch_workers(fixt_redis_client):
+
+    await redis_flushall()
 
     file_path = os.path.dirname(__file__)
     pool_worker_path = os.path.join(file_path, "../../pool_worker/app.py")
@@ -73,13 +82,13 @@ async def fixt_launch_workers():
             pass
         worker.kill()
 
-    # stop_worker(ws_listener_worker)
+    # stop_worker(monitor_worker)
     stop_worker(pool_worker)
 
 
 @pytest.fixture
 @async_generator
-async def fixt_db():
+async def fixt_db(fixt_redis_client):
     """Actual fixture for requests working with db."""
     await start_gino()
     await yield_()
@@ -249,7 +258,7 @@ async def several_static_pools(fixt_controller, count: int = 5):
     context = await get_auth_context()
     pools_list = list()
     # Создаем пулы
-    for i in range(count + 1):
+    for _ in range(count + 1):
         vm_id = uuid.uuid4()
         qu = """
             mutation{addStaticPool(
@@ -321,7 +330,7 @@ async def fixt_create_rds_pool(fixt_controller):
     mutation {
               addRdsPool(verbose_name: "%s",
               controller_id: "%s",
-              resource_pool_id:"%s",  
+              resource_pool_id:"%s",
               rds_vm:{id: "%s", verbose_name: "rds_server"},
               connection_types:[NATIVE_RDP, RDP]){
          ok
@@ -542,7 +551,7 @@ def fixt_auth_dir(request, event_loop):
             await AuthenticationDirectory.delete.where(
                 AuthenticationDirectory.id == id
             ).gino.status()
-            # TODO: опасное место
+            # опасное место
             await User.delete.where(User.username == "ad120").gino.status()
 
         event_loop.run_until_complete(a_teardown())
@@ -579,7 +588,7 @@ def fixt_auth_dir_with_pass(request, event_loop):
             await AuthenticationDirectory.delete.where(
                 AuthenticationDirectory.id == id
             ).gino.status()
-            # TODO: опасное место
+            # опасное место
             await User.delete.where(User.username == "ad120").gino.status()
 
         event_loop.run_until_complete(a_teardown())
@@ -617,7 +626,7 @@ def fixt_ipa_with_pass(request, event_loop):
             await AuthenticationDirectory.delete.where(
                 AuthenticationDirectory.id == id
             ).gino.status()
-            # TODO: опасное место
+            # опасное место
             await User.delete.where(User.username == "admin").gino.status()
 
         event_loop.run_until_complete(a_teardown())
@@ -654,7 +663,7 @@ def fixt_auth_dir_with_pass_bad(request, event_loop):
             await AuthenticationDirectory.delete.where(
                 AuthenticationDirectory.id == id
             ).gino.status()
-            # TODO: опасное место
+            # опасное место
             await User.delete.where(User.username == "ad120").gino.status()
 
         event_loop.run_until_complete(a_teardown())

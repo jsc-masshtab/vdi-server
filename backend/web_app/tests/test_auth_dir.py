@@ -7,6 +7,7 @@ import pytest
 
 from web_app.tests.fixtures import (
     fixt_db,  # noqa
+    fixt_redis_client,
     fixt_auth_context,  # noqa
     fixt_group,  # noqa
     fixt_local_group,  # noqa
@@ -24,10 +25,7 @@ from web_app.auth.authentication_directory.auth_dir_schema import auth_dir_schem
 from common.models.authentication_directory import AuthenticationDirectory, Mapping
 from common.models.auth import Group, User
 from common.settings import PAM_AUTH
-from common.languages import lang_init
-
-
-_ = lang_init()
+from common.languages import _local_
 
 pytestmark = [
     pytest.mark.asyncio,
@@ -174,7 +172,7 @@ class TestAuthenticationDirectoryCreate:
         try:
             await execute_scheme(auth_dir_schema, query, context=fixt_auth_context)
         except ExecError as E:
-            assert _(
+            assert _local_(
                 "More than one authentication directory can not be created."
             ) in str(E)
 

@@ -7,6 +7,7 @@ from tornado.httpclient import HTTPClientError
 from web_app.tests.utils import VdiHttpTestCase
 from web_app.tests.fixtures import (
     fixt_db,
+    fixt_redis_client,
     fixt_user_locked,
     fixt_user,
     fixt_user_admin,
@@ -16,11 +17,8 @@ from web_app.tests.fixtures import (
     fixt_group_role,
 )  # noqa
 
-from common.languages import lang_init
+from common.languages import _local_
 from common.settings import LOCAL_AUTH, EXTERNAL_AUTH, PAM_AUTH
-
-
-_ = lang_init()
 
 pytestmark = [
     pytest.mark.asyncio,
@@ -41,7 +39,7 @@ class AuthLocalTestCase(VdiHttpTestCase):
     @gen_test
     @pytest.mark.smoke_test
     def test_local_auth_ok(self):
-        body = '{"username": "test_user_admin","password": "veil"}'
+        body = '{"username": "test_user_admin","password": "veil", "code": ""}'
         response_dict = yield self.get_response(body=body)
         self.check_local_auth(response_dict)
         if LOCAL_AUTH:
@@ -113,7 +111,7 @@ class AuthLocalTestCase(VdiHttpTestCase):
                 body=body, url="/users", headers=headers
             )
             error_message = response_dict["errors"][0]["message"]
-            self.assertIn(_("Invalid permissions."), error_message)
+            self.assertIn(_local_("Invalid permissions."), error_message)
 
     @pytest.mark.usefixtures("fixt_db", "fixt_user")
     @gen_test

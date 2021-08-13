@@ -26,6 +26,7 @@ from common.settings import AUTH_ENABLED, PAM_AUTH
 
 from web_app.tests.fixtures import (
     fixt_db,  # noqa: F401
+    fixt_redis_client,
     fixt_user_locked,  # noqa: F401
     fixt_user,  # noqa: F401
     fixt_user_admin,  # noqa: F401
@@ -51,9 +52,7 @@ class TestMessageChat(VdiHttpTestCase):
     @pytest.mark.usefixtures("fixt_db", "fixt_user", "fixt_user_admin")
     @gen_test
     async def test_chat_ok(self):
-        """Тестируется сценарий общения пользователя с админом
-        """
-
+        """Тестируется сценарий общения пользователя с админом"""
         tk_ws_client = None
         admin_ws_client = None
         try:
@@ -152,7 +151,6 @@ class TestMessageChat(VdiHttpTestCase):
             self.assertEqual(response.code, 200)
 
             # Получение сообщение админом от тк
-
             admin_received_msg_dict = await ws_wait_for_text_msg_with_timeout(admin_ws_client)
 
             assert admin_received_msg_dict["msg_type"] == WsMessageType.TEXT_MSG.value

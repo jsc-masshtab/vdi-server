@@ -10,11 +10,9 @@ from sqlalchemy.sql import and_, desc
 from sqlalchemy.sql.schema import Column
 
 from common.database import db
-from common.languages import lang_init
+from common.languages import _local_
 from common.settings import VEIL_OPERATION_WAITING
 from common.veil.veil_redis import publish_data_in_internal_channel
-
-_ = lang_init()
 
 
 async def get_list_of_values_from_db(db_model, column):
@@ -76,23 +74,22 @@ class AbstractSortableStatusModel:
     @classmethod
     def get_order_field(cls, field_name):
         """Соответствие переданного наименования поля полю модели, чтобы не использовать raw_sql в order."""
-        from common.veil.veil_errors import SimpleError
-
+        from common.veil.veil_errors import FieldError
         field = cls._get_table_field(field_name)
+        # Получив FieldError, фронт подсветит GUI элемент, соответствующий field_name
         if field is None:
-            # TODO: switch SimpleError to FieldError
-            raise SimpleError(_("Incorrect sort parameter {}.").format(field_name))
+            raise FieldError(message=_local_("Incorrect sort parameter {}.").format(field_name),
+                             field_name=field_name)
         return field
 
     @classmethod
     def get_query_field(cls, field_name):
         """Соответствие переданного наименования поля полю модели, чтобы не использовать raw_sql в where."""
-        from common.veil.veil_errors import SimpleError
-
+        from common.veil.veil_errors import FieldError
         field = cls._get_table_field(field_name)
         if field is None:
-            # TODO: switch SimpleError to FieldError
-            raise SimpleError(_("Incorrect request parameter {}.").format(field_name))
+            raise FieldError(message=_local_("Incorrect request parameter {}.").format(field_name),
+                             field_name=field_name)
         return field
 
     @classmethod
@@ -220,8 +217,8 @@ class VeilModel(db.Model):
         from common.log.journal import system_logger
 
         await self.set_status(Status.FAILED)
-        msg = _("{} {} has been disabled.").format(self.entity_name, self.verbose_name)
-        description = _(
+        msg = _local_("{} {} has been disabled.").format(self.entity_name, self.verbose_name)
+        description = _local_(
             "{} {} has`t been found in ECP VeiL. Switched to FAILED."
         ).format(self.entity_name, self.verbose_name)
         await system_logger.info(
@@ -235,9 +232,11 @@ class VeilModel(db.Model):
             await self.delete()
             if self.entity_name == "Group":
                 await system_logger.info(
-                    _("Group {} has been deleted.").format(self.verbose_name))
+                    _local_("Group {} has been deleted.").format(self.verbose_name),
+                    entity=self.entity, user=creator)
         except DataError as db_error:
-            await system_logger.debug(_("Soft_delete exception: {}.").format(db_error))
+            await system_logger.debug(
+                _local_("Soft_delete exception: {}.").format(db_error))
             return False
         return True
 
@@ -293,7 +292,8 @@ class VeilModel(db.Model):
         await self.update(status=status).apply()
 
         additional_data = await self.additional_model_to_json_data()
-        await publish_data_in_internal_channel(self.get_resource_type(), "UPDATED", self, additional_data)
+        await publish_data_in_internal_channel(self.get_resource_type(), "UPDATED",
+                                               self, additional_data)
 
 
 StatusGraphene = GrapheneEnum.from_enum(Status)

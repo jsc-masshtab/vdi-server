@@ -1,5 +1,5 @@
 [flake8]
-application-import-names = common, web_app, pool_worker, ws_listener_worker
+application-import-names = common, web_app, pool_worker, monitor_worker
 ignore =
     # E501 line too long
     E501,

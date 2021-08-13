@@ -9,23 +9,30 @@ from tornado import httputil, websocket
 from tornado.escape import json_decode
 from tornado.web import Application, RequestHandler
 
-from common.languages import lang_init
+from common.languages import _local_
 from common.log.journal import system_logger
-from common.models.auth import User, UserJwtInfo
+from common.models.auth import User
 from common.models.pool import Pool
 from common.veil.auth.veil_jwt import (
-    JWT_OPTIONS,
-    decode_jwt,
     extract_user,
     extract_user_object,
     jwtauth,
 )
 from common.veil.veil_errors import InvalidUserError, ValidationError
 
-_ = lang_init()
-
 
 class BaseHandler(RequestHandler, ABC):
+    @property
+    def remote_ip(self):
+        remote_ip = (
+            self.request.headers.get("X-Real-IP")
+            or self.request.headers.get("X-Forwarded-For")  # noqa: W503
+            or self.request.remote_ip  # noqa: W503
+        )
+        return remote_ip
+
+
+class BaseHttpHandler(BaseHandler):
     args = dict()
 
     def prepare(self):
@@ -51,25 +58,16 @@ class BaseHandler(RequestHandler, ABC):
         )
 
         if not user:
-            raise InvalidUserError(_("User {} not found.").format(username))
+            raise InvalidUserError(_local_("User {} not found.").format(username))
 
         return user
 
     async def log_finish(self, response):
         if "data" in response:
-            await system_logger.debug("BaseHandler data: {}".format(response))
+            await system_logger.debug("BaseHttpHandler data: {}".format(response))
         else:
-            await system_logger.debug("BaseHandler error: {}".format(response))
+            await system_logger.debug("BaseHttpHandler error: {}".format(response))
         return self.finish(response)
-
-    @property
-    def remote_ip(self):
-        remote_ip = (
-            self.request.headers.get("X-Real-IP")
-            or self.request.headers.get("X-Forwarded-For")  # noqa: W503
-            or self.request.remote_ip  # noqa: W503
-        )
-        return remote_ip
 
     @property
     def client_type(self):
@@ -94,15 +92,16 @@ class BaseHandler(RequestHandler, ABC):
     @staticmethod
     async def validate_and_get_vm(user, pool_id):
         if not user:
-            raise InvalidUserError(_("User {} not found."))
+            raise InvalidUserError(_local_("User {} not found."))
 
         pool = await Pool.get(pool_id)
         if not pool:
-            raise ValidationError(_("There is no pool with id: {}.").format(pool_id))
+            raise ValidationError(
+                _local_("There is no pool with id: {}.").format(pool_id))
         vm = await pool.get_vm(user_id=user.id)
         if not vm:
             raise ValidationError(
-                _("User {} has no VM on pool {}.").format(user.username, pool.id)
+                _local_("User {} has no VM on pool {}.").format(user.username, pool.id)
             )
 
         return vm
@@ -114,8 +113,6 @@ class BaseHandler(RequestHandler, ABC):
             exc_info = kwargs["exc_info"]
             (_, exc, _) = exc_info
             message = "Server error: " + str(exc)
-        except Exception:  # noqa
-            pass
         finally:
             shorten_msg = textwrap.shorten(message, width=100)
             response = {"errors": [{"message": shorten_msg}]}
@@ -127,7 +124,7 @@ class VdiTornadoGraphQLHandler(TornadoGraphQLHandler, ABC):
     pass
 
 
-class BaseWsHandler(websocket.WebSocketHandler, ABC):
+class BaseWsHandler(BaseHandler, websocket.WebSocketHandler):
     def __init__(
         self,
         application: Application,
@@ -139,59 +136,20 @@ class BaseWsHandler(websocket.WebSocketHandler, ABC):
         self.user_id = None
 
     def check_origin(self, origin):
-        # TODO: временное решение
         return True
 
-    async def _validate_token(self):
-        """Проверить токен. Вернуть True, если валидация прошла. Иначе False."""
-        try:
-            token = self.get_query_argument("token")
-            if not token:
-                raise AssertionError("Jwt token must be send as query param")
-            if token and "jwt" in token:
-                token = token.replace("jwt", "")
-            token = token.replace(" ", "")
-
-            # token checking
-            payload = decode_jwt(token)
-            payload_user = payload.get("username")
-            is_valid = await UserJwtInfo.check_token(payload_user, token)
-            if not is_valid:
-                raise AssertionError("Auth failed. Wrong jwt token")
-
-            # extract user
-            payload = decode_jwt(token, JWT_OPTIONS)
-            user_name = payload["username"]
-
-            self.user_id = await User.get_id(user_name)
-            if not self.user_id:
-                raise AssertionError("User {} not found.".format(user_name))
-
-            return True
-
-        except Exception as ex:  # noqa
-            error_msg = "Token validation error. {}".format(str(ex))
-            await self._write_msg(error_msg)
-            self.close(code=4001, reason=error_msg)
-            return False
-
-    async def _write_msg(self, msg):
+    async def write_msg(self, msg):
         try:
             await self.write_message(msg)
         except (websocket.WebSocketError, IOError) as ex:
             await system_logger.debug(
-                message=_("Ws write error."), description=(str(ex))
+                message=_local_("Ws write error."), description=(str(ex))
             )
+
+    async def close_with_msg(self, msg, code=4001):
+        await self.write_msg(msg)
+        self.close(code=code, reason=msg)
 
     # unused abstract method implementation
     def data_received(self, chunk: bytes) -> Optional[Awaitable[None]]:
         pass
-
-    @property
-    def remote_ip(self):
-        remote_ip = (
-            self.request.headers.get("X-Real-IP")
-            or self.request.headers.get("X-Forwarded-For")  # noqa: W503
-            or self.request.remote_ip  # noqa: W503
-        )
-        return remote_ip

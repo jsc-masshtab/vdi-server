@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+
 import ssl
 
 from tornado.httpserver import HTTPServer
@@ -10,7 +11,7 @@ from tornado.web import Application
 import uvloop
 
 from common.database import start_gino, stop_gino
-from common.languages import lang_init
+from common.languages import _local_
 from common.log.journal import system_logger
 from common.settings import (
     AUTH_ENABLED,
@@ -23,7 +24,7 @@ from common.settings import (
 from common.utils import init_signals
 from common.veil.veil_api import get_veil_client, stop_veil_client
 from common.veil.veil_handlers import VdiTornadoGraphQLHandler
-from common.veil.veil_redis import REDIS_POOL
+from common.veil.veil_redis import redis_deinit, redis_init
 
 from web_app.auth.authentication_directory.auth_dir_schema import auth_dir_schema
 from web_app.auth.group_schema import group_schema
@@ -36,11 +37,10 @@ from web_app.controller.schema import controller_schema
 from web_app.front_ws_api.urls import ws_event_monitoring_urls
 from web_app.journal.schema import event_schema
 from web_app.pool.schema import pool_schema
+from web_app.settings.schema import settings_schema
 from web_app.task.schema import task_schema
 from web_app.thin_client_api.schema import thin_client_schema
 from web_app.thin_client_api.urls import thin_client_api_urls
-
-_ = lang_init()
 
 define("port", default=8888, help="port to listen on")
 define("address", default="127.0.0.1", help="address to listen on")
@@ -68,6 +68,11 @@ handlers = [
     ),
     (r"/pools", VdiTornadoGraphQLHandler, dict(graphiql=True, schema=pool_schema)),
     (r"/events", VdiTornadoGraphQLHandler, dict(graphiql=True, schema=event_schema)),
+    (
+        r"/settings",
+        VdiTornadoGraphQLHandler,
+        dict(graphiql=True, schema=settings_schema)
+    ),
     (r"/tasks", VdiTornadoGraphQLHandler, dict(graphiql=True, schema=task_schema)),
     (
         r"/thin_clients",
@@ -114,10 +119,10 @@ def exit_handler(sig, frame):  # noqa
     io_loop = IOLoop.current()
 
     async def shutdown():
-        REDIS_POOL.disconnect()
         await stop_veil_client()
-        await system_logger.info(_("VDI broker stopped."))
+        await system_logger.info(_local_("VDI broker stopped."))
         await stop_gino()
+        redis_deinit()
         io_loop.stop()
 
     io_loop.add_callback_from_signal(shutdown)
@@ -127,19 +132,19 @@ async def startup_alerts(vdi_license):
     """Выводим сообщения только в первом процессе. Если task_id None, значит процесс 1, если > 0, значит больше 1."""
     if not task_id():
         await system_logger.info(
-            _("VDI broker started with {} worker(s).").format(options.workers)
+            _local_("VDI broker started with {} worker(s).").format(options.workers)
         )
         # Проверка настроек
         if not AUTH_ENABLED:
-            await system_logger.warning(_("Authentication system is disabled."))
+            await system_logger.warning(_local_("Authentication system is disabled."))
         if vdi_license.expired:
             await system_logger.warning(
-                _(
+                _local_(
                     "The license is expired. Some functions will be blocked. Contact your dealer."
                 )
             )
         if DEBUG:
-            await system_logger.warning(_("DEBUG mode is enabled."))
+            await system_logger.warning(_local_("DEBUG mode is enabled."))
 
 
 async def startup_server():
@@ -148,6 +153,9 @@ async def startup_server():
     # signals
     init_signals(exit_handler)
     app = make_app()
+
+    # Инициализация редис
+    redis_init()
     # Инициализация клиента
     get_veil_client()
     # Запуск tornado

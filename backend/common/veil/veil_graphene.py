@@ -10,7 +10,6 @@ class VeilResourceType(graphene.ObjectType):
     """Фильтрует переданные аргументы отсутствующие у типа."""
 
     def __init__(self, **kwargs):
-        # TODO: args?
         filtered = {
             attr: attr_value
             for attr, attr_value in kwargs.items()

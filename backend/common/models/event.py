@@ -1,26 +1,23 @@
 # -*- coding: utf-8 -*-
 # TODO: удалять зависимые записи журнала событий, возможно через ON_DELETE
 #  при удалении родительской сущности (нет явной связи, сами не удалятся).
+
 import csv
 import json
 import uuid
 from datetime import datetime, timedelta
 from pathlib import Path
 
-import redis
-
 from sqlalchemy import and_, between
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
 
 from common.database import db
-from common.languages import lang_init
+from common.languages import _local_
 from common.settings import INTERNAL_EVENTS_CHANNEL
 from common.subscription_sources import EVENTS_SUBSCRIPTION, WsMessageType
 from common.utils import gino_model_to_json_serializable_dict
-from common.veil.veil_redis import REDIS_CLIENT
-
-_ = lang_init()
+from common.veil.veil_redis import publish_to_redis
 
 
 class Event(db.Model):
@@ -74,7 +71,7 @@ class Event(db.Model):
             )
         ).gino.all()
         if not query:
-            raise SilentError(_("Journal in this period is empty."))
+            raise SilentError(_local_("Journal in this period is empty."))
 
         export = []
         for event in query:
@@ -91,17 +88,17 @@ class Event(db.Model):
                 for row in export:
                     writer.writerow(row)
         except FileNotFoundError:
-            raise SilentError(_("Path {} is incorrect.").format(real_path))
+            raise SilentError(_local_("Path {} is incorrect.").format(real_path))
         except IndexError:
             raise SilentError(
-                _("Check date. Interval {} - {} is incorrect.").format(
+                _local_("Check date. Interval {} - {} is incorrect.").format(
                     start_date + timedelta(days=1), finish_date
                 )
             )
         except MemoryError:
-            raise SilentError(_("Not enough free space."))
+            raise SilentError(_local_("Not enough free space."))
         except Exception as e:
-            raise SimpleError(_("Journal export error."), description=e)
+            raise SimpleError(_local_("Journal export error."), description=e)
 
         return name
 
@@ -178,8 +175,8 @@ class Event(db.Model):
         msg_dict.update(gino_model_to_json_serializable_dict(event_obj))
 
         try:
-            REDIS_CLIENT.publish(INTERNAL_EVENTS_CHANNEL, json.dumps(msg_dict))
-        except (TypeError, redis.RedisError):  # Can`t serialize
+            await publish_to_redis(INTERNAL_EVENTS_CHANNEL, json.dumps(msg_dict))
+        except (TypeError):  # Can`t serialize
             pass
 
 
@@ -248,17 +245,17 @@ class JournalSettings(db.Model):
                 settings["form"] = "YYYY"
                 settings["duration"] = 3
             else:
-                raise SilentError(_("Choose right period."))
+                raise SilentError(_local_("Choose right period."))
         if by_count and count:
             settings["by_count"] = by_count
             if count > 1:
                 settings["count"] = count
             else:
-                raise SilentError(_("Count must be more than 1."))
+                raise SilentError(_local_("Count must be more than 1."))
         await cls.update.values(**settings).gino.status()
         entity = {"entity_type": "SECURITY", "entity_uuid": None}
         await system_logger.info(
-            _("Journal settings changed."),
+            _local_("Journal settings changed."),
             description=settings,
             entity=entity,
             user=kwargs["creator"],

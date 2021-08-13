@@ -5,7 +5,7 @@
 
 import pytest
 
-from web_app.tests.fixtures import fixt_db, fixt_auth_context, fixt_group  # noqa
+from web_app.tests.fixtures import fixt_db, fixt_redis_client, fixt_auth_context, fixt_group  # noqa
 from web_app.tests.utils import execute_scheme, ExecError
 from web_app.auth.group_schema import group_schema
 from common.models.auth import Group
@@ -85,10 +85,12 @@ class TestGroupSchema:
                           },
                           ok
                         }}"""
+
+        # Ожидаем исключение
         try:
             await execute_scheme(group_schema, query, context=fixt_auth_context)
         except ExecError as E:
-            assert "duplicate key value violates unique constraint" in str(E)
+            assert "Группа test_group_1 уже существует." in str(E)
         else:
             raise AssertionError
 

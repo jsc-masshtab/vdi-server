@@ -1,0 +1,64 @@
+:host{
+    display: flex;
+    height: 100%;
+    width: 100%;
+    background: #FFF;
+}
+
+.nav-tabs {
+    min-width: 200px;
+    display: flex;
+    flex-direction: column;
+    background-color: white;
+    overflow-y: auto;
+    border-right: 1px solid #e8e8e8;
+    transition: all 150ms;
+    height: 100%;
+
+    > li {
+        display: flex;
+        align-items: center;
+        flex-shrink: 0;
+        padding: 9px;
+        padding-left: 8px;
+        padding-right: 8px;
+        border: 1px solid transparent;
+        margin: 1px;
+        border-radius: 3px;
+        color: rgba(0,0,0,0.5);
+        font-size: 13px;
+        transition: all 300ms;
+        width: calc(100% - 2px);
+        white-space: nowrap;
+
+        &:hover {
+            color: rgba(0,0,0,0.6);
+            cursor: pointer;
+            background-color: #f9f9f9;
+            border: 1px solid #e8e8e8;
+        }
+
+        &.active {
+            color: rgba(0,0,0,0.6);
+            border: 1px solid rgba(0,0,0,0.15);
+            border-radius: 3px ;
+            background-color: white ;
+            font-weight: 550;
+            outline: 0 none;
+        }
+    }
+    .name {
+        margin-left: 8px;
+        max-width: 400px;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        overflow: hidden;
+    }
+}
+
+.tab-wrapper {
+    height: 100%;
+    width: 100%;
+    background-color: #fafafa;
+    padding-left: 6px;
+}

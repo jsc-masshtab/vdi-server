@@ -94,7 +94,6 @@ module.exports = {
     "id-blacklist": "off",
     "id-match": "off",
     "import/no-deprecated": "warn",
-    "import/order": "off",
     "max-classes-per-file": "off",
     "max-len": [
       "error",

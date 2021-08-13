@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 from web_app.thin_client_api.handlers import (
-    AttachUsb, DetachUsb, PoolGetVm, PoolHandler,
-    RedisInfoHandler, SendTextMsgHandler, ThinClientWsHandler, VmAction
+    AttachUsb, DetachUsb, GenerateUserQrCodeHandler, GetUserDataHandler, PoolGetVm, PoolHandler,
+    SendTextMsgHandler, ThinClientWsHandler, UpdateUserDataHandler, VmAction
 )
 
 
 thin_client_api_urls = [
     (r"/client/pools/?", PoolHandler),
     (
-        r"/client/pools/(?P<pool_id>[0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{12})/?",
+        r"/client/pools/(?P<pool_id>[0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{12})/?",  # noqa: E501
         PoolGetVm,
     ),
     (
@@ -24,6 +24,8 @@ thin_client_api_urls = [
         VmAction,
     ),
     (r"/ws/client/?", ThinClientWsHandler),
-    (r"/client/message_broker/?", RedisInfoHandler),
     (r"/client/send_text_message/?", SendTextMsgHandler),
+    (r"/client/generate_user_qr_code/?", GenerateUserQrCodeHandler),
+    (r"/client/get_user_data/?", GetUserDataHandler),
+    (r"/client/update_user_data/?", UpdateUserDataHandler),
 ]

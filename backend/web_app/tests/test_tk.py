@@ -13,12 +13,15 @@ from web_app.tests.utils import VdiHttpTestCase
 from common.models.active_tk_connection import ActiveTkConnection
 from common.models.auth import User
 from common.models.pool import Pool
+from common.models.vm import Vm
+from common.models.user_tk_permission import TkPermission
 
 from web_app.tests.utils import execute_scheme
 from web_app.thin_client_api.schema import thin_client_schema
 from common.settings import PAM_AUTH
 from web_app.tests.fixtures import (
     fixt_db,  # noqa: F401
+    fixt_redis_client,
     fixt_user_locked,  # noqa: F401
     fixt_user,  # noqa: F401
     fixt_user_admin,  # noqa: F401
@@ -46,7 +49,6 @@ pytestmark = [
 
 
 class TestWebsockets(VdiHttpTestCase):
-    # TODO: дополнить сценарии
 
     @pytest.mark.usefixtures("fixt_db", "fixt_user_admin")
     @gen_test
@@ -165,7 +167,7 @@ class TestPool(VdiHttpTestCase):
     @gen_test
     async def test_superuser_pools_list(self):
         """Check tk rest api"""
-        auth_headers = await self.get_auth_headers(username="test_user_admin")
+        auth_headers = await self.do_login_and_get_auth_headers(username="test_user_admin")
 
         response_dict = await self.get_response(
             body=None, url=self.API_URL, headers=auth_headers, method="GET"
@@ -176,7 +178,7 @@ class TestPool(VdiHttpTestCase):
     @gen_test
     async def test_user_has_no_pools(self):
         """Сценарий, когда у пользователя нет закрепленных пулов."""
-        auth_headers = await self.get_auth_headers(username="test_user")
+        auth_headers = await self.do_login_and_get_auth_headers(username="test_user")
 
         response_dict = await self.get_response(
             body=None, url=self.API_URL, headers=auth_headers, method="GET"
@@ -189,7 +191,7 @@ class TestPool(VdiHttpTestCase):
     async def test_user_has_one_pool(self):
         """Сценарий, когда обычному пользователю выдан 1 пул из 2х."""
         # Данные для подключения
-        auth_headers = await self.get_auth_headers(username="test_user")
+        auth_headers = await self.do_login_and_get_auth_headers(username="test_user")
         # Проверяем, что изначально нет пулов
         response_dict = await self.get_response(
             body=None, url=self.API_URL, headers=auth_headers, method="GET"
@@ -217,7 +219,7 @@ class TestPoolVm(VdiHttpTestCase):
         self.init_fake_license(expired=True)
         vm_url = self.API_URL.format(pool_id=str(uuid4()))
         body = ''
-        auth_headers = yield self.get_auth_headers(username="test_user")
+        auth_headers = yield self.do_login_and_get_auth_headers(username="test_user")
         response_dict = yield self.get_response(
             body=body, url=vm_url, headers=auth_headers, method="POST"
         )
@@ -231,7 +233,7 @@ class TestPoolVm(VdiHttpTestCase):
         """Сценарий, когда отправляется несуществующий пул."""
         vm_url = self.API_URL.format(pool_id=str(uuid4()))
         body = ''
-        auth_headers = yield self.get_auth_headers(username="test_user")
+        auth_headers = yield self.do_login_and_get_auth_headers(username="test_user")
         response_dict = yield self.get_response(
             body=body,
             url=vm_url,
@@ -247,7 +249,7 @@ class TestPoolVm(VdiHttpTestCase):
         """Сценарий получения пользователем ВМ из пула."""
         pool = yield Pool.query.gino.first()
         get_vm_url = self.API_URL.format(pool_id=pool.id_str)
-        auth_headers = yield self.get_auth_headers(username="test_user")
+        auth_headers = yield self.do_login_and_get_auth_headers(username="test_user")
         body = ''
         # Получаем
         response_dict = yield self.get_response(
@@ -259,10 +261,11 @@ class TestPoolVm(VdiHttpTestCase):
         assert 'data' in response_dict
         port = response_dict['data']['port']
         assert port == 5900
+        # Проверка наличие всех разрешений
         permissions = response_dict['data']['permissions']
-        assert 'USB_REDIR' in permissions
-        assert 'FOLDERS_REDIR' in permissions
-        assert 'SHARED_CLIPBOARD' in permissions
+        for permission_type in TkPermission:
+            assert permission_type.name in permissions
+
         pool_type = response_dict['data']['pool_type']
         assert pool_type == 'STATIC'
         host = response_dict['data']['host']
@@ -281,7 +284,7 @@ class TestPoolVm(VdiHttpTestCase):
         pool = yield Pool.query.gino.first()
         vm_url = self.API_URL.format(pool_id=pool.id_str)
         body = json.dumps({"remote_protocol": "BAD"})
-        auth_headers = yield self.get_auth_headers(username="test_user")
+        auth_headers = yield self.do_login_and_get_auth_headers(username="test_user")
         response_dict = yield self.get_response(
             body=body, url=vm_url, headers=auth_headers, method="POST"
         )
@@ -295,7 +298,7 @@ class TestPoolVm(VdiHttpTestCase):
         pool = yield Pool.query.gino.first()
         vm_url = self.API_URL.format(pool_id=pool.id_str)
         body = json.dumps({"remote_protocol": "RDP"})
-        auth_headers = yield self.get_auth_headers(username="test_user")
+        auth_headers = yield self.do_login_and_get_auth_headers(username="test_user")
         response_dict = yield self.get_response(
             body=body, url=vm_url, headers=auth_headers, method="POST"
         )
@@ -304,8 +307,128 @@ class TestPoolVm(VdiHttpTestCase):
         assert '005' == response_dict['errors'][0]['code']
 
 
-class TestVm(VdiHttpTestCase):
-    # TODO: подключение USB к ВМ
-    # TODO: отключение USB от ВМ
-    # TODO: действие над ВМ
-    pass
+@pytest.mark.asyncio
+@pytest.mark.usefixtures(
+    "fixt_db",
+    "fixt_controller",
+    "fixt_user_admin",
+    "fixt_create_static_pool",
+    "fixt_veil_client",
+)
+class VmActionTestCase(VdiHttpTestCase):
+    async def get_moking_dict(self, action):
+
+        # Получаем pool_id из динамической фикстуры пула
+        pool_id = await Pool.select("id").gino.scalar()
+
+        # Получаем виртуальную машину из динамической фикстуры пула
+        vm = await Vm.query.where(pool_id == pool_id).gino.first()
+
+        # Закрепляем VM за тестовым пользователем
+        await vm.add_user("10913d5d-ba7a-4049-88c5-769267a6cbe3", creator="system")
+
+        # Формируем данные для тестируемого параметра
+        headers = await self.do_login_and_get_auth_headers()
+        body = '{"force": true}'
+        url = "/client/pools/{pool_id}/{action}/".format(pool_id=pool_id, action=action)
+        return {"headers": headers, "body": body, "url": url}
+
+    @gen_test(timeout=20)
+    async def test_valid_action(self):
+        action = 'start'  # Заведомо правильное действие.
+        moking_dict = await self.get_moking_dict(action=action)
+        self.assertIsInstance(moking_dict, dict)
+        response_dict = await self.get_response(**moking_dict)
+        response_data = response_dict['data']
+        self.assertEqual(response_data, 'success')
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures(
+    "fixt_db",
+    "fixt_controller",
+    "fixt_user_admin",
+    "fixt_create_static_pool",
+    "fixt_veil_client",
+)
+class USbTestCase(VdiHttpTestCase):
+
+    @gen_test
+    async def test_attach_detach_usb_ok(self):
+
+        # Получаем pool_id из динамической фикстуры пула
+        pool_id = await Pool.select("id").gino.scalar()
+
+        # Получаем виртуальную машину из динамической фикстуры пула
+        vm = await Vm.query.where(pool_id == pool_id).gino.first()
+
+        # Закрепляем VM за тестовым пользователем
+        await vm.add_user("10913d5d-ba7a-4049-88c5-769267a6cbe3", creator="system")
+
+        headers = await self.do_login_and_get_auth_headers()
+        # Формируем данные для attach usb запроса
+        usb_tcp_port = 17001
+        usb_tcp_ip = "127.0.0.1"
+        send_data = dict(host_address=usb_tcp_ip, host_port=usb_tcp_port)
+        body = json.dumps(send_data)
+
+        url = "/client/pools/{pool_id}/attach-usb/".format(pool_id=pool_id)
+        request_data_dict = {"headers": headers, "body": body, "url": url}
+
+        # Send attach request
+        response_dict = await self.get_response(**request_data_dict)
+        # print('!!!response_dict ', response_dict, flush=True)
+        usb_array = response_dict['tcp_usb_devices']
+
+        # some attach response checks
+        try:
+            usb = next(usb for usb in usb_array if usb['service'] == usb_tcp_port and usb['host'] == usb_tcp_ip)
+        except StopIteration:
+            raise AssertionError("USB not found")
+
+        usb_uuid = usb.get('uuid')
+        assert usb_uuid is not None
+
+        # Данные для detach
+        send_data = dict(usb_uuid=usb_uuid, remove_all=False)
+        body = json.dumps(send_data)
+
+        url = "/client/pools/{pool_id}/detach-usb/".format(pool_id=pool_id)
+        request_data_dict = {"headers": headers, "body": body, "url": url}
+
+        # Send detach request
+        await self.get_response(**request_data_dict)
+
+
+class TestUserAuth(VdiHttpTestCase):
+    @pytest.mark.usefixtures("fixt_db", "fixt_user")
+    @gen_test
+    async def test_2fa_ok(self):
+
+        # Thin client login
+        auth_headers = await self.do_login_and_get_auth_headers(username="test_user")
+        # Get user's data
+        response_dict = await self.get_response(
+            body=None, url="/client/get_user_data/", headers=auth_headers, method="GET"
+        )
+
+        two_factor = response_dict["data"]["user"]["two_factor"]
+        assert not two_factor  # По умолчанию 2fa выключена
+
+        # Generate QR code
+        response_dict = await self.get_response(
+            body="", url="/client/generate_user_qr_code/", headers=auth_headers, method="POST"
+        )
+
+        assert response_dict["data"]["qr_uri"]
+        assert response_dict["data"]["secret"]
+
+        # Turn on 2fa
+        request_body_dict = dict(two_factor=True)
+        response_dict = await self.get_response(
+            body=json.dumps(request_body_dict), url="/client/update_user_data/", headers=auth_headers, method="POST"
+        )
+
+        assert response_dict["data"]["ok"]
+        two_factor = response_dict["data"]["user"]["two_factor"]
+        assert two_factor  # Проверяем что 2fa включена

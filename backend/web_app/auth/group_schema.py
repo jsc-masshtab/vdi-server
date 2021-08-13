@@ -2,7 +2,7 @@
 import graphene
 
 from common.database import db
-from common.languages import lang_init
+from common.languages import _local_
 from common.models.auth import Group, User
 from common.models.user_tk_permission import TkPermission
 from common.veil.veil_decorators import security_administrator_required
@@ -11,8 +11,6 @@ from common.veil.veil_gino import Role, RoleTypeGraphene
 from common.veil.veil_validators import MutationValidation
 
 from web_app.auth.user_schema import PermissionTypeGraphene, UserType
-
-_ = lang_init()
 
 
 class GroupValidator(MutationValidation):
@@ -24,7 +22,7 @@ class GroupValidator(MutationValidation):
         if group:
             obj_dict["group"] = group
             return value
-        raise ValidationError(_("No such group."))
+        raise ValidationError(_local_("No such group."))
 
     @staticmethod
     async def validate_verbose_name(obj_dict, value):
@@ -32,8 +30,8 @@ class GroupValidator(MutationValidation):
         if 0 < value_len <= 128:
             return value
         if value_len > 128:
-            raise ValidationError(_("verbose name must me <= 128 characters."))
-        raise ValidationError(_("verbose_name is empty."))
+            raise ValidationError(_local_("verbose name must me <= 128 characters."))
+        raise ValidationError(_local_("verbose_name is empty."))
 
     @staticmethod
     async def validate_users(obj_dict, value):
@@ -46,14 +44,15 @@ class GroupValidator(MutationValidation):
                 .gino.scalar()
             )
             if exists_count != value_count:
-                raise ValidationError(_("users count not much with db count."))
+                raise ValidationError(_local_("users count not much with db count."))
             return value
-        raise ValidationError(_("users list is empty."))
+        raise ValidationError(_local_("users list is empty."))
 
     @staticmethod
     async def validate_description(obj_dict, value):
         if len(value) > 255:
-            raise ValidationError(_("Last name length must be <= 255 characters."))
+            raise ValidationError(
+                _local_("Last name length must be <= 255 characters."))
         return value
 
 
@@ -142,7 +141,7 @@ class GroupQuery(graphene.ObjectType):
     async def resolve_group(self, info, id, **kwargs):  # noqa
         group = await Group.get(id)
         if not group:
-            raise SimpleError(_("No such group."))
+            raise SimpleError(_local_("No such group."))
         return GroupType.instance_to_type(group)
 
     @security_administrator_required
@@ -168,6 +167,15 @@ class CreateGroupMutation(graphene.Mutation, GroupValidator):
     @security_administrator_required
     async def mutate(cls, root, info, creator, **kwargs):
         await cls.validate(**kwargs)
+
+        verbose_name = kwargs["verbose_name"]
+        group = await Group.query.where((Group.verbose_name == verbose_name)).gino.first()
+        if group:
+            raise SimpleError(
+                _local_("Group {} already exists.").format(verbose_name),
+                user=creator,
+            )
+
         group = await Group.soft_create(creator=creator, **kwargs)
         return CreateGroupMutation(group=GroupType.instance_to_type(group), ok=True)
 
@@ -206,9 +214,9 @@ class DeleteGroupMutation(graphene.Mutation, GroupValidator):
     async def mutate(self, _info, creator, id=None, ad_guid=None):
         # Если нет ни одного из параметров
         if not id and not ad_guid:
-            raise SimpleError(_("Specify Group.id or Group.ad_guid."))
+            raise SimpleError(_local_("Specify Group.id or Group.ad_guid."))
         if id and ad_guid:
-            raise SimpleError(_("Specify Group.id or Group.ad_guid. Not both."))
+            raise SimpleError(_local_("Specify Group.id or Group.ad_guid. Not both."))
         # Ищем группу по переданному параметру
         group = (
             await Group.get(id)
@@ -216,7 +224,7 @@ class DeleteGroupMutation(graphene.Mutation, GroupValidator):
             else await Group.query.where(Group.ad_guid == str(ad_guid)).gino.first()
         )
         if not group:
-            raise SimpleError(_("No such Group."))
+            raise SimpleError(_local_("No such Group."))
         status = await group.soft_delete(creator=creator)
         return DeleteGroupMutation(ok=status)
 

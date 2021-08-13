@@ -1,8 +1,8 @@
-@import "dashboard/common/styles/form";
-@import "dashboard/common/styles/panel-buttons";
-@import "dashboard/common/styles/details-wrap";
-@import "dashboard/common/styles/panel-btn-into";
-@import "dashboard/common/styles/common";
+@import "shared/styles/form";
+@import "shared/styles/panel-buttons";
+@import "shared/styles/details-wrap";
+@import "shared/styles/panel-btn-into";
+@import "shared/styles/common";
 
 vdi-login {
     width: 100% !important;
@@ -10,8 +10,11 @@ vdi-login {
 }
 
 vdi-dashboard {
+    display: flex;
+    flex-direction: column;
     width: 100% !important;
     height: 100% !important;
+    border-right: 5px solid #3f606b;
 }
 
 .container {
@@ -24,12 +27,13 @@ vdi-dashboard {
 }
 
 .all-main {
-    width: 100%;
-    height: calc(100% - 80px);
+    position: relative;
     display: flex;
-    border-right: 5px solid #3f606b;
+    flex-direction: row;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
     margin-top: 50px;
-
     margin-right: 200px;
 }
 
@@ -42,10 +46,7 @@ main {
     background-repeat: repeat;
     background-size: 12px 14px, 12px 14px, 12px 11px;
     background-position: 0 0, 0 0, 0 20px;
-    margin-left: 200px;
 }
-
-@media all  and (max-width: 750px) { main { margin-left: 70px !important} }
 
 .cursorTrue {
     cursor: pointer !important;

@@ -1,0 +1,86 @@
+<div class="table-area">
+  <div *ngFor="let obj of collection" class="table-area-object">   <!--строка-->
+
+      <div class="table-area-title">
+        <span>{{ obj.title }}</span>
+        <button *ngIf="obj.edit && item" (click)="actionEditField(obj.edit, obj)" class="edit-button">
+          <fa-icon [icon]="['fas','edit']" size="xs"></fa-icon>
+        </button>
+      </div>
+      <div class="table-area-value" *ngIf="item; else nothing">
+
+        <ng-container *ngIf="obj.property_lv2">
+          <ng-container *ngIf="item[obj.property] && item[obj.property][obj.property_lv2]; else nothing">
+            <span>{{ item[obj.property][obj.property_lv2] }}</span>
+          </ng-container>
+        </ng-container>
+
+<!-- obj.property === 'status' -->
+        <ng-container *ngIf="obj.property === 'status'">
+          <ng-container *ngIf="item[obj.property]; else nothing">
+            <span>{{ item[obj.property] | status }}</span>
+          </ng-container>
+        </ng-container>
+
+<!-- obj.property === 'assignment_type' -->
+        <ng-container *ngIf="obj.property === 'assignment_type'">
+            <span>{{ item[obj.property] | assignmentType }}</span>
+        </ng-container>
+
+<!-- obj.property -> all-types-here-->
+        <ng-container *ngIf="obj.property && obj.property != 'status' && obj.property != 'assignment_type' && !obj.property_lv2">
+          <ng-container *ngIf="item[obj.property] || item[obj.property] === false && obj.type; else nothing">
+            <span *ngIf="obj.type === 'string'">{{ item[obj.property] }}</span>
+            
+            <span *ngIf="obj.type === 'metric'">{{ item[obj.property] }} {{ obj.unit }}</span>
+
+            <span *ngIf="obj.type === 'bites'">{{ formatBytes(item[obj.property], obj.delimiter) }}</span>
+
+            <span *ngIf="obj.type === 'array-length'">{{ item[obj.property]?.length }}</span>
+
+            <span *ngIf="obj.type === 'pool_type'">{{ item[obj.property] | poolType }}</span>
+
+            <span *ngIf="obj.type === 'task_type'">{{ item[obj.property] | taskType }}</span>
+
+            <ul *ngIf="obj.type === 'array'">
+              <li *ngFor="let item of item[obj.property]">{{item}}</li>
+            </ul>
+
+            <span *ngIf="obj.type === 'time'">{{ moment(item[obj.property]).format('DD.MM.YYYY HH:mm:ss Z')  }}</span>
+
+            <ng-container *ngIf="obj.type.typeDepend === 'propertyInObjectsInArray'">
+              <ng-container *ngIf="item[obj.property]?.length; else nothing">
+                <span *ngFor="let objInItem of item[obj.property];let i = index">
+                  {{ objInItem[obj.type.propertyDepend] }}
+                  <ng-container *ngIf="item[obj.property]?.length > 1 && i != item[obj.property]?.length - 1">,</ng-container>
+                </span>
+              </ng-container>
+            </ng-container>
+
+            <ng-container *ngIf="obj.type.typeDepend === 'boolean'">
+              <ng-container *ngIf="item[obj.property]">{{ obj.type.propertyDepend[0] }}</ng-container>
+              <ng-container *ngIf="!item[obj.property]">{{ obj.type.propertyDepend[1] }}</ng-container>
+            </ng-container>
+
+            <ng-container *ngIf="obj.type.typeDepend === 'tags_array'">
+              <ul *ngFor="let dict of item[obj.property]">
+                <li>
+                  <fa-icon [icon]="['fas', 'circle']" [style.color]="dict['colour']"></fa-icon>
+                  <span> {{ dict['verbose_name'] }}</span>
+              </ul>
+            </ng-container>
+          </ng-container>
+        </ng-container>
+      </div>
+      
+      <ng-template #nothing>
+        <div *ngIf="!item; else noitem" class="table-area-value">
+          {{ parseNothing(obj, item) }}
+        </div>
+        <ng-template #noitem>
+          {{ parseNothing(obj, item) }}
+        </ng-template>
+      </ng-template>
+
+  </div>
+</div>

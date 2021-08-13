@@ -11,6 +11,7 @@ from common.subscription_sources import WsMessageType, VDI_FRONT_ALLOWED_SUBSCRI
 
 from web_app.tests.fixtures import (
     fixt_db,  # noqa: F401
+    fixt_redis_client,
     fixt_user_locked,  # noqa: F401
     fixt_user,  # noqa: F401
     fixt_user_admin,  # noqa: F401

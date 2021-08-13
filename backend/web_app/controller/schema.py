@@ -7,17 +7,20 @@ import graphene
 
 from veil_api_client import VeilRestPaginator
 
-from common.languages import lang_init
+from common.languages import _local_
 from common.models.controller import Controller
 from common.models.pool import Pool
 from common.models.vm import Vm
 from common.veil.veil_decorators import administrator_required
 from common.veil.veil_errors import SilentError, SimpleError, ValidationError
 from common.veil.veil_gino import Status, StatusGraphene
-from common.veil.veil_graphene import VeilEventTypeEnum, VeilResourceType, VeilShortEntityType, VmState
+from common.veil.veil_graphene import (
+    VeilEventTypeEnum,
+    VeilResourceType,
+    VeilShortEntityType,
+    VmState
+)
 from common.veil.veil_validators import MutationValidation
-
-_ = lang_init()
 
 
 class ControllerValidator(MutationValidation):
@@ -28,17 +31,16 @@ class ControllerValidator(MutationValidation):
         """Валидатор verbose_name для контроллера."""
         # Проверяем длину значения (работает только если у валидатора value is not None)
         if not value:
-            raise SimpleError(_("name can`t be empty."))
+            raise SimpleError(_local_("name can`t be empty."))
 
         # Проверяем наличие записей в БД
-        # TODO: универсальный метод в родительском валидаторе для сокращения дублирования
         verbose_name_is_busy = (
             await Controller.select("id")
             .where(Controller.verbose_name == value)
             .gino.scalar()
         )
         if verbose_name_is_busy:
-            raise ValidationError(_("name `{}` is busy.").format(value))
+            raise ValidationError(_local_("name `{}` is busy.").format(value))
         return value
 
     @staticmethod
@@ -46,24 +48,23 @@ class ControllerValidator(MutationValidation):
         """Валидатор адреса контроллера."""
         # Проверяем длину значения (работает только если у валидатора value is not None)
         if not value:
-            raise SimpleError(_("address can`t be empty."))
+            raise SimpleError(_local_("address can`t be empty."))
 
         # Проверяем наличие записей в БД
-        # TODO: универсальный метод в родительском валидаторе для сокращения дублирования
         address_is_busy = (
             await Controller.select("id")
             .where(Controller.address == value)
             .gino.scalar()
         )
         if address_is_busy:
-            raise ValidationError(_("address `{}` is busy.").format(value))
+            raise ValidationError(_local_("address `{}` is busy.").format(value))
         return value
 
     @staticmethod
     async def validate_token(obj_dict, value):
         """Валидатор токена интеграции контроллера."""
         if not value:
-            raise ValidationError(_("token can`t be empty."))
+            raise ValidationError(_local_("token can`t be empty."))
         return value
 
 
@@ -71,10 +72,9 @@ class ControllerFetcher:
     @staticmethod
     async def fetch_by_id(id_):
         """Возваращает инстанс объекта, если он есть."""
-        # TODO: универсальный метод в родительском валидаторе для сокращения дублированияа
         controller = await Controller.get(id_)
         if not controller:
-            raise SimpleError(_("No such controller."))
+            raise SimpleError(_local_("No such controller."))
         return controller
 
     @staticmethod
@@ -93,15 +93,6 @@ class ControllerPoolType(graphene.ObjectType):
     users_amount = graphene.Int()
     pool_type = graphene.String()
     keep_vms_on = graphene.Boolean()
-
-    async def resolve_vms_amount(self, info):
-        # В self лежит объект модели Pool
-        return await self.get_vm_amount()
-
-    async def resolve_users_amount(self, info):
-        # В self лежит объект модели Pool
-        assigned_users = await self.assigned_users
-        return len(assigned_users)
 
 
 class VeilEventType(VeilResourceType):
@@ -335,7 +326,6 @@ class ControllerType(graphene.ObjectType, ControllerFetcher):
         ordering: str = None,
     ):
         """Сокращенная информация о контроллере."""
-        # TODO: на фронте делать неактивными элементы в плохом статусе?
         controller = await Controller.get(self.id)
         # Прерываем выполнение при отсутствии клиента
         if not controller.veil_client:
@@ -360,7 +350,6 @@ class ControllerType(graphene.ObjectType, ControllerFetcher):
         ordering: str = None,
     ):
         """В self прилетает инстанс модели контроллера."""
-        # TODO: на фронте делать неактивными элементы в плохом статусе?
         controller = await Controller.get(self.id)
         # Прерываем выполнение при отсутствии клиента
         if not controller.veil_client:
@@ -386,7 +375,6 @@ class ControllerType(graphene.ObjectType, ControllerFetcher):
         ordering: str = None,
     ):
         """В self прилетает инстанс модели контроллера."""
-        # TODO: на фронте делать неактивными элементы в плохом статусе?
         controller = await Controller.get(self.id)
         paginator = VeilRestPaginator(ordering=ordering, limit=limit, offset=offset)
         vms = await Vm.query.gino.all()
@@ -436,6 +424,8 @@ class ControllerType(graphene.ObjectType, ControllerFetcher):
         for type_ in VeilEventTypeEnum:
             if event_type is type_.value:
                 event_type = type_.name
+        if not controller.veil_client:
+            return
         veil_events = await controller.veil_client.event().list(event_type=event_type,
                                                                 user=veil_user)
         return veil_events.paginator_count
@@ -445,22 +435,23 @@ class ControllerType(graphene.ObjectType, ControllerFetcher):
         controller = await Controller.get(self.id)
         veil_user = await controller.get_veil_user
         paginator = VeilRestPaginator(ordering=ordering, limit=limit, offset=offset)
+        veil_events = list()
         if not controller.veil_client:
-            return
+            return veil_events
         for type_ in VeilEventTypeEnum:
             if event_type is type_.value:
                 event_type = type_.name
         veil_response = await controller.veil_client.event().list(
             paginator=paginator, user=veil_user, event_type=event_type
         )
-        veil_events = list()
         for data in veil_response.response:
             event = data.public_attrs
             # Добавляем id, так как в response он не присутствует в чистом виде
             event["id"] = event["api_object_id"]
             event["event_type"] = VeilEventTypeEnum[event["type"]]
             event["description"] = event["detail_message"]
-            event["created"] = datetime.strptime("{}".format(event["created"]), "%Y-%m-%dT%H:%M:%S.%fZ")
+            event["created"] = datetime.strptime("{}".format(event["created"]),
+                                                 "%Y-%m-%dT%H:%M:%S.%fZ")
             veil_events.append(VeilEventType(**event))
 
         return veil_events
@@ -474,11 +465,12 @@ class ControllerType(graphene.ObjectType, ControllerFetcher):
             event = event_info.value
             event["description"] = event["detail_message"]
             event["event_type"] = VeilEventTypeEnum[event["type"]]
-            event["created"] = datetime.strptime("{}".format(event["created"]), "%Y-%m-%dT%H:%M:%S.%fZ")
+            event["created"] = datetime.strptime("{}".format(event["created"]),
+                                                 "%Y-%m-%dT%H:%M:%S.%fZ")
 
             return VeilEventType(**event)
         else:
-            raise SilentError(_("No such event."))
+            raise SilentError(_local_("No such event."))
 
     @staticmethod
     def obj_to_type(controller_obj: Controller) -> dict:
@@ -518,7 +510,7 @@ class AddControllerMutation(graphene.Mutation, ControllerValidator):
         try:
             controller = await Controller.soft_create(**kwargs)
         except TimeoutError:
-            raise SimpleError(_("Connection to ECP has been failed."))
+            raise SimpleError(_local_("Connection to ECP has been failed."))
         else:
             return AddControllerMutation(controller=controller)
 
@@ -551,7 +543,7 @@ class UpdateControllerMutation(
         try:
             updated_controller = await controller.soft_update(creator=creator, **kwargs)
         except TimeoutError:
-            raise SimpleError(_("Connection to ECP has been failed."))
+            raise SimpleError(_local_("Connection to ECP has been failed."))
         else:
             return UpdateControllerMutation(controller=updated_controller)
 
@@ -645,6 +637,8 @@ class ControllerQuery(graphene.ObjectType, ControllerFetcher):
         controllers = await Controller.get_objects(
             limit, offset, filters=filters, ordering=ordering, include_inactive=True
         )
+        for controller in controllers:
+            await controller.check_jwt_token
         return controllers
 
     @classmethod
