@@ -150,10 +150,6 @@ nav:
       - Пользователи: broker/auth_v3/users.md
       - Группы: broker/auth_v3/groups.md
       - Разрешения ТК: broker/auth_v3/client-permissions.md
-    - Cписок изменений:
-      - 3.1.0: broker/changelog/3.1.0.md
-      - 3.0.0: broker/changelog/3.0.0.md
-      - 2.1.4: broker/changelog/2.1.4.md
   - VeiL Connect:
     - Аннотация: connect/operator_guide/annotate.md
     - Назначение программы: connect/operator_guide/general_info.md
@@ -184,7 +180,21 @@ nav:
       - Общие ошибки: connect/possible_errors/common.md
       - Ошибки RDP: connect/possible_errors/rdp.md
       - Ошибки Spice: connect/possible_errors/spice.md
-    - Cписок изменений:
+    - Описание ini файла настроек: connect/ini_file_description.md
+    - Описание логов: connect/log_files_description.md
+    - Тонкие клиенты:
+      - FAQ ТК: connect/thin_clients/thin_clients.md
+      - Приложение. Установка ОС "Astra Linux Common Edition": connect/thin_clients/application1.md
+      - Приложение. Установка ОС "Astra Linux Special Edition": connect/thin_clients/application2.md
+      - Приложение. Установка ОС "Альт Рабочая станция": connect/thin_clients/application3.md
+  - ECP VeiL: https://veil.mashtab.org/docs/
+  - Cписок изменений:
+    - VeiL Broker:
+      - 3.1.1 (Будущая): broker/changelog/3.1.1.md
+      - 3.1.0: broker/changelog/3.1.0.md
+      - 3.0.0: broker/changelog/3.0.0.md
+      - 2.1.4: broker/changelog/2.1.4.md
+    - VeiL Connect:
       - 1.7.0: connect/changelog/1.7.0.md
       - 1.6.7: connect/changelog/1.6.7.md
       - 1.6.6: connect/changelog/1.6.6.md
@@ -205,11 +215,3 @@ nav:
       - 1.3.8: connect/changelog/1.3.8.md
       - 1.3.7: connect/changelog/1.3.7.md
       - 1.3.6: connect/changelog/1.3.6.md
-    - Описание ini файла настроек: connect/ini_file_description.md
-    - Описание логов: connect/log_files_description.md
-    - Тонкие клиенты:
-      - FAQ ТК: connect/thin_clients/thin_clients.md
-      - Приложение. Установка ОС "Astra Linux Common Edition": connect/thin_clients/application1.md
-      - Приложение. Установка ОС "Astra Linux Special Edition": connect/thin_clients/application2.md
-      - Приложение. Установка ОС "Альт Рабочая станция": connect/thin_clients/application3.md
-  - ECP VeiL: https://veil.mashtab.org/docs/
