@@ -282,8 +282,8 @@ class DoServiceAction(graphene.Mutation):
         await system_logger.info(_local_("Executed action {} for service {}.").
                                  format(service_action, service_name), user=creator)
 
-        # Try to get status of the service
-        service_status = None
+        # Try to get status of the service.
+        service_status = "stopped"
         try:
             cmd = """timeout 50s systemctl list-units --no-pager --no-legend --type=service"""\
                   """ | awk '{print $1\":\"$4}' | grep %s""" % service_name
