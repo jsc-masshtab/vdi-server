@@ -157,8 +157,7 @@ nav:
     - Установка и удаление программы:
       - Проверка целостности VeiL Connect: connect/operator_guide/integrity_check.md
       - Установка VeiL Connect: connect/operator_guide/install.md
-      - Процедура установки VeiL Connect: connect/operator_guide/process_install.md
-      - Процедура удаления VeiL Connect: connect/operator_guide/delete.md
+      - Удаление VeiL Connect: connect/operator_guide/delete.md
     - Выполнение программы:
       - Подготовка к работе: connect/operator_guide/prepare.md
       - Общие правила при работе с программой: connect/operator_guide/rules.md
