@@ -55,16 +55,18 @@ def user_passes_test(test_func, exc=Unauthorized):  # noqa
     return decorator
 
 
+def is_operator(roles) -> bool:
+    # админам доступны права операторов
+    return Role.OPERATOR in roles or Role.SECURITY_ADMINISTRATOR in roles or Role.ADMINISTRATOR in roles
+
+
 def is_administrator(roles) -> bool:
-    return Role.ADMINISTRATOR in roles
+    # админам безопасности доступны права обычных админов
+    return Role.ADMINISTRATOR in roles or Role.SECURITY_ADMINISTRATOR in roles
 
 
 def is_security_administrator(roles) -> bool:
     return Role.SECURITY_ADMINISTRATOR in roles
-
-
-def is_operator(roles) -> bool:
-    return Role.OPERATOR in roles
 
 
 administrator_required = user_passes_test(lambda roles: is_administrator(roles))
