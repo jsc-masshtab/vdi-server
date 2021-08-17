@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import re
 from collections import OrderedDict
 from datetime import datetime, timezone
 from enum import Enum
@@ -13,6 +14,19 @@ from common.models.settings import Settings
 from common.utils import create_subprocess
 from common.veil.veil_decorators import administrator_required
 from common.veil.veil_errors import SilentError, SimpleError
+
+
+# Dictionary of services.{Service name: human friendly service name}.
+app_services = OrderedDict([
+    # external services
+    ("apache2.service", _local_("Apache server.")),
+    ("postgresql.service", _local_("Database.")),
+    ("redis-server.service", "Redis."),
+    # app services
+    ("vdi-monitor_worker.service", _local_("Monitor worker.")),
+    ("vdi-pool_worker.service", _local_("Task worker.")),
+    ("vdi-web.service", _local_("Web application.")),
+])
 
 
 class ServiceAction(Enum):
@@ -126,7 +140,6 @@ class SettingsQuery(graphene.ObjectType):
 
         # Form response
         service_graphene_type_list = []
-        app_services = SettingsQuery._get_app_services_dict()
 
         for service_name, verbose_name in app_services.items():
             service_status = current_services.get(service_name, "stopped")
@@ -185,25 +198,6 @@ class SettingsQuery(graphene.ObjectType):
         sys_info_graphene_type.time_zone = "{}  {}".format(tz_name, tz_offset)
 
         return sys_info_graphene_type
-
-    @staticmethod
-    def _get_app_services_dict():
-        """Get dictionary of services.
-
-        {Service name: human friendly service name}.
-        """
-        app_services = OrderedDict([
-            # external services
-            ("apache2.service", _local_("Apache server.")),
-            ("postgresql.service", _local_("Database.")),
-            ("redis-server.service", "Redis."),
-            # app services
-            ("vdi-monitor_worker.service", _local_("Monitor worker.")),
-            ("vdi-pool_worker.service", _local_("Task worker.")),
-            ("vdi-web.service", _local_("Web application.")),
-        ])
-
-        return app_services
 
 
 class ChangeSettingsMutation(graphene.Mutation):
@@ -266,8 +260,24 @@ class DoServiceAction(graphene.Mutation):
     @administrator_required
     async def mutate(self, _info, sudo_password, service_name, service_action,
                      check_errors=True, creator="system"):
+
+        # Проверка  для защиты от иньекции команд c помощью проблелов и спец символов
+        # service_action валидируется на уровне  graphql
+        pass_validated = re.match("^[a-zA-Z0-9~@#$&_^*%?.+:;=!]*$", sudo_password)
+        if not pass_validated:
+            raise SimpleError(
+                _local_("Password {} contains invalid characters.").format(sudo_password),
+                user=creator
+            )
+
+        if service_name not in app_services.keys():
+            raise SimpleError(
+                _local_("Invalid service name {}.").format(service_name),
+                user=creator
+            )
+
         # Do action
-        cmd = "echo {} | sudo -S timeout 50s systemctl {} {}".format(
+        cmd = "echo '{}' | sudo -S timeout 50s systemctl {} {}".format(
             sudo_password, service_action, service_name)
 
         return_code, stdout, stderr = await create_subprocess(cmd)
