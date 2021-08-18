@@ -8,6 +8,7 @@ import { SharedModule } from '@app/shared/shared.module';
 import { ConfirmModalComponent } from './confirm-modal/confirm-modal.component';
 import { ServiceControlsComponent } from './service-controls/service-controls.component';
 import { ServicePageComponent } from './service-page.component';
+import { ReactiveFormsModule } from '@angular/forms';
 
 @NgModule({
   imports: [
@@ -15,6 +16,7 @@ import { ServicePageComponent } from './service-page.component';
     SharedModule,
     FontAwesomeModule,
     MatDialogModule,
+    ReactiveFormsModule
   ],
   entryComponents: [
     ConfirmModalComponent

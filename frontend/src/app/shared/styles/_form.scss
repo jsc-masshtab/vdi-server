@@ -192,13 +192,13 @@
             margin-left: 3px;
         }
 
-        &:hover {
+        &:not([disabled]):hover {
             background-color: #759296;
             color: white;
             transition: all 200ms;
         }
 
-        &:active {
+        &:not([disabled]):active {
             padding: 0px; // против смещения текста в firefox
         }
 

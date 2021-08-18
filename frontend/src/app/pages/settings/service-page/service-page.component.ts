@@ -5,7 +5,7 @@ import { ApolloQueryResult } from 'apollo-client';
 import { WaitService } from '@core/components/wait/wait.service';
 
 import { ConfirmModalComponent } from './confirm-modal/confirm-modal.component';
-import { IMutationApiModel, IQueryApiModel, IQueryResponse, IQueryService, ServicePageMapper } from './service-page.mapper';
+import { IQueryApiModel, IQueryResponse, IQueryService, MutationServiceInfo, ServicePageMapper } from './service-page.mapper';
 import { ServicePageService } from './service-page.service';
 
 
@@ -20,13 +20,11 @@ export interface IEventData {
   actionType: ActionType
 }
 
-export interface IServiceUpdateParams{
-  serviceName: string,
-  password: string,
-  actionType: string
-}
-
-
+export type modalData = {
+  serviceName: string
+  actionType: ActionType
+  password: string
+} 
 @Component({
   selector: 'vdi-service-page',
   templateUrl: './service-page.component.html',
@@ -62,35 +60,28 @@ export class ServicePageComponent implements OnInit {
   public clickControls(event: IEventData): void  {
     const dialogRef  = this.dialog.open(ConfirmModalComponent, {
       autoFocus: true,
-      width: '500px'
-    });
-    
-    dialogRef.afterClosed().subscribe( (result: string | undefined) => {
-      if (!result){
-        return;
-      }
-
-      const params: IServiceUpdateParams = {
+      width: '500px',
+      data: {
         serviceName: event.service.serviceName,
-        password: result,
         actionType: event.actionType
       }
+    });
+    
+    dialogRef.afterClosed().subscribe( (result: MutationServiceInfo | undefined) => {
 
-      this.servicePageService.updateService(params).subscribe((res) => {
-        const response: IMutationApiModel = res.data.doServiceAction;
-        const mapper = new ServicePageMapper();
-        const serviceInfo = mapper.serverMutationModelToClientModel(response);
+      if (!result){
+        return;
+      }      
+      this.services = this.services.map((service: IQueryService) => {
 
-        this.services = this.services.map((service: IQueryService) => {
+      if (service.serviceName === event.service.serviceName){
 
-            if (service.serviceName === params.serviceName){
+        service.status = result.status
+      }
 
-              service.status = serviceInfo.status
-            }
-
-            return service;
-          })
-      })
+      return service;
+    })
+   
     })
   }
 }
