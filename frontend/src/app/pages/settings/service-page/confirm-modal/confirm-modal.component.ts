@@ -1,9 +1,10 @@
 import { Component, Inject, OnInit } from '@angular/core';
 import { FormGroup, Validators, FormBuilder } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { WaitService } from '@app/core/components/wait/wait.service';
 
 import { modalData } from '../service-page.component';
-import { IMutationApiModel, ServicePageMapper } from '../service-page.mapper';
+import { IMutationApiModel, IQueryService, ServicePageMapper } from '../service-page.mapper';
 import { ServicePageService } from '../service-page.service';
 
 type error = {
@@ -21,8 +22,10 @@ export class ConfirmModalComponent implements OnInit {
   }
   public data: modalData;
   public confirmForm: FormGroup;
+  public services: IQueryService[];
 
   constructor(
+    private waitService: WaitService,
     private servicePageService: ServicePageService,
     private formBuilder: FormBuilder,
     private dialogRef: MatDialogRef<ConfirmModalComponent>,
@@ -44,23 +47,29 @@ export class ConfirmModalComponent implements OnInit {
     this.dialogRef.close();
   }
 
-  public onSubmit(): void {    
-    const params: modalData  = {
-      serviceName: this.data.serviceName,
-      actionType: this.data.actionType,
-      password: this.confirmForm.get('password').value
-    }
+  public onSubmit(): void {
+    if (this.confirmForm.status === 'VALID') {
+       
+      const params: modalData  = {
+        serviceName: this.data.serviceName,
+        actionType: this.data.actionType,
+        password: this.confirmForm.get('password').value
+      }
 
-    this.servicePageService.updateService(params).subscribe((res) => {
-      const response: IMutationApiModel = res.data.doServiceAction;
-      const mapper = new ServicePageMapper();
-      const serviceInfo = mapper.serverMutationModelToClientModel(response)
-      this.dialogRef.close(serviceInfo)
-      
-      }, (err: error) => {
-        this.error = err
-      })
-
+      this.waitService.setWait(true);
+      this.servicePageService.updateService(params).subscribe((res) => {
+        const response: IMutationApiModel = res.data.doServiceAction;
+        const mapper = new ServicePageMapper();
+        const serviceInfo = mapper.serverMutationModelToClientModel(response)
+        if (serviceInfo.ok && !!serviceInfo.status ){
+            this.servicePageService.getServicesInfo().refetch();
+            this.waitService.setWait(false);
+            this.dialogRef.close()
+          }
+        }, (err: error) => {
+          this.error = err
+        })
+      }
   }
 
   

@@ -19,17 +19,14 @@
     <label class="field">
       <p class="field-name">Sudo password</p>
      
-      <input formControlName="password" matInput type="password" required>
-        <div *ngIf="isPasswordEmpty" class="error">Поле обязательно для заполения</div>     
+      <input formControlName="password" [focusMe]="true"  matInput type="password" required>
+        <div *ngIf="isPasswordEmpty" class="error">Поле обязательно для заполнения</div>     
         <div *ngIf="error.message" class="error" >
           {{error.message}}
         </div>     
     </label>
   </div>
   <div class="form-actions">
-    <button (click)="close()"  type="button" class="form-btn" >
-      <span class="action-name">Отмена</span>
-    </button>
     <button type="button" class="form-btn" [disabled]="confirmForm.invalid" type="submit" >
       <span class="action-name"  >Подтвердить</span>
     </button>

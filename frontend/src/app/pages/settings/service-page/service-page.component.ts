@@ -5,7 +5,7 @@ import { ApolloQueryResult } from 'apollo-client';
 import { WaitService } from '@core/components/wait/wait.service';
 
 import { ConfirmModalComponent } from './confirm-modal/confirm-modal.component';
-import { IQueryApiModel, IQueryResponse, IQueryService, MutationServiceInfo, ServicePageMapper } from './service-page.mapper';
+import { IQueryApiModel, IQueryResponse, IQueryService, ServicePageMapper } from './service-page.mapper';
 import { ServicePageService } from './service-page.service';
 
 
@@ -58,30 +58,14 @@ export class ServicePageComponent implements OnInit {
   }
 
   public clickControls(event: IEventData): void  {
-    const dialogRef  = this.dialog.open(ConfirmModalComponent, {
-      autoFocus: true,
+    this.dialog.open(ConfirmModalComponent, {
+      disableClose: true,
       width: '500px',
       data: {
         serviceName: event.service.serviceName,
         actionType: event.actionType
       }
     });
-    
-    dialogRef.afterClosed().subscribe( (result: MutationServiceInfo | undefined) => {
-
-      if (!result){
-        return;
-      }      
-      this.services = this.services.map((service: IQueryService) => {
-
-      if (service.serviceName === event.service.serviceName){
-
-        service.status = result.status
-      }
-
-      return service;
-    })
-   
-    })
+  
   }
 }
