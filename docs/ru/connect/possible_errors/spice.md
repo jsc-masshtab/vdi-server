@@ -7,5 +7,5 @@
 
 Решение:
 
- - В Web-интерфейсе ECP VeiL соответствующей ВМ необходимо добавить USB Spice канал и USB контроллер nec-xhci (USB3.0)
- См. [Настройки для возможности перенаправления USB (Spice и RDP)](../operator_guide/vm_window.md)
+ - В Web-интерфейсе **ECP VeiL** соответствующей ВМ необходимо добавить USB Spice канал и USB контроллер **nec-xhci** (USB3.0)
+ См. [Настройки для возможности перенаправления USB (Spice и RDP)](../operator_guide/vm_window.md).
