@@ -147,7 +147,7 @@ export class ThinClientDetailsComponent implements OnInit, OnDestroy {
   }
 
 
-  private listenSockets() {
+  private listenSockets(): void {
     if (this.socketSub) {
       this.socketSub.unsubscribe();
     }
@@ -174,7 +174,7 @@ export class ThinClientDetailsComponent implements OnInit, OnDestroy {
     this.menuActive = route;
   }
 
-  public disconnect() {
+  public disconnect(): void {
     this.dialog.open(DisconnectThinClientComponent, {
       disableClose: true,
       width: '500px',
@@ -182,7 +182,7 @@ export class ThinClientDetailsComponent implements OnInit, OnDestroy {
     });
   }
 
-  public sendMessage() {
+  public sendMessage(): void {
 
     const message = this.message.value
     this.messages.push({
@@ -192,7 +192,7 @@ export class ThinClientDetailsComponent implements OnInit, OnDestroy {
       time: new Date().toLocaleTimeString()
     })
 
-  this.message.setValue('')   
+   this.message.setValue('')   
 
     setTimeout(() => {
       this.messenger.nativeElement.scrollTop = this.messenger.nativeElement.scrollHeight
@@ -207,11 +207,11 @@ export class ThinClientDetailsComponent implements OnInit, OnDestroy {
     }
   }
 
-  public close() {
+  public close(): void {
     this.router.navigate(['pages/clients/session/']);
   }
 
-  ngOnDestroy() {
+  ngOnDestroy(): void {
     if (this.socketSub) {
       this.socketSub.unsubscribe();
     }
