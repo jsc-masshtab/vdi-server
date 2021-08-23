@@ -114,4 +114,16 @@ async def test_smtp_sending(snapshot, fixt_db, fixt_user_admin, fixt_auth_contex
                     {ok}
             }
          """
+    await execute_scheme(settings_schema, qu, context=fixt_auth_context)
+
+
+@pytest.mark.asyncio
+async def test_change_settings(snapshot, fixt_db, fixt_user_admin, fixt_auth_context):
+    qu = """
+            mutation{
+                changeSettings(LANGUAGE: "ru")
+                    {ok}
+            }
+         """
     executed = await execute_scheme(settings_schema, qu, context=fixt_auth_context)
+    assert executed["changeSettings"]["ok"]

@@ -43,7 +43,10 @@ class TestUserSchema:
                     first_name,
                     is_superuser,
                     is_active
-                    possible_groups{
+                    assigned_groups {
+                      id
+                    }
+                    possible_groups {
                       id
                       verbose_name
                     }
@@ -66,6 +69,22 @@ class TestUserSchema:
                     is_active
                 }
             }"""
+        executed = await execute_scheme(user_schema, query, context=fixt_auth_context)
+        snapshot.assert_match(executed)
+
+    async def test_get_existing_permissions(self, snapshot, fixt_auth_context):  # noqa
+        query = """{
+                   existing_permissions
+                }"""
+        executed = await execute_scheme(user_schema, query, context=fixt_auth_context)
+        snapshot.assert_match(executed)
+
+    async def test_get_count(self, snapshot, fixt_auth_context):  # noqa
+        query = """{
+                   count(
+                         is_superuser: true, is_active: true
+                        )
+                }"""
         executed = await execute_scheme(user_schema, query, context=fixt_auth_context)
         snapshot.assert_match(executed)
 
@@ -301,3 +320,12 @@ class TestUserSchema:
         # Permissions are Set. Snapshot would`t work.
         for permission_type in TkPermission:
             assert permission_type.name in assigned_permissions_list
+
+    async def test_generation_qr_code(self, snapshot, fixt_auth_context):  # noqa
+        query = """mutation {
+                      generateUserQrcode(id: "f9599771-cc95-45e5-9ae5-c8177b796aff"){
+                        qr_uri
+                        secret
+                      }
+                    }"""
+        await execute_scheme(user_schema, query, context=fixt_auth_context)

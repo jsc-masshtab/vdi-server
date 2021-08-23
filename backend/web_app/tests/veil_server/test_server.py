@@ -75,6 +75,9 @@ class VeilTestServer:
         self.app.add_routes([web.post(self.base_url + "tags/", self.get_tags)])
         self.app.add_routes([web.put(self.base_url + "tags/", self.get_tags)])
 
+        # veil events
+        self.app.add_routes([web.get(self.base_url + "events/", self.get_veil_events)])
+
         # USB
         self.app.add_routes([web.post(self.base_url + "domains/{domain_id}/attach-usb/",
                                       self.attach_usb)])
@@ -1588,6 +1591,32 @@ class VeilTestServer:
                     "slug": "tag9_slug",
                     "colour": "#ff0000",
                     "ui_entities": []
+                }
+            ]
+        }
+        return web.Response(body=json.dumps(res_dict), content_type="application/json")
+
+    async def get_veil_events(self, request):
+        res_dict = {
+            "count": 1,
+            "next": None,
+            "previous": None,
+            "results": [
+                {
+                    "id": "9863da03-5497-4df1-947e-0ce360631062",
+                    "message": "Обновление информации о виртуальной машине broker-test (391bf28f-1757-467a-8c64-589ad9f135a0).",
+                    "user": "vdi_emil",
+                    "detail_message": "Обновление информации о виртуальной машине broker-test (391bf28f-1757-467a-8c64-589ad9f135a0).",
+                    "type": "info",
+                    "created": "2021-08-20T10:08:09.761081Z",
+                    "task": None,
+                    "readed": [],
+                    "entities": [
+                        {
+                            "entity_uuid": "391bf28f-1757-467a-8c64-589ad9f135a0",
+                            "entity_class": "domain"
+                        }
+                    ]
                 }
             ]
         }
