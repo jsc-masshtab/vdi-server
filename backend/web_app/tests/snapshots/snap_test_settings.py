@@ -35,3 +35,16 @@ snapshots['test_request_services 1'] = {
         }
     ]
 }
+
+snapshots['test_smtp_sending 1'] = {
+    'smtp_settings': {
+        'SSL': True,
+        'TLS': False,
+        'from_address': 'vdi.mashtab@yandex.ru',
+        'hostname': 'smtp.yandex.ru',
+        'level': 2,
+        'password': 'Bazalt1!',
+        'port': 465,
+        'user': 'vdi.mashtab@yandex.ru'
+    }
+}

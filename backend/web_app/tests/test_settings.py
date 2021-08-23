@@ -1,5 +1,6 @@
 import pytest
 
+from common.log.journal import send_mail_async
 from common.settings import PAM_AUTH
 
 from web_app.tests.utils import execute_scheme
@@ -61,7 +62,6 @@ async def test_request_system_info(snapshot, fixt_db, fixt_auth_context):
                      name
                      ipv4
                  }
-                 
                  time_zone
                  local_time
                  }
@@ -69,3 +69,49 @@ async def test_request_system_info(snapshot, fixt_db, fixt_auth_context):
     executed = await execute_scheme(settings_schema, qu, context=fixt_auth_context)
     assert executed["system_info"]["time_zone"]
     assert executed["system_info"]["local_time"]
+
+
+@pytest.mark.asyncio
+async def test_smtp_sending(snapshot, fixt_db, fixt_user_admin, fixt_auth_context):
+    #  тестовая почта на яндексе: vdi.mashtab@yandex.ru - Bazalt1!
+    qu = """
+            mutation{
+                changeSmtpSettings(hostname: "smtp.yandex.ru", 
+                                   port: 465, 
+                                   SSL: true,
+                                   TLS: false,
+                                   user: "vdi.mashtab@yandex.ru", 
+                                   from_address: "vdi.mashtab@yandex.ru", 
+                                   password: "Bazalt1!", 
+                                   level: 2)
+                    {ok}
+            }
+         """
+    executed = await execute_scheme(settings_schema, qu, context=fixt_auth_context)
+
+    qu = """{
+            smtp_settings {
+                  hostname
+                  port
+                  SSL
+                  TLS
+                  from_address
+                  user
+                  password
+                  level
+                 }
+         }"""
+
+    executed = await execute_scheme(settings_schema, qu, context=fixt_auth_context)
+    snapshot.assert_match(executed)
+
+    await send_mail_async(event_type=2, subject="Test smtp from VDI", message="TEST MESSAGE")
+    assert True
+
+    qu = """
+            mutation{
+                changeSmtpSettings(level: 4)
+                    {ok}
+            }
+         """
+    executed = await execute_scheme(settings_schema, qu, context=fixt_auth_context)

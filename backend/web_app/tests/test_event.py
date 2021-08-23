@@ -102,3 +102,29 @@ async def test_export_journal(fixt_db, fixt_user, fixt_auth_context):  # noqa
     )
     executed = await execute_scheme(event_schema, qu, context=fixt_auth_context)
     assert executed["eventExport"]["ok"]
+
+
+@pytest.mark.asyncio
+async def test_change_journal_settings(fixt_db, fixt_user, fixt_auth_context):  # noqa
+    period_list = [
+        "day",
+        "week",
+        "month",
+        "year"
+    ]
+    for period in period_list:
+        qu = ("""mutation {
+                      changeJournalSettings(by_count: false, period: "%s") {
+                        ok
+                      }
+                 }""" % period)
+        executed = await execute_scheme(event_schema, qu, context=fixt_auth_context)
+        assert executed["changeJournalSettings"]["ok"]
+
+    qu = """mutation {
+                      changeJournalSettings(by_count: true, count: 1000, dir_path: "/tmp/") {
+                        ok
+                      }
+                 }"""
+    executed = await execute_scheme(event_schema, qu, context=fixt_auth_context)
+    assert executed["changeJournalSettings"]["ok"]

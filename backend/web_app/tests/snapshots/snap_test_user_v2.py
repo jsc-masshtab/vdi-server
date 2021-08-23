@@ -25,7 +25,7 @@ snapshots["TestUserSchema.test_user_edit 1"] = {
         "user": {
             "email": "test@test.ru",
             "first_name": "test_firstname",
-            "is_superuser": False,
+            "is_superuser": True,
             "last_name": "test_lastname",
             "username": "devyatkin",
         },
@@ -58,6 +58,8 @@ snapshots["TestUserSchema.test_users_get_by_id 1"] = {
         "is_active": True,
         "is_superuser": True,
         "last_name": None,
+        "possible_groups": [
+        ],
         "username": "vdiadmin",
     }
 }

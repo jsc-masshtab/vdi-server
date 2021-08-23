@@ -43,6 +43,10 @@ class TestUserSchema:
                     first_name,
                     is_superuser,
                     is_active
+                    possible_groups{
+                      id
+                      verbose_name
+                    }
                     }
                 }"""
         executed = await execute_scheme(user_schema, query, context=fixt_auth_context)
@@ -115,6 +119,32 @@ class TestUserSchema:
         except ExecError as E:
             assert "Email a.devyatkin@mashtab.org занят." in str(E)
 
+    async def test_user_create_bad_username(self, snapshot, fixt_auth_context):  # noqa
+        query = """mutation {
+                createUser(
+                username: "d",
+                password: "qwQ123$%",
+                groups: [],
+                email: "",
+                last_name: "",
+                first_name: "",
+                is_superuser: false
+                )
+                {
+                ok,
+                user {
+                    username,
+                    email,
+                    password,
+                    is_superuser
+                    }
+                }
+                }"""
+        try:
+            await execute_scheme(user_schema, query, context=fixt_auth_context)
+        except ExecError as E:
+            assert "имя пользователя должно быть >= 3 символов (буквы, цифры, _, -, +), начинаться с буквы и не содержать пробелов." in str(E)
+
     async def test_user_edit(self, snapshot, fixt_auth_context):  # noqa
         user_obj = await User.get_object(
             extra_field_name="username",
@@ -128,6 +158,7 @@ class TestUserSchema:
                         first_name: "test_firstname",
                         email: "test@test.ru",
                         last_name: "test_lastname",
+                        is_superuser: true
                       ) {
                         ok,
                         user{
