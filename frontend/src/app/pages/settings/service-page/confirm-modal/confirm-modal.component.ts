@@ -1,7 +1,8 @@
-import { Component, Inject, OnInit } from '@angular/core';
+import { Component, Inject, OnDestroy, OnInit } from '@angular/core';
 import { FormGroup, Validators, FormBuilder } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { WaitService } from '@app/core/components/wait/wait.service';
+import { Subscription } from 'rxjs';
 
 import { modalData } from '../service-page.component';
 import { IMutationApiModel, IQueryService, ServicePageMapper } from '../service-page.mapper';
@@ -13,12 +14,13 @@ import { ServicePageService } from '../service-page.service';
   templateUrl: './confirm-modal.component.html',
   styleUrls: ['./confirm-modal.component.scss']
 })
-export class ConfirmModalComponent implements OnInit {
-
+export class ConfirmModalComponent implements OnInit, OnDestroy {
+  private sub: Subscription;
+  public checkValid: boolean = false;
   public data: modalData;
   public confirmForm: FormGroup;
   public services: IQueryService[];
-
+  
   constructor(
     private waitService: WaitService,
     private servicePageService: ServicePageService,
@@ -41,6 +43,7 @@ export class ConfirmModalComponent implements OnInit {
   }
 
   public onSubmit(): void {
+    this.checkValid = true;
     if (this.confirmForm.status === 'VALID') {
        
       const params: modalData  = {
@@ -48,10 +51,9 @@ export class ConfirmModalComponent implements OnInit {
         actionType: this.data.actionType,
         ...this.confirmForm.value
       }
-      console.log(params);
-      
+
       this.waitService.setWait(true);
-      this.servicePageService.updateService(params).subscribe((res) => {
+      this.sub = this.servicePageService.updateService(params).subscribe((res) => {
         const response: IMutationApiModel = res.data.doServiceAction;
         const mapper = new ServicePageMapper();
         const serviceInfo = mapper.serverMutationModelToClientModel(response)
@@ -64,9 +66,7 @@ export class ConfirmModalComponent implements OnInit {
       }
   }
 
-  
-  public get isPasswordEmpty(): boolean {
-    return !this.confirmForm.get('password').valid && this.confirmForm.get('password').touched;
+  ngOnDestroy() {
+    this.sub.unsubscribe()
   }
-  
 }

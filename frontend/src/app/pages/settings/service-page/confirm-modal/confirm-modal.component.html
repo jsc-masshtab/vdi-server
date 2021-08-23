@@ -1,7 +1,7 @@
 <form class="form" [formGroup]="confirmForm" (ngSubmit)="onSubmit()">
   <div class="form-header">
     <p>Подтвердите действие {{data.actionType}} на сервисе {{data.serviceName}}</p>
-    <button (click)="close()" [mat-dialog-close]="true"  class="form-close"><fa-icon [icon]="['fas','times-circle']" size="s"></fa-icon></button>
+    <button (click)="close()"  class="form-close"><fa-icon [icon]="['fas','times-circle']" size="s"></fa-icon></button>
   </div>
 
   <div class="form-fields">
@@ -9,11 +9,11 @@
       <p class="field-name">Sudo password</p>
      
       <input formControlName="password" matInput type="password" [focusMe]="true" required>
-        <div *ngIf="isPasswordEmpty" class="error">Поле обязательно для заполнения</div>      
+        <div *ngIf="confirmForm.hasError('required', 'password') && checkValid" class="error">Поле обязательно для заполнения</div>        
     </label>
   </div>
   <div class="form-actions">
-    <button type="button" class="form-btn" [disabled]="confirmForm.invalid" type="submit" >
+    <button type="button" class="form-btn" type="submit" >
       <span class="action-name"  >Подтвердить</span>
     </button>
   </div>
