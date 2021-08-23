@@ -7,9 +7,6 @@ import { modalData } from '../service-page.component';
 import { IMutationApiModel, IQueryService, ServicePageMapper } from '../service-page.mapper';
 import { ServicePageService } from '../service-page.service';
 
-type error = {
-  message: null | string
-}
 
 @Component({
   selector: 'vdi-confirm-modal',
@@ -17,9 +14,7 @@ type error = {
   styleUrls: ['./confirm-modal.component.scss']
 })
 export class ConfirmModalComponent implements OnInit {
-  public error: error = {
-    message: null
-  }
+
   public data: modalData;
   public confirmForm: FormGroup;
   public services: IQueryService[];
@@ -36,8 +31,6 @@ export class ConfirmModalComponent implements OnInit {
 
   public ngOnInit(): void {
     this.confirmForm = this.formBuilder.group({
-      serviceName: [{value: this.data.serviceName, disabled: true}, [Validators.required]],
-      actionType: [{value: this.data.actionType, disabled: true}, [Validators.required]],
       password: ['', [Validators.required]]
     });
   }
@@ -53,9 +46,10 @@ export class ConfirmModalComponent implements OnInit {
       const params: modalData  = {
         serviceName: this.data.serviceName,
         actionType: this.data.actionType,
-        password: this.confirmForm.get('password').value
+        ...this.confirmForm.value
       }
-
+      console.log(params);
+      
       this.waitService.setWait(true);
       this.servicePageService.updateService(params).subscribe((res) => {
         const response: IMutationApiModel = res.data.doServiceAction;
@@ -66,8 +60,6 @@ export class ConfirmModalComponent implements OnInit {
             this.waitService.setWait(false);
             this.dialogRef.close()
           }
-        }, (err: error) => {
-          this.error = err
         })
       }
   }

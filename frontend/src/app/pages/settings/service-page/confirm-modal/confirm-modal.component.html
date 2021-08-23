@@ -1,29 +1,15 @@
 <form class="form" [formGroup]="confirmForm" (ngSubmit)="onSubmit()">
   <div class="form-header">
-    <p>Подтвердите действие</p>
-    <button (click)="close()"  class="form-close"><fa-icon [icon]="['fas','times-circle']" size="s"></fa-icon></button>
+    <p>Подтвердите действие {{data.actionType}} на сервисе {{data.serviceName}}</p>
+    <button (click)="close()" [mat-dialog-close]="true"  class="form-close"><fa-icon [icon]="['fas','times-circle']" size="s"></fa-icon></button>
   </div>
-  <div class="form-fields">
-    <label class="field">
-      <p class="field-name">Название сервиса</p>
-      <input formControlName="serviceName" matInput type="text" >
-    </label>
-  </div>
-  <div class="form-fields">
-    <label class="field">
-      <p class="field-name">Операция</p>
-      <input formControlName="actionType" matInput type="text" >
-    </label>
-  </div>
+
   <div class="form-fields">
     <label class="field">
       <p class="field-name">Sudo password</p>
      
-      <input formControlName="password" [focusMe]="true"  matInput type="password" required>
-        <div *ngIf="isPasswordEmpty" class="error">Поле обязательно для заполнения</div>     
-        <div *ngIf="error.message" class="error" >
-          {{error.message}}
-        </div>     
+      <input formControlName="password" matInput type="password" [focusMe]="true" required>
+        <div *ngIf="isPasswordEmpty" class="error">Поле обязательно для заполнения</div>      
     </label>
   </div>
   <div class="form-actions">
