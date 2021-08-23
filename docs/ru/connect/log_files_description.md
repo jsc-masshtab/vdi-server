@@ -1,8 +1,8 @@
 # Описание логирования
 
 !!! info ""
-        На линукс логи пишутся в папку /opt/veil-connect/log. 
-        На Windows - в папку C:\Users\{текущий пользователь}\AppData\Local\VeilConnect\log.
+        На Linux логи пишутся в папку **/opt/veil-connect/log**. 
+        На Windows - в папку **C:\Users\{текущий пользователь}\AppData\Local\VeilConnect\log**.
 
 ### Структура логов
 
@@ -13,12 +13,12 @@
 
 Данная папка может содержать файлы **stdout.txt**, **stderr.txt**, **clipboard.txt**, **backtrace.txt**.
 
-В stdout.txt пишется stdout вывод. 
+В **stdout.txt** пишется stdout-вывод. 
 
-В stderr.txt пишется stderr вывод. 
+В **stderr.txt** пишется stderr-вывод. 
 
-В clipboard.txt логируется буфер обмена между 
+В **clipboard.txt** логируется буфер обмена между 
 клиентом и удаленной машиной. Файл присутствует, если осуществлялись операции с буфером обмена. 
 
 
-Файл backtrace.txt будет создан, если произошло аварийное завершение приложения.
+Файл **backtrace.txt** будет создан, если произошло аварийное завершение приложения.
