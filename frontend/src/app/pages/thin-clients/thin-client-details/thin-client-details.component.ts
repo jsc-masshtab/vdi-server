@@ -2,7 +2,6 @@ import { Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/co
 import { FormControl } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute, ParamMap, Router } from '@angular/router';
-import * as moment from 'moment';
 import { Subscription } from 'rxjs';
 
 import { WebsocketService } from '../../../shared/classes/websock.service';
@@ -71,7 +70,7 @@ export class ThinClientDetailsComponent implements OnInit, OnDestroy {
       type: 'time'
     },
     {
-      title: 'Время последней активнасти',
+      title: 'Время последней активности',
       property: 'last_interaction',
       type: 'time'
     },
@@ -132,6 +131,7 @@ export class ThinClientDetailsComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
+    
     this.activatedRoute.paramMap.subscribe((param: ParamMap) => {
 
       this.id = param.get('id');
@@ -158,7 +158,7 @@ export class ThinClientDetailsComponent implements OnInit, OnDestroy {
           sender: message.sender_name,
           self: false,
           text: message.message,
-          time: moment().format('HH:mm:ss')
+          time: new Date().toLocaleTimeString()
         })
 
         if (this.messenger) {
@@ -189,10 +189,10 @@ export class ThinClientDetailsComponent implements OnInit, OnDestroy {
       sender: 'Вы',
       self: true,
       text: message,
-      time: moment().format('HH:mm:ss')
+      time: new Date().toLocaleTimeString()
     })
 
-    this.message.setValue('')
+  this.message.setValue('')   
 
     setTimeout(() => {
       this.messenger.nativeElement.scrollTop = this.messenger.nativeElement.scrollHeight
