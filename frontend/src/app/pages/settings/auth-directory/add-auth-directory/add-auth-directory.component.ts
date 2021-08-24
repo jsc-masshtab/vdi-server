@@ -3,7 +3,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatDialogRef } from '@angular/material/dialog';
 import { Subscription } from 'rxjs';
 
-import { WaitService } from '../../../../core/components/wait/wait.service';
+import { WaitService } from '@core/components/wait/wait.service';
 import { AuthenticationDirectoryService } from '../auth-directory.service';
 
 
