@@ -7,18 +7,6 @@ from snapshottest import Snapshot
 
 snapshots = Snapshot()
 
-snapshots['test_entity_types 1'] = {
-    'entity_types': [
-        'GROUP',
-        'SECURITY',
-        'AUTH',
-        'POOL',
-        'CONTROLLER',
-        'VM',
-        'USER'
-    ]
-}
-
 snapshots['test_event_creator 1'] = {
     'events': [
         {

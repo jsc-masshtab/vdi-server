@@ -55,7 +55,7 @@ async def test_event_users(fixt_db, fixt_auth_context, fixt_user):
 
 
 @pytest.mark.asyncio
-async def test_events_count(snapshot, fixt_db, fixt_auth_context, fixt_user):
+async def test_events_count(fixt_db, fixt_auth_context, fixt_user):
     query = """{
                 count(event_type: 0)
             }"""
@@ -64,12 +64,13 @@ async def test_events_count(snapshot, fixt_db, fixt_auth_context, fixt_user):
 
 
 @pytest.mark.asyncio
-async def test_entity_types(snapshot, fixt_db, fixt_auth_context, fixt_user):
+async def test_entity_types(fixt_db, fixt_auth_context, fixt_user):
     query = """{
                 entity_types
             }"""
     executed = await execute_scheme(event_schema, query, context=fixt_auth_context)
-    snapshot.assert_match(executed)
+    entity_types_list = executed["entity_types"]
+    assert len(entity_types_list) >= 5
 
 
 @pytest.mark.asyncio
@@ -143,17 +144,6 @@ async def test_export_journal(fixt_db, fixt_user, fixt_auth_context):  # noqa
 
 @pytest.mark.asyncio
 async def test_get_and_change_journal_settings(snapshot, fixt_db, fixt_user, fixt_auth_context):  # noqa
-    query = """{
-              journal_settings {
-                period
-                by_count
-                count
-                dir_path
-              }
-            }"""
-    executed = await execute_scheme(event_schema, query, context=fixt_auth_context)
-    snapshot.assert_match(executed)
-
     period_list = [
         "day",
         "week",
@@ -176,3 +166,14 @@ async def test_get_and_change_journal_settings(snapshot, fixt_db, fixt_user, fix
                  }"""
     executed = await execute_scheme(event_schema, qu, context=fixt_auth_context)
     assert executed["changeJournalSettings"]["ok"]
+
+    query = """{
+                  journal_settings {
+                    period
+                    by_count
+                    count
+                    dir_path
+                  }
+                }"""
+    executed = await execute_scheme(event_schema, query, context=fixt_auth_context)
+    snapshot.assert_match(executed)
