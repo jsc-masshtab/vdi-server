@@ -449,6 +449,7 @@ def fixt_user_admin(request, event_loop):
     user_name = "test_user_admin"
     user_id = "10913d5d-ba7a-4049-88c5-769267a6cbe3"
     user_password = "veil"
+    email = "vdi.mashtab@yandex.ru"
     creator = "vdiadmin"
 
     async def setup():
@@ -456,6 +457,7 @@ def fixt_user_admin(request, event_loop):
             username=user_name,
             id=user_id,
             password=user_password,
+            email=email,
             is_superuser=True,
             creator=creator,
         )

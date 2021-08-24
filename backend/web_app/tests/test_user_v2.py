@@ -43,6 +43,13 @@ class TestUserSchema:
                     first_name,
                     is_superuser,
                     is_active
+                    assigned_groups {
+                      id
+                    }
+                    possible_groups {
+                      id
+                      verbose_name
+                    }
                     }
                 }"""
         executed = await execute_scheme(user_schema, query, context=fixt_auth_context)
@@ -62,6 +69,22 @@ class TestUserSchema:
                     is_active
                 }
             }"""
+        executed = await execute_scheme(user_schema, query, context=fixt_auth_context)
+        snapshot.assert_match(executed)
+
+    async def test_get_existing_permissions(self, snapshot, fixt_auth_context):  # noqa
+        query = """{
+                   existing_permissions
+                }"""
+        executed = await execute_scheme(user_schema, query, context=fixt_auth_context)
+        snapshot.assert_match(executed)
+
+    async def test_get_count(self, snapshot, fixt_auth_context):  # noqa
+        query = """{
+                   count(
+                         is_superuser: true, is_active: true
+                        )
+                }"""
         executed = await execute_scheme(user_schema, query, context=fixt_auth_context)
         snapshot.assert_match(executed)
 
@@ -115,6 +138,32 @@ class TestUserSchema:
         except ExecError as E:
             assert "Email a.devyatkin@mashtab.org занят." in str(E)
 
+    async def test_user_create_bad_username(self, snapshot, fixt_auth_context):  # noqa
+        query = """mutation {
+                createUser(
+                username: "d",
+                password: "qwQ123$%",
+                groups: [],
+                email: "",
+                last_name: "",
+                first_name: "",
+                is_superuser: false
+                )
+                {
+                ok,
+                user {
+                    username,
+                    email,
+                    password,
+                    is_superuser
+                    }
+                }
+                }"""
+        try:
+            await execute_scheme(user_schema, query, context=fixt_auth_context)
+        except ExecError as E:
+            assert "имя пользователя должно быть >= 3 символов (буквы, цифры, _, -, +), начинаться с буквы и не содержать пробелов." in str(E)
+
     async def test_user_edit(self, snapshot, fixt_auth_context):  # noqa
         user_obj = await User.get_object(
             extra_field_name="username",
@@ -128,6 +177,7 @@ class TestUserSchema:
                         first_name: "test_firstname",
                         email: "test@test.ru",
                         last_name: "test_lastname",
+                        is_superuser: true
                       ) {
                         ok,
                         user{
@@ -270,3 +320,12 @@ class TestUserSchema:
         # Permissions are Set. Snapshot would`t work.
         for permission_type in TkPermission:
             assert permission_type.name in assigned_permissions_list
+
+    async def test_generation_qr_code(self, snapshot, fixt_auth_context):  # noqa
+        query = """mutation {
+                      generateUserQrcode(id: "f9599771-cc95-45e5-9ae5-c8177b796aff"){
+                        qr_uri
+                        secret
+                      }
+                    }"""
+        await execute_scheme(user_schema, query, context=fixt_auth_context)

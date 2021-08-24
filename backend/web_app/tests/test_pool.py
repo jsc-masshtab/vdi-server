@@ -217,19 +217,27 @@ async def test_create_static_pool(
     assert is_vm_successfully_prepared
 
     # get pool info
-    qu = (
-        """{
-      pool(pool_id: "%s") {
-        pool_type
-          vms{
-            verbose_name
-        }
-      }
-    }"""
-        % pool_id
-    )
-    executed = await execute_scheme(pool_schema, qu, context=fixt_auth_context)  # noqa
-    assert len(executed["pool"]["vms"]) == 1
+    ordering_list = [
+        "verbose_name",
+        "user",
+        "status",
+        "qemu_state",
+        "parent_name",
+    ]
+    for ordering in ordering_list:
+        qu = (
+            """{
+          pool(pool_id: "%s") {
+            pool_type
+              vms (ordering: "%s"){
+                verbose_name
+            }
+          }
+        }"""
+            % (pool_id, ordering)
+        )
+        executed = await execute_scheme(pool_schema, qu, context=fixt_auth_context)  # noqa
+        assert len(executed["pool"]["vms"]) == 1
 
 
 @pytest.mark.asyncio
@@ -270,9 +278,13 @@ async def test_remove_and_add_vm_in_static_pool(
         """{
       pool(pool_id: "%s") {
         pool_type
-          vms{
-            id
-            verbose_name
+        users_count
+        users(ordering: "id") {
+                    id
+        }
+        vms {
+          id
+          verbose_name
         }
       }
     }"""
@@ -428,13 +440,17 @@ async def test_pools_ordering(
                     template_id
                     initial_size
                     os_type
-                    assigned_groups {
+                    assigned_groups(ordering: "verbose_name") {
                       id
                       verbose_name
                     }
                     possible_groups {
                       id
                       verbose_name
+                    }
+                    users_count(entitled: false)
+                    users(entitled: false) {
+                      id
                     }
                     assigned_connection_types
                     possible_connection_types

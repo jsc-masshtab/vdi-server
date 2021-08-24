@@ -516,7 +516,7 @@ class TestAuthenticationDirectoryUtils:
         await group.delete()
 
     async def test_auth_dir_sync_new_only_group(
-        self, snapshot, fixt_auth_context, fixt_auth_dir_with_pass, fixt_local_group
+        self, fixt_auth_context, fixt_auth_dir_with_pass, fixt_local_group
     ):  # noqa
         """Должна создаться новая группа без пользователей."""
         query = """mutation{syncAuthDirGroupUsers(

@@ -185,12 +185,6 @@ snapshots['TestAuthenticationDirectoryUtils.test_auth_dir_with_bad_pass_check 1'
     }
 }
 
-snapshots['TestAuthenticationDirectoryUtils.test_auth_dir_sync_new_only_group 1'] = {
-    'syncAuthDirGroupUsers': {
-        'ok': True
-    }
-}
-
 snapshots['TestAuthenticationDirectoryUtils.test_auth_dir_sync_group_and_users 1'] = {
     'syncAuthDirGroupUsers': {
         'ok': True
