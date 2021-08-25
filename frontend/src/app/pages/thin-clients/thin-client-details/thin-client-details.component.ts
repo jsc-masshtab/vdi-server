@@ -192,7 +192,7 @@ export class ThinClientDetailsComponent implements OnInit, OnDestroy {
       time: new Date().toLocaleTimeString()
     })
 
-   this.message.setValue('')   
+    this.message.setValue('')   
 
     setTimeout(() => {
       this.messenger.nativeElement.scrollTop = this.messenger.nativeElement.scrollHeight
