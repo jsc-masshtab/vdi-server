@@ -49,19 +49,20 @@ export class MutationServiceInfo implements IMutationServiceInfo {
 export class ServicePageMapper {
 
     public serverQueryModelToClientModel(apiModel: IQueryApiModel): QueryServiceInfo {
-        const clientModel =  new QueryServiceInfo();     
-        clientModel.serviceName = apiModel.service_name;
-        clientModel.verboseName = apiModel.verbose_name;
-        clientModel.status = apiModel.status;
-        
-        return clientModel; 
+        const { service_name, verbose_name, status } = apiModel;
+        return {     
+            serviceName: service_name,
+            verboseName: verbose_name,
+            status
+        } 
     }
 
-    public serverMutationModelToClientModel(apiModel: IMutationApiModel): MutationServiceInfo {
-        const clientModel =  new MutationServiceInfo();     
-        clientModel.ok = apiModel.ok;
-        clientModel.status = apiModel.service_status;
+    public serverMutationModelToClientModel(apiModel: IMutationApiModel): MutationServiceInfo {    
         
-        return clientModel; 
+        const {ok, service_status} = apiModel; 
+        return {
+                ok,
+                status: service_status
+        } 
     }
 }
