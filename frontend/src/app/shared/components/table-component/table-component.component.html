@@ -107,7 +107,7 @@
                     </ng-container>
 
                     <ng-container *ngIf="obj.type === 'time'">
-                      <ng-container>{{ moment(item[obj.property]).format('DD.MM.YYYY HH:mm:ss Z')  }}</ng-container>
+                      <ng-container>{{item[obj.property] | date:'dd.MM.yyyy hh:mm:ss 	ZZZZZ'}}</ng-container>
                     </ng-container>
 
                 </ng-container>
