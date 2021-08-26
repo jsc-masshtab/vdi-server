@@ -3,6 +3,7 @@ from enum import Enum
 
 import graphene
 
+from common.graphene_utils import ShortString
 from common.veil.veil_gino import StatusGraphene
 
 
@@ -39,12 +40,12 @@ class VeilShortEntityType(VeilResourceType):
     """Сокращенное описание структуры вложенной сущности на ECP Veil."""
 
     id = graphene.UUID()
-    verbose_name = graphene.String()
+    verbose_name = graphene.Field(ShortString)
     status = StatusGraphene()
 
 
 # Tags
 class VeilTagsType(VeilResourceType):
-    verbose_name = graphene.String()
-    colour = graphene.String()
-    slug = graphene.String()
+    verbose_name = graphene.Field(ShortString)
+    colour = graphene.Field(ShortString)
+    slug = graphene.Field(ShortString)

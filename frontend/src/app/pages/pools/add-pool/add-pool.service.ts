@@ -94,7 +94,7 @@ export class AddPoolService {
                 $rds_vm: VmInput!
                 $controller_id: UUID!
                 $resource_pool_id: UUID!
-                $verbose_name: String!
+                $verbose_name: ShortString!
             ) {
                 addRdsPool(
                     connection_types: $connection_types
@@ -124,7 +124,7 @@ export class AddPoolService {
                 $vms: [VmInput!]!
                 $controller_id: UUID!
                 $resource_pool_id: UUID!
-                $verbose_name: String!
+                $verbose_name: ShortString!
             ) {
                 addStaticPool(
                     connection_types: $connection_types
@@ -153,10 +153,10 @@ export class AddPoolService {
                 $connection_types: [PoolConnectionTypes!]
                 $controller_id: UUID!
                 $resource_pool_id: UUID!
-                $verbose_name: String!
+                $verbose_name: ShortString!
                 $template_id: UUID!
 
-                $vm_name_template: String!
+                $vm_name_template: ShortString!
 
                 $increase_step: Int
                 $reserve_size: Int
@@ -164,7 +164,7 @@ export class AddPoolService {
                 $initial_size: Int
                 $create_thin_clones: Boolean
                 $prepare_vms: Boolean
-                $ad_ou: String
+                $ad_ou: ShortString
             ) {
                 addDynamicPool(
                     connection_types: $connection_types
@@ -203,16 +203,16 @@ export class AddPoolService {
                 $connection_types: [PoolConnectionTypes!]
                 $controller_id: UUID!
                 $resource_pool_id: UUID!
-                $verbose_name: String!
+                $verbose_name: ShortString!
                 $template_id: UUID!
 
-                $vm_name_template: String!
+                $vm_name_template: ShortString!
 
                 $increase_step: Int
                 $reserve_size: Int
                 $total_size: Int
                 $initial_size: Int
-                $ad_ou: String
+                $ad_ou: ShortString
             ) {
                 addDynamicPool(
                     connection_types: $connection_types

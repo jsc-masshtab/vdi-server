@@ -20,7 +20,7 @@ export class ThinClientsService {
     return this.service.watchQuery({
       query: gql`
         query thin_clients(
-          $ordering: String
+          $ordering: ShortString
           $get_disconnected: Boolean
         ){
           thin_clients_count
@@ -64,7 +64,7 @@ export class ThinClientsService {
         query thin_clients(
           $limit: Int
           $offset: Int
-          $ordering: String
+          $ordering: ShortString
           $conn_id: UUID
           $user_id: UUID
         ){
@@ -93,7 +93,7 @@ export class ThinClientsService {
   sendMessageToThinClient(recipient_id, message) {
     return this.service.mutate<any>({
       mutation: gql`
-        mutation thin_clients($recipient_id: UUID, $message: String!) {
+        mutation thin_clients($recipient_id: UUID, $message: ShortString!) {
           sendMessageToThinClient(
             recipient_id: $recipient_id,
             message: $message,

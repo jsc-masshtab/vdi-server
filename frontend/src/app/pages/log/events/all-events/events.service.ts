@@ -25,10 +25,10 @@ export class EventsService {
                                         $end_date: DateTime,
                                         $entity: UUID,
                                         $event_type: Int,
-                                        $entity_type: String,
-                                        $user: String,
+                                        $entity_type: ShortString,
+                                        $user: ShortString,
                                         $read_by: UUID
-                                        $ordering:String) {
+                                        $ordering:ShortString) {
                                 count(  start_date: $start_date,
                                         end_date: $end_date,
                                         event_type: $event_type,
@@ -73,7 +73,7 @@ export class EventsService {
                 mutation events(
                     $start: DateTime,
                     $finish: DateTime,
-                    $journal_path: String
+                    $journal_path: ShortString
                 ){
                     eventExport(
                         start: $start,

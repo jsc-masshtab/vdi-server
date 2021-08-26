@@ -7,6 +7,7 @@ import graphene
 
 from veil_api_client import VeilRestPaginator
 
+from common.graphene_utils import ShortString
 from common.languages import _local_
 from common.models.controller import Controller
 from common.models.pool import Pool
@@ -87,21 +88,21 @@ class ControllerPoolType(graphene.ObjectType):
     """Сокращенное описание Pool."""
 
     id = graphene.UUID()
-    verbose_name = graphene.String()
+    verbose_name = graphene.Field(ShortString)
     status = StatusGraphene()
     vms_amount = graphene.Int()
     users_amount = graphene.Int()
-    pool_type = graphene.String()
+    pool_type = graphene.Field(ShortString)
     keep_vms_on = graphene.Boolean()
 
 
 class VeilEventType(VeilResourceType):
     id = graphene.UUID()
     event_type = graphene.Int()
-    message = graphene.String()
-    description = graphene.String()
+    message = graphene.Field(ShortString)
+    description = graphene.Field(ShortString)
     created = graphene.DateTime()
-    user = graphene.String()
+    user = graphene.Field(ShortString)
 
 
 class ControllerClusterType(VeilResourceType):
@@ -111,13 +112,13 @@ class ControllerClusterType(VeilResourceType):
     """
 
     id = graphene.UUID()
-    verbose_name = graphene.String()
-    description = graphene.String()
+    verbose_name = graphene.Field(ShortString)
+    description = graphene.Field(ShortString)
     nodes_count = graphene.Int()
     status = StatusGraphene()
     cpu_count = graphene.Int()
     memory_count = graphene.Int()
-    tags = graphene.List(graphene.String)
+    tags = graphene.List(ShortString)
 
 
 class ControllerResourcePoolType(VeilResourceType):
@@ -127,8 +128,8 @@ class ControllerResourcePoolType(VeilResourceType):
     """
 
     id = graphene.UUID()
-    verbose_name = graphene.String()
-    description = graphene.String()
+    verbose_name = graphene.Field(ShortString)
+    description = graphene.Field(ShortString)
     domains_count = graphene.Int()
     memory_limit = graphene.Int()
     cpu_limit = graphene.Int()
@@ -141,33 +142,33 @@ class ControllerNodeType(VeilResourceType):
     """
 
     id = graphene.UUID()
-    verbose_name = graphene.String()
+    verbose_name = graphene.Field(ShortString)
     status = StatusGraphene()
-    cpu_count = graphene.String()
-    memory_count = graphene.String()
-    management_ip = graphene.String()
+    cpu_count = graphene.Field(ShortString)
+    memory_count = graphene.Field(ShortString)
+    management_ip = graphene.Field(ShortString)
 
     # Маловероятно что это нужно
     # cluster = graphene.JSONString()
     # Это вообще непонятно зачем
     # resources_usage = graphene.Field(ResourcesUsageType)
     # datacenter = graphene.Field(DatacenterType)
-    # veil_info = graphene.String()
-    # veil_info_json = graphene.String()
+    # veil_info = graphene.Field(ShortString)
+    # veil_info_json = graphene.Field(ShortString)
 
 
 class ControllerDataPoolType(VeilResourceType):
     """Сокращенное описание VeiL DataPool."""
 
     id = graphene.UUID()
-    verbose_name = graphene.String()
+    verbose_name = graphene.Field(ShortString)
     used_space = graphene.Int()
     free_space = graphene.Int()
     size = graphene.Int()
     status = StatusGraphene()
-    type = graphene.String()
+    type = graphene.Field(ShortString)
     vdisk_count = graphene.Int()
-    tags = graphene.List(graphene.String)
+    tags = graphene.List(ShortString)
     hints = graphene.Int()
     file_count = graphene.Int()
     iso_count = graphene.Int()
@@ -177,37 +178,37 @@ class ControllerVmType(VeilResourceType):
     """Сокращенное описание Veil Domain."""
 
     id = graphene.UUID()
-    verbose_name = graphene.String()
+    verbose_name = graphene.Field(ShortString)
     template = graphene.Field(VeilShortEntityType)
     resource_pool = graphene.Field(VeilShortEntityType)
     status = StatusGraphene()
     user_power_state = VmState()
     # название пула, в котором ВМ из локальной БД
-    pool_name = graphene.String()
+    pool_name = graphene.Field(ShortString)
 
 
 class ControllerType(graphene.ObjectType, ControllerFetcher):
     """Описание Controller."""
 
     id = graphene.UUID()
-    verbose_name = graphene.String()
-    address = graphene.String()
-    description = graphene.String()
+    verbose_name = graphene.Field(ShortString)
+    address = graphene.Field(ShortString)
+    description = graphene.Field(ShortString)
     status = StatusGraphene()
-    version = graphene.String()
-    token = graphene.String()
+    version = graphene.Field(ShortString)
+    token = graphene.Field(ShortString)
     # Новые поля
     pools = graphene.List(ControllerPoolType)
     clusters = graphene.List(
         ControllerClusterType,
-        ordering=graphene.String(),
+        ordering=ShortString(),
         limit=graphene.Int(default_value=100),
         offset=graphene.Int(default_value=0),
     )
     resource_pools = graphene.List(
         ControllerResourcePoolType,
         cluster_id=graphene.UUID(),
-        ordering=graphene.String(),
+        ordering=ShortString(),
         limit=graphene.Int(default_value=100),
         offset=graphene.Int(default_value=0),
     )
@@ -215,7 +216,7 @@ class ControllerType(graphene.ObjectType, ControllerFetcher):
         ControllerNodeType,
         cluster_id=graphene.UUID(),
         resource_pool_id=graphene.UUID(),
-        ordering=graphene.String(),
+        ordering=ShortString(),
         limit=graphene.Int(default_value=100),
         offset=graphene.Int(default_value=0),
     )
@@ -224,7 +225,7 @@ class ControllerType(graphene.ObjectType, ControllerFetcher):
         cluster_id=graphene.UUID(),
         node_id=graphene.UUID(),
         resource_pool_id=graphene.UUID(),
-        ordering=graphene.String(),
+        ordering=ShortString(),
         limit=graphene.Int(default_value=100),
         offset=graphene.Int(default_value=0),
     )
@@ -233,7 +234,7 @@ class ControllerType(graphene.ObjectType, ControllerFetcher):
         cluster_id=graphene.UUID(),
         resource_pool_id=graphene.UUID(),
         node_id=graphene.UUID(),
-        ordering=graphene.String(),
+        ordering=ShortString(),
         limit=graphene.Int(default_value=100),
         offset=graphene.Int(default_value=0),
     )
@@ -243,7 +244,7 @@ class ControllerType(graphene.ObjectType, ControllerFetcher):
         resource_pool_id=graphene.UUID(),
         node_id=graphene.UUID(),
         exclude_existed=graphene.Boolean(),
-        ordering=graphene.String(),
+        ordering=ShortString(),
         limit=graphene.Int(default_value=100),
         offset=graphene.Int(default_value=0),
     )
@@ -251,7 +252,7 @@ class ControllerType(graphene.ObjectType, ControllerFetcher):
     veil_events_count = graphene.Int(event_type=graphene.Int())
     veil_events = graphene.List(
         VeilEventType,
-        ordering=graphene.String(),
+        ordering=ShortString(),
         event_type=graphene.Int(),
         limit=graphene.Int(default_value=100),
         offset=graphene.Int(default_value=0),
@@ -491,10 +492,10 @@ class AddControllerMutation(graphene.Mutation, ControllerValidator):
     """Добавление контроллера."""
 
     class Arguments:
-        verbose_name = graphene.String(required=True)
-        address = graphene.String(required=True)
-        token = graphene.String(required=True)
-        description = graphene.String()
+        verbose_name = ShortString(required=True)
+        address = ShortString(required=True)
+        token = ShortString(required=True)
+        description = ShortString()
 
     controller = graphene.Field(lambda: ControllerType)
     __TOKEN_PREFIX = re.compile("jwt ", re.I)
@@ -522,10 +523,10 @@ class UpdateControllerMutation(
 
     class Arguments:
         id_ = graphene.UUID(required=True)
-        verbose_name = graphene.String()
-        address = graphene.String()
-        description = graphene.String()
-        token = graphene.String()
+        verbose_name = ShortString()
+        address = ShortString()
+        description = ShortString()
+        token = ShortString()
 
     controller = graphene.Field(lambda: ControllerType)
     __TOKEN_PREFIX = re.compile("jwt ", re.I)
@@ -616,7 +617,7 @@ class ControllerQuery(graphene.ObjectType, ControllerFetcher):
         ControllerType,
         limit=graphene.Int(default_value=100),
         offset=graphene.Int(default_value=0),
-        ordering=graphene.String(),
+        ordering=ShortString(),
         status=StatusGraphene(),
     )
     controller = graphene.Field(ControllerType, id_=graphene.UUID())

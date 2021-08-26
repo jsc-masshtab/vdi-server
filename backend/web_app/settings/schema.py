@@ -8,6 +8,7 @@ from dateutil.tz import tzlocal
 
 import graphene
 
+from common.graphene_utils import ShortString
 from common.languages import _local_
 from common.log.journal import system_logger
 from common.models.settings import Settings
@@ -41,10 +42,10 @@ ServiceActionGraphene = graphene.Enum.from_enum(ServiceAction)
 
 
 class SettingsType(graphene.ObjectType):
-    LANGUAGE = graphene.String()
+    LANGUAGE = graphene.Field(ShortString)
     DEBUG = graphene.Boolean()
     VEIL_CACHE_TTL = graphene.Int()
-    VEIL_CACHE_SERVER = graphene.String()
+    VEIL_CACHE_SERVER = graphene.Field(ShortString)
     VEIL_CACHE_PORT = graphene.Int()
     VEIL_REQUEST_TIMEOUT = graphene.Int()
     VEIL_CONNECTION_TIMEOUT = graphene.Int()
@@ -61,31 +62,31 @@ class SettingsType(graphene.ObjectType):
 
 
 class SmtpSettingsType(graphene.ObjectType):
-    hostname = graphene.String()
+    hostname = graphene.Field(ShortString)
     port = graphene.Int()
     TLS = graphene.Boolean()
     SSL = graphene.Boolean()
-    password = graphene.String()
-    user = graphene.String()
-    from_address = graphene.String()
+    password = graphene.Field(ShortString)
+    user = graphene.Field(ShortString)
+    from_address = graphene.Field(ShortString)
     level = graphene.Int()
 
 
 class ServiceGrapheneType(graphene.ObjectType):
-    service_name = graphene.String()
-    verbose_name = graphene.String()
-    status = graphene.String()
+    service_name = graphene.Field(ShortString)
+    verbose_name = graphene.Field(ShortString)
+    status = graphene.Field(ShortString)
 
 
 class NetworkGrapheneType(graphene.ObjectType):
-    name = graphene.String()
-    ipv4 = graphene.String()
+    name = graphene.Field(ShortString)
+    ipv4 = graphene.Field(ShortString)
 
 
 class SysInfoGrapheneType(graphene.ObjectType):
     networks_list = graphene.List(NetworkGrapheneType)
     local_time = graphene.DateTime()
-    time_zone = graphene.String()
+    time_zone = graphene.Field(ShortString)
 
 
 class SettingsQuery(graphene.ObjectType):
@@ -202,10 +203,10 @@ class SettingsQuery(graphene.ObjectType):
 
 class ChangeSettingsMutation(graphene.Mutation):
     class Arguments:
-        LANGUAGE = graphene.String(description="Язык сообщений журнала")
+        LANGUAGE = ShortString(description="Язык сообщений журнала")
         DEBUG = graphene.Boolean()
         VEIL_CACHE_TTL = graphene.Int()
-        VEIL_CACHE_SERVER = graphene.String()
+        VEIL_CACHE_SERVER = ShortString()
         VEIL_CACHE_PORT = graphene.Int()
         VEIL_REQUEST_TIMEOUT = graphene.Int()
         VEIL_CONNECTION_TIMEOUT = graphene.Int()
@@ -230,13 +231,13 @@ class ChangeSettingsMutation(graphene.Mutation):
 
 class ChangeSmtpSettingsMutation(graphene.Mutation):
     class Arguments:
-        hostname = graphene.String()
+        hostname = ShortString()
         port = graphene.Int()
         TLS = graphene.Boolean()
         SSL = graphene.Boolean()
-        password = graphene.String()
-        user = graphene.String()
-        from_address = graphene.String()
+        password = ShortString()
+        user = ShortString()
+        from_address = ShortString()
         level = graphene.Int()
 
     ok = graphene.Boolean()
@@ -249,13 +250,13 @@ class ChangeSmtpSettingsMutation(graphene.Mutation):
 
 class DoServiceAction(graphene.Mutation):
     class Arguments:
-        sudo_password = graphene.String()
-        service_name = graphene.String()
+        sudo_password = ShortString()
+        service_name = ShortString()
         service_action = ServiceActionGraphene()
         check_errors = graphene.Boolean()
 
     ok = graphene.Boolean()
-    service_status = graphene.String()
+    service_status = ShortString()
 
     @administrator_required
     async def mutate(self, _info, sudo_password, service_name, service_action,
