@@ -1,5 +1,4 @@
 import { Component,  Input, EventEmitter, Output } from '@angular/core';
-import * as moment from 'moment';
 
 @Component({
   selector: 'vdi-table-into',
@@ -13,10 +12,8 @@ export class TableIntoComponent  {
   @Output() action: EventEmitter<object> = new EventEmitter<object>();
   @Output() edit: EventEmitter<any> = new EventEmitter<any>();
 
-  public moment: any;
-
   constructor() {
-    this.moment = moment;
+   
   }
 
   public actionEditField(method, info = null) {
