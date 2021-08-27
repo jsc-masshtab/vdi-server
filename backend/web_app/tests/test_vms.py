@@ -150,3 +150,26 @@ class TestVmStatus:
             pool_schema, qu, context=fixt_auth_context
         )  # noqa
         snapshot.assert_match(executed)
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures("fixt_db", "fixt_user_admin", "fixt_create_static_pool")
+class TestResolveVm:
+    async def test_vm_info(self, snapshot, fixt_auth_context):  # noqa
+        pool_id = await Pool.select("id").gino.scalar()
+        pool = await Pool.get(pool_id)
+
+        vm = await Vm.query.where(pool_id == pool_id).gino.first()
+
+        qu = (
+            """{pools{
+                    vm (vm_id: "%s", controller_id: "%s") {
+                       verbose_name
+                    }
+                } 
+               }"""
+            % (vm.id, pool.controller)
+        )
+
+        executed = await execute_scheme(pool_schema, qu, context=fixt_auth_context)
+        snapshot.assert_match(executed)

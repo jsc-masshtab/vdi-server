@@ -150,7 +150,7 @@ class TestGroupSchema:
         try:
             await execute_scheme(group_schema, query, context=fixt_auth_context)
         except ExecError as E:
-            assert "Description length must be <= 255 characters." in str(E)
+            assert "Описание должно быть <= 255 символам." in str(E)
         else:
             raise AssertionError
 
