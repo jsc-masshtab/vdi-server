@@ -174,8 +174,7 @@ nav:
       - Настройки Spice: connect/settings/spice_settings.md
       - Настройки RDP: connect/settings/rdp_settings.md
       - Служебные настройки: connect/settings/service_settings.md
-      - Настройка двухфакторной аутентификации: connect/settings/thin_client_2fa_settings.md
-    - Нулевые клиенты:    
+      - Настройка двухфакторной аутентификации: connect/settings/thin_client_2fa_settings.md  
     - Возможные ошибки:
       - Общие ошибки: connect/possible_errors/common.md
       - Ошибки RDP: connect/possible_errors/rdp.md
