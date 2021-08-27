@@ -175,6 +175,7 @@ nav:
       - Настройки RDP: connect/settings/rdp_settings.md
       - Служебные настройки: connect/settings/service_settings.md
       - Настройка двухфакторной аутентификации: connect/settings/thin_client_2fa_settings.md
+    - Нулевые клиенты:    
     - Возможные ошибки:
       - Общие ошибки: connect/possible_errors/common.md
       - Ошибки RDP: connect/possible_errors/rdp.md
@@ -186,6 +187,13 @@ nav:
       - Приложение. Установка ОС "Astra Linux Common Edition": connect/thin_clients/application1.md
       - Приложение. Установка ОС "Astra Linux Special Edition": connect/thin_clients/application2.md
       - Приложение. Установка ОС "Альт Рабочая станция": connect/thin_clients/application3.md
+      - Нулевые клиенты:
+        - О нулевы клиентах: connect/thin_clients/zero_clients/index.md
+        - Системные требования: connect/thin_clients/zero_clients/hardware_requirements.md
+        - Настройка DHCP: connect/thin_clients/zero_clients/DHCP.md
+        - Настройка TFTP сервера: connect/thin_clients/zero_clients/TFTP.md
+        - Настройка pxelinux: connect/thin_clients/zero_clients/pxe.md
+        - Настройка NFS: connect/thin_clients/zero_clients/nfs.md
   - ECP VeiL: https://veil.mashtab.org/docs/
   - Cписок изменений:
     - VeiL Broker:
