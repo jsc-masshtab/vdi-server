@@ -187,7 +187,7 @@ nav:
       - Приложение. Установка ОС "Astra Linux Special Edition": connect/thin_clients/application2.md
       - Приложение. Установка ОС "Альт Рабочая станция": connect/thin_clients/application3.md
       - Нулевые клиенты:
-        - О нулевы клиентах: connect/thin_clients/zero_clients/index.md
+        - О нулевых клиентах: connect/thin_clients/zero_clients/index.md
         - Системные требования: connect/thin_clients/zero_clients/hardware_requirements.md
         - Настройка DHCP: connect/thin_clients/zero_clients/DHCP.md
         - Настройка TFTP сервера: connect/thin_clients/zero_clients/TFTP.md
