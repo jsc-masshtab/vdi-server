@@ -645,8 +645,12 @@ class ControllerQuery(graphene.ObjectType, ControllerFetcher):
     @administrator_required
     async def resolve_controller(cls, root, info, id_, creator):
         controller = await cls.fetch_by_id(id_)
-        await controller.get_version()
-        return ControllerType.obj_to_type(controller)
+        try:
+            await controller.get_version()
+        except SimpleError as e:
+            raise SimpleError(e)
+        finally:
+            return ControllerType.obj_to_type(controller)
 
 
 class ControllerMutations(graphene.ObjectType):
