@@ -6,12 +6,18 @@
 
 1. Установите TFTP-сервер и Xinetd на ваш сервер, выполнив следующую команду:
 
-'''bash
-# apt-get install tftp-server xinetd 
-'''
-2. Приветедите файл конфигерации '''/etc/xinetd.d/tftp''' TFTP сервера к видуЖ
+!!! example "Для дистрибутивов использующих менеджер пакетов apt"
+    ```console
+    sudo apt-get install tftp-server xinetd 
+    ```
+!!! example "Для дистрибутивов использующих менеджер пакетов yum"
+    ```console
+    sudo yum tftp-server xinetd 
+    ```
+    
+2. Приветедите файл конфигерации `/etc/xinetd.d/tftp` TFTP сервера к видуЖ
 
-'''shell
+```
 service tftp
 {
 disable = no
@@ -22,5 +28,5 @@ user = root
 server = /usr/sbin/in.tftpd
 server_args = -u tftp -s /var/lib/tftpboot #путь до директории, где будет находится загрузчик pxelinux и его конфигурация, а также ядро и начальная файловая система.
 }
-'''
+```
 
