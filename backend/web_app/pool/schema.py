@@ -1066,7 +1066,7 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator, ControllerFe
         vm_name_template = ShortString(required=True)
 
         create_thin_clones = graphene.Boolean(default_value=True)
-        prepare_vms = graphene.Boolean(default_value=True)
+        prepare_vms = graphene.Boolean(default_value=False)
         connection_types = graphene.List(
             graphene.NonNull(ConnectionTypesGraphene),
             default_value=[Pool.PoolConnectionTypes.SPICE.value],

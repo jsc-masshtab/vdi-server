@@ -35,6 +35,7 @@
    команды для обновления:
 
     ```
+    Если существует media_cdrom_repo.list:
     sudo mv /etc/apt/sources.list.d/media_cdrom_repo.list /etc/apt/sources.list.d/media_cdrom_repo.back
     sudo apt update
     ```
@@ -100,6 +101,7 @@
 1. Выполнить команды для обновления:
 
     ```bash
+    Если существует media_cdrom_repo.list:
     sudo mv /etc/apt/sources.list.d/media_cdrom_repo.list /etc/apt/sources.list.d/media_cdrom_repo.back
     sudo apt update
     ```

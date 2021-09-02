@@ -7,10 +7,10 @@ from tornado import gen
 
 from common.settings import VEIL_WS_MAX_TIME_TO_WAIT, PAM_AUTH
 from web_app.pool.schema import pool_schema
-from web_app.tests.utils import execute_scheme
+from web_app.tests.utils import execute_scheme, ExecError
 from common.models.pool import Pool
 from common.models.task import TaskStatus, Task
-
+from common.veil.veil_gino import Status
 from common.veil.veil_redis import wait_for_task_result
 
 from common.models.vm import Vm
@@ -334,6 +334,66 @@ async def test_remove_and_add_vm_in_static_pool(
 
 
 @pytest.mark.asyncio
+async def test_clear_pool_errors(
+    fixt_launch_workers,
+    fixt_db,
+    fixt_controller,  # noqa
+    fixt_create_static_pool,
+    fixt_auth_context,
+):  # noqa
+    """Create automated pool, make request to check data,
+    remove a vm from this pool, add the removed vm back to this pool, remove this pool"""
+    pool_id = fixt_create_static_pool["id"]
+    pool = await Pool.get(pool_id)
+    await pool.update(status=Status.FAILED).apply()
+    query = (
+        """mutation{
+                    clearPool(pool_id: "%s")
+                        {
+                          ok
+                        }
+                    }"""
+        % pool_id
+    )
+    executed = await execute_scheme(pool_schema, query, context=fixt_auth_context)
+    assert executed["clearPool"]["ok"]
+
+    await pool.update(status=Status.SERVICE).apply()
+    query = (
+        """mutation{
+                    clearPool(pool_id: "%s")
+                        {
+                          ok
+                        }
+                    }"""
+        % pool_id
+    )
+    try:
+        await execute_scheme(pool_schema, query, context=fixt_auth_context)
+    except ExecError as E:
+        assert "находится в сервисном режиме." in str(E)
+    else:
+        raise AssertionError
+
+    await pool.update(status=Status.ACTIVE).apply()
+    query = (
+        """mutation{
+                    clearPool(pool_id: "%s")
+                        {
+                          ok
+                        }
+                    }"""
+        % pool_id
+    )
+    try:
+        await execute_scheme(pool_schema, query, context=fixt_auth_context)
+    except ExecError as E:
+        assert "уже активирован." in str(E)
+    else:
+        raise AssertionError
+
+
+@pytest.mark.asyncio
 @pytest.mark.usefixtures(
     "fixt_launch_workers",
     "fixt_db",
@@ -437,7 +497,13 @@ async def test_pools_ordering(
                     verbose_name
                     pool_type
                     resource_pool_id
+                    resource_pool {
+                      verbose_name
+                    }
                     template_id
+                    template {
+                      verbose_name
+                    }
                     initial_size
                     os_type
                     assigned_groups(ordering: "verbose_name") {
@@ -454,6 +520,27 @@ async def test_pools_ordering(
                     }
                     assigned_connection_types
                     possible_connection_types
+                    vm_amount
+                    vms {
+                      verbose_name
+                      assigned_users {
+                        id
+                      }
+                      assigned_users_count
+                      count
+                      events {
+                        message
+                      }
+                      backups {
+                        filename
+                      }
+                      # spice_connection {
+                      #   connection_url
+                      # }
+                      # vnc_connection {
+                      #   connection_url
+                      # }
+                    }
                  }
                 }
             """

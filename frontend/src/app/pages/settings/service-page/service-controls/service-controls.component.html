@@ -1,4 +1,4 @@
-<button *ngIf="isRunning; else stoped" class="btn controls-btn" title="Стоп" (click)="stop()">
+<button *ngIf="isRunning || isExited; else stoped" class="btn controls-btn" title="Стоп" (click)="stop()">
   <fa-icon [icon]="['fas','stop-circle']"></fa-icon>
 
 </button>

@@ -16,21 +16,26 @@ export class ServiceControlsComponent{
   @Output() clickControls: EventEmitter<IEventData> = new EventEmitter<IEventData>();
 
   public get isRunning(): boolean  {
-    
+
     return this.service.status === Status.Running
   }
-  
+
+  public get isExited(): boolean  {
+
+    return this.service.status === Status.Exited
+  }
+
   public restart(): void {
     this.clickControls.emit({
       service: this.service,
-      actionType: ActionType.Restart 
+      actionType: ActionType.Restart
     });
   }
 
   public run(): void {
     this.clickControls.emit({
       service: this.service,
-      actionType: ActionType.Start 
+      actionType: ActionType.Start
     });
 
   }
@@ -38,7 +43,7 @@ export class ServiceControlsComponent{
   public stop(): void {
     this.clickControls.emit({
       service: this.service,
-      actionType: ActionType.Stop 
+      actionType: ActionType.Stop
     });
   }
 }
