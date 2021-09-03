@@ -67,7 +67,7 @@ export class ConfirmModalComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    if(this.sub){
+    if (this.sub){
       this.sub.unsubscribe()
     }
   }

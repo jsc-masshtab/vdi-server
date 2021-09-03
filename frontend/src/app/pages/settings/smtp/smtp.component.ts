@@ -27,12 +27,12 @@ export class SmtpComponent implements OnInit {
       property: 'port'
     },
     {
-      title:'Имя пользователя',
+      title: 'Имя пользователя',
       type: 'string',
       property: 'user'
     },
     {
-      title:'E-mail отправителя',
+      title: 'E-mail отправителя',
       type: 'string',
       property: 'fromAddress'
     },

@@ -122,8 +122,8 @@ const routes: Routes = [
         component: ServicePageComponent
       },
       {
-        path:'settings/smtp',
-        component:SmtpComponent
+        path: 'settings/smtp',
+        component: SmtpComponent
       },
       {
         path: 'log/events',

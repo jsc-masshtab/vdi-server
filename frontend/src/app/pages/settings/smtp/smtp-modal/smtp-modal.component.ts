@@ -50,11 +50,11 @@ export class SmtpModalComponent implements OnInit, OnDestroy {
       hostname: [hostname, [Validators.required]],
       port: [port],
       fromAddress: [fromAddress, [Validators.required, Validators.pattern(/^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/)]],
-      user:[user, [Validators.required]],
+      user: [user, [Validators.required]],
       password: [password, [Validators.required]],
-      level:[...this.levels.filter(l => l.value === level)],
-      TLS:[TLS],
-      SSL:[SSL],
+      level: [...this.levels.filter(l => l.value === level)],
+      TLS: [TLS],
+      SSL: [SSL],
     });
   }
 
@@ -69,7 +69,7 @@ export class SmtpModalComponent implements OnInit, OnDestroy {
         fromAddress,
         user,
         password,
-        level:level.value,
+        level: level.value,
         TLS,
         SSL
       }
@@ -93,7 +93,7 @@ export class SmtpModalComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    if(this.sub){
+    if (this.sub){
       this.sub.unsubscribe()
     }
   }
