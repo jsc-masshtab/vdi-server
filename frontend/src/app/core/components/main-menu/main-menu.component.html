@@ -127,6 +127,17 @@
     <span>Сервисы</span>
   </a>
 
+  <a class="top-menu-item item-tree"
+    [@fadeInOut]
+    *ngIf="toggleSetting"
+    (click)="routeTo('settings/smtp')"
+    (keydown.enter)="routeTo('settings/smtp')"
+    [class.clicked-link]="clickedManage =='smtp'"
+    tabindex="0">
+    <fa-icon [icon]="['fas','envelope']" size="s" [style.color]="'rgb(255, 235, 205)'"></fa-icon>
+    <span>SMTP</span>
+  </a>
+
   <a class="top-menu-item item-hat" (click)="logToggle()"  tabindex="0" (keydown.enter)="logToggle()" [@fadeInOut]>
     <fa-icon title="Журнал" [icon]="['fas','clipboard-list']" size="s" [style.color]="'rgb(94, 185, 161)'"></fa-icon>
     <span>Журнал</span>

@@ -1,0 +1,23 @@
+<div class="control-panel">
+    
+  <div class="crumb" [style.marginRight]="'15px'">
+    <fa-icon [icon]="['fas','envelope']"></fa-icon>
+      <span class="crumb-name">Настройки SMTP сервера</span>
+  </div>
+  <button (click)="getSmtpSettings()" class="btn-refresh" title="Обновить">
+    <fa-icon [icon]="['fas','sync-alt']"></fa-icon>
+  </button>
+  <div class="control-btns">
+    <button type="button" (click)="openModal()">
+      <fa-icon [icon]="['fas','plus-circle']"></fa-icon>
+      <span class="btn-name">Настроить SMTP сервер</span>
+    </button>
+  </div>
+</div>
+
+<div class="components-info">
+    <vdi-table-into 
+        [item]="smtpSettings" 
+        [collection]="intoCollection">
+  </vdi-table-into>
+</div>

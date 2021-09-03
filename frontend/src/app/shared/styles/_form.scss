@@ -103,7 +103,7 @@
             margin-bottom: 0px;
         }
 
-        input[type="text"],input[type="number"],input[type="password"],textarea {
+        input[type="text"],input[type="number"],input[type="password"],textarea,select {
             background-color: #f9f9f9;
             border: 1px solid #e8e8e8;
             width: 100%;
@@ -125,7 +125,7 @@
             padding: 5px;
         }
 
-        input[type="text"],input[type="number"],input[type="password"] {
+        input[type="text"],input[type="number"],input[type="password"],select {
             height: 30px;
         }
     }
