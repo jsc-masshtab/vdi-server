@@ -1,9 +1,9 @@
 import { Component, Inject, OnDestroy, OnInit } from '@angular/core';
 import { FormGroup, Validators, FormBuilder } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { WaitService } from '@app/core/components/wait/wait.service';
 import { Subscription } from 'rxjs';
 
+import { WaitService } from '@core/components/wait/wait.service';
 import { modalData } from '../service-page.component';
 import { IMutationApiModel, IQueryService, ServicePageMapper } from '../service-page.mapper';
 import { ServicePageService } from '../service-page.service';
@@ -67,6 +67,8 @@ export class ConfirmModalComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    this.sub.unsubscribe()
+    if(this.sub){
+      this.sub.unsubscribe()
+    }
   }
 }

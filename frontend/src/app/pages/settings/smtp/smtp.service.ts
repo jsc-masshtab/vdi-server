@@ -18,28 +18,34 @@ export interface ISmtpSettings {
   level: number
 }
 
+export interface ISmtpMutationResponse {
+  changeSmtpSettings: IChangeSmtpSettings
+}
 
-
+interface IChangeSmtpSettings {
+  ok: boolean
+}
 
 @Injectable({
   providedIn: 'root'
 })
 export class SmtpService {
 
-  constructor(private appolo: Apollo) { }
+  constructor(private apollo: Apollo) { }
 
   public getSmptSettings(): QueryRef<ISmtpResponse> {
-    return this.appolo.watchQuery({
+    return this.apollo.watchQuery({
       query: gql`
         query settings {
           smtpSettings: smtp_settings {
             hostname
             port
-            SSL
-            TLS
+            password
             fromAdress: from_address
             user
-            password
+            SSL
+            TLS
+            level
           }
         }
       `,
@@ -50,22 +56,19 @@ export class SmtpService {
   }
 
 
-  // public changeSmtpSettings(data: modalData) {
-  //   return this.apollo.mutate<IMutationResponse>({
-  //     mutation: gql`
-  //       mutation settings($password: String, $serviceName:String, $actionType: ServiceAction) {
-  //       doServiceAction(sudo_password:$password, service_name: $serviceName, service_action: $actionType){
-  //          ok,
-  //          service_status
-  //        }
-  //     }`,
-  //     variables: {
-  //       method: 'POST',
-  //       password: data.password,
-  //       serviceName: data.serviceName,
-  //       actionType: data.actionType
-  //     }
-  //   })
-  // }
+  public changeSmtpSettings(data: ISmtpSettings) {
+    return this.apollo.mutate<ISmtpMutationResponse>({
+      mutation: gql`
+        mutation settings($hostname: String, $port: Int, $password: String, $fromAddress: String, $user: String, $level: Int, $SSL: Boolean, $TLS: Boolean) {
+          changeSmtpSettings (hostname: $hostname, port:$port, password: $password, from_address: $fromAddress, user: $user, level: $level, SSL: $SSL, TLS: $TLS ){
+           ok
+         }
+      }`,
+      variables: {
+        method: 'POST',
+        ...data
+      }
+    })
+  }
 
 }
