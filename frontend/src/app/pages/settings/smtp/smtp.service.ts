@@ -41,7 +41,7 @@ export class SmtpService {
             hostname
             port
             password
-            fromAdress: from_address
+            fromAddress: from_address
             user
             SSL
             TLS

@@ -1,9 +1,13 @@
 import { Component, OnInit } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
+import { WaitService } from '@app/core/components/wait/wait.service';
 import { ApolloQueryResult } from 'apollo-client';
+import { Subscription } from 'rxjs';
 
 import { SmtpModalComponent } from './smtp-modal/smtp-modal.component';
 import { ISmtpResponse, ISmtpSettings, SmtpService } from './smtp.service';
+
+
 
 @Component({
   selector: 'vdi-smtp',
@@ -12,7 +16,7 @@ import { ISmtpResponse, ISmtpSettings, SmtpService } from './smtp.service';
 })
 export class SmtpComponent implements OnInit {
 
-
+  public sub: Subscription;
   public smtpSettings: ISmtpSettings;
 
   public readonly intoCollection: ReadonlyArray<object> = [
@@ -37,6 +41,11 @@ export class SmtpComponent implements OnInit {
       property: 'fromAddress'
     },
     {
+      title: 'Уровень информирования',
+      type: 'level',
+      property: 'level'
+    },
+    {
       title: 'TLS',
       type: 'boolean',
       property: 'TLS'
@@ -48,7 +57,10 @@ export class SmtpComponent implements OnInit {
     }
   ]
 
-  constructor(private smtpService: SmtpService, private dialog: MatDialog) { }
+  constructor(
+    private smtpService: SmtpService,
+    private dialog: MatDialog,
+    private waitService: WaitService) { }
 
   ngOnInit() {
     this.getSmtpSettings()
@@ -71,4 +83,27 @@ export class SmtpComponent implements OnInit {
     });
   }
 
+  public reset(): void{
+    const params = {
+      hostname: '',
+      port: 25,
+      SSL: false,
+      TLS: false,
+      fromAddress: '',
+      user: '',
+      password: '',
+      level: 4
+    }
+    this.waitService.setWait(true);
+    this.sub = this.smtpService.changeSmtpSettings(params).subscribe((res) => {
+      const response = res.data.changeSmtpSettings;
+      
+      if (response.ok){
+          this.smtpService.getSmptSettings().refetch();
+          this.waitService.setWait(false);
+        }
+      })
+  }
+ 
+  
 }
