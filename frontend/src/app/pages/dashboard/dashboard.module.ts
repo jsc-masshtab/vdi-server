@@ -37,6 +37,7 @@ import { ThinClientsModule } from '../thin-clients/thin-clients.module';
 import { DashboardRoutingModule } from './dashboard-routing.module';
 import { DashboardComponent } from './dashboard.component';
 import { SystemModule } from '../settings/system/system.module';
+import { SmtpModule } from '../settings/smtp/smtp.module';
 
 
 @NgModule({
@@ -67,7 +68,8 @@ import { SystemModule } from '../settings/system/system.module';
     LicenseModule,
     ThinClientsModule,
     SystemModule,
-    ServicePageModule
+    ServicePageModule,
+    SmtpModule
   ],
   providers:
     [
