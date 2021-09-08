@@ -180,8 +180,7 @@ class PoolGetVm(BaseHttpHandler, ABC):
             }
             return await self.log_finish(response)
 
-        if (remote_protocol == PoolM.PoolConnectionTypes.RDP.name
-                or remote_protocol == PoolM.PoolConnectionTypes.NATIVE_RDP.name):  # noqa: W503
+        if self._is_rdp(remote_protocol) or remote_protocol == PoolM.PoolConnectionTypes.X2GO.name:
             try:
                 vm_address = veil_domain.first_ipv4
                 if vm_address is None:
@@ -193,7 +192,7 @@ class PoolGetVm(BaseHttpHandler, ABC):
                     "errors": [
                         {
                             "message": _local_(
-                                "VM does not support RDP. The controller didn`t provide a VM address."
+                                "The controller didn`t provide a VM address. Try again in 1 minute."
                             ),
                             "code": "005"
                         }
@@ -238,6 +237,11 @@ class PoolGetVm(BaseHttpHandler, ABC):
     def _is_spice(remote_protocol):
         return bool(remote_protocol == PoolM.PoolConnectionTypes.SPICE.name or  # noqa
                     remote_protocol == PoolM.PoolConnectionTypes.SPICE_DIRECT.name)  # noqa
+
+    @staticmethod
+    def _is_rdp(remote_protocol):
+        return bool(remote_protocol == PoolM.PoolConnectionTypes.RDP.name or  # noqa
+                    remote_protocol == PoolM.PoolConnectionTypes.NATIVE_RDP.name)  # noqa
 
     @staticmethod
     def _check_if_protocol_allowed(pool, remote_protocol):

@@ -78,6 +78,7 @@ class Pool(VeilModel):
         SPICE_DIRECT = "SPICE_DIRECT"
         RDP = "RDP"
         NATIVE_RDP = "NATIVE_RDP"
+        X2GO = "X2GO"
 
         @classmethod
         def values(cls):
