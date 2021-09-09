@@ -85,6 +85,7 @@ nav:
     - nVidia Grid: broker/faq/vm/nvidia.md
     - Возможные ошибки: broker/faq/questions.md
     - Двухфакторная аутентификация: broker/faq/2fa.md
+    - Использование Indeed AM с VeiL VDI: broker/faq/indeed-id.md
   - VeiL Broker:
     - Руководство системного программиста:
       - Аннотация: broker/engineer_guide/annotate.md
