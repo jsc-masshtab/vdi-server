@@ -1,8 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
-import { WaitService } from '@app/core/components/wait/wait.service';
 import { ApolloQueryResult } from 'apollo-client';
 import { Subscription } from 'rxjs';
+import { SmtpConfirmModalComponent } from './confirm-modal/confirm-modal.component';
 
 import { SmtpModalComponent } from './smtp-modal/smtp-modal.component';
 import { ISmtpResponse, ISmtpSettings, SmtpService } from './smtp.service';
@@ -60,7 +60,7 @@ export class SmtpComponent implements OnInit {
   constructor(
     private smtpService: SmtpService,
     private dialog: MatDialog,
-    private waitService: WaitService) { }
+   ) { }
 
   ngOnInit() {
     this.getSmtpSettings()
@@ -84,25 +84,13 @@ export class SmtpComponent implements OnInit {
   }
 
   public reset(): void{
-    const params = {
-      hostname: '',
-      port: 25,
-      SSL: false,
-      TLS: false,
-      fromAddress: '',
-      user: '',
-      password: '',
-      level: 4
-    }
-    this.waitService.setWait(true);
-    this.sub = this.smtpService.changeSmtpSettings(params).subscribe((res) => {
-      const response = res.data.changeSmtpSettings;
-      
-      if (response.ok){
-          this.smtpService.getSmptSettings().refetch();
-          this.waitService.setWait(false);
-        }
-      })
+
+    this.dialog.open(SmtpConfirmModalComponent, {
+      disableClose: true,
+      width: '500px',
+  
+    });
+   
   }
  
   
