@@ -173,8 +173,11 @@ nav:
       - Основные настройки: connect/settings/main_settings.md
       - Настройки Spice: connect/settings/spice_settings.md
       - Настройки RDP: connect/settings/rdp_settings.md
+      - Настройки X2Go: connect/settings/x2go_settings.md
       - Служебные настройки: connect/settings/service_settings.md
-      - Настройка двухфакторной аутентификации: connect/settings/thin_client_2fa_settings.md  
+      - Настройка двухфакторной аутентификации: connect/settings/thin_client_2fa_settings.md
+      - Перенаправление папок по Spice: connect/settings/folder_redir_settings.md
+      - Перенаправление USB: connect/settings/usb_redir_settings.md
     - Возможные ошибки:
       - Общие ошибки: connect/possible_errors/common.md
       - Ошибки RDP: connect/possible_errors/rdp.md
