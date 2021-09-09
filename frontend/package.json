@@ -4,6 +4,7 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve --watch=true",
+    "thin-client": "ng serve --watch=true --project=thin-client --port=4201",
     "build": "ng build",
     "test": "ng test",
     "lint": "ng lint",

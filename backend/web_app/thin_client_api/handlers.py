@@ -130,7 +130,7 @@ class PoolGetVm(BaseHttpHandler, ABC):
 
         elif expandable_pool:  # Даже если у пользователя есть ВМ, то попробовать расшириться все равно нужно
             await self._expand_pool_if_required(pool)
-        # Только включение ВМ.
+        #  Включение ВМ и включение удаленного доступа, если спайс
         try:
             # Дальше запросы начинают уходить на veil
             veil_domain = await vm.vm_client
@@ -139,6 +139,8 @@ class PoolGetVm(BaseHttpHandler, ABC):
             await veil_domain.info()
             if not veil_domain.powered:
                 await vm.start()
+            if self._is_spice(remote_protocol) and not veil_domain.remote_access:
+                await veil_domain.enable_remote_access()
 
         except client_exceptions.ServerDisconnectedError:
             response = {
@@ -178,8 +180,7 @@ class PoolGetVm(BaseHttpHandler, ABC):
             }
             return await self.log_finish(response)
 
-        if (remote_protocol == PoolM.PoolConnectionTypes.RDP.name
-                or remote_protocol == PoolM.PoolConnectionTypes.NATIVE_RDP.name):  # noqa: W503
+        if self._is_rdp(remote_protocol) or remote_protocol == PoolM.PoolConnectionTypes.X2GO.name:
             try:
                 vm_address = veil_domain.first_ipv4
                 if vm_address is None:
@@ -191,7 +192,7 @@ class PoolGetVm(BaseHttpHandler, ABC):
                     "errors": [
                         {
                             "message": _local_(
-                                "VM does not support RDP. The controller didn`t provide a VM address."
+                                "The controller didn`t provide a VM address. Try again in 1 minute."
                             ),
                             "code": "005"
                         }
@@ -231,6 +232,16 @@ class PoolGetVm(BaseHttpHandler, ABC):
             )
         }
         return await self.log_finish(response)
+
+    @staticmethod
+    def _is_spice(remote_protocol):
+        return bool(remote_protocol == PoolM.PoolConnectionTypes.SPICE.name or  # noqa
+                    remote_protocol == PoolM.PoolConnectionTypes.SPICE_DIRECT.name)  # noqa
+
+    @staticmethod
+    def _is_rdp(remote_protocol):
+        return bool(remote_protocol == PoolM.PoolConnectionTypes.RDP.name or  # noqa
+                    remote_protocol == PoolM.PoolConnectionTypes.NATIVE_RDP.name)  # noqa
 
     @staticmethod
     def _check_if_protocol_allowed(pool, remote_protocol):

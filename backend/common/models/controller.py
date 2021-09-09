@@ -15,7 +15,7 @@ from common.models.pool import Pool as PoolModel
 from common.subscription_sources import CONTROLLERS_SUBSCRIPTION
 from common.veil.auth.fernet_crypto import decrypt, encrypt
 from common.veil.veil_api import get_veil_client
-from common.veil.veil_errors import ValidationError
+from common.veil.veil_errors import SimpleError, ValidationError
 from common.veil.veil_gino import (
     AbstractSortableStatusModel,
     EntityType,
@@ -153,7 +153,7 @@ class Controller(AbstractSortableStatusModel, VeilModel):
         if not version:
             msg = _local_("ECP VeiL version could not be obtained. Check your token.")
             await self.remove_client()
-            raise ValidationError(msg)
+            raise SimpleError(msg)
         major_version, minor_version, patch_version = version.split(".")
         await self.update(version=version).apply()
         # Проверяем версию контроллера в пределах допустимой.

@@ -1,13 +1,17 @@
-import { Component,  Input, EventEmitter, Output } from '@angular/core';
+import { Component,  Input, EventEmitter, Output, ChangeDetectionStrategy } from '@angular/core';
+
+import { ISmtpSettings } from '@pages/settings/smtp/smtp.service';
+import { Levels } from '@pages/settings/smtp/smtp-modal/smtp-modal.component';
 
 @Component({
   selector: 'vdi-table-into',
   templateUrl: './table-into.html',
-  styleUrls: ['./table-into.scss']
+  styleUrls: ['./table-into.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class TableIntoComponent  {
 
-  @Input() item: {};
+  @Input() item: ISmtpSettings | any = {};
   @Input() collection: object[] = [];
   @Output() action: EventEmitter<object> = new EventEmitter<object>();
   @Output() edit: EventEmitter<any> = new EventEmitter<any>();
@@ -29,7 +33,10 @@ export class TableIntoComponent  {
     if (obj.property_lv2 && item[obj.property]) {
       return typeof item[obj.property][obj.property_lv2] === 'number' ? 0 : '--';
     }
+    
     if (obj.property) {
+      console.log(item.level);
+      
       return typeof item[obj.property] === 'number' ? 0 : '--';
     }
     return '--';
@@ -46,5 +53,22 @@ export class TableIntoComponent  {
     const def = sizes.findIndex(size => size === delimiter);
 
     return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i + def];
+  }
+ 
+  get lvlDescription(): string {
+    console.log(this.item.level);
+    
+    switch (this.item.level) {
+      case 0:
+        return Levels.All;
+      case 1:
+        return Levels.Warnings;
+      case 2:
+        return Levels.Errors; 
+      case 4:
+        return Levels.Off;
+      default:
+        return '--';       
+    }
   }
 }

@@ -7,7 +7,7 @@
 - Описание прочих требований и спецификация доступны в разделах:
   [Подготовка сервера](../spec/domain-req.md) и [Перечень портов](../spec/ports_info.md).
 
-## Установка Virtual Аppliance брокера (версия от 3.1.1)
+## Установка Virtual Appliance брокера (версия от 3.1.1)
 
 !!! info "Virtual Appliance"
     Виртуальный аплайнс (Virtual Appliance, VA) **VA VeiL Broker** — это готовый образ виртуальной машины 

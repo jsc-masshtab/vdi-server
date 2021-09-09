@@ -1532,8 +1532,8 @@ msgid "The remote controller is unavailable."
 msgstr "Контроллер недоступен."
 
 #: ../web_app/thin_client_api/handlers.py:194
-msgid "VM does not support RDP. The controller didn`t provide a VM address."
-msgstr "Виртуальная машина не поддерживает RDP. Контроллер не передал адрес ВМ."
+msgid "The controller didn`t provide a VM address. Try again in 1 minute."
+msgstr "Контроллер не передал адрес ВМ. Попробуйте снова через 1 минуту."
 
 #: ../web_app/thin_client_api/handlers.py:218
 msgid "Unable to get list of published applications. {}."
