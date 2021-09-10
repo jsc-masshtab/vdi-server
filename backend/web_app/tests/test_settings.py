@@ -44,7 +44,7 @@ async def test_request_services(snapshot, fixt_db, fixt_auth_context):
 async def test_execute_service_action(fixt_db, fixt_auth_context):
     qu = """
         mutation{
-            doServiceAction(sudo_password: "pass", service_name: "postgresql.service", 
+            doServiceAction(sudo_password: "pass", service_name: "postgresql@9.6-main.service", 
                 service_action: RESTART, check_errors:false)
                 {ok, service_status}
         }
