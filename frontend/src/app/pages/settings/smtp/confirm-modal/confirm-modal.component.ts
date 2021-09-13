@@ -39,17 +39,17 @@ export class SmtpConfirmModalComponent implements OnDestroy {
       password: '',
       level: 4
     }
-      this.waitService.setWait(true);
-      this.sub = this.smtpService.changeSmtpSettings(params).subscribe((res) => {
-        const response = res.data.changeSmtpSettings;
-        
-        if (response.ok){
-            this.smtpService.getSmptSettings().refetch();
-            this.waitService.setWait(false);
-            this.dialogRef.close();
-          }
-        })
-      }
+    this.waitService.setWait(true);
+    this.sub = this.smtpService.changeSmtpSettings(params).subscribe((res) => {
+      const response = res.data.changeSmtpSettings;
+      
+      if (response.ok){
+          this.smtpService.getSmptSettings().refetch();
+          this.waitService.setWait(false);
+          this.dialogRef.close();
+        }
+      })
+    }
 
   ngOnDestroy() {
     if (this.sub){
