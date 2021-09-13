@@ -125,6 +125,7 @@ nav:
         - Группы: broker/operator_guide/groups.md
         - Пользователи: broker/operator_guide/users.md
         - Службы каталогов: broker/operator_guide/ad.md
+        - SMTP: broker/operator_guide/smtp.md
       - Журнал: 
         - События: broker/operator_guide/events.md
         - Задачи: broker/operator_guide/tasks.md
