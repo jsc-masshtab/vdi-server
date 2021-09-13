@@ -7,6 +7,7 @@ import { MatDialogModule } from '@angular/material/dialog';
 import { SmtpComponent } from './smtp.component';
 import { SharedModule } from '@shared/shared.module';
 import { SmtpModalComponent } from './smtp-modal/smtp-modal.component';
+import { SmtpConfirmModalComponent } from './confirm-modal/confirm-modal.component';
 
 @NgModule({
   imports: [
@@ -17,8 +18,9 @@ import { SmtpModalComponent } from './smtp-modal/smtp-modal.component';
     ReactiveFormsModule
   ],
   entryComponents: [
-    SmtpModalComponent
+    SmtpModalComponent,
+    SmtpConfirmModalComponent
   ],
-  declarations: [SmtpComponent, SmtpModalComponent]
+  declarations: [SmtpComponent, SmtpModalComponent, SmtpConfirmModalComponent]
 })
 export class SmtpModule { }
