@@ -143,7 +143,7 @@ export class PoolAddComponent implements OnInit, OnDestroy {
 
   resetData() {
     this.data = {
-      connection_types: this.type === 'rds' ? ['RDP', 'NATIVE_RDP'] : ['RDP', 'NATIVE_RDP', 'SPICE', 'SPICE_DIRECT'],
+      connection_types: this.type === 'rds' ? ['RDP', 'NATIVE_RDP'] : ['RDP', 'NATIVE_RDP', 'SPICE', 'SPICE_DIRECT', 'X2GO'],
       controllers: [],
       resource_pools: [],
       vms: [],
@@ -161,13 +161,12 @@ export class PoolAddComponent implements OnInit, OnDestroy {
 
   public toStep(step: string) {
     this.last = this.step;
-    this.step = step;
 
     /* Обработка каждого шага */
 
     switch (step) {
       case 'type': {
-
+        this.step = step;
         /* Установка начальных значений */
         this.resetData();
 
@@ -182,6 +181,7 @@ export class PoolAddComponent implements OnInit, OnDestroy {
                    break;
 
       case 'static': {
+        this.step = step;
         this.resetData();
 
         /* Выбор первого типа */
@@ -197,6 +197,8 @@ export class PoolAddComponent implements OnInit, OnDestroy {
 
           if (!this.sharedData.get('controller_id').value) {
             this.sharedData.get('controller_id').setValue(this.data['controllers'][0]['id']);
+          } else {
+            this.sharedData.get('controller_id').setValue(this.sharedData.get('controller_id').value)
           }
         });
 
@@ -242,12 +244,10 @@ export class PoolAddComponent implements OnInit, OnDestroy {
 
         if (!this.sharedData.valid) {
           this.checkValid = true;
-          this.toStep('static');
         } else {
           if (this.type === 'static') {
             if (!this.staticPool.valid) {
               this.checkValid = true;
-              this.toStep('static');
             } else {
               this.toStep('done');
             }
@@ -264,11 +264,9 @@ export class PoolAddComponent implements OnInit, OnDestroy {
       case 'check_rds': {
         if (!this.sharedData.valid) {
           this.checkValid = true;
-          this.toStep('static');
         } else {
           if (!this.rdsPool.valid) {
             this.checkValid = true;
-            this.toStep('static');
           } else {
             this.toStep('done');
           }
@@ -276,6 +274,7 @@ export class PoolAddComponent implements OnInit, OnDestroy {
       }                 break;
 
       case 'dynamic': {
+        this.step = step;
         this.dynamicPool.get('increase_step').setValue(1);
         this.dynamicPool.get('initial_size').setValue(1);
         this.dynamicPool.get('total_size').setValue(1);
@@ -287,13 +286,13 @@ export class PoolAddComponent implements OnInit, OnDestroy {
       case 'check_dynamic': {
         if (!this.dynamicPool.valid) {
           this.checkValid = true;
-          this.toStep('dynamic');
         } else {
           this.toStep('done');
         }
       }                     break;
 
       case 'guest': {
+        this.step = step;
         this.guestPool.get('increase_step').setValue(1);
         this.guestPool.get('initial_size').setValue(1);
         this.guestPool.get('total_size').setValue(1);
@@ -306,14 +305,13 @@ export class PoolAddComponent implements OnInit, OnDestroy {
       case 'check_guest': {
         if (!this.guestPool.valid) {
           this.checkValid = true;
-          this.toStep('guest');
         } else {
           this.toStep('done');
         }
       }                   break;
 
       case 'done': {
-
+        this.step = step;
         /* сборка данных для отправки */
 
         let data: any = { ...this.sharedData.value };
