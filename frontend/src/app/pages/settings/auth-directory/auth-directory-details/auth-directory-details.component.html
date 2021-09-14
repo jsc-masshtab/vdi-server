@@ -35,6 +35,16 @@
 
         <span class="ad-status-text" [class.ad-success]="connected" [class.ad-failed]="!connected" *ngIf="tested">{{ connected ? 'Успешно' : 'Нет соединения' }}</span>
       </button>
+
+      <button *ngIf="AuthenticationDirectory?.directory_type === 'OpenLDAP'" (click)="syncOpenLDAPUsers()" title="Синхронизировать пользователей" class="btn-control">
+        <fa-icon [icon]="['fas','rss']" size="xs"></fa-icon>
+        <span class="name">Синхронизировать пользователей</span>
+
+        <fa-icon *ngIf="synced && connected" class="ad-status ad-success" [icon]="['fas','check']" size="xs"></fa-icon>
+        <fa-icon *ngIf="synced && !connected" class="ad-status ad-failed" [icon]="['fas','times-circle']" size="xs"></fa-icon>
+
+        <span class="ad-status-text" [class.ad-success]="connected" [class.ad-failed]="!connected" *ngIf="synced">{{ connected ? 'Синхронизировано' : 'Не синхронизировано' }}</span>
+      </button>
     </ng-container>
 
     <ng-container *ngIf="menuActive === 'match'">
@@ -75,7 +85,7 @@
         <span class="name">Соответствия</span>
       </li>
 
-      <li (click)="routeTo('groups')" [class.active]="menuActive === 'groups'" title="Группы пользователя">
+      <li *ngIf="AuthenticationDirectory?.directory_type != 'OpenLDAP'" (click)="routeTo('groups')" [class.active]="menuActive === 'groups'" title="Группы пользователя">
         <fa-icon [icon]="['fas','users-cog']"></fa-icon>
         <span class="name">Группы</span>
       </li>

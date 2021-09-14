@@ -28,6 +28,7 @@ export class AuthenticationDirectoryDetailsComponent implements OnInit, OnDestro
 
   testing: boolean = false;
   tested: boolean = false;
+  synced: boolean = false;
   connected: boolean = false;
   public menuActive: string = 'info';
   public host: boolean = false;
@@ -72,6 +73,11 @@ export class AuthenticationDirectoryDetailsComponent implements OnInit, OnDestro
         tag: 'input',
         type: 'text'
       }
+    },
+    {
+      title: 'Тип службы',
+      property: 'directory_type',
+      type: 'string'
     },
     {
       title: 'Описание',
@@ -219,6 +225,25 @@ export class AuthenticationDirectoryDetailsComponent implements OnInit, OnDestro
       }, () => {
           this.testing = false;
           this.tested = false;
+      });
+  }
+
+  public syncOpenLDAPUsers(): void {
+    this.synced = false;
+    this.service.syncOpenLDAPUsers({
+        id: this.id,
+      })
+      .subscribe((data) => {
+        setTimeout(() => {
+          this.synced = true;
+          this.connected = data.syncOpenLDAPUsers.ok;
+        }, 1000);
+
+        setTimeout(() => {
+          this.synced = false;
+        }, 5000);
+      }, () => {
+          this.synced = false;
       });
   }
 

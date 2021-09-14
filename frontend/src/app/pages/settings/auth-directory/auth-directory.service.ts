@@ -194,6 +194,22 @@ export class AuthenticationDirectoryService {
         }).pipe(map(data => data.data));
     }
 
+    public syncOpenLDAPUsers(props) {
+        return this.service.mutate<any>({
+            mutation: gql`
+                mutation auth_dirs($id: UUID!) {
+                    syncOpenLDAPUsers(auth_dir_id: $id, ou: "people") {
+                        ok
+                    }
+                }
+            `,
+            variables: {
+                method: 'POST',
+                ...props
+            }
+        }).pipe(map(data => data.data));
+    }
+
     public deleteAuthDir(props) {
         return this.service.mutate<any>({
             mutation: gql`

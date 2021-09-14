@@ -40,7 +40,7 @@
 
       <mat-form-field>
         <mat-label>Выберите тип службы</mat-label>
-        
+
         <mat-select formControlName="directory_type">
           <mat-option [value]="'ActiveDirectory'">
             ActiveDirectory
@@ -48,6 +48,10 @@
 
           <mat-option [value]="'FreeIPA'">
             FreeIPA
+          </mat-option>
+
+          <mat-option [value]="'OpenLDAP'">
+            OpenLDAP
           </mat-option>
         </mat-select>
       </mat-form-field>
