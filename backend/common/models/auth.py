@@ -860,12 +860,13 @@ class User(AbstractSortableStatusModel, VeilModel):
         try:
             two_factor = await User.select("two_factor").where(User.username == username).gino.first()
             if two_factor:
-                if isinstance(code, str) and two_factor[0]:
-                    secret = await User.select("secret").where(User.username == username).gino.first()
-                    totp = pyotp.TOTP(secret[0])
-                    if totp.now() == code:
-                        return True
-                raise SilentError(_local_("One-time password does not match or is out of date."))
+                if two_factor[0]:
+                    if isinstance(code, str):
+                        secret = await User.select("secret").where(User.username == username).gino.first()
+                        totp = pyotp.TOTP(secret[0])
+                        if totp.now() == code:
+                            return True
+                    raise SilentError(_local_("One-time password does not match or is out of date."))
         except AssertionError as e:
             raise AssertionError(e)
         return False
