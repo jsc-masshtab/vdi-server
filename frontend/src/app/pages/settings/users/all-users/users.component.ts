@@ -25,7 +25,7 @@ export class UsersComponent extends DetailsMove implements OnInit, OnDestroy {
 
   private getUsersSub: Subscription;
 
-  public limit = 15;
+  public limit = 100;
   public count = 0;
   public offset = 0;
 

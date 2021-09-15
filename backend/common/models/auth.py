@@ -657,7 +657,7 @@ class User(AbstractSortableStatusModel, VeilModel):
         try:
             async with db.transaction():
                 user_obj = await cls.create(**user_kwargs)
-                if PAM_AUTH:
+                if PAM_AUTH and not user_obj.by_ad:
                     pam_result = await user_obj.pam_create_user(
                         raw_password=password, superuser=is_superuser
                     )
@@ -859,8 +859,8 @@ class User(AbstractSortableStatusModel, VeilModel):
     async def check_2fa(username, code):
         try:
             two_factor = await User.select("two_factor").where(User.username == username).gino.first()
-            if two_factor[0]:
-                if isinstance(code, str):
+            if two_factor:
+                if isinstance(code, str) and two_factor[0]:
                     secret = await User.select("secret").where(User.username == username).gino.first()
                     totp = pyotp.TOTP(secret[0])
                     if totp.now() == code:
