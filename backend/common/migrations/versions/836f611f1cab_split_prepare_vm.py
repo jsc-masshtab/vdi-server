@@ -1,4 +1,4 @@
-"""split prepare vm in pool.
+"""split_prepare_vm_in_pool.
 
 Revision ID: 836f611f1cab
 Revises: 90d353c9e3f7
