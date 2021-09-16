@@ -303,8 +303,7 @@ class TestPoolVm(VdiHttpTestCase):
             body=body, url=vm_url, headers=auth_headers, method="POST"
         )
         # Проверяем, что ВМ выдана
-        assert 'errors' in response_dict
-        assert '005' == response_dict['errors'][0]['code']
+        assert 'data' in response_dict
 
 
 @pytest.mark.asyncio
