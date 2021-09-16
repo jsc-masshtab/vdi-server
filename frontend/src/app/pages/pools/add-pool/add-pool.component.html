@@ -274,9 +274,28 @@
         <p class="description">Создать тонкие клоны</p>
       </label>
 
+      <label class="field">
+        <p class="field-name">Подготовка ВМ:</p>
+      </label>
+
+      <label class="field-inline" [@animForm]>
+        <mat-checkbox [color]="'warn'" formControlName="enable_vms_remote_access"></mat-checkbox>
+        <p class="description">Включать удаленный доступ на ВМ</p>
+      </label>
+
+      <label class="field-inline" [@animForm]>
+        <mat-checkbox [color]="'warn'" formControlName="start_vms"></mat-checkbox>
+        <p class="description">Включать ВМ</p>
+      </label>
+
+      <label class="field-inline" [@animForm]>
+        <mat-checkbox [color]="'warn'" formControlName="set_vms_hostnames"></mat-checkbox>
+        <p class="description">Задавать hostname ВМ</p>
+      </label>
+
       <label class="field-inline" [@animForm] *ngIf="auth_dirs.length">
-        <mat-checkbox [color]="'warn'" formControlName="prepare_vms"></mat-checkbox>
-        <p class="description">Подготавливать ВМ</p>
+        <mat-checkbox [color]="'warn'" formControlName="include_vms_in_ad"></mat-checkbox>
+        <p class="description">Вводить ВМ в домен (только для ВМ с Windows)</p>
       </label>
     </div>
 

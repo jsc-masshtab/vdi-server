@@ -120,8 +120,35 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       edit: 'changeAutomatedPoolCreate_thin_clones'
     },
     {
-      title: 'Подготавливать ВМ',
-      property: 'prepare_vms',
+      title: 'Включать удаленный доступ на ВМ',
+      property: 'enable_vms_remote_access',
+      type: {
+        typeDepend: 'boolean',
+        propertyDepend: ['Да', 'Нет']
+      },
+      edit: 'changeAutomatedPoolPrepare_vms'
+    },
+    {
+      title: 'Включать ВМ',
+      property: 'start_vms',
+      type: {
+        typeDepend: 'boolean',
+        propertyDepend: ['Да', 'Нет']
+      },
+      edit: 'changeAutomatedPoolPrepare_vms'
+    },
+    {
+      title: 'Задавать hostname ВМ',
+      property: 'set_vms_hostnames',
+      type: {
+        typeDepend: 'boolean',
+        propertyDepend: ['Да', 'Нет']
+      },
+      edit: 'changeAutomatedPoolPrepare_vms'
+    },
+    {
+      title: 'Вводить ВМ в домен',
+      property: 'include_vms_in_ad',
       type: {
         typeDepend: 'boolean',
         propertyDepend: ['Да', 'Нет']
@@ -235,15 +262,39 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       type: {
         typeDepend: 'boolean',
         propertyDepend: ['Создаются', 'Не создаются']
-      },
+      }
     },
     {
-      title: 'Подготавливать ВМ',
-      property: 'prepare_vms',
+      title: 'Включать удаленный доступ на ВМ',
+      property: 'enable_vms_remote_access',
       type: {
         typeDepend: 'boolean',
         propertyDepend: ['Да', 'Нет']
-      },
+      }
+    },
+    {
+      title: 'Включать ВМ',
+      property: 'start_vms',
+      type: {
+        typeDepend: 'boolean',
+        propertyDepend: ['Да', 'Нет']
+      }
+    },
+    {
+      title: 'Задавать hostname ВМ',
+      property: 'set_vms_hostnames',
+      type: {
+        typeDepend: 'boolean',
+        propertyDepend: ['Да', 'Нет']
+      }
+    },
+    {
+      title: 'Вводить ВМ в домен',
+      property: 'include_vms_in_ad',
+      type: {
+        typeDepend: 'boolean',
+        propertyDepend: ['Да', 'Нет']
+      }
     },
     {
       title: 'Держать ВМ с пользователями включенными',
@@ -1022,9 +1073,30 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
           form: [{
             tag: 'input',
             type: 'checkbox',
-            fieldName: 'prepare_vms',
-            fieldValue: this.pool.prepare_vms,
-            description: 'Подготавливать ВМ'
+            fieldName: 'enable_vms_remote_access',
+            fieldValue: this.pool.enable_vms_remote_access,
+            description: 'Включать удаленный доступ на ВМ'
+          },
+          {
+            tag: 'input',
+            type: 'checkbox',
+            fieldName: 'start_vms',
+            fieldValue: this.pool.start_vms,
+            description: 'Включать ВМ'
+          },
+          {
+            tag: 'input',
+            type: 'checkbox',
+            fieldName: 'set_vms_hostnames',
+            fieldValue: this.pool.set_vms_hostnames,
+            description: 'Задавать hostname ВМ'
+          },
+          {
+            tag: 'input',
+            type: 'checkbox',
+            fieldName: 'include_vms_in_ad',
+            fieldValue: this.pool.include_vms_in_ad,
+            description: 'Вводить ВМ в домен'
           }]
         },
         update: {

@@ -246,7 +246,10 @@ class Pool(VeilModel):
                 AutomatedPool.vm_name_template,
                 AutomatedPool.os_type,
                 AutomatedPool.create_thin_clones,
-                AutomatedPool.prepare_vms,
+                AutomatedPool.enable_vms_remote_access,
+                AutomatedPool.start_vms,
+                AutomatedPool.set_vms_hostnames,
+                AutomatedPool.include_vms_in_ad,
                 AutomatedPool.ad_ou,
                 Pool.pool_type,
                 Pool.connection_types,
@@ -299,7 +302,10 @@ class Pool(VeilModel):
                 AutomatedPool.vm_name_template,
                 AutomatedPool.os_type,
                 AutomatedPool.create_thin_clones,
-                AutomatedPool.prepare_vms,
+                AutomatedPool.enable_vms_remote_access,
+                AutomatedPool.start_vms,
+                AutomatedPool.set_vms_hostnames,
+                AutomatedPool.include_vms_in_ad,
                 AutomatedPool.ad_ou,
                 RdsPool.id,
                 Controller.address,
@@ -1517,7 +1523,10 @@ class AutomatedPool(db.Model):
     vm_name_template = db.Column(db.Unicode(length=100), nullable=True)
     os_type = db.Column(db.Unicode(length=100), nullable=True)
     create_thin_clones = db.Column(db.Boolean(), nullable=False, default=True)
-    prepare_vms = db.Column(db.Boolean(), nullable=False, default=True)
+    enable_vms_remote_access = db.Column(db.Boolean(), nullable=False, default=True)
+    start_vms = db.Column(db.Boolean(), nullable=False, default=True)
+    set_vms_hostnames = db.Column(db.Boolean(), nullable=False, default=True)
+    include_vms_in_ad = db.Column(db.Boolean(), nullable=False, default=True)
     # Группы/Контейнеры в Active Directory для назначения виртуальным машинам пула
     ad_ou = db.Column(db.Unicode(length=1000), nullable=True)
     is_guest = db.Column(db.Boolean(), nullable=False, default=False)
@@ -1582,7 +1591,10 @@ class AutomatedPool(db.Model):
         total_size,
         vm_name_template,
         create_thin_clones,
-        prepare_vms,
+        enable_vms_remote_access,
+        start_vms,
+        set_vms_hostnames,
+        include_vms_in_ad,
         connection_types,
         tag,
         ad_ou: str = None,
@@ -1611,7 +1623,10 @@ class AutomatedPool(db.Model):
                 total_size=total_size,
                 vm_name_template=vm_name_template,
                 create_thin_clones=create_thin_clones,
-                prepare_vms=prepare_vms,
+                enable_vms_remote_access=enable_vms_remote_access,
+                start_vms=start_vms,
+                set_vms_hostnames=set_vms_hostnames,
+                include_vms_in_ad=include_vms_in_ad,
                 ad_ou=ad_ou,
                 is_guest=is_guest,
             )
@@ -1646,7 +1661,10 @@ class AutomatedPool(db.Model):
         vm_name_template,
         keep_vms_on: bool,
         create_thin_clones: bool,
-        prepare_vms: bool,
+        enable_vms_remote_access: bool,
+        start_vms: bool,
+        set_vms_hostnames: bool,
+        include_vms_in_ad: bool,
         connection_types,
         ad_ou: str,
     ):
@@ -1692,8 +1710,14 @@ class AutomatedPool(db.Model):
                 auto_pool_kwargs["ad_ou"] = ad_ou
             if isinstance(create_thin_clones, bool):
                 auto_pool_kwargs["create_thin_clones"] = create_thin_clones
-            if isinstance(prepare_vms, bool):
-                auto_pool_kwargs["prepare_vms"] = prepare_vms
+            if isinstance(enable_vms_remote_access, bool):
+                auto_pool_kwargs["enable_vms_remote_access"] = enable_vms_remote_access
+            if isinstance(start_vms, bool):
+                auto_pool_kwargs["start_vms"] = start_vms
+            if isinstance(set_vms_hostnames, bool):
+                auto_pool_kwargs["set_vms_hostnames"] = set_vms_hostnames
+            if isinstance(include_vms_in_ad, bool):
+                auto_pool_kwargs["include_vms_in_ad"] = include_vms_in_ad
             if auto_pool_kwargs:
                 desc = str(auto_pool_kwargs)
                 await system_logger.debug(
@@ -1986,7 +2010,7 @@ class AutomatedPool(db.Model):
         results_future = await asyncio.gather(
             *[
                 vm_object.prepare_with_timeout(
-                    active_directory_object, self.ad_ou
+                    active_directory_object, self.ad_ou, self
                 )
                 for vm_object in vm_objects
             ],

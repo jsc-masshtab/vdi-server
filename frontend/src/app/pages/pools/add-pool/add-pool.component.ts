@@ -108,7 +108,10 @@ export class PoolAddComponent implements OnInit, OnDestroy {
       total_size: [1, [Validators.required, Validators.max(10000), Validators.min(1)]],
 
       create_thin_clones: true,
-      ...this.auth_dirs.length ? { prepare_vms: true } : {},
+      enable_vms_remote_access: true,
+      start_vms: true,
+      set_vms_hostnames: true,
+      ...this.auth_dirs.length ? { include_vms_in_ad: true } : {},
     }, { validators: this.totalSizeValidator() });
 
     this.guestPool = this.fb.group({
@@ -122,7 +125,10 @@ export class PoolAddComponent implements OnInit, OnDestroy {
 
       create_thin_clones: true,
       is_guest: true,
-      ...this.auth_dirs.length ? { prepare_vms: true } : {},
+      enable_vms_remote_access: true,
+      start_vms: true,
+      set_vms_hostnames: true,
+      ...this.auth_dirs.length ? { include_vms_in_ad: true } : {},
     }, { validators: this.totalSizeValidator() });
 
     this.toStep('type');
@@ -280,7 +286,10 @@ export class PoolAddComponent implements OnInit, OnDestroy {
         this.dynamicPool.get('total_size').setValue(1);
         this.dynamicPool.get('reserve_size').setValue(1);
         this.dynamicPool.get('create_thin_clones').setValue(true);
-        if (this.auth_dirs.length) { this.dynamicPool.get('prepare_vms').setValue(true); }
+        this.dynamicPool.get('enable_vms_remote_access').setValue(true);
+        this.dynamicPool.get('start_vms').setValue(true);
+        this.dynamicPool.get('set_vms_hostnames').setValue(true);
+        if (this.auth_dirs.length) { this.dynamicPool.get('include_vms_in_ad').setValue(true); }
       }               break;
 
       case 'check_dynamic': {
@@ -299,7 +308,10 @@ export class PoolAddComponent implements OnInit, OnDestroy {
         this.guestPool.get('reserve_size').setValue(1);
         this.guestPool.get('create_thin_clones').setValue(true);
         this.guestPool.get('is_guest').setValue(true);
-        if (this.auth_dirs.length) { this.guestPool.get('prepare_vms').setValue(true); }
+        this.guestPool.get('enable_vms_remote_access').setValue(true);
+        this.guestPool.get('start_vms').setValue(true);
+        this.guestPool.get('set_vms_hostnames').setValue(true);
+        if (this.auth_dirs.length) { this.guestPool.get('include_vms_in_ad').setValue(true); }
       }             break;
 
       case 'check_guest': {

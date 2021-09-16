@@ -175,7 +175,7 @@ class InitPoolTask(AbstractTask):
 
             # Подготавливаем машины. Находимся на этом отступе так как нам нужен лок пула но не нужен лок шаблона
             try:
-                if automated_pool.prepare_vms:
+                if automated_pool.enable_vms_remote_access or automated_pool.start_vms or automated_pool.set_vms_hostnames or automated_pool.include_vms_in_ad:
                     results_future = await automated_pool.prepare_initial_vms()
                     # Если есть отмененные корутины, то считаем, что инициализация пула отменена
                     for response in results_future:
@@ -267,11 +267,11 @@ class ExpandPoolTask(AbstractTask):
                 active_directory_object = await AuthenticationDirectory.query.where(
                     AuthenticationDirectory.status == Status.ACTIVE
                 ).gino.first()
-                if vm_list and automated_pool.prepare_vms:
+                if vm_list and (automated_pool.enable_vms_remote_access or automated_pool.start_vms or automated_pool.set_vms_hostnames or automated_pool.include_vms_in_ad):
                     await asyncio.gather(
                         *[
                             vm_object.prepare_with_timeout(
-                                active_directory_object, automated_pool.ad_ou
+                                active_directory_object, automated_pool.ad_ou, automated_pool
                             )
                             for vm_object in vm_list
                         ],
@@ -338,11 +338,11 @@ class RecreationGuestVmTask(AbstractTask):
                 active_directory_object = await AuthenticationDirectory.query.where(
                     AuthenticationDirectory.status == Status.ACTIVE
                 ).gino.first()
-                if vm_list and automated_pool.prepare_vms:
+                if vm_list and (automated_pool.enable_vms_remote_access or automated_pool.start_vms or automated_pool.set_vms_hostnames or automated_pool.include_vms_in_ad):
                     await asyncio.gather(
                         *[
                             vm_object.prepare_with_timeout(
-                                active_directory_object, automated_pool.ad_ou
+                                active_directory_object, automated_pool.ad_ou, automated_pool
                             )
                             for vm_object in vm_list
                         ],
@@ -467,7 +467,7 @@ class PrepareVmTask(AbstractTask):
             ).gino.first()
             ad_ou = auto_pool.ad_ou
 
-        await vm.prepare_with_timeout(active_directory_object, ad_ou)
+        await vm.prepare_with_timeout(active_directory_object, ad_ou, auto_pool)
 
     async def _do_light_preparation(self, vm):
         """Only remote access."""
