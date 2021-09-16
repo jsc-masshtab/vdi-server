@@ -356,7 +356,9 @@ export class PoolDetailsService {
         });
     }
 
-    public updatePool({pool_id, pool_type }, {connection_types, verbose_name, increase_step, reserve_size, total_size, vm_name_template, create_thin_clones, enable_vms_remote_access, start_vms, set_vms_hostnames, include_vms_in_ad, keep_vms_on, ad_ou}) {
+    public updatePool({pool_id, pool_type }, {connection_types, verbose_name, increase_step, reserve_size, total_size,
+                                              vm_name_template, create_thin_clones, enable_vms_remote_access, start_vms,
+                                              set_vms_hostnames, include_vms_in_ad, keep_vms_on, ad_ou}) {
         if (pool_type === 'static') {
             return this.service.mutate<any>({
                 mutation: gql`
