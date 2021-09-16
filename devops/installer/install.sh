@@ -13,4 +13,6 @@ apt-get install -y /media/cdrom/repo/pool/main/a/ansible/ansible_*.deb
 cd /media/cdrom/ansible
 REPO="deb [trusted=yes] file:///media/cdrom/repo smolensk main"
 ansible-playbook main.yml --extra-vars "broker_apt_repo='$REPO'"
-sed -i 's/instances running)/instances running) \n    sleep 5/g' /usr/sbin/apache2ctl
+
+# rollback apache2ctl
+sed -i '/sleep 5/d' /usr/sbin/apache2ctl

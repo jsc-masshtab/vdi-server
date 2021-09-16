@@ -323,9 +323,7 @@ class VeilTestServer:
 
             ],
             "start_on_boot": False,
-            "guest_utils": {
-                "qemu_state": True
-            },
+            "guest_utils": {"veil_state": False, "version": "101.1.0", "hostname": "DESKTOP-LI1VKFH", "ipv4": ["192.168.6.0"], "interfaces": ["Ethernet 5"], "qemu_state": True},
             "graphics_settings": {
                 "mouse_mode": "client",
                 "streaming_mode": "filter",

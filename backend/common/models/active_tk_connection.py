@@ -8,7 +8,9 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import and_, func
 
 from common.database import db
+from common.languages import _local_
 from common.log.journal import system_logger
+from common.models.auth import User
 from common.models.pool import AutomatedPool, Pool
 from common.models.task import PoolTaskType
 from common.models.vm import Vm
@@ -148,6 +150,7 @@ class ActiveTkConnection(db.Model, AbstractSortableStatusModel):
             await system_logger.debug("GUEST POOL EXPAND EXCEPTION: {}.".format(e))
 
         is_conn_secure = is_conn_secure if (is_conn_secure is not None) else False
+        prev_vm_id = self.vm_id
         await self.update(vm_id=vm_id, connection_type=conn_type,
                           is_connection_secure=is_conn_secure,
                           data_received=func.now()).apply()
@@ -155,6 +158,25 @@ class ActiveTkConnection(db.Model, AbstractSortableStatusModel):
         # front ws notification
         await publish_data_in_internal_channel(THIN_CLIENTS_SUBSCRIPTION, "UPDATED",
                                                self)
+        # log
+        user = await User.get(self.user_id) if self.user_id else None
+        if user:
+            if vm_id:
+                vm = await Vm.get(vm_id)
+                await system_logger.info(
+                    _local_("User {} connected to VM {}.").format(user.username, vm.verbose_name),
+                    entity=vm.entity,
+                    user=user.username,
+                )
+            else:
+                vm = await Vm.get(prev_vm_id) if prev_vm_id else None
+                vm_verbose_name = vm.verbose_name if vm else ""
+                vm_entity = vm.entity if vm else None
+                await system_logger.info(
+                    _local_("User {} disconnected from VM {}.").format(user.username, vm_verbose_name),
+                    entity=vm_entity,
+                    user=user.username,
+                )
 
     async def update_last_interaction(self):
         await self.update(last_interaction=func.now(), data_received=func.now()).apply()

@@ -905,7 +905,7 @@ class Pool(VeilModel):
             return await VmModel.get(vm_ids[0])
 
         domain_client = controller_client.domain(resource_pool=self.resource_pool_id)
-        domains_response = await domain_client.list(fields=["id"],
+        domains_response = await domain_client.list(fields=["id", "guest_utils"],
                                                     params={"power_state": "ON"})
 
         # Берем первую свободную если не достучались до контроллера
@@ -944,7 +944,6 @@ class Pool(VeilModel):
     async def get_vm_with_enabled_qemu(domains: list):
         """Попытка найти включенную ВМ с активным гостевым агентом."""
         for domain in domains:
-            await domain.info()
             if domain.qemu_state and domain.api_object_id:
                 return domain.api_object_id
 
