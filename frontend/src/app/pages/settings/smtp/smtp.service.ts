@@ -59,7 +59,7 @@ export class SmtpService {
   public changeSmtpSettings(data: ISmtpSettings) {
     return this.apollo.mutate<ISmtpMutationResponse>({
       mutation: gql`
-        mutation settings($hostname: String, $port: Int, $password: String, $fromAddress: String, $user: String, $level: Int, $SSL: Boolean, $TLS: Boolean) {
+        mutation settings($hostname: ShortString, $port: Int, $password: ShortString, $fromAddress: ShortString, $user: ShortString, $level: Int, $SSL: Boolean, $TLS: Boolean) {
           changeSmtpSettings (hostname: $hostname, port:$port, password: $password, from_address: $fromAddress, user: $user, level: $level, SSL: $SSL, TLS: $TLS ){
            ok
          }
