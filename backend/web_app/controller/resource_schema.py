@@ -272,10 +272,11 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
                 veil_response = await controller.veil_client.resource_pool().list(
                     paginator=paginator
                 )
+            # with_vdisks: 2 - все домены, 0 - только без vdisk'ов, 1/ничего - только с vdisk'ами
             elif resource_type == "domain":
                 veil_response = await controller.veil_client.domain(
                     template=template
-                ).list(paginator=paginator)
+                ).list(with_vdisks=2, paginator=paginator)
 
             for data in veil_response.response:
                 resource = data.public_attrs

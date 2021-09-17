@@ -22,6 +22,7 @@ app_services = OrderedDict([
     # external services
     ("apache2.service", _local_("Apache server.")),
     ("postgresql.service", _local_("Database.")),
+    ("postgresql@9.6-main.service", _local_("Database.")),
     ("redis-server.service", "Redis."),
     # app services
     ("vdi-monitor_worker.service", _local_("Monitor worker.")),
@@ -143,6 +144,11 @@ class SettingsQuery(graphene.ObjectType):
         service_graphene_type_list = []
 
         for service_name, verbose_name in app_services.items():
+            # Пропускаем postgresql.service так как этот сервис в завершенном состоянии на астре
+            # и его статус неинтересен пользователю
+            if service_name == "postgresql.service":
+                continue
+
             service_status = current_services.get(service_name, "stopped")
             service_graphene_type = ServiceGrapheneType(
                 service_name=service_name,
@@ -278,8 +284,14 @@ class DoServiceAction(graphene.Mutation):
             )
 
         # Do action
+        # Особый случай для postgresql@9.6-main.service. Он находится под управлением postgresql.service и
+        # именно с последним мы и выполняем действие
+        if service_name == "postgresql@9.6-main.service":
+            parent_service_name = "postgresql.service"
+        else:
+            parent_service_name = service_name
         cmd = "echo '{}' | sudo -S timeout 50s systemctl {} {}".format(
-            sudo_password, service_action, service_name)
+            sudo_password, service_action, parent_service_name)
 
         return_code, stdout, stderr = await create_subprocess(cmd)
 

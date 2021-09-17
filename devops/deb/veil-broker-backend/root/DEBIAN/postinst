@@ -5,12 +5,14 @@ set -e
 configure_users()
 {
 	VDIADMIN="vdiadmin"
-    VDIADMIN_PASS="Bazalt1!"
+	VDIADMIN_PASS="Bazalt1!"
 
-	groupadd vdi-web
-	groupadd vdi-web-admin
-	useradd -G vdi-web,vdi-web-admin,shadow -s /sbin/nologin $VDIADMIN
-	echo "$VDIADMIN:$VDIADMIN_PASS" | chpasswd
+	groupadd -f vdi-web
+	groupadd -f vdi-web-admin
+	if ! id "$VDIADMIN" &>/dev/null; then
+		useradd -G vdi-web,vdi-web-admin,shadow -s /sbin/nologin $VDIADMIN
+		echo "$VDIADMIN:$VDIADMIN_PASS" | chpasswd
+	fi
 }
 
 configure_secrets()
@@ -67,29 +69,6 @@ configure_crontab()
 	echo "$(echo '1 1 * * * /bin/bash /opt/veil-vdi/app/archive_csv_journal.sh' ; crontab -l)" | crontab -
 }
 
-configure_apache2()
-{
-	a2enmod ssl rewrite proxy proxy_http proxy_wstunnel deflate headers expires remoteip
-
-	cp /opt/veil-vdi/apache2-configs/apache2.conf /etc/apache2
-	rm -f /etc/apache2/sites-enabled/*
-	rm -f /etc/apache2/sites-available/*
-	cp /opt/veil-vdi/apache2-configs/vdi*.conf /etc/apache2/sites-available
-	ln -sf /etc/apache2/sites-available/*.conf /etc/apache2/sites-enabled/
-
-	# отключаем режим AstraMode для Astra Linux
-	if [ -f /etc/astra_version ] ; then
-	    echo "AstraMode off" >> /etc/apache2/apache2.conf
-	fi
-
-    apachectl configtest
-
-    systemctl enable apache2
-	systemctl restart apache2
-
-	chown www-data:adm /var/log/apache2
-}
-
 db_migrations()
 {
 	systemctl stop vdi-web vdi-pool_worker vdi-monitor_worker
@@ -108,16 +87,15 @@ case "$1" in
 		configure_systemd
 
 		if [ -z "$2" ] ; then
-		    # действия только при установке
-		    configure_users
+			# действия только при установке
+			configure_users
 			configure_secrets
 			configure_redis
 			configure_logs
 			configure_crontab
-			configure_apache2
 		else
-		    # действия только при обновлении
-            db_migrations
+		# действия только при обновлении
+		db_migrations
 		fi
 
 		exit 0
