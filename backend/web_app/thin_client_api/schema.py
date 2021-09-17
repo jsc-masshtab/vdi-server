@@ -9,6 +9,7 @@ from sqlalchemy import and_
 from sqlalchemy.sql import desc
 
 from common.database import db
+from common.graphene_utils import ShortString
 from common.languages import _local_
 from common.log.journal import system_logger
 from common.models.active_tk_connection import (
@@ -30,11 +31,11 @@ ConnectionTypesGraphene = graphene.Enum.from_enum(Pool.PoolConnectionTypes)
 class ThinClientType(graphene.ObjectType):
     conn_id = graphene.UUID()
     user_id = graphene.UUID()
-    user_name = graphene.String()
-    veil_connect_version = graphene.String()
-    vm_name = graphene.String()
-    tk_ip = graphene.String()
-    tk_os = graphene.String()
+    user_name = graphene.Field(ShortString)
+    veil_connect_version = graphene.Field(ShortString)
+    vm_name = graphene.Field(ShortString)
+    tk_ip = graphene.Field(ShortString)
+    tk_os = graphene.Field(ShortString)
     connected = graphene.DateTime()
     disconnected = graphene.DateTime()
     data_received = (
@@ -117,7 +118,7 @@ class ThinClientConnStatType(graphene.ObjectType):
 class ThinClientConnStatOutdatedType(graphene.ObjectType):
     id = graphene.UUID()
     conn_id = graphene.UUID()
-    message = graphene.String()
+    message = graphene.Field(ShortString)
     created = graphene.DateTime()
 
 
@@ -131,7 +132,7 @@ class ThinClientQuery(graphene.ObjectType):
         ThinClientType,
         limit=graphene.Int(default_value=100),
         offset=graphene.Int(default_value=0),
-        ordering=graphene.String(default_value="-connected"),
+        ordering=ShortString(default_value="-connected"),
         get_disconnected=graphene.Boolean(default_value=False),
         user_id=graphene.UUID(default_value=None),
     )
@@ -261,7 +262,7 @@ class SendMessageToThinClientMutation(graphene.Mutation):
 
     class Arguments:
         recipient_id = graphene.UUID(default_value=None, description="id получателя")
-        message = graphene.String(required=True, description="Текстовое сообщение")
+        message = ShortString(required=True, description="Текстовое сообщение")
 
     ok = graphene.Boolean()
 

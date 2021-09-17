@@ -8,6 +8,7 @@ import graphene
 
 from veil_api_client import VeilRestPaginator
 
+from common.graphene_utils import ShortString
 from common.languages import _local_
 from common.log.journal import system_logger
 from common.models.controller import Controller
@@ -31,9 +32,9 @@ class ResourceClusterType(VeilResourceType):
     """Описание сущности кластера."""
 
     id = graphene.UUID()
-    verbose_name = graphene.String()
+    verbose_name = graphene.Field(ShortString)
     status = StatusGraphene()
-    tags = graphene.List(graphene.String)
+    tags = graphene.List(ShortString)
     hints = graphene.Int()
     built_in = graphene.Boolean()
     cluster_fs_configured = graphene.Boolean()
@@ -44,24 +45,24 @@ class ResourceClusterType(VeilResourceType):
     quorum = graphene.Boolean()
     drs_strategy = graphene.Boolean()
     cpu_count = graphene.Int()
-    cluster_fs_type = graphene.String()
+    cluster_fs_type = graphene.Field(ShortString)
     ha_timeout = graphene.Int()
     drs_check_timeout = graphene.Int()
     drs_deviation_limit = graphene.Float()
     nodes = graphene.List(VeilShortEntityType)
     nodes_count = graphene.Int()
     memory_count = graphene.Int()
-    description = graphene.String()
+    description = graphene.Field(ShortString)
     ha_retrycount = graphene.Int()
-    drs_mode = graphene.String()
-    drs_metrics_strategy = graphene.String()
+    drs_mode = graphene.Field(ShortString)
+    drs_metrics_strategy = graphene.Field(ShortString)
 
 
 # Resource pool
 class ResourcePoolType(VeilResourceType):
     id = graphene.UUID()
-    verbose_name = graphene.String()
-    description = graphene.String()
+    verbose_name = graphene.Field(ShortString)
+    description = graphene.Field(ShortString)
     domains_count = graphene.Int()
     memory_limit = graphene.Int()
     cpu_limit = graphene.Int()
@@ -77,31 +78,31 @@ class ResourceNodeType(VeilResourceType):
     """Описание ноды на ECP VeiL."""
 
     id = graphene.UUID()
-    verbose_name = graphene.String()
+    verbose_name = graphene.Field(ShortString)
     status = StatusGraphene()
     domains_count = graphene.Int()
-    management_ip = graphene.String()
+    management_ip = graphene.Field(ShortString)
     domains_on_count = graphene.Int()
-    datacenter_name = graphene.String()
+    datacenter_name = graphene.Field(ShortString)
     cluster = graphene.Field(VeilShortEntityType)
     memory_count = graphene.Int()
     datacenter_id = graphene.UUID()
     built_in = graphene.Boolean()
     cpu_count = graphene.Int()
     hints = graphene.Int()
-    tags = graphene.List(graphene.String)
+    tags = graphene.List(ShortString)
     controller = graphene.Field(VeilShortEntityType)
-    version = graphene.String()
+    version = graphene.Field(ShortString)
     ksm_pages_to_scan = graphene.Int()
     ballooning = graphene.Boolean()
-    cluster_name = graphene.String()
-    description = graphene.String()
+    cluster_name = graphene.Field(ShortString)
+    description = graphene.Field(ShortString)
     node_plus_controller_installation = graphene.Boolean()
-    heartbeat_type = graphene.String()
-    ipmi_username = graphene.String()
+    heartbeat_type = graphene.Field(ShortString)
+    ipmi_username = graphene.Field(ShortString)
     ksm_merge_across_nodes = graphene.Int()
-    datacenter_name = graphene.String()
-    fencing_type = graphene.String()
+    datacenter_name = graphene.Field(ShortString)
+    fencing_type = graphene.Field(ShortString)
     ksm_enable = graphene.Int()
     ksm_sleep_time = graphene.Int()
 
@@ -111,17 +112,17 @@ class ResourceDataPoolType(VeilResourceType):
     """Описание пула-данных на ECP VeiL."""
 
     id = graphene.UUID()
-    verbose_name = graphene.String()
-    description = graphene.String()
+    verbose_name = graphene.Field(ShortString)
+    description = graphene.Field(ShortString)
     status = StatusGraphene()
     controller = graphene.Field(VeilShortEntityType)
-    tags = graphene.List(graphene.String)
+    tags = graphene.List(ShortString)
     hints = graphene.Int()
     built_in = graphene.Boolean()
     free_space = graphene.Int()
     used_space = graphene.Int()
     vdisk_count = graphene.Int()
-    type = graphene.String()
+    type = graphene.Field(ShortString)
     file_count = graphene.Int()
     size = graphene.Int()
     iso_count = graphene.Int()
@@ -138,22 +139,18 @@ class ResourceVmType(VeilResourceType):
     """Описание ВМ на ECP VeiL."""
 
     id = graphene.UUID()
-    verbose_name = graphene.String()
+    verbose_name = graphene.Field(ShortString)
     status = StatusGraphene()
     controller = graphene.Field(VeilShortEntityType)
     resource_pool = graphene.Field(VeilShortEntityType)
     memory_count = graphene.Int()
     cpu_count = graphene.Int()
     template = graphene.Boolean()
-    # luns_count = graphene.Int()
-    # vfunctions_count = graphene.Int()
-    tags = graphene.List(graphene.String)
-    # vmachine_infs_count = graphene.Int()
+    tags = graphene.List(ShortString)
     hints = graphene.Int()
     user_power_state = VmState()
-    # vdisks_count = graphene.Int()
     safety = graphene.Boolean()
-    boot_type = graphene.String()
+    boot_type = graphene.Field(ShortString)
     start_on_boot = graphene.Boolean()
     cloud_init = graphene.Boolean()
     disastery_enabled = graphene.Boolean()
@@ -161,26 +158,26 @@ class ResourceVmType(VeilResourceType):
     ha_retrycount = graphene.Boolean()
     ha_timeout = graphene.Int()
     ha_enabled = graphene.Boolean()
-    clean_type = graphene.String()
-    machine = graphene.String()
-    graphics_password = graphene.String()
+    clean_type = graphene.Field(ShortString)
+    machine = graphene.Field(ShortString)
+    graphics_password = graphene.Field(ShortString)
     remote_access = graphene.Boolean()
     bootmenu_timeout = graphene.Int()
-    os_type = graphene.String()
-    cpu_type = graphene.String()
-    description = graphene.String()
+    os_type = graphene.Field(ShortString)
+    cpu_type = graphene.Field(ShortString)
+    description = graphene.Field(ShortString)
     guest_agent = graphene.Boolean()
-    os_version = graphene.String()
+    os_version = graphene.Field(ShortString)
     spice_stream = graphene.Boolean()
     tablet = graphene.Boolean()
     parent = graphene.Field(VeilShortEntityType)
-    parent_name = graphene.String()
-    hostname = graphene.String()
-    address = graphene.List(graphene.String)
+    parent_name = graphene.Field(ShortString)
+    hostname = graphene.Field(ShortString)
+    address = graphene.List(ShortString)
     domain_tags = graphene.List(VeilTagsType)
 
     # название пула, в котором ВМ из локальной БД
-    pool_name = graphene.String()
+    pool_name = graphene.Field(ShortString)
 
 
 # Query
@@ -195,7 +192,7 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
     )
     clusters = graphene.List(
         ResourceClusterType,
-        ordering=graphene.String(),
+        ordering=ShortString(),
         limit=graphene.Int(default_value=100),
         offset=graphene.Int(default_value=0),
     )
@@ -207,7 +204,7 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
     )
     resource_pools = graphene.List(
         ResourcePoolType,
-        ordering=graphene.String(),
+        ordering=ShortString(),
         limit=graphene.Int(default_value=100),
         offset=graphene.Int(default_value=0),
     )
@@ -217,7 +214,7 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
     )
     nodes = graphene.List(
         ResourceNodeType,
-        ordering=graphene.String(),
+        ordering=ShortString(),
         limit=graphene.Int(default_value=100),
         offset=graphene.Int(default_value=0),
     )
@@ -227,7 +224,7 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
     )
     datapools = graphene.List(
         ResourceDataPoolType,
-        ordering=graphene.String(),
+        ordering=ShortString(),
         limit=graphene.Int(default_value=100),
         offset=graphene.Int(default_value=0),
     )
@@ -240,7 +237,7 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
     )
     templates = graphene.List(
         ResourceVmType,
-        ordering=graphene.String(),
+        ordering=ShortString(),
         limit=graphene.Int(default_value=100),
         offset=graphene.Int(default_value=0),
     )

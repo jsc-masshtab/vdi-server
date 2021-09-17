@@ -17,7 +17,7 @@ export class TemplatesService {
 
     public getAllTemplates(filter?): QueryRef<any, any> {
 
-        let query: string = `query resources($ordering:String) {
+        let query: string = `query resources($ordering:ShortString) {
             templates(ordering: $ordering) {
                 id
                 verbose_name
@@ -30,7 +30,7 @@ export class TemplatesService {
         }`
 
         if (filter) {
-            query = `query controllers($controller_id:UUID, $cluster_id: UUID, $resource_pool_id: UUID, $node_id: UUID, $ordering:String) {
+            query = `query controllers($controller_id:UUID, $cluster_id: UUID, $resource_pool_id: UUID, $node_id: UUID, $ordering:ShortString) {
                 controller(id_:$controller_id) {
                     id
                     templates(cluster_id: $cluster_id, resource_pool_id: $resource_pool_id, node_id: $node_id, ordering: $ordering) {

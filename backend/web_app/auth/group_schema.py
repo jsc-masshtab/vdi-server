@@ -2,6 +2,7 @@
 import graphene
 
 from common.database import db
+from common.graphene_utils import ShortString
 from common.languages import _local_
 from common.models.auth import Group, User
 from common.models.user_tk_permission import TkPermission
@@ -58,8 +59,8 @@ class GroupValidator(MutationValidation):
 
 class GroupType(graphene.ObjectType):
     id = graphene.UUID(required=True)
-    verbose_name = graphene.String()
-    description = graphene.String()
+    verbose_name = graphene.Field(ShortString)
+    description = graphene.Field(ShortString)
     date_created = graphene.DateTime()
     date_updated = graphene.DateTime()
 
@@ -132,8 +133,8 @@ class GroupQuery(graphene.ObjectType):
         GroupType,
         limit=graphene.Int(default_value=100),
         offset=graphene.Int(default_value=0),
-        verbose_name=graphene.String(),
-        ordering=graphene.String(),
+        verbose_name=ShortString(),
+        ordering=ShortString(),
     )
     group = graphene.Field(GroupType, id=graphene.UUID())
 
@@ -157,8 +158,8 @@ class GroupQuery(graphene.ObjectType):
 
 class CreateGroupMutation(graphene.Mutation, GroupValidator):
     class Arguments:
-        verbose_name = graphene.String(required=True)
-        description = graphene.String(required=False)
+        verbose_name = ShortString(required=True)
+        description = ShortString(required=False)
 
     group = graphene.Field(GroupType)
     ok = graphene.Boolean(default_value=False)
@@ -183,8 +184,8 @@ class CreateGroupMutation(graphene.Mutation, GroupValidator):
 class UpdateGroupMutation(graphene.Mutation, GroupValidator):
     class Arguments:
         id = graphene.UUID(required=True)
-        verbose_name = graphene.String(required=False)
-        description = graphene.String(required=False)
+        verbose_name = ShortString(required=False)
+        description = ShortString(required=False)
 
     group = graphene.Field(GroupType)
     ok = graphene.Boolean(default_value=False)
