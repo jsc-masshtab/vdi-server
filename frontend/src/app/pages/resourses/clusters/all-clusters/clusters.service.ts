@@ -17,7 +17,7 @@ export class ClustersService  {
 
     public getAllClusters(filter?): QueryRef<any, any> {
 
-        let query: string = `query resources($ordering:String) {
+        let query: string = `query resources($ordering:ShortString) {
             clusters(ordering: $ordering) {
                 id
                 verbose_name
@@ -35,7 +35,7 @@ export class ClustersService  {
         }`
 
         if (filter) {
-            query = `query controllers($controller_id:UUID, $ordering:String) {
+            query = `query controllers($controller_id:UUID, $ordering:ShortString) {
                 controller(id_:$controller_id) {
                     id
                     clusters(ordering: $ordering) {

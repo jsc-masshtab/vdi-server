@@ -16,7 +16,7 @@ export class VmsService {
 
     public getAllVms(filter?): QueryRef<any, any> {
 
-        let query: string = `query resources($ordering:String) {
+        let query: string = `query resources($ordering:ShortString) {
             vms(ordering: $ordering) {
                 verbose_name
                 pool_name
@@ -31,7 +31,7 @@ export class VmsService {
         }`
 
         if (filter) {
-            query = `query controllers($controller_id:UUID, $cluster_id: UUID, $resource_pool_id: UUID, $node_id: UUID, $ordering:String) {
+            query = `query controllers($controller_id:UUID, $cluster_id: UUID, $resource_pool_id: UUID, $node_id: UUID, $ordering:ShortString) {
                 controller(id_:$controller_id) {
                     id
                     vms(cluster_id: $cluster_id, resource_pool_id: $resource_pool_id, node_id: $node_id, exclude_existed: false, ordering: $ordering) {

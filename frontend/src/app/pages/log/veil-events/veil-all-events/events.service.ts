@@ -25,7 +25,7 @@ export class VeilEventsService {
                     $offset: Int,
                     $controller: UUID,
                     $event_type: Int,
-                    $ordering: String
+                    $ordering: ShortString
                 ){
                     veil_events_count(
                     event_type: $event_type,
@@ -58,7 +58,7 @@ export class VeilEventsService {
     public getAllControllers(): QueryRef<any, any> {
         return this.service.watchQuery({
             query: gql`
-                query controllers($ordering:String) {
+                query controllers($ordering:ShortString) {
                     controllers(ordering: $ordering) {
                         id
                         verbose_name

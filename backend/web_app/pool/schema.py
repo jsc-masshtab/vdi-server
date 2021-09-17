@@ -7,6 +7,7 @@ from asyncpg.exceptions import UniqueViolationError
 import graphene
 
 from common.database import db
+from common.graphene_utils import ShortString
 from common.languages import _local_
 from common.log.journal import system_logger
 from common.models.auth import Entity, User
@@ -72,42 +73,38 @@ class ControllerFetcher:
 
 
 class VmBackupType(VeilResourceType):
-    file_id = graphene.String()
-    filename = graphene.String()
-    size = graphene.String()
-    assignment_type = graphene.String()
+    file_id = graphene.Field(ShortString)
+    filename = graphene.Field(ShortString)
+    size = graphene.Field(ShortString)
+    assignment_type = graphene.Field(ShortString)
     datapool = graphene.Field(ResourceDataPoolType)
     node = graphene.Field(VeilShortEntityType)
-    vm_id = graphene.String()
+    vm_id = graphene.Field(ShortString)
     status = StatusGraphene()
 
 
 class VmConnectionType(VeilResourceType):
-    password = graphene.String()
-    host = graphene.String()
-    token = graphene.String()
-    connection_url = graphene.String()
-    connection_type = graphene.String()
+    password = graphene.Field(ShortString)
+    host = graphene.Field(ShortString)
+    token = graphene.Field(ShortString)
+    connection_url = graphene.Field(ShortString)
+    connection_type = graphene.Field(ShortString)
 
 
 class VmType(VeilResourceType):
     id = graphene.UUID()
-    verbose_name = graphene.String()
+    verbose_name = graphene.Field(ShortString)
     status = StatusGraphene()
     controller = graphene.Field(VeilShortEntityType)
     resource_pool = graphene.Field(VeilShortEntityType)
     memory_count = graphene.Int()
     cpu_count = graphene.Int()
     template = graphene.Boolean()
-    # luns_count = graphene.Int()
-    # vfunctions_count = graphene.Int()
-    tags = graphene.List(graphene.String)
-    # vmachine_infs_count = graphene.Int()
+    tags = graphene.List(ShortString)
     hints = graphene.Int()
     user_power_state = VmState(description="Питание")
-    # vdisks_count = graphene.Int()
     safety = graphene.Boolean()
-    boot_type = graphene.String()
+    boot_type = graphene.Field(ShortString)
     start_on_boot = graphene.Boolean()
     cloud_init = graphene.Boolean()
     disastery_enabled = graphene.Boolean()
@@ -115,22 +112,22 @@ class VmType(VeilResourceType):
     ha_retrycount = graphene.Boolean()
     ha_timeout = graphene.Int()
     ha_enabled = graphene.Boolean()
-    clean_type = graphene.String()
-    machine = graphene.String()
-    graphics_password = graphene.String()
+    clean_type = graphene.Field(ShortString)
+    machine = graphene.Field(ShortString)
+    graphics_password = graphene.Field(ShortString)
     remote_access = graphene.Boolean()
     bootmenu_timeout = graphene.Int()
-    os_type = graphene.String()
-    cpu_type = graphene.String()
-    description = graphene.String()
+    os_type = graphene.Field(ShortString)
+    cpu_type = graphene.Field(ShortString)
+    description = graphene.Field(ShortString)
     guest_agent = graphene.Boolean()
-    os_version = graphene.String()
+    os_version = graphene.Field(ShortString)
     spice_stream = graphene.Boolean()
     tablet = graphene.Boolean()
     parent = graphene.Field(VeilShortEntityType)
-    parent_name = graphene.String(description="Родительская ВМ")
-    hostname = graphene.String()
-    address = graphene.List(graphene.String)
+    parent_name = graphene.Field(ShortString)
+    hostname = graphene.Field(ShortString)
+    address = graphene.List(ShortString)
     domain_tags = graphene.List(VeilTagsType)
     user = graphene.Field(UserType)
     assigned_users = graphene.List(
@@ -257,7 +254,7 @@ class VmInput(graphene.InputObjectType):
     """Инпут для ввода ВМ."""
 
     id = graphene.UUID()
-    verbose_name = graphene.String()
+    verbose_name = ShortString()
 
 
 class PoolValidator(MutationValidation):
@@ -420,8 +417,8 @@ class PoolGroupType(graphene.ObjectType):
     """
 
     id = graphene.UUID(required=True)
-    verbose_name = graphene.String()
-    description = graphene.String()
+    verbose_name = ShortString()
+    description = ShortString()
 
     @staticmethod
     def instance_to_type(model_instance):
@@ -437,9 +434,9 @@ class PoolType(graphene.ObjectType):
     # Pool fields
     master_id = graphene.UUID()
     pool_id = graphene.UUID()
-    verbose_name = graphene.String()
+    verbose_name = ShortString()
     status = StatusGraphene()
-    pool_type = graphene.String()
+    pool_type = ShortString()
     resource_pool_id = graphene.UUID()
     controller = graphene.Field(ControllerType)
     vm_amount = graphene.Int()
@@ -455,23 +452,23 @@ class PoolType(graphene.ObjectType):
     initial_size = graphene.Int()
     reserve_size = graphene.Int()
     total_size = graphene.Int()
-    vm_name_template = graphene.String()
-    os_type = graphene.String()
-    ad_ou = graphene.String()
+    vm_name_template = ShortString()
+    os_type = ShortString()
+    ad_ou = ShortString()
 
     users_count = graphene.Int(entitled=graphene.Boolean())
     users = graphene.List(UserType,
                           limit=graphene.Int(default_value=500),
                           offset=graphene.Int(default_value=0),
                           entitled=graphene.Boolean(),
-                          ordering=graphene.String())
+                          ordering=ShortString())
     assigned_roles = graphene.List(RoleTypeGraphene)
     possible_roles = graphene.List(RoleTypeGraphene)
     assigned_groups = graphene.List(
         PoolGroupType,
         limit=graphene.Int(default_value=100),
         offset=graphene.Int(default_value=0),
-        ordering=graphene.String()
+        ordering=ShortString()
     )
     possible_groups = graphene.List(PoolGroupType)
 
@@ -490,7 +487,7 @@ class PoolType(graphene.ObjectType):
     vms = graphene.List(VmType,
                         limit=graphene.Int(default_value=500),
                         offset=graphene.Int(default_value=0),
-                        ordering=graphene.String())
+                        ordering=ShortString())
     vm = graphene.Field(VmType, vm_id=graphene.UUID(), controller_id=graphene.UUID())
 
     async def resolve_controller(self, info):
@@ -662,9 +659,9 @@ class PoolQuery(graphene.ObjectType):
         status=StatusGraphene(),
         limit=graphene.Int(default_value=100),
         offset=graphene.Int(default_value=0),
-        ordering=graphene.String(),
+        ordering=ShortString(),
     )
-    pool = graphene.Field(PoolType, pool_id=graphene.String())
+    pool = graphene.Field(PoolType, pool_id=ShortString())
 
     @staticmethod
     def build_filters(status):
@@ -765,7 +762,7 @@ class CreateStaticPoolMutation(graphene.Mutation, ControllerFetcher):
     class Arguments:
         controller_id = graphene.UUID(required=True)
         resource_pool_id = graphene.UUID(required=True)
-        verbose_name = graphene.String(required=True)
+        verbose_name = ShortString(required=True)
         vms = graphene.NonNull(graphene.List(graphene.NonNull(VmInput)))
         connection_types = graphene.List(
             graphene.NonNull(ConnectionTypesGraphene),
@@ -845,7 +842,7 @@ class CreateRdsPoolMutation(graphene.Mutation, PoolValidator, ControllerFetcher)
         controller_id = graphene.UUID(required=True)
         resource_pool_id = graphene.UUID(required=True)
         rds_vm = VmInput(required=True)
-        verbose_name = graphene.String(required=True)
+        verbose_name = ShortString(required=True)
         connection_types = graphene.List(
             graphene.NonNull(ConnectionTypesGraphene),
             default_value=[Pool.PoolConnectionTypes.RDP.value],
@@ -939,7 +936,7 @@ class UpdateStaticPoolMutation(graphene.Mutation, PoolValidator):
 
     class Arguments:
         pool_id = graphene.UUID(required=True)
-        verbose_name = graphene.String()
+        verbose_name = ShortString()
         keep_vms_on = graphene.Boolean()
         connection_types = graphene.List(graphene.NonNull(ConnectionTypesGraphene))
 
@@ -969,7 +966,7 @@ class UpdateStaticPoolMutation(graphene.Mutation, PoolValidator):
 class UpdateRdsPoolMutation(graphene.Mutation, PoolValidator):
     class Arguments:
         pool_id = graphene.UUID(required=True)
-        verbose_name = graphene.String()
+        verbose_name = ShortString()
         keep_vms_on = graphene.Boolean()
         connection_types = graphene.List(graphene.NonNull(ConnectionTypesGraphene))
 
@@ -1061,7 +1058,7 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator, ControllerFe
         resource_pool_id = graphene.UUID(required=True)
         template_id = graphene.UUID(required=True)
 
-        verbose_name = graphene.String(required=True)
+        verbose_name = ShortString(required=True)
         increase_step = graphene.Int(default_value=1, description="Шаг расширения пула")
         initial_size = graphene.Int(
             default_value=1, description="Начальное количество ВМ"
@@ -1072,7 +1069,7 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator, ControllerFe
         total_size = graphene.Int(
             default_value=2, description="Максимальное количество создаваемых ВМ"
         )
-        vm_name_template = graphene.String(required=True)
+        vm_name_template = ShortString(required=True)
 
         create_thin_clones = graphene.Boolean(default_value=True)
         enable_vms_remote_access = graphene.Boolean(default_value=True)
@@ -1083,7 +1080,7 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator, ControllerFe
             graphene.NonNull(ConnectionTypesGraphene),
             default_value=[Pool.PoolConnectionTypes.SPICE.value],
         )
-        ad_ou = graphene.String(
+        ad_ou = ShortString(
             description="Наименование организационной единицы для добавления ВМ в AD"
         )
         is_guest = graphene.Boolean(default_value=False)
@@ -1166,18 +1163,18 @@ class UpdateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
 
     class Arguments:
         pool_id = graphene.UUID(required=True)
-        verbose_name = graphene.String()
+        verbose_name = ShortString()
         reserve_size = graphene.Int()
         total_size = graphene.Int()
         increase_step = graphene.Int()
-        vm_name_template = graphene.String()
+        vm_name_template = ShortString()
         keep_vms_on = graphene.Boolean()
         create_thin_clones = graphene.Boolean()
         enable_vms_remote_access = graphene.Boolean()
         start_vms = graphene.Boolean()
         set_vms_hostnames = graphene.Boolean()
         include_vms_in_ad = graphene.Boolean()
-        ad_ou = graphene.String()
+        ad_ou = ShortString()
         connection_types = graphene.List(graphene.NonNull(ConnectionTypesGraphene))
 
     ok = graphene.Boolean()
@@ -1370,7 +1367,7 @@ class PoolGroupDropPermissionsMutation(graphene.Mutation):
 class AssignVmToUser(graphene.Mutation):
     class Arguments:
         vm_id = graphene.ID(required=True)
-        username = graphene.String()  # Legacy
+        username = ShortString()  # Legacy
         user_id = graphene.ID()
 
     ok = graphene.Boolean()
@@ -1711,7 +1708,7 @@ class VmConvertToTemplate(graphene.Mutation, PoolValidator):
     """Мутация для ВМ, которая конвертирует ВМ в шаблон."""
 
     class Arguments:
-        verbose_name = graphene.String(required=True)
+        verbose_name = ShortString(required=True)
         vm_id = graphene.UUID(required=True)
         controller_id = graphene.UUID(required=True)
 

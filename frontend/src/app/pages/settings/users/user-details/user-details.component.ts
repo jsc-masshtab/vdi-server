@@ -204,7 +204,7 @@ export class UserDetailsComponent implements OnInit, OnDestroy {
       form: {
         tag: 'input',
         type: 'password',
-        gqlType: 'String!'
+        gqlType: 'ShortString!'
       }
     };
 
@@ -212,7 +212,7 @@ export class UserDetailsComponent implements OnInit, OnDestroy {
   }
 
   public openEditForm(options): void {
-    let gqlType: string = 'String';
+    let gqlType: string = 'ShortString';
 
     if (options.form.gqlType) {
       gqlType = options.form.gqlType;

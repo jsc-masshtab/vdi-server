@@ -40,7 +40,7 @@ export class TasksService {
                     $offset: Int,
                     $task_type: PoolTaskType,
                     $status: TaskStatus,
-                    $ordering:String
+                    $ordering:ShortString
                 ){
                     tasks(
                         limit: $limit,

@@ -133,27 +133,6 @@ class TestGroupSchema:
         else:
             raise AssertionError
 
-    async def test_group_create_long_description(self, snapshot, fixt_auth_context):  # noqa
-        desc = "-" * 260
-        query = """mutation{createGroup(verbose_name: "test",
-                                        description: "%s"){
-                          group{
-                            verbose_name,
-                            assigned_users{
-                              email
-                            }
-                          },
-                          ok
-                        }}""" % desc
-
-        # Ожидаем исключение
-        try:
-            await execute_scheme(group_schema, query, context=fixt_auth_context)
-        except ExecError as E:
-            assert "Описание должно быть <= 255 символам." in str(E)
-        else:
-            raise AssertionError
-
     async def test_group_edit(self, snapshot, fixt_auth_context):  # noqa
 
         query = """mutation {
