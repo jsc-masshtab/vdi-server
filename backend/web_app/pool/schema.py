@@ -1075,8 +1075,8 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator, ControllerFe
         vm_name_template = graphene.String(required=True)
 
         create_thin_clones = graphene.Boolean(default_value=True)
-        enable_vms_remote_access = graphene.Boolean(default_value=False)
-        start_vms = graphene.Boolean(default_value=False)
+        enable_vms_remote_access = graphene.Boolean(default_value=True)
+        start_vms = graphene.Boolean(default_value=True)
         set_vms_hostnames = graphene.Boolean(default_value=False)
         include_vms_in_ad = graphene.Boolean(default_value=False)
         connection_types = graphene.List(

@@ -1524,8 +1524,8 @@ class AutomatedPool(db.Model):
     create_thin_clones = db.Column(db.Boolean(), nullable=False, default=True)
     enable_vms_remote_access = db.Column(db.Boolean(), nullable=False, default=True)
     start_vms = db.Column(db.Boolean(), nullable=False, default=True)
-    set_vms_hostnames = db.Column(db.Boolean(), nullable=False, default=True)
-    include_vms_in_ad = db.Column(db.Boolean(), nullable=False, default=True)
+    set_vms_hostnames = db.Column(db.Boolean(), nullable=False, default=False)
+    include_vms_in_ad = db.Column(db.Boolean(), nullable=False, default=False)
     # Группы/Контейнеры в Active Directory для назначения виртуальным машинам пула
     ad_ou = db.Column(db.Unicode(length=1000), nullable=True)
     is_guest = db.Column(db.Boolean(), nullable=False, default=False)
