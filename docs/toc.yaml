@@ -79,6 +79,7 @@ nav:
     - Cоздание локального репозитория: broker/faq/repo_without_inet.md
     - Резервные копии: broker/faq/backup.md
     - Службы системы: broker/faq/services.md
+    - Протоколы удаленного подключения: broker/faq/remote_conn_protocols.md
     - Подготовка эталонного образа на основе Windows 8.1/10: broker/faq/rdp/example_template_win.md
     - Работа по RDP с пулами ВРС: broker/faq/rdp/example_rdp.md
     - Настройка GPO через RDP для ВМ в домене MS AD: broker/faq/rdp/example_rdp_domain.md
