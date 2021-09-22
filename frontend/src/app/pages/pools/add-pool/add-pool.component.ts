@@ -47,6 +47,7 @@ export class PoolAddComponent implements OnInit, OnDestroy {
   public rdsPool: FormGroup;
 
   public warming_vm: FormControl = new FormControl(false);
+  public warming_all: boolean = true;
 
   public auth_dirs: any[] = []
 
@@ -165,6 +166,13 @@ export class PoolAddComponent implements OnInit, OnDestroy {
 
   deselectAllVms() {
     this.staticPool.get('vms').setValue([])
+  }
+
+  someComplete() {
+    return (this.dynamicPool.get('enable_vms_remote_access').value ||
+    this.dynamicPool.get('start_vms').value ||
+    this.dynamicPool.get('set_vms_hostnames').value ||
+    (this.auth_dirs.length ? this.dynamicPool.get('include_vms_in_ad').value : false)) && !this.warming_all;
   }
 
   public toStep(step: string) {
@@ -288,20 +296,22 @@ export class PoolAddComponent implements OnInit, OnDestroy {
         this.dynamicPool.get('total_size').setValue(1);
         this.dynamicPool.get('reserve_size').setValue(1);
         this.dynamicPool.get('create_thin_clones').setValue(true);
-        
-        if (this.auth_dirs.length) { 
-          this.dynamicPool.get('include_vms_in_ad').setValue(true); 
-        }
-
-        
+        this.warming_vm.setValue(true);
+        this.dynamicPool.get('enable_vms_remote_access').setValue(true);
+        this.dynamicPool.get('start_vms').setValue(true);
+        this.dynamicPool.get('set_vms_hostnames').setValue(true);
+        if (this.auth_dirs.length) { this.dynamicPool.get('include_vms_in_ad').setValue(true); }
+ 
         this.warming_vm.valueChanges.subscribe((value) => {
 
           if (value) {
+            this.warming_all = true;
             this.dynamicPool.get('enable_vms_remote_access').setValue(true);
             this.dynamicPool.get('start_vms').setValue(true);
             this.dynamicPool.get('set_vms_hostnames').setValue(true);
             if (this.auth_dirs.length) { this.dynamicPool.get('include_vms_in_ad').setValue(true); }
           } else {
+            this.warming_all = false;
             this.dynamicPool.get('enable_vms_remote_access').setValue(false);
             this.dynamicPool.get('start_vms').setValue(false);
             this.dynamicPool.get('set_vms_hostnames').setValue(false);
@@ -311,9 +321,6 @@ export class PoolAddComponent implements OnInit, OnDestroy {
 
         this.dynamicPool.get('enable_vms_remote_access').valueChanges.subscribe((value) => {
           if (value) {
-            this.dynamicPool.get('start_vms').setValue(true);
-            this.dynamicPool.get('set_vms_hostnames').setValue(true);
-            if (this.auth_dirs.length) { this.dynamicPool.get('include_vms_in_ad').setValue(true); }
           } else {
             this.dynamicPool.get('start_vms').setValue(false);
             this.dynamicPool.get('set_vms_hostnames').setValue(false);
@@ -323,8 +330,7 @@ export class PoolAddComponent implements OnInit, OnDestroy {
 
         this.dynamicPool.get('start_vms').valueChanges.subscribe((value) => {
           if (value) {
-            this.dynamicPool.get('set_vms_hostnames').setValue(true);
-            if (this.auth_dirs.length) { this.dynamicPool.get('include_vms_in_ad').setValue(true); }
+            this.dynamicPool.get('enable_vms_remote_access').setValue(true);
           } else {
             this.dynamicPool.get('set_vms_hostnames').setValue(false);
             if (this.auth_dirs.length) { this.dynamicPool.get('include_vms_in_ad').setValue(false); }
@@ -333,11 +339,22 @@ export class PoolAddComponent implements OnInit, OnDestroy {
 
         this.dynamicPool.get('set_vms_hostnames').valueChanges.subscribe((value) => {
           if (value) {
-            if (this.auth_dirs.length) { this.dynamicPool.get('include_vms_in_ad').setValue(true); }
+            this.dynamicPool.get('enable_vms_remote_access').setValue(true);
+            this.dynamicPool.get('start_vms').setValue(true);
           } else {
             if (this.auth_dirs.length) { this.dynamicPool.get('include_vms_in_ad').setValue(false); }
           }
         });
+
+        if (this.auth_dirs.length) {
+          this.dynamicPool.get('include_vms_in_ad').valueChanges.subscribe((value) => {
+            if (value) {
+              this.dynamicPool.get('enable_vms_remote_access').setValue(true);
+              this.dynamicPool.get('start_vms').setValue(true);
+              this.dynamicPool.get('set_vms_hostnames').setValue(true);
+            }
+          });
+        }
       }               break;
 
       case 'check_dynamic': {
