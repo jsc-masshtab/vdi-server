@@ -21,6 +21,10 @@ import { SmtpConfirmModalComponent } from './confirm-modal/confirm-modal.compone
     SmtpModalComponent,
     SmtpConfirmModalComponent
   ],
-  declarations: [SmtpComponent, SmtpModalComponent, SmtpConfirmModalComponent]
+  declarations: [
+    SmtpComponent, 
+    SmtpModalComponent, 
+    SmtpConfirmModalComponent
+  ]
 })
 export class SmtpModule { }

@@ -1,7 +1,7 @@
-<form class="form" [formGroup]="smtpForm" (ngSubmit)="onSubmit()">
+<form class="form" [formGroup]="smtpForm">
   <div class="form-header">
     <p>Изменение настроек SMTP сервера</p>
-    <button (click)="close()"  class="form-close"><fa-icon [icon]="['fas','times-circle']" size="s"></fa-icon></button>
+    <button (click)="close()" class="form-close"><fa-icon [icon]="['fas','times-circle']" size="s"></fa-icon></button>
   </div>
 
   <div class="form-fields">
@@ -10,62 +10,57 @@
       <input formControlName="hostname" matInput type="text" [focusMe]="true" placeholder="Введите адрес сервера" required>    
       <div *ngIf="smtpForm.hasError('required', 'hostname') && checkValid" class="error">Поле обязательно для заполнения</div>
     </label>
-  </div>
-  <div class="form-fields">
+
     <label class="field">
       <p class="field-name">Порт</p>
       <input formControlName="port" matInput type="text" [focusMe]="true" placeholder="Порт" required>      
     </label>
-  </div>
-  <div class="form-fields">
+
     <label class="field">
       <p class="field-name">E-mail отправителя</p>
       <input formControlName="fromAddress" matInput type="text" [focusMe]="true" placeholder="Введите адрес, с которого будут отправлены письма" required>
       <div class="error" *ngIf="smtpForm.hasError('pattern', 'fromAddress') && checkValid">Почтовый адрес содержит недопустимые символы или неверный формат</div>      
       <div *ngIf="smtpForm.hasError('required', 'fromAddress') && checkValid" class="error">Поле обязательно для заполнения</div>
     </label>
-  </div>
-  <div class="form-fields">
+
     <label class="field">
       <p class="field-name">Имя пользователя</p>
       <input formControlName="user" matInput type="text" [focusMe]="true" placeholder="Введите имя пользователя" required>      
       <div *ngIf="smtpForm.hasError('required', 'user') && checkValid" class="error">Поле обязательно для заполнения</div>
     </label>
-  </div>
-  <div class="form-fields">
+
     <label class="field">
       <p class="field-name">Пароль</p>
       <input formControlName="password" matInput type="password" [focusMe]="true" placeholder="Введите пароль" required>
       <div *ngIf="smtpForm.hasError('required', 'password') && checkValid" class="error">Поле обязательно для заполнения</div>
     </label>
+
+    <label class="field">
+      <mat-form-field>
+        <mat-label>Выберите уровень информирования</mat-label>
+
+        <mat-select formControlName="level">
+          <mat-option *ngFor="let level of levels" [value]="level.value">{{level.description}}</mat-option>
+        </mat-select>
+      </mat-form-field>
+    </label>
+
+    <label class="field-inline">
+      <mat-checkbox [color]="'primary'" formControlName="TLS">TLS</mat-checkbox>
+    </label>
+
+    <label class="field-inline">
+      <mat-checkbox [color]="'primary'" formControlName="SSL">SSL</mat-checkbox>
+    </label>
+
+    <div class="form-description" *ngIf="smtpForm.get('SSL').value">
+      <p class="description-danger">Включенный SSL режим деактивирует контроллер, все операции с контроллером становятся неактивными!</p>
+    </div>
   </div>
 
-  <div class="form-fields">
-    <label class="field">
-      <p class="field-name">Уровень информирования</p>
-      <select formControlName="level" >
-        <option  *ngFor="let level of levels" [ngValue]="level" >{{level.description}}</option>
-      </select>
-    </label>
-    
-  </div>
-  <div class="toggle">
-    <label class="switch">
-      <input type="checkbox" formControlName="TLS" >
-      <span class="slider"></span>
-      <span class="slider-name" >TLS</span>
-    </label>
-  </div>
-  <div class="toggle" title="Включенный сервисный режим деактивирует контроллер, все операции с контроллером становятся неактивными">
-    <label class="switch">
-      <input type="checkbox"  formControlName="SSL" >
-      <span class="slider"></span>
-      <span class="slider-name" >SSL</span>
-    </label>
-  </div>
   <div class="form-actions">
-    <button type="button" class="form-btn" type="submit" >
-      <span class="action-name"  >Изменить</span>
+    <button type="button" class="form-btn" type="submit" (click)="onSubmit()">
+      <span class="action-name" >Изменить</span>
     </button>
   </div>
 </form>

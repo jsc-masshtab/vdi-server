@@ -51,40 +51,30 @@ export class SmtpModalComponent implements OnInit, OnDestroy {
       fromAddress: [fromAddress, [Validators.required, Validators.pattern(/^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/)]],
       user: [user, [Validators.required]],
       password: [password, [Validators.required]],
-      level: [...this.levels.filter(l => l.value === level)],
+      level: [level],
       TLS: [TLS],
       SSL: [SSL],
     });
   }
 
   public onSubmit(): void {
-
     this.checkValid = true;
+
     if (this.smtpForm.status === 'VALID') {
-      const { hostname, port, fromAddress, user, password, level, TLS, SSL } = this.smtpForm.value;
-      const params: ISmtpSettings  = {
-        hostname,
-        port,
-        fromAddress,
-        user,
-        password,
-        level: level.value,
-        TLS,
-        SSL
-      }
       
       this.waitService.setWait(true);
-      this.sub = this.smtpService.changeSmtpSettings(params).subscribe((res) => {
+
+      this.sub = this.smtpService.changeSmtpSettings(this.smtpForm.value).subscribe((res) => {
+
         const response = res.data.changeSmtpSettings;
         
         if (response.ok){
-            this.smtpService.getSmptSettings().refetch();
-            this.waitService.setWait(false);
-            this.dialogRef.close()
-          }
-        })
-      }
-      
+          this.smtpService.getSmptSettings().refetch();
+          this.waitService.setWait(false);
+          this.dialogRef.close()
+        }
+      })
+    }
   }
 
   public close(): void {
