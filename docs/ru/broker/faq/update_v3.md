@@ -18,30 +18,8 @@
         следует ознакомиться с шагами по копированию **_основного_** и **_devel_** дисков 
         в разделе [Установка VeiL Broker](./install_v3.md).
 
-1. Проверить статус сервиса **_apache2_** с помощью команды:
-   
-    ```
-    sudo systemctl status apache2
-    ```
-   
-    Если он не включен, то включить и выполнить:
-
-    ```
-    sudo systemctl start apache2
-    sudo chown www-data:adm /var/log/apache2 -R
-    ```
-
 1. Подключить новый iso-образ **VeiL Broker** и выполнить 
    команды для обновления:
-
-    ```
-    Если существует media_cdrom_repo.list:
-    sudo mv /etc/apt/sources.list.d/media_cdrom_repo.list /etc/apt/sources.list.d/media_cdrom_repo.back
-    sudo apt update
-    ```
-
-    !!! note "Примечание"
-        Команда очистки старого репозитория актуальна для **VeiL Broker 3.***
 
     ```
     sudo mount /media/cdrom
@@ -72,58 +50,20 @@
         следует ознакомиться с шагами по копированию **_основного_** и **_devel_** дисков 
         в разделе [Установка VeiL Broker](./install_v3.md).
 
-1. Привести файл **_/etc/apt/sources.list_** к виду:
- 
-    ```bash
-    # deb cdrom:[OS Astra Linux 1.6 smolensk - amd64 DVD ]/ smolensk contrib main non-free
-    # deb file:///opt/basic smolensk contrib main non-free
-    # deb file:///opt/devel smolensk contrib main non-free
-    ``` 
-   
-1. Проверить статус сервиса **_apache2_** с помощью команды:
-   
-    ```bash
-    sudo systemctl status apache2
-    ```
-    Если он не включен, то включить и выполнить:
-    ```bash
-    sudo systemctl start apache2
-    sudo chown www-data:adm /var/log/apache2 -R
-    ```
+1. Подключить внешний репозиторий **VeiL Broker**:
 
-1. В директории **_/etc/apt/sources.list.d/_** создать файл **_vdi.list_** и привести его к виду:
-    
     ```bash
-    deb https://veil-update.mashtab.org/veil-broker-prod-31 smolensk main
+    echo "deb https://veil-update.mashtab.org/veil-broker-prod-31 smolensk main" | sudo tee /etc/apt/sources.list.d/vdi.list
     ```
     где указана свежая версия репозитория с [сайта доступных версий](https://veil-update.mashtab.org/).
  
 1. Выполнить команды для обновления:
 
     ```bash
-    Если существует media_cdrom_repo.list:
-    sudo mv /etc/apt/sources.list.d/media_cdrom_repo.list /etc/apt/sources.list.d/media_cdrom_repo.back
-    sudo apt update
-    ```
-
-    !!! note "Примечание"
-        Команда очистки старого репозитория актуальна для **VeiL Broker 3.***
-
-1. Остановить сервисы **VeiL Broker**:
-
-    ```bash
-    sudo service vdi-pool_worker stop
-    sudo service vdi-web stop
-    sudo service vdi-monitor_worker stop
-    ```
- 
-1. Выполнить **upgrade** и запустить сервисы **VeiL Broker** обратно:
-
-    ```bash
-    sudo apt upgrade
-    sudo service vdi-pool_worker start
-    sudo service vdi-web start
-    sudo service vdi-monitor_worker start
+    sudo apt-get update
+    sudo apt-get upgrade -y
+    sudo rm -f /etc/apt/sources.list.d/vdi.list
+    sudo apt-get update
     ```
 
 ## Миграция данных VeiL Broker 2.0 на версию 3.0.0

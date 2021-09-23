@@ -17,7 +17,7 @@ configure_users()
 
 configure_secrets()
 {
-	# генерируем local_settings только если его не существует
+	# generate local_settings.py if not exists
 	if [ ! -f /opt/veil-vdi/app/common/local_settings.py ]; then
 		export PYTHONPATH=/opt/veil-vdi/app
 		cd /opt/veil-vdi/app
@@ -27,21 +27,6 @@ configure_secrets()
 
 	chmod 600 /opt/veil-vdi/app/common/settings.py
 	chown -R $VDIADMIN:$VDIADMIN /opt/veil-vdi
-
-	# берем из файла ключи доступа к БД и Redis
-	DB_PASS="$(grep -r 'DB_PASS' /opt/veil-vdi/app/common/local_settings.py | sed -r "s/DB_PASS = '(.+)'/\1/g")"
-	REDIS_PASS="$(grep -r 'REDIS_PASSWORD' /opt/veil-vdi/app/common/local_settings.py | sed -r "s/REDIS_PASSWORD = '(.+)'/\1/g")"
-}
-
-configure_redis()
-{
-	systemctl enable redis-server.service
-
-	cp /opt/veil-vdi/other/vdi.redis /etc/redis/redis.conf
-	# устанавливаем пароль для подключения
-	echo "requirepass ${REDIS_PASS}" | tee -a /etc/redis/redis.conf
-
-	systemctl restart redis-server
 }
 
 configure_logs()
@@ -83,19 +68,18 @@ db_migrations()
 
 case "$1" in
 	configure)
-		# действия и при установке и при обновлении
+		# install and upgrade
 		configure_systemd
 
 		if [ -z "$2" ] ; then
-			# действия только при установке
+			# install only
 			configure_users
 			configure_secrets
-			configure_redis
 			configure_logs
 			configure_crontab
 		else
-		# действия только при обновлении
-		db_migrations
+			# upgrade only
+			db_migrations
 		fi
 
 		exit 0
