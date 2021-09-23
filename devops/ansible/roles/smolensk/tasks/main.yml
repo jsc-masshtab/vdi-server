@@ -1,31 +1,44 @@
 ---
 
+- name: Smolensk | Check Smolensk main repo exists
+  stat:
+    path: "{{ smolensk_repo_main }}"
+  register: smolensk_repo_main_check_result
+
+- name: Smolensk | Check Smolensk devel repo exists
+  stat:
+    path: "{{ smolensk_repo_devel }}"
+  register: smolensk_repo_devel_check_result
+
+- name: Smolensk | Fail if Smolensk main repo not found
+  fail:
+    msg: "Smolensk main repo not found in {{ smolensk_repo_main }}"
+  when: not smolensk_repo_main_check_result.stat.exists
+
+- name: Smolensk | Fail if Smolensk devel repo not found
+  fail:
+    msg: "Smolensk devel repo not found in {{ smolensk_repo_devel }}"
+  when: not smolensk_repo_devel_check_result.stat.exists
+
+- name: Smolensk | Ensure repo list
+  template:
+    src: sources.list.j2
+    dest: "/etc/apt/sources.list"
+    mode: 0664
+    owner: root
+
 - name: Smolensk | Configure zero_if_notfound
   lineinfile:
     path: /etc/parsec/mswitch.conf
     regexp: '^zero_if_notfound'
     line: "zero_if_notfound: yes"
 
-- name: Smolensk | Remove smolensk cdrom repo
-  file:
-    state: absent
-    path: /etc/apt/sources.list
-  when: smolensk_add_repo
-
-- name: Smolensk | Add repo
-  template:
-    src: sources.list.j2
-    dest: "/etc/apt/sources.list"
-    mode: 0664
-    owner: root
-  when: smolensk_add_repo
-
 - name: Smolensk | Unarchive locale
   command: "gunzip /usr/share/i18n/charmaps/UTF-8.gz"
   args:
     creates: /usr/share/i18n/charmaps/UTF-8
 
-- name: Smolensk | localedef
+- name: Smolensk | Compile locale
   command: "localedef -i /usr/share/i18n/locales/en_US -f /usr/share/i18n/charmaps/UTF-8 /usr/lib/locale/en_US.UTF-8"
   args:
     creates: /usr/lib/locale/en_US.UTF-8
