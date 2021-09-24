@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import asyncio
 import re
+import uuid
 
 from asyncpg.exceptions import UniqueViolationError
 
@@ -1367,17 +1368,15 @@ class AssignVmToUser(graphene.Mutation):
         pool_id = vm.pool_id
 
         if user_id:
-            cur_user_id = user_id
+            cur_user_id = uuid.UUID(user_id)
         elif username:
             cur_user_id = await User.get_id(username)
         else:
             raise SimpleError(_local_("Provide user_id or username."))
 
         # check if the user is entitled to pool(pool_id) the vm belongs to
-        pool_type = None
         if pool_id:
             pool = await Pool.get(pool_id)
-            pool_type = pool.pool_type
 
             assigned_users = await pool.assigned_users()
             assigned_users_list = [user.id for user in assigned_users]
@@ -1391,9 +1390,6 @@ class AssignVmToUser(graphene.Mutation):
             # another vm in the pool may have this user as owner. Remove assignment
             await pool.free_user_vms(cur_user_id)
 
-        # Освобождаем от других пользователей если пул не RDS
-        if pool_type != Pool.PoolTypes.RDS:
-            await vm.remove_users(creator=creator, users_list=None)
         await vm.add_user(cur_user_id, creator)
         return AssignVmToUser(ok=True, vm=vm)
 
@@ -1401,14 +1397,15 @@ class AssignVmToUser(graphene.Mutation):
 class FreeVmFromUser(graphene.Mutation):
     class Arguments:
         vm_id = graphene.ID(required=True)
+        users = graphene.List(graphene.UUID)
 
     ok = graphene.Boolean()
 
     @administrator_required
-    async def mutate(self, _info, vm_id, creator):
+    async def mutate(self, _info, vm_id, users=None, creator="system"):
         vm = await Vm.get(vm_id)
         if vm:
-            await vm.remove_users(creator=creator, users_list=None)
+            await vm.remove_users(creator=creator, users_list=users)
             return FreeVmFromUser(ok=True)
         return FreeVmFromUser(ok=False)
 

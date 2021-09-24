@@ -346,8 +346,9 @@ class Vm(VeilModel):
             (EntityModel.entity_type == self.entity_type)
             & (EntityModel.entity_uuid == self.id)  # noqa: W503
         )
-        #  Машина лишаемая пользователя помечается статусом RESERVED
-        await self.soft_update(id=self.id, status=Status.RESERVED, creator=creator)
+        # Машина лишаемая пользователя помечается статусом RESERVED
+        # Закоментировано, так как идет в противоречие с возможностью владения машиной множеством пользователей
+        # await self.soft_update(id=self.id, status=Status.RESERVED, creator=creator)
         await system_logger.info(
             _local_("VM {} is clear from users.").format(self.verbose_name),
             user=creator,
