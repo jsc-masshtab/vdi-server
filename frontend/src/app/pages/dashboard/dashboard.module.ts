@@ -5,7 +5,7 @@ import { NgModule } from '@angular/core';
 import { MAT_DIALOG_DEFAULT_OPTIONS } from '@angular/material/dialog';
 import { Apollo } from 'apollo-angular';
 import { HttpLink } from 'apollo-angular-link-http';
-import { InMemoryCache } from 'apollo-cache-inmemory';
+import { defaultDataIdFromObject, InMemoryCache } from 'apollo-cache-inmemory';
 import { ApolloLink, from } from 'apollo-link';
 import { onError } from 'apollo-link-error';
 import { environment } from 'environments/environment';
@@ -153,7 +153,7 @@ export class DashboardModule {
 
     this.apollo.create({
       link: from([errorLink, authMiddleware, link]),
-      cache: new InMemoryCache({ addTypename: false, dataIdFromObject: object => object.id }),
+      cache: new InMemoryCache({ addTypename: false, dataIdFromObject: object => defaultDataIdFromObject(object) }),
       defaultOptions: {
         watchQuery: {
           fetchPolicy: 'network-only', // обойдет кеш и напрямую отправит запрос на сервер.
