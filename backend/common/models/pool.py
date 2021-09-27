@@ -1058,9 +1058,8 @@ class Pool(VeilModel):
 
         # get automated pool object
         automated_pool = await AutomatedPool.get(self.id)
-        static_pool = bool(automated_pool)
         # get tag verbose name
-        tag_must_be_detached = self.tag and static_pool
+        tag_must_be_detached = self.tag and not automated_pool
         # vms check
         # get list of vms ids which are in pool_id
         vms_ids_in_pool = await VmModel.get_vms_ids_in_pool(self.id)
