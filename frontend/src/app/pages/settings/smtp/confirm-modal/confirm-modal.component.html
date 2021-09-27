@@ -1,15 +1,19 @@
 <div class="form" >
   <div class="form-header">
     <h1>Сброс настроек SMTP сервера</h1>
-    
-    <button (click)="close()"  class="form-close"><fa-icon [icon]="['fas','times-circle']" size="s"></fa-icon></button>
+     
+    <button type="button" (click)="close()" class="form-close">
+      <fa-icon [icon]="['fas','times-circle']" size="s"></fa-icon>
+    </button>
   </div>
+
   <div class="form-message">
-  <p>Сбросить настройки SMTP сервера?</p>
+    <p>Сбросить настройки SMTP сервера?</p>
   </div>
+
   <div class="form-actions">
     <button type="button" class="form-btn" type="submit" (click)="onSubmit()" >
-      <span class="action-name"  >Подтвердить</span>
+      <span class="action-name">Подтвердить</span>
     </button>
   </div>
 </div> 

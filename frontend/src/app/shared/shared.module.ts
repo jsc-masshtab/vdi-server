@@ -64,7 +64,9 @@ const FORMS_DINAMIC = [
     ...DIRECTIVES,
     ...COMPONENTS,
     ...PIPES,
-    ...FORMS_DINAMIC
+    ...FORMS_DINAMIC,
+    MatSelectModule,
+    MatCheckboxModule
   ],
   imports: [
     CommonModule,

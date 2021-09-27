@@ -751,7 +751,8 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
   public clickVm(vmActive: IPoolVms): void  {
     this.dialog.open(VmDetalsPopupComponent, {
       disableClose: true,
-      width: '1000px',
+      width: '90vw',
+      height: '90vh',
       data: {
         typePool: this.typePool,
         usersPool: this.pool.users,

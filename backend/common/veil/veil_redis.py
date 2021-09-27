@@ -71,6 +71,10 @@ async def redis_flushall():
     await A_REDIS_CLIENT.flushdb()
 
 
+def redis_get_lock(name, timeout, blocking_timeout):
+    return A_REDIS_CLIENT.lock(name=name, timeout=timeout, blocking_timeout=blocking_timeout)
+
+
 def redis_error_handle(func):
     """Декоратор обеспечивает перехват исключений, вызванных при взаимодействии с Redis."""
 

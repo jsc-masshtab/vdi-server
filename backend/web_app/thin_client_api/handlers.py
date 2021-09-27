@@ -14,6 +14,8 @@ from tornado.web import Application
 
 from veil_api_client import DomainTcpUsb, VeilRetryConfiguration
 
+from yaaredis.exceptions import LockError as RedisLockError
+
 from common.languages import _local_
 from common.log.journal import system_logger
 from common.models.active_tk_connection import ActiveTkConnection
@@ -36,6 +38,7 @@ from common.veil.veil_redis import (
     ThinClientCmd,
     publish_to_redis,
     redis_block_get_message,
+    redis_get_lock,
     redis_get_pubsub,
     request_to_execute_pool_task,
 )
@@ -88,47 +91,51 @@ class PoolGetVm(BaseHttpHandler):
         if pool_type == PoolM.PoolTypes.AUTOMATED or pool_type == PoolM.PoolTypes.GUEST:
             auto_pool = await AutomatedPool.get(pool.id)
             expandable_pool = True
+
         vm = await pool.get_vm(user_id=user.id)
         if not vm:  # ВМ для пользователя не присутствует
             await self._notify_vm_await_progress(progress=10, msg=_local_("Looking for machine."))
-            # В случае RDS пула выдаем общий для всех RDS Сервер
+
             if pool_type == PoolM.PoolTypes.RDS:
+                # В случае RDS пула выдаем общий для всех RDS Сервер
                 vms = await pool.get_vms()
                 vm = vms[0]
+                await vm.add_user(user.id, creator="system")
             else:
                 # Если у пользователя нет VM в пуле, то нужно попытаться назначить ему свободную VM.
-                vm = await pool.get_free_vm_v2()
-            # Если свободная VM найдена, нужно закрепить ее за пользователем.
-            if vm:
-                await vm.add_user(user.id, creator="system")
-                if expandable_pool:
-                    await self._expand_pool_if_required(pool)
-            elif expandable_pool and not await auto_pool.check_if_total_size_reached():
-                response = {
-                    "errors": [
-                        {
-                            "message": _local_(
-                                "The pool doesn`t have free machines. Try again after 5 minutes."
-                            ),
-                            "code": "002",
-                        }
-                    ]
-                }
-                await self._expand_pool_if_required(pool)
-                return await self.log_finish(response)
-            else:
-                response = {
-                    "errors": [
-                        {
-                            "message": _local_("The pool doesn`t have free machines."),
-                            "code": "003",
-                        }
-                    ]
-                }
-                return await self.log_finish(response)
+                # Critical section protected with redis lock https://aredis.readthedocs.io/en/latest/extra.html
+                # Блокировка необходима для попытки избежать назначение одной ВМ нескольким пользователям
+                # при одновременном запросе свободной ВМ от нескольких пользователей
+                vms_global_lock = redis_get_lock(name="pool_vms_lock_" + pool.verbose_name, timeout=5,
+                                                 blocking_timeout=10)
+                lock_acquired = await vms_global_lock.acquire()
+                if not lock_acquired:  # Не удалось получить лок
+                    response = self.form_err_res(_local_("The pool is busy. Try again in 1 minute."), "006")
+                    return await self.log_finish(response)
 
-        elif expandable_pool:  # Даже если у пользователя есть ВМ, то попробовать расшириться все равно нужно
-            await self._expand_pool_if_required(pool)
+                try:
+                    vm = await pool.get_free_vm_v2()
+                    if vm:  # Machine found
+                        await vm.add_user(user.id, creator="system")
+                finally:
+                    try:
+                        await vms_global_lock.release()
+                    except RedisLockError:  # Исключение будет, если лок уже был освобожден по таймауту
+                        pass
+
+                if vm:
+                    await self._expand_pool_if_required(pool, expandable_pool)
+                elif expandable_pool and not await auto_pool.check_if_total_size_reached():
+                    await self._expand_pool_if_required(pool)
+                    response = self.form_err_res(
+                        _local_("The pool doesn`t have free machines. Try again after 5 minutes."), "002")
+                    return await self.log_finish(response)
+                else:
+                    response = self.form_err_res(_local_("The pool doesn`t have free machines."), "003")
+                    return await self.log_finish(response)
+
+        else:  # Даже если у пользователя есть ВМ, то попробовать расшириться все равно нужно
+            await self._expand_pool_if_required(pool, expandable_pool)
 
         #  Включение ВМ и включение удаленного доступа, если спайс
         await self._notify_vm_await_progress(progress=30, msg=_local_("Machine is being prepared."))
@@ -147,8 +154,8 @@ class PoolGetVm(BaseHttpHandler):
         veil_domain = await vm.vm_client
         domain_info = await veil_domain.info()
         vm_controller = await vm.controller
-        is_ok, response, vm_address, vm_port = await self._get_conn_data(remote_protocol, vm_controller,
-                                                                         veil_domain, domain_info)
+        is_ok, response, vm_address, vm_port, vm_token = await self._get_conn_data(remote_protocol, vm_controller,
+                                                                                   veil_domain, domain_info)
         if not is_ok:
             return await self.log_finish(response)
 
@@ -157,13 +164,13 @@ class PoolGetVm(BaseHttpHandler):
             farm_list = await RdsPool.get_farm_list(pool.id, user.username) \
                 if pool_type == PoolM.PoolTypes.RDS else []
         except (KeyError, IndexError, RuntimeError) as ex:
-            response = {"errors": [{"message": _local_("Unable to get list of published applications. {}.").
-                        format(str(ex))}]}
+            response = self.form_err_res(_local_("Unable to get list of published applications. {}.").format(str(ex)))
             return await self.log_finish(response)
         response = {
             "data": dict(
                 host=vm_address,
                 port=vm_port,
+                token=vm_token,
                 password=veil_domain.graphics_password,
                 vm_verbose_name=veil_domain.verbose_name,
                 vm_controller_address=vm_controller.address,
@@ -193,10 +200,8 @@ class PoolGetVm(BaseHttpHandler):
         # Проверяем наличие клиента у контроллера
         veil_client = vm_controller.veil_client
         if not veil_client:
-            response = {
-                "errors": [{"message": _local_("The remote controller is unavailable.")}]
-            }
-            return False, response, None, None
+            response = self.form_err_res(_local_("The remote controller is unavailable."))
+            return False, response, None, None, None
 
         if self._is_rdp(remote_protocol) or remote_protocol == PoolM.PoolConnectionTypes.X2GO.name:
 
@@ -206,17 +211,9 @@ class PoolGetVm(BaseHttpHandler):
                 wait_timeout = 60
                 vm_address = await asyncio.wait_for(self._get_ipv4_address(veil_domain), wait_timeout)
             except asyncio.TimeoutError:
-                response = {
-                    "errors": [
-                        {
-                            "message": _local_(
-                                "The controller didn`t provide a VM address. Try again in 1 minute."
-                            ),
-                            "code": "005"
-                        }
-                    ]
-                }
-                return False, response, None, None
+                response = self.form_err_res(
+                    _local_("The controller didn`t provide a VM address. Try again in 1 minute."), "005")
+                return False, response, None, None, None
 
         elif remote_protocol == PoolM.PoolConnectionTypes.SPICE_DIRECT.name:
             # Нужен адрес сервера поэтому делаем запрос
@@ -229,7 +226,14 @@ class PoolGetVm(BaseHttpHandler):
             vm_address = vm_controller.address
             vm_port = veil_domain.remote_access_port
 
-        return True, None, vm_address, vm_port
+        #  Для подключения по спайсу через web нужен токен
+        vm_token = None
+        if self._is_spice(remote_protocol):
+            spice = await veil_domain.spice_conn()
+            if spice and spice.valid:
+                vm_token = spice.token
+
+        return True, None, vm_address, vm_port, vm_token
 
     async def _prepare_vm_if_required(self, vm, remote_protocol):
         """Prepare VM if it's not ready. Return true if everything is ok."""
@@ -245,18 +249,10 @@ class PoolGetVm(BaseHttpHandler):
                 await veil_domain.enable_remote_access()
 
         except client_exceptions.ServerDisconnectedError:
-            response = {
-                "errors": [
-                    {"message": _local_("VM is unreachable on ECP VeiL."), "code": "004"}
-                ]
-            }
+            response = self.form_err_res(_local_("VM is unreachable on ECP VeiL."), "004")
             return False, response
         except asyncio.TimeoutError:
-            response = {
-                "errors": [
-                    {"message": _local_("Controller did not reply. Check if it is available."), "code": "005"}
-                ]
-            }
+            response = self.form_err_res(_local_("Controller did not reply. Check if it is available."), "005")
             return False, response
 
         return True, None
@@ -296,14 +292,10 @@ class PoolGetVm(BaseHttpHandler):
         # Проверяем лимит клиентов
         thin_client_limit_exceeded = await ActiveTkConnection.thin_client_limit_exceeded()
         if thin_client_limit_exceeded:
-            response = {
-                "errors": [{"message": _local_("Thin client limit exceeded."),
-                            "code": "001"}]
-            }
+            response = PoolGetVm.form_err_res(_local_("Thin client limit exceeded."), "001")
             return False, response
         if not pool:
-            response = {
-                "errors": [{"message": _local_("Pool not found."), "code": "404"}]}
+            response = PoolGetVm.form_err_res(_local_("Pool not found."), "404")
             return False, response
 
         # Protocol validation
@@ -311,24 +303,16 @@ class PoolGetVm(BaseHttpHandler):
         bad_connection_type = remote_protocol not in PoolM.PoolConnectionTypes.values() or \
                               PoolM.PoolConnectionTypes[remote_protocol] not in con_t  # noqa: E127
         if bad_connection_type:
-            response = {
-                "errors": [
-                    {
-                        "message": _local_(
-                            "The pool doesnt support connection type {}."
-                        ).format(remote_protocol),
-                        "code": "404",
-                    }
-                ]
-            }
+            response = PoolGetVm.form_err_res(
+                _local_("The pool doesnt support connection type {}.").format(remote_protocol), "404")
             return False, response
 
         return True, None
 
     @staticmethod
-    async def _expand_pool_if_required(pool_model):
+    async def _expand_pool_if_required(pool_model, is_expandable_pool):
         """Только если расширение возможно и над пулом не выполняются другие задачи расширения."""  # noqa: E501
-        if not pool_model:
+        if not pool_model or not is_expandable_pool:
             return
         # 1) is max reached
         auto_pool = await AutomatedPool.get(pool_model.id)

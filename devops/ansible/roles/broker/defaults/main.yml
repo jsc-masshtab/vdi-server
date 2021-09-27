@@ -3,8 +3,7 @@
 broker_db_name: "vdi"
 broker_db_user: "vdi"
 broker_local_settings: "/opt/veil-vdi/app/common/local_settings.py"
-broker_apt_key_url: "http://qa2.bazalt.team/veil-repo-key.gpg"
-broker_apt_repo: "deb http://qa2.bazalt.team/veil-broker-test/ smolensk main"
+broker_apt_repo: "deb [trusted=yes] file:///media/cdrom/repo smolensk main"
 
 broker_system_packages_list:
   - python3

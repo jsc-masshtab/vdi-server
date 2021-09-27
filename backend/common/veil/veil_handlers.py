@@ -106,6 +106,18 @@ class BaseHttpHandler(BaseHandler):
 
         return vm
 
+    @staticmethod
+    def form_err_res(message, code=None):
+        response = {
+            "errors": [
+                {
+                    "message": message,
+                    "code": code
+                }
+            ]
+        }
+        return response
+
     def write_error(self, status_code, **kwargs):
         """Согласно доке вызывается если возникло неотработанное исключение при обработка запроса."""
         message = "Uncaught exception"
