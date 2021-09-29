@@ -528,6 +528,11 @@ class Pool(VeilModel):
             )
         return await finish_query.limit(limit).offset(offset).gino.all()
 
+    async def check_if_user_assigned(self, user_id):
+        assigned_users_query = await self.get_assigned_users_query()
+        user = await assigned_users_query.where(UserModel.id == user_id).gino.first()
+        return user
+
     async def get_possible_users_query(self):
 
         query = EntityModel.query.where(

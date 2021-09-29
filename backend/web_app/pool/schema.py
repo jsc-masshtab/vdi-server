@@ -169,9 +169,7 @@ class VmType(VeilResourceType):
 
     async def resolve_assigned_users_count(self, _info):
         vm = await Vm.get(self.id)
-        users_query = await vm.get_users_query()
-        count = await db.select([db.func.count()]).select_from(
-            users_query.alias()).gino.scalar()
+        count = await vm.get_users_count()
         return count
 
     async def resolve_count(self, _info, **kwargs):
@@ -1374,14 +1372,19 @@ class AssignVmToUser(graphene.Mutation):
         else:
             raise SimpleError(_local_("Provide user_id or username."))
 
-        # check if the user is entitled to pool(pool_id) the vm belongs to
         if pool_id:
             pool = await Pool.get(pool_id)
+            # Если пул гостевой и ВМ уже имеет пользователя, то возвращаем ошибку. Назначение ВМ
+            # больше одного пользовтеля не имеет смысл, так как в гостевом пуле ВМ
+            # будет удалена после отключения от нее любого пользователя.
+            users_count = await vm.get_users_count()
+            if pool.pool_type == Pool.PoolTypes.GUEST and users_count > 0:
+                raise SimpleError(_local_("Impossible to assign more than 1 user to VM in guest pool."))
 
-            assigned_users = await pool.assigned_users()
-            assigned_users_list = [user.id for user in assigned_users]
+            # check if the user is entitled to the pool(pool_id) the vm belongs to
+            user_entitled_to_pool = await pool.check_if_user_assigned(cur_user_id)
 
-            if cur_user_id not in assigned_users_list:
+            if not user_entitled_to_pool:
                 # Requested user is not entitled to the pool the requested vm belongs to
                 raise SimpleError(
                     _local_("User does not have the right to use pool, which has VM.")
