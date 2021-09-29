@@ -412,6 +412,12 @@ class Vm(VeilModel):
         )
         return query
 
+    async def get_users_count(self):
+        users_query = await self.get_users_query()
+        count = await db.select([db.func.count()]).select_from(
+            users_query.alias()).gino.scalar()
+        return count
+
     @staticmethod
     async def copy(
         verbose_name: str,
