@@ -164,8 +164,8 @@ class AuthenticationDirectoryType(graphene.ObjectType):
         offset=graphene.Int(default_value=0),
     )
 
-    assigned_ad_groups = graphene.List(AuthenticationDirectoryGroupType)
-    possible_ad_groups = graphene.List(AuthenticationDirectoryGroupType)
+    assigned_ad_groups = graphene.List(AuthenticationDirectoryGroupType, group_name=graphene.String(default_value=""))
+    possible_ad_groups = graphene.List(AuthenticationDirectoryGroupType, group_name=graphene.String(default_value=""))
 
     async def resolve_service_password(self, _info):
         """Will showed dummy value for not displayed field."""
@@ -175,15 +175,15 @@ class AuthenticationDirectoryType(graphene.ObjectType):
         auth_dir = await AuthenticationDirectory.get(self.id)
         return await auth_dir.mappings_paginator(limit=limit, offset=offset)
 
-    async def resolve_assigned_ad_groups(self, _info):
+    async def resolve_assigned_ad_groups(self, _info, group_name):
         """Группы созданные при предыдущих синхронизациях."""
         auth_dir = await AuthenticationDirectory.get(self.id)
-        return await auth_dir.assigned_ad_groups
+        return await auth_dir.assigned_ad_groups(group_name)
 
-    async def resolve_possible_ad_groups(self, _info):
+    async def resolve_possible_ad_groups(self, _info, group_name):
         """Получить список доступных групп из AuthenticationDirectory."""
         auth_dir = await AuthenticationDirectory.get(self.id)
-        groups = await auth_dir.get_possible_ad_groups()
+        groups = await auth_dir.get_possible_ad_groups(group_name=group_name)
         if groups:
             return groups
         return list()
