@@ -7,7 +7,6 @@
     width: 100%;
 }
 
-
 .table-area-object {
     display: flex;
     align-items: center;
@@ -21,12 +20,16 @@
 
 .table-area-title {
     padding-left: 15px;
-    width: 25%;
+    min-width: 25%;
     display: flex;
     justify-content: space-between;
     align-items: center;
     flex-basis: 250px;
     flex-grow: 1;
+    
+    > span {
+        padding-right: 15px;
+    }
 }
 
 .table-area-value {
@@ -36,7 +39,6 @@
     padding-right: 5px;
     word-break: break-all;
 }
-
 
 .edit-button {
     border: none;
@@ -54,5 +56,18 @@
     &:hover {
         background-color: #c9d9e6;
         color: rgba(0,0,0,0.7);
+    }
+}
+
+.table-group {
+    flex-wrap: wrap;
+
+    > .table-area-title {
+        padding: 10px 15px;
+        justify-content: unset;
+    }
+
+    > .table-area-value {
+        width: 100%;
     }
 }

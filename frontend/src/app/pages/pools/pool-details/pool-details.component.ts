@@ -120,40 +120,42 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       edit: 'changeAutomatedPoolCreate_thin_clones'
     },
     {
-      title: 'Включать удаленный доступ на ВМ',
-      property: 'enable_vms_remote_access',
-      type: {
-        typeDepend: 'boolean',
-        propertyDepend: ['Да', 'Нет']
-      },
-      edit: 'changeAutomatedPoolPrepare_vms'
-    },
-    {
-      title: 'Включать ВМ',
-      property: 'start_vms',
-      type: {
-        typeDepend: 'boolean',
-        propertyDepend: ['Да', 'Нет']
-      },
-      edit: 'changeAutomatedPoolPrepare_vms'
-    },
-    {
-      title: 'Задавать hostname ВМ',
-      property: 'set_vms_hostnames',
-      type: {
-        typeDepend: 'boolean',
-        propertyDepend: ['Да', 'Нет']
-      },
-      edit: 'changeAutomatedPoolPrepare_vms'
-    },
-    {
-      title: 'Вводить ВМ в домен',
-      property: 'include_vms_in_ad',
-      type: {
-        typeDepend: 'boolean',
-        propertyDepend: ['Да', 'Нет']
-      },
-      edit: 'changeAutomatedPoolPrepare_vms'
+      title: 'Подготавливать ВМ',
+      edit: 'changeAutomatedPoolPrepare_vms',
+      group: [
+        {
+          title: 'Включать удаленный доступ на ВМ',
+          property: 'enable_vms_remote_access',
+          type: {
+            typeDepend: 'boolean',
+            propertyDepend: ['Да', 'Нет']
+          }
+        },
+        {
+          title: 'Включать ВМ',
+          property: 'start_vms',
+          type: {
+            typeDepend: 'boolean',
+            propertyDepend: ['Да', 'Нет']
+          }
+        },
+        {
+          title: 'Задавать hostname ВМ',
+          property: 'set_vms_hostnames',
+          type: {
+            typeDepend: 'boolean',
+            propertyDepend: ['Да', 'Нет']
+          }
+        },
+        {
+          title: 'Вводить ВМ в домен',
+          property: 'include_vms_in_ad',
+          type: {
+            typeDepend: 'boolean',
+            propertyDepend: ['Да', 'Нет']
+          }
+        }
+      ]
     },
     {
       title: 'Держать ВМ с пользователями включенными',
