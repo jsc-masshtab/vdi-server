@@ -1381,13 +1381,10 @@ class AssignVmToUser(graphene.Mutation):
             if pool.pool_type == Pool.PoolTypes.GUEST and users_count > 0:
                 raise SimpleError(_local_("Impossible to assign more than 1 user to VM in guest pool."))
 
-            # check if the user is entitled to pool(pool_id) the vm belongs to
-            # todo: косяк. assigned_users - только 100 а не все юзеры. нужен Нормальный метод тест
-            # может ди юзер использовать пул
-            assigned_users = await pool.assigned_users()
-            assigned_users_list = [user.id for user in assigned_users]
+            # check if the user is entitled to the pool(pool_id) the vm belongs to
+            user_entitled_to_pool = await pool.check_if_user_assigned(cur_user_id)
 
-            if cur_user_id not in assigned_users_list:
+            if not user_entitled_to_pool:
                 # Requested user is not entitled to the pool the requested vm belongs to
                 raise SimpleError(
                     _local_("User does not have the right to use pool, which has VM.")
