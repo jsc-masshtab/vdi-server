@@ -1078,6 +1078,9 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
             type: 'checkbox',
             fieldName: 'enable_vms_remote_access',
             fieldValue: this.pool.enable_vms_remote_access,
+            dependName: {
+              on: [], off: ['start_vms', 'set_vms_hostnames', 'include_vms_in_ad']
+            },
             description: 'Включать удаленный доступ на ВМ'
           },
           {
@@ -1085,6 +1088,9 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
             type: 'checkbox',
             fieldName: 'start_vms',
             fieldValue: this.pool.start_vms,
+            dependName: {
+              on: ['enable_vms_remote_access'], off: ['set_vms_hostnames', 'include_vms_in_ad']
+            },
             description: 'Включать ВМ'
           },
           {
@@ -1092,6 +1098,9 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
             type: 'checkbox',
             fieldName: 'set_vms_hostnames',
             fieldValue: this.pool.set_vms_hostnames,
+            dependName: {
+              on: ['enable_vms_remote_access', 'start_vms'], off: ['include_vms_in_ad']
+            },
             description: 'Задавать hostname ВМ'
           },
           {
@@ -1099,6 +1108,9 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
             type: 'checkbox',
             fieldName: 'include_vms_in_ad',
             fieldValue: this.pool.include_vms_in_ad,
+            dependName: {
+              on: ['enable_vms_remote_access', 'start_vms', 'set_vms_hostnames'], off: []
+            },
             description: 'Вводить ВМ в домен'
           }]
         },

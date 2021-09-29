@@ -82,8 +82,27 @@ export class FormForEditComponent implements OnInit, OnDestroy {
     }
   }
 
-  public changeCheck(event, fieldName): void {
-    this.formGroup.value[fieldName] = event.checked;
+  public changeCheck(field): void {
+    if (field.dependName) {
+      const depend = field.dependName;
+
+      if (this.formGroup.get(field.fieldName).value) {
+        depend.on.forEach((checkbox) => {
+          this.formGroup.get(checkbox).setValue(true)
+        })
+      } else {
+        depend.off.forEach((checkbox) => {
+          this.formGroup.get(checkbox).setValue(false)
+        })
+      }
+    }
+  }
+
+  public dependChecked(field): boolean {
+    if (field.dependBy) {
+      return this.formGroup.get(field.depend_by).value
+    }
+    return false;
   }
 
   public selectionChange(event, fieldName): void {
