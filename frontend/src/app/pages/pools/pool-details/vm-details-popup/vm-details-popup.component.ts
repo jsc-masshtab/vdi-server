@@ -997,4 +997,63 @@ export class VmDetalsPopupComponent implements OnInit {
       }
     });
   }
+
+  public toggleReserve(e) {
+
+    e.preventDefault();
+
+    if (this.data.vm.status === 'RESERVED') {
+      this.activateVm();
+    } else {
+      this.reserveVm();
+    }
+  }
+
+  public reserveVm() {
+    this.dialog.open(YesNoFormComponent, {
+      disableClose: true,
+      width: '500px',
+      data: {
+        form: {
+          header: 'Подтверждение действия',
+          question: 'Перевести ВМ в статус "зарезервировано"?',
+          button: 'Выполнить'
+        },
+        request: {
+          service: this.service,
+          action: 'reserveVm',
+          body: {
+            vm_id: this.data.vm.id,
+            reserve: true,
+          }
+        }
+      }
+    }).afterClosed().subscribe(() => {
+      this.service.getPool(this.data.idPool, this.data.typePool).refetch();
+    })
+  }
+
+  public activateVm() {
+    this.dialog.open(YesNoFormComponent, {
+      disableClose: true,
+      width: '500px',
+      data: {
+        form: {
+          header: 'Подтверждение действия',
+          question: 'Активировать ВМ?',
+          button: 'Выполнить'
+        },
+        request: {
+          service: this.service,
+          action: 'reserveVm',
+          body: {
+            vm_id: this.data.vm.id,
+            reserve: false,
+          }
+        }
+      }
+    }).afterClosed().subscribe(() => {
+      this.service.getPool(this.data.idPool, this.data.typePool).refetch();
+    })
+  }
 }

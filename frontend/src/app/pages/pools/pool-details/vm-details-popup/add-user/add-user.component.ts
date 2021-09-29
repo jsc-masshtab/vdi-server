@@ -7,7 +7,7 @@ import { PoolDetailsService } from '../../pool-details.service';
 interface IData  {
   vm: {
     id: string;
-    name: string;
+    verbose_name: string;
     state: string;
     user: {
       username: string | null;

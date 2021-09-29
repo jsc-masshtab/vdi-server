@@ -340,10 +340,9 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
     //   }
     // },
     {
-      title: 'Пользователь',
-      property: 'user',
-      property_lv2: 'username',
-      sort: true
+      title: 'Пользователи',
+      property: 'assigned_users',
+      type: 'users-array'
     },
     {
       title: 'Статус',
@@ -374,10 +373,9 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       sort: true
     },
     {
-      title: 'Пользователь',
-      property: 'user',
-      property_lv2: 'username',
-      sort: true
+      title: 'Пользователи',
+      property: 'assigned_users',
+      type: 'users-array'
     },
     {
       title: 'Статус',
@@ -410,10 +408,9 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
     //   }
     // },
     {
-      title: 'Пользователь',
-      property: 'user',
-      property_lv2: 'username',
-      sort: true
+      title: 'Пользователи',
+      property: 'assigned_users',
+      type: 'users-array'
     },
     {
       title: 'Статус',

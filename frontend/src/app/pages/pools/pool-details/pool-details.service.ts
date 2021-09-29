@@ -78,6 +78,9 @@ export class PoolDetailsService {
                                             verbose_name
                                         }
                                         qemu_state
+                                        assigned_users {
+                                          username
+                                        }
                                         status
                                         parent_name
                                     }
@@ -145,6 +148,9 @@ export class PoolDetailsService {
                                         }
                                         qemu_state
                                         status
+                                        assigned_users {
+                                          username
+                                        }
                                         parent_name
                                         controller {
                                             id
@@ -449,18 +455,19 @@ export class PoolDetailsService {
 
     // отлучить пользователя вм
 
-    public freeVmFromUser(vm_id: string) {
+    public freeVmFromUser(vm_id: string, username: string) {
         return this.service.mutate<any>({
             mutation: gql`
-                            mutation pools($vm_id: ID!) {
-                                freeVmFromUser(vm_id: $vm_id) {
+                            mutation pools($vm_id: ID!,$username: ShortString!) {
+                                freeVmFromUser(vm_id: $vm_id,username: $username) {
                                     ok
                                 }
                             }
             `,
             variables: {
                 method: 'POST',
-                vm_id
+                vm_id,
+                username
             }
         });
     }
@@ -924,4 +931,21 @@ export class PoolDetailsService {
             }
         });
     }
+
+
+  public reserveVm(params: any) {
+    return this.service.mutate<any>({
+      mutation: gql`
+        mutation pools($vm_id: UUID!, $reserve: Boolean!) {
+            reserveVm(vm_id: $vm_id, reserve: $reserve){
+            ok
+          }
+        }
+      `,
+      variables: {
+        method: 'POST',
+        ...params
+      }
+    });
+  }
 }

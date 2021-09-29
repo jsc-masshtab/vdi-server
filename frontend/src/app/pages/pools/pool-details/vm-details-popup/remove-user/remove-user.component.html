@@ -1,14 +1,25 @@
 <div class="form">
   <div class="form-header">
-    <h1>Подтверждение действия</h1>
+    <h1>Освобождение вм {{data?.vm?.verbose_name}} от пользователя</h1>
     <button [mat-dialog-close]="true" class="form-close"><fa-icon [icon]="['fas','times-circle']"></fa-icon></button>
   </div>
 
-  <div class="form-message">
-    Освободить вм от пользователя {{data?.vm?.user?.username}} ?
+  <div class="form-fields">
+    <label class="field">
+      <mat-form-field>
+        <mat-label *ngIf="data?.usersPool?.length">Выберите пользователя</mat-label>
+        <mat-label *ngIf="!data?.usersPool?.length">- нет пользователей -</mat-label>
+        <mat-select (selectionChange)="selectUser($event)">
+          <mat-option *ngFor="let user of data?.usersPool" [value]="user.username">
+            {{user.username}}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+      <div class="error" *ngIf="!valid">Выберите пользователя</div>
+    </label>
   </div>
 
   <div class="form-actions">
-    <button (click)="send()" class="form-btn"><span class="action-name">Выполнить</span></button>
+    <button (click)="send()" class="form-btn"><span class="action-name">Освободить</span></button>
   </div>
 </div>

@@ -61,13 +61,13 @@
                 <ng-container *ngIf="obj.property === 'controls'">
                   <button>
                     <fa-icon [icon]="['fas', 'play-circle']" [style.fontSize]="'12px'" [style.marginRight]="'5px'" [spin]="false" ></fa-icon>
-                  </button>  
+                  </button>
                </ng-container>
               </ng-container>
 
       <!-- controls -->
-            
-            
+
+
     <!-- obj.property === 'assignment_type' -->
               <ng-container *ngIf="obj.property === 'assignment_type'">
                   <span>{{ item[obj.property] | assignmentType }}</span>
@@ -82,6 +82,11 @@
                     <span *ngIf="obj.type === 'bites'" [class.name-entity]="obj.class == 'name-start'"  class="for-wrap">{{ formatBytes(item[obj.property], obj.delimiter) }}</span>
 
                     <span *ngIf="obj.type === 'array-type'" [class.name-entity]="obj.class == 'name-start'"  class="for-wrap">{{ item }}</span>
+
+                    <ul *ngIf="obj.type === 'users-array'">
+                      <li *ngFor="let item of item[obj.property]">{{ item.username }}</li>
+                    </ul>
+
                     <span *ngIf="obj.type === 'array-type-rename'" [class.name-entity]="obj.class == 'name-start'"  class="for-wrap">{{ item | rename }}</span>
 
                     <span *ngIf="obj.type === 'array-length'">{{ item[obj.property]?.length }}</span>

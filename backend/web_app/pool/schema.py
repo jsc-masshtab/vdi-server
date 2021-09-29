@@ -1397,17 +1397,40 @@ class AssignVmToUser(graphene.Mutation):
 class FreeVmFromUser(graphene.Mutation):
     class Arguments:
         vm_id = graphene.ID(required=True)
-        users = graphene.List(graphene.UUID)
+        username = ShortString()
+        user_id = graphene.UUID()
 
     ok = graphene.Boolean()
 
     @administrator_required
-    async def mutate(self, _info, vm_id, users=None, creator="system"):
+    async def mutate(self, _info, vm_id, username=None, user_id=None, creator="system"):
         vm = await Vm.get(vm_id)
         if vm:
-            await vm.remove_users(creator=creator, users_list=users)
+            if user_id:
+                cur_user_id = user_id
+            elif username:
+                cur_user_id = await User.get_id(username)
+            user_list = list()
+            user_list.append(cur_user_id)
+            await vm.remove_users(creator=creator, users_list=user_list)
             return FreeVmFromUser(ok=True)
         return FreeVmFromUser(ok=False)
+
+
+class ReserveVm(graphene.Mutation):
+    class Arguments:
+        vm_id = graphene.UUID(required=True)
+        reserve = graphene.Boolean(required=True)
+
+    ok = graphene.Boolean()
+
+    @administrator_required
+    async def mutate(self, _info, vm_id, reserve=True, creator="system"):
+        vm = await Vm.get(vm_id)
+        if vm:
+            await vm.reserve(creator=creator, reserve=reserve)
+            return ReserveVm(ok=True)
+        return ReserveVm(ok=False)
 
 
 class PrepareVm(graphene.Mutation):
@@ -1773,6 +1796,7 @@ class PoolMutations(graphene.ObjectType):
     attachVeilUtilsVm = AttachVeilUtilsMutation.Field()
     changeTemplate = TemplateChange.Field()
     convertToTemplate = VmConvertToTemplate.Field()
+    reserveVm = ReserveVm.Field()
 
 
 pool_schema = graphene.Schema(
