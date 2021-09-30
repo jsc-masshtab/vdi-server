@@ -73,7 +73,8 @@ class TestVmPermissionsSchema:
 
         # Открепляем VM от всех пользователей.
         query = """mutation{
-                         freeVmFromUser(vm_id: "10913d5d-ba7a-4049-88c5-769267a6cbe4"){ok}}"""
+                         freeVmFromUser(vm_id: "10913d5d-ba7a-4049-88c5-769267a6cbe4", 
+                                        username: "test_user"){ok}}"""
 
         executed = await execute_scheme(
             pool_schema, query, context=fixt_auth_context
