@@ -267,38 +267,6 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       }
     },
     {
-      title: 'Включать удаленный доступ на ВМ',
-      property: 'enable_vms_remote_access',
-      type: {
-        typeDepend: 'boolean',
-        propertyDepend: ['Да', 'Нет']
-      }
-    },
-    {
-      title: 'Включать ВМ',
-      property: 'start_vms',
-      type: {
-        typeDepend: 'boolean',
-        propertyDepend: ['Да', 'Нет']
-      }
-    },
-    {
-      title: 'Задавать hostname ВМ',
-      property: 'set_vms_hostnames',
-      type: {
-        typeDepend: 'boolean',
-        propertyDepend: ['Да', 'Нет']
-      }
-    },
-    {
-      title: 'Вводить ВМ в домен',
-      property: 'include_vms_in_ad',
-      type: {
-        typeDepend: 'boolean',
-        propertyDepend: ['Да', 'Нет']
-      }
-    },
-    {
       title: 'Держать ВМ с пользователями включенными',
       property: 'keep_vms_on',
       type: {
@@ -352,10 +320,25 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       edit: 'changeTemplateForVmAutomatedPool'
     },
     {
-      title: 'Наименование организационной единицы для добавления ВМ в AD',
-      property: 'ad_ou',
-      type: 'string',
-      edit: 'changeAdCnPatternForGroupAutomatedPool'
+      title: 'Подготавливать ВМ',
+      group: [
+        {
+          title: 'Включать удаленный доступ на ВМ',
+          property: 'enable_vms_remote_access',
+          type: {
+            typeDepend: 'boolean',
+            propertyDepend: ['Да', 'Нет']
+          }
+        },
+        {
+          title: 'Включать ВМ',
+          property: 'start_vms',
+          type: {
+            typeDepend: 'boolean',
+            propertyDepend: ['Да', 'Нет']
+          }
+        }
+      ]
     },
     {
       title: 'Пользователи',

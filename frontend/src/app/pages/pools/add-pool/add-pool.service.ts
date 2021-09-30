@@ -218,7 +218,6 @@ export class AddPoolService {
                 $reserve_size: Int
                 $total_size: Int
                 $initial_size: Int
-                $ad_ou: ShortString
             ) {
                 addDynamicPool(
                     connection_types: $connection_types
@@ -236,9 +235,8 @@ export class AddPoolService {
                     create_thin_clones: true
                     enable_vms_remote_access: true
                     start_vms: true
-                    set_vms_hostnames: true
-                    include_vms_in_ad: true
-                    ad_ou: $ad_ou
+                    set_vms_hostnames: false
+                    include_vms_in_ad: false
                     is_guest: true
                 ) {
                     ok

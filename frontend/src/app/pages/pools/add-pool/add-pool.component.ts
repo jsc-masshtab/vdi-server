@@ -110,7 +110,7 @@ export class PoolAddComponent implements OnInit, OnDestroy {
       total_size: [1, [Validators.required, Validators.max(10000), Validators.min(1)]],
 
       create_thin_clones: true,
-      
+
       enable_vms_remote_access: true,
       start_vms: true,
       set_vms_hostnames: true,
@@ -301,7 +301,7 @@ export class PoolAddComponent implements OnInit, OnDestroy {
         this.dynamicPool.get('start_vms').setValue(true);
         this.dynamicPool.get('set_vms_hostnames').setValue(true);
         if (this.auth_dirs.length) { this.dynamicPool.get('include_vms_in_ad').setValue(true); }
- 
+
         this.warming_vm.valueChanges.subscribe((value) => {
 
           if (value) {
@@ -375,8 +375,6 @@ export class PoolAddComponent implements OnInit, OnDestroy {
         this.guestPool.get('is_guest').setValue(true);
         this.guestPool.get('enable_vms_remote_access').setValue(true);
         this.guestPool.get('start_vms').setValue(true);
-        this.guestPool.get('set_vms_hostnames').setValue(true);
-        if (this.auth_dirs.length) { this.guestPool.get('include_vms_in_ad').setValue(true); }
       }             break;
 
       case 'check_guest': {

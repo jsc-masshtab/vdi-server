@@ -1080,12 +1080,12 @@ class Vm(VeilModel):
                 await self.enable_remote_access()
             if automated_pool.start_vms:
                 await self.start()
-            if automated_pool.set_vms_hostnames:
-                await self.set_hostname_and_reboot()
-
-            if active_directory_obj and automated_pool.include_vms_in_ad:
-                await self.include_in_ad(active_directory_obj,
-                                         ad_ou=ad_ou)
+            if not automated_pool.is_guest:
+                if automated_pool.set_vms_hostnames:
+                    await self.set_hostname_and_reboot()
+                if active_directory_obj and automated_pool.include_vms_in_ad:
+                    await self.include_in_ad(active_directory_obj,
+                                             ad_ou=ad_ou)
 
             # Протоколируем успех
             msg = _local_("VM {} has been prepared.").format(self.verbose_name)
