@@ -22,7 +22,10 @@ export interface IPool extends ISettingsAutoPool, ISettingsStaticPool  {
   };
 
   create_thin_clones: boolean;
-  prepare_vms: boolean;
+  enable_vms_remote_access: boolean;
+  start_vms: boolean;
+  set_vms_hostnames: boolean;
+  include_vms_in_ad: boolean;
   keep_vms_on: boolean;
   status: string;
 }

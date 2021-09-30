@@ -163,7 +163,10 @@ export class AddPoolService {
                 $total_size: Int
                 $initial_size: Int
                 $create_thin_clones: Boolean
-                $prepare_vms: Boolean
+                $enable_vms_remote_access: Boolean
+                $start_vms: Boolean
+                $set_vms_hostnames: Boolean
+                $include_vms_in_ad: Boolean
                 $ad_ou: ShortString
             ) {
                 addDynamicPool(
@@ -180,7 +183,10 @@ export class AddPoolService {
                     total_size: $total_size
                     initial_size: $initial_size
                     create_thin_clones: $create_thin_clones
-                    prepare_vms: $prepare_vms
+                    enable_vms_remote_access: $enable_vms_remote_access
+                    start_vms: $start_vms
+                    set_vms_hostnames: $set_vms_hostnames
+                    include_vms_in_ad: $include_vms_in_ad
                     ad_ou: $ad_ou
                 ) {
                     ok
@@ -228,7 +234,10 @@ export class AddPoolService {
                     total_size: $total_size
                     initial_size: $initial_size
                     create_thin_clones: true
-                    prepare_vms: true
+                    enable_vms_remote_access: true
+                    start_vms: true
+                    set_vms_hostnames: true
+                    include_vms_in_ad: true
                     ad_ou: $ad_ou
                     is_guest: true
                 ) {

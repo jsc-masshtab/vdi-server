@@ -842,7 +842,10 @@ class Vm(VeilModel):
                         vm_name_template=automated_pool.vm_name_template,
                         keep_vms_on=pool.keep_vms_on,
                         create_thin_clones=automated_pool.create_thin_clones,
-                        prepare_vms=automated_pool.prepare_vms,
+                        enable_vms_remote_access=automated_pool.enable_vms_remote_access,
+                        start_vms=automated_pool.start_vms,
+                        set_vms_hostnames=automated_pool.set_vms_hostnames,
+                        include_vms_in_ad=automated_pool.include_vms_in_ad,
                         ad_ou=automated_pool.ad_ou,
                         connection_types=pool.connection_types,
                         creator=creator,
@@ -933,6 +936,10 @@ class Vm(VeilModel):
     async def qemu_guest_agent_waiting(self):
         """Ожидает активации гостевого агента."""
         domain_entity = await self.get_veil_entity()
+        await system_logger.info(
+            message=_local_("Waiting Qemu guest agent for vm {}.").format(self.verbose_name),
+            entity=self.entity,
+        )
         while not domain_entity.qemu_state:
             await asyncio.sleep(VEIL_OPERATION_WAITING)
             await domain_entity.info()
@@ -997,10 +1004,12 @@ class Vm(VeilModel):
 
     async def set_hostname_and_reboot(self):
         """Задание hostname и перезагрузка ВМ."""
-        hostname_is_success = await self.set_hostname()
-        # Когда hostname начнет гарантировано задаваться в этой проверке будет смысл
-        if hostname_is_success:
-            await self.reboot()
+        reboot_is_success = await self.reboot()
+        if reboot_is_success:
+            hostname_is_success = await self.set_hostname()
+            # Когда hostname начнет гарантировано задаваться в этой проверке будет смысл
+            if hostname_is_success:
+                await self.reboot()
 
     async def include_in_ad(self,
                             active_directory_obj: AuthenticationDirectory,
@@ -1060,33 +1069,42 @@ class Vm(VeilModel):
         self,
         active_directory_obj: AuthenticationDirectory = None,
         ad_ou: str = None,
+        automated_pool=None
     ):
         """Check that domain remote-access is enabled and domain is powered on.
 
         Вся процедура должна продолжаться не более 10 минут для 1 ВМ.
         """
-        await self.enable_remote_access()
-        await self.start_and_reboot()
-        await self.set_hostname_and_reboot()
+        if automated_pool:
+            if automated_pool.enable_vms_remote_access:
+                await self.enable_remote_access()
+            if automated_pool.start_vms:
+                await self.start()
+            if automated_pool.set_vms_hostnames:
+                await self.set_hostname_and_reboot()
 
-        if active_directory_obj:
-            await self.include_in_ad(active_directory_obj,
-                                     ad_ou=ad_ou)
+            if active_directory_obj and automated_pool.include_vms_in_ad:
+                await self.include_in_ad(active_directory_obj,
+                                         ad_ou=ad_ou)
 
-        # Протоколируем успех
-        msg = _local_("VM {} has been prepared.").format(self.verbose_name)
-        await system_logger.info(message=msg, entity=self.entity)
+            # Протоколируем успех
+            msg = _local_("VM {} has been prepared.").format(self.verbose_name)
+            await system_logger.info(message=msg, entity=self.entity)
+        else:
+            msg = _local_("VM {} has been not prepared.").format(self.verbose_name)
+            await system_logger.warning(message=msg, entity=self.entity, description=_local_("Check pool settings."))
         return True
 
     async def prepare_with_timeout(
         self,
         active_directory_obj: AuthenticationDirectory = None,
         ad_ou: str = None,
+        automated_pool=None
     ):
         """Подготовка ВМ с ограничением по времени."""
         try:
             await asyncio.wait_for(
-                self.prepare(active_directory_obj, ad_ou),
+                self.prepare(active_directory_obj, ad_ou, automated_pool),
                 VEIL_VM_PREPARE_TIMEOUT,
             )
         except asyncio.TimeoutError as err_msg:

@@ -474,7 +474,10 @@ class PoolType(graphene.ObjectType):
 
     keep_vms_on = graphene.Boolean()
     create_thin_clones = graphene.Boolean()
-    prepare_vms = graphene.Boolean()
+    enable_vms_remote_access = graphene.Boolean()
+    start_vms = graphene.Boolean()
+    set_vms_hostnames = graphene.Boolean()
+    include_vms_in_ad = graphene.Boolean()
     assigned_connection_types = graphene.List(ConnectionTypesGraphene)
     possible_connection_types = graphene.List(ConnectionTypesGraphene)
 
@@ -639,7 +642,10 @@ def pool_obj_to_type(pool_obj: Pool) -> PoolType:
         "keep_vms_on": pool_obj.keep_vms_on,
         "ad_ou": pool_obj.ad_ou,
         "create_thin_clones": pool_obj.create_thin_clones,
-        "prepare_vms": pool_obj.prepare_vms,
+        "enable_vms_remote_access": pool_obj.enable_vms_remote_access,
+        "start_vms": pool_obj.start_vms,
+        "set_vms_hostnames": pool_obj.set_vms_hostnames,
+        "include_vms_in_ad": pool_obj.include_vms_in_ad,
         "controller": pool_obj.controller,
         "status": pool_obj.status,
         # 'assigned_connection_types': pool_obj.connection_types
@@ -1066,7 +1072,10 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator, ControllerFe
         vm_name_template = ShortString(required=True)
 
         create_thin_clones = graphene.Boolean(default_value=True)
-        prepare_vms = graphene.Boolean(default_value=False)
+        enable_vms_remote_access = graphene.Boolean(default_value=True)
+        start_vms = graphene.Boolean(default_value=True)
+        set_vms_hostnames = graphene.Boolean(default_value=False)
+        include_vms_in_ad = graphene.Boolean(default_value=False)
         connection_types = graphene.List(
             graphene.NonNull(ConnectionTypesGraphene),
             default_value=[Pool.PoolConnectionTypes.SPICE.value],
@@ -1096,7 +1105,10 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator, ControllerFe
         total_size,
         vm_name_template,
         create_thin_clones,
-        prepare_vms,
+        enable_vms_remote_access,
+        start_vms,
+        set_vms_hostnames,
+        include_vms_in_ad,
         connection_types,
         ad_ou: str = None,
         is_guest: bool = False,
@@ -1122,7 +1134,10 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator, ControllerFe
                 total_size=total_size,
                 vm_name_template=vm_name_template,
                 create_thin_clones=create_thin_clones,
-                prepare_vms=prepare_vms,
+                enable_vms_remote_access=enable_vms_remote_access,
+                start_vms=start_vms,
+                set_vms_hostnames=set_vms_hostnames,
+                include_vms_in_ad=include_vms_in_ad,
                 connection_types=connection_types,
                 ad_ou=ad_ou,
                 tag=tag,
@@ -1155,7 +1170,10 @@ class UpdateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
         vm_name_template = ShortString()
         keep_vms_on = graphene.Boolean()
         create_thin_clones = graphene.Boolean()
-        prepare_vms = graphene.Boolean()
+        enable_vms_remote_access = graphene.Boolean()
+        start_vms = graphene.Boolean()
+        set_vms_hostnames = graphene.Boolean()
+        include_vms_in_ad = graphene.Boolean()
         ad_ou = ShortString()
         connection_types = graphene.List(graphene.NonNull(ConnectionTypesGraphene))
 
@@ -1212,7 +1230,10 @@ class UpdateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
                     vm_name_template=vm_name_template,
                     keep_vms_on=kwargs.get("keep_vms_on"),
                     create_thin_clones=kwargs.get("create_thin_clones"),
-                    prepare_vms=kwargs.get("prepare_vms"),
+                    enable_vms_remote_access=kwargs.get("enable_vms_remote_access"),
+                    start_vms=kwargs.get("start_vms"),
+                    set_vms_hostnames=kwargs.get("set_vms_hostnames"),
+                    include_vms_in_ad=kwargs.get("include_vms_in_ad"),
                     ad_ou=kwargs.get("ad_ou"),
                     connection_types=kwargs.get("connection_types"),
                     creator=creator,
