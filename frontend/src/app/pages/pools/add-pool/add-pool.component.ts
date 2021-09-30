@@ -1,7 +1,6 @@
 import { trigger, style, animate, transition } from '@angular/animations';
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { Validators } from '@angular/forms';
-import { FormBuilder, FormGroup } from '@angular/forms';
+import { FormBuilder, FormGroup, FormControl, Validators } from '@angular/forms';
 import { MatDialogRef } from '@angular/material/dialog';
 import { Subscription } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -46,6 +45,9 @@ export class PoolAddComponent implements OnInit, OnDestroy {
   public dynamicPool: FormGroup;
   public guestPool: FormGroup;
   public rdsPool: FormGroup;
+
+  public warming_vm: FormControl = new FormControl(false);
+  public warming_all: boolean = true;
 
   public auth_dirs: any[] = []
 
@@ -108,7 +110,11 @@ export class PoolAddComponent implements OnInit, OnDestroy {
       total_size: [1, [Validators.required, Validators.max(10000), Validators.min(1)]],
 
       create_thin_clones: true,
-      ...this.auth_dirs.length ? { prepare_vms: true } : {},
+
+      enable_vms_remote_access: true,
+      start_vms: true,
+      set_vms_hostnames: true,
+      ...this.auth_dirs.length ? { include_vms_in_ad: true } : {},
     }, { validators: this.totalSizeValidator() });
 
     this.guestPool = this.fb.group({
@@ -122,7 +128,10 @@ export class PoolAddComponent implements OnInit, OnDestroy {
 
       create_thin_clones: true,
       is_guest: true,
-      ...this.auth_dirs.length ? { prepare_vms: true } : {},
+      enable_vms_remote_access: true,
+      start_vms: true,
+      set_vms_hostnames: true,
+      ...this.auth_dirs.length ? { include_vms_in_ad: true } : {},
     }, { validators: this.totalSizeValidator() });
 
     this.toStep('type');
@@ -143,7 +152,7 @@ export class PoolAddComponent implements OnInit, OnDestroy {
 
   resetData() {
     this.data = {
-      connection_types: this.type === 'rds' ? ['RDP', 'NATIVE_RDP'] : ['RDP', 'NATIVE_RDP', 'SPICE', 'SPICE_DIRECT'],
+      connection_types: this.type === 'rds' ? ['RDP', 'NATIVE_RDP'] : ['RDP', 'NATIVE_RDP', 'SPICE', 'SPICE_DIRECT', 'X2GO'],
       controllers: [],
       resource_pools: [],
       vms: [],
@@ -159,15 +168,21 @@ export class PoolAddComponent implements OnInit, OnDestroy {
     this.staticPool.get('vms').setValue([])
   }
 
+  someComplete() {
+    return (this.dynamicPool.get('enable_vms_remote_access').value ||
+    this.dynamicPool.get('start_vms').value ||
+    this.dynamicPool.get('set_vms_hostnames').value ||
+    (this.auth_dirs.length ? this.dynamicPool.get('include_vms_in_ad').value : false)) && !this.warming_all;
+  }
+
   public toStep(step: string) {
     this.last = this.step;
-    this.step = step;
 
     /* Обработка каждого шага */
 
     switch (step) {
       case 'type': {
-
+        this.step = step;
         /* Установка начальных значений */
         this.resetData();
 
@@ -182,6 +197,7 @@ export class PoolAddComponent implements OnInit, OnDestroy {
                    break;
 
       case 'static': {
+        this.step = step;
         this.resetData();
 
         /* Выбор первого типа */
@@ -197,6 +213,8 @@ export class PoolAddComponent implements OnInit, OnDestroy {
 
           if (!this.sharedData.get('controller_id').value) {
             this.sharedData.get('controller_id').setValue(this.data['controllers'][0]['id']);
+          } else {
+            this.sharedData.get('controller_id').setValue(this.sharedData.get('controller_id').value)
           }
         });
 
@@ -242,12 +260,10 @@ export class PoolAddComponent implements OnInit, OnDestroy {
 
         if (!this.sharedData.valid) {
           this.checkValid = true;
-          this.toStep('static');
         } else {
           if (this.type === 'static') {
             if (!this.staticPool.valid) {
               this.checkValid = true;
-              this.toStep('static');
             } else {
               this.toStep('done');
             }
@@ -264,11 +280,9 @@ export class PoolAddComponent implements OnInit, OnDestroy {
       case 'check_rds': {
         if (!this.sharedData.valid) {
           this.checkValid = true;
-          this.toStep('static');
         } else {
           if (!this.rdsPool.valid) {
             this.checkValid = true;
-            this.toStep('static');
           } else {
             this.toStep('done');
           }
@@ -276,44 +290,103 @@ export class PoolAddComponent implements OnInit, OnDestroy {
       }                 break;
 
       case 'dynamic': {
+        this.step = step;
         this.dynamicPool.get('increase_step').setValue(1);
         this.dynamicPool.get('initial_size').setValue(1);
         this.dynamicPool.get('total_size').setValue(1);
         this.dynamicPool.get('reserve_size').setValue(1);
         this.dynamicPool.get('create_thin_clones').setValue(true);
-        if (this.auth_dirs.length) { this.dynamicPool.get('prepare_vms').setValue(true); }
+        this.warming_vm.setValue(true);
+        this.dynamicPool.get('enable_vms_remote_access').setValue(true);
+        this.dynamicPool.get('start_vms').setValue(true);
+        this.dynamicPool.get('set_vms_hostnames').setValue(true);
+        if (this.auth_dirs.length) { this.dynamicPool.get('include_vms_in_ad').setValue(true); }
+
+        this.warming_vm.valueChanges.subscribe((value) => {
+
+          if (value) {
+            this.warming_all = true;
+            this.dynamicPool.get('enable_vms_remote_access').setValue(true);
+            this.dynamicPool.get('start_vms').setValue(true);
+            this.dynamicPool.get('set_vms_hostnames').setValue(true);
+            if (this.auth_dirs.length) { this.dynamicPool.get('include_vms_in_ad').setValue(true); }
+          } else {
+            this.warming_all = false;
+            this.dynamicPool.get('enable_vms_remote_access').setValue(false);
+            this.dynamicPool.get('start_vms').setValue(false);
+            this.dynamicPool.get('set_vms_hostnames').setValue(false);
+            if (this.auth_dirs.length) { this.dynamicPool.get('include_vms_in_ad').setValue(false); }
+          }
+        });
+
+        this.dynamicPool.get('enable_vms_remote_access').valueChanges.subscribe((value) => {
+          if (value) {
+          } else {
+            this.dynamicPool.get('start_vms').setValue(false);
+            this.dynamicPool.get('set_vms_hostnames').setValue(false);
+            if (this.auth_dirs.length) { this.dynamicPool.get('include_vms_in_ad').setValue(false); }
+          }
+        });
+
+        this.dynamicPool.get('start_vms').valueChanges.subscribe((value) => {
+          if (value) {
+            this.dynamicPool.get('enable_vms_remote_access').setValue(true);
+          } else {
+            this.dynamicPool.get('set_vms_hostnames').setValue(false);
+            if (this.auth_dirs.length) { this.dynamicPool.get('include_vms_in_ad').setValue(false); }
+          }
+        });
+
+        this.dynamicPool.get('set_vms_hostnames').valueChanges.subscribe((value) => {
+          if (value) {
+            this.dynamicPool.get('enable_vms_remote_access').setValue(true);
+            this.dynamicPool.get('start_vms').setValue(true);
+          } else {
+            if (this.auth_dirs.length) { this.dynamicPool.get('include_vms_in_ad').setValue(false); }
+          }
+        });
+
+        if (this.auth_dirs.length) {
+          this.dynamicPool.get('include_vms_in_ad').valueChanges.subscribe((value) => {
+            if (value) {
+              this.dynamicPool.get('enable_vms_remote_access').setValue(true);
+              this.dynamicPool.get('start_vms').setValue(true);
+              this.dynamicPool.get('set_vms_hostnames').setValue(true);
+            }
+          });
+        }
       }               break;
 
       case 'check_dynamic': {
         if (!this.dynamicPool.valid) {
           this.checkValid = true;
-          this.toStep('dynamic');
         } else {
           this.toStep('done');
         }
       }                     break;
 
       case 'guest': {
+        this.step = step;
         this.guestPool.get('increase_step').setValue(1);
         this.guestPool.get('initial_size').setValue(1);
         this.guestPool.get('total_size').setValue(1);
         this.guestPool.get('reserve_size').setValue(1);
         this.guestPool.get('create_thin_clones').setValue(true);
         this.guestPool.get('is_guest').setValue(true);
-        if (this.auth_dirs.length) { this.guestPool.get('prepare_vms').setValue(true); }
+        this.guestPool.get('enable_vms_remote_access').setValue(true);
+        this.guestPool.get('start_vms').setValue(true);
       }             break;
 
       case 'check_guest': {
         if (!this.guestPool.valid) {
           this.checkValid = true;
-          this.toStep('guest');
         } else {
           this.toStep('done');
         }
       }                   break;
 
       case 'done': {
-
+        this.step = step;
         /* сборка данных для отправки */
 
         let data: any = { ...this.sharedData.value };

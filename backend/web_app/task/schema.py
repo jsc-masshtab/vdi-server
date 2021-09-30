@@ -7,7 +7,7 @@ from graphene import Enum as GrapheneEnum
 
 from sqlalchemy import and_
 
-
+from common.graphene_utils import ShortString
 from common.languages import _local_
 from common.models.task import PoolTaskType, Task, TaskStatus
 from common.utils import convert_gino_model_to_graphene_type
@@ -33,8 +33,8 @@ class TaskType(graphene.ObjectType):
     finished = graphene.DateTime()
     priority = graphene.Int()
     progress = graphene.Int(default_value=0)
-    message = graphene.String()
-    duration = graphene.String()
+    message = graphene.Field(ShortString)
+    duration = graphene.Field(ShortString)
 
 
 class TaskQuery(graphene.ObjectType):
@@ -44,7 +44,7 @@ class TaskQuery(graphene.ObjectType):
         offset=graphene.Int(default_value=0),
         status=TaskStatusGraphene(),
         task_type=TaskTypeGraphene(),
-        ordering=graphene.String(),
+        ordering=ShortString(),
     )
 
     task = graphene.Field(TaskType, id=graphene.UUID())

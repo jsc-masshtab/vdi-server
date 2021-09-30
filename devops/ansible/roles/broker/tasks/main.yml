@@ -55,6 +55,12 @@
   environment:
     PYTHONPATH: "/opt/veil-vdi/app"
 
+# apache2 tasks
+- import_tasks: apache2.yml
+
+# redis-server tasks
+- import_tasks: redis-server.yml
+
 - name: Broker | Start broker services
   service:
     name: "{{ item }}"

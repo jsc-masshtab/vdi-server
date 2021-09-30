@@ -22,8 +22,8 @@ export class GroupsService  {
        return  this.service.watchQuery({
             query:  gql`
                 query groups(
-                    $ordering: String,
-                    $verbose_name: String
+                    $ordering: ShortString,
+                    $verbose_name: ShortString
                 ){
                     groups(
                         verbose_name: $verbose_name,
@@ -82,8 +82,8 @@ export class GroupsService  {
         return this.service.mutate<any>({
             mutation: gql`
                             mutation groups(
-                                $verbose_name: String!,
-                                $description: String){
+                                $verbose_name: ShortString!,
+                                $description: ShortString){
                                 createGroup(
                                     description: $description,
                                     verbose_name: $verbose_name
@@ -122,8 +122,8 @@ export class GroupsService  {
     public update({id}, {verbose_name, description}) {
         return this.service.mutate<any>({
             mutation: gql`
-                            mutation groups($id: UUID!,$verbose_name: String,
-                                $description: String) {
+                            mutation groups($id: UUID!,$verbose_name: ShortString,
+                                $description: ShortString) {
                                 updateGroup(id: $id, verbose_name: $verbose_name,
                                     description: $description) {
                                     ok
@@ -229,7 +229,7 @@ export class GroupsService  {
 
     public addPermission(id, permissions) {
         return this.service.mutate<any>({
-            mutation: gql` 
+            mutation: gql`
             mutation groups($id: UUID!, $permissions: [TkPermission!]!){
                 addGroupPermission(id: $id, permissions: $permissions) {
                     ok
@@ -245,7 +245,7 @@ export class GroupsService  {
 
     public removePermission(id, permissions) {
         return this.service.mutate<any>({
-            mutation: gql` 
+            mutation: gql`
             mutation groups($id: UUID!, $permissions: [TkPermission!]!){
                 removeGroupPermission(id: $id, permissions: $permissions) {
                     ok

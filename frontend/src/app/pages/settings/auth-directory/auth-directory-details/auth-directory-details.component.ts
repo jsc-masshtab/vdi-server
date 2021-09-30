@@ -164,7 +164,7 @@ export class AuthenticationDirectoryDetailsComponent implements OnInit, OnDestro
   }
 
   public openEditForm(options): void {
-    let gqlType: string = 'String';
+    let gqlType: string = 'ShortString';
 
     if (options.form.gqlType) {
       gqlType = options.form.gqlType;

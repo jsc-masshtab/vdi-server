@@ -61,7 +61,7 @@ export class PoolDetailsService {
     public getPool(pool_id: string | number, type: string): QueryRef<any, any> {
         if (type === 'automated' || type === 'guest') {
             return this.service.watchQuery({
-                query: gql`  query pools($pool_id: String, $ordering_vms: String, $ordering_users: String, $ordering_groups: String) {
+                query: gql`  query pools($pool_id: ShortString, $ordering_vms: ShortString, $ordering_users: ShortString, $ordering_groups: ShortString) {
                                 pool(pool_id: $pool_id) {
                                     pool_id
                                     verbose_name
@@ -102,7 +102,10 @@ export class PoolDetailsService {
                                         verbose_name
                                     }
                                     create_thin_clones
-                                    prepare_vms
+                                    enable_vms_remote_access
+                                    start_vms
+                                    set_vms_hostnames
+                                    include_vms_in_ad
                                     keep_vms_on
                                     assigned_groups(ordering: $ordering_groups) {
                                         id
@@ -128,7 +131,7 @@ export class PoolDetailsService {
 
         if (type === 'static' || type === 'rds') {
             return this.service.watchQuery({
-                query: gql`  query pools($pool_id: String, $ordering_vms: String, $ordering_users: String, $ordering_groups: String) {
+                query: gql`  query pools($pool_id: ShortString, $ordering_vms: ShortString, $ordering_users: ShortString, $ordering_groups: ShortString) {
                                 pool(pool_id: $pool_id) {
                                     verbose_name
                                     pool_type
@@ -280,7 +283,7 @@ export class PoolDetailsService {
 
     public getAllUsersNoEntitleToPool(pool_id: string): Observable<any>  {
         return  this.service.watchQuery({
-            query: gql` query pools($pool_id: String, $entitled: Boolean) {
+            query: gql` query pools($pool_id: ShortString, $entitled: Boolean) {
                 pool(pool_id: $pool_id) {
                     users(entitled: $entitled) {
                         username
@@ -300,7 +303,7 @@ export class PoolDetailsService {
     public getAllUsersEntitleToPool(pool_id: string): Observable<any> {
         return this.service.watchQuery({
                 query: gql`
-                            query  pools($pool_id: String) {
+                            query  pools($pool_id: ShortString) {
                                 pool(pool_id: $pool_id) {
                                     users {
                                         is_superuser
@@ -353,11 +356,13 @@ export class PoolDetailsService {
         });
     }
 
-    public updatePool({pool_id, pool_type }, {connection_types, verbose_name, increase_step, reserve_size, total_size, vm_name_template, create_thin_clones, prepare_vms, keep_vms_on, ad_ou}) {
+    public updatePool({pool_id, pool_type }, {connection_types, verbose_name, increase_step, reserve_size, total_size,
+                                              vm_name_template, create_thin_clones, enable_vms_remote_access, start_vms,
+                                              set_vms_hostnames, include_vms_in_ad, keep_vms_on, ad_ou}) {
         if (pool_type === 'static') {
             return this.service.mutate<any>({
                 mutation: gql`
-                                mutation pools($connection_types: [PoolConnectionTypes!], $pool_id: UUID!,$verbose_name: String
+                                mutation pools($connection_types: [PoolConnectionTypes!], $pool_id: UUID!,$verbose_name: ShortString
                                      $keep_vms_on: Boolean) {
                                     updateStaticPool(connection_types: $connection_types, pool_id: $pool_id, verbose_name: $verbose_name,
                                      keep_vms_on: $keep_vms_on ) {
@@ -378,7 +383,7 @@ export class PoolDetailsService {
         if (pool_type === 'rds') {
             return this.service.mutate<any>({
                 mutation: gql`
-                                mutation pools($connection_types: [PoolConnectionTypes!], $pool_id: UUID!,$verbose_name: String
+                                mutation pools($connection_types: [PoolConnectionTypes!], $pool_id: UUID!,$verbose_name: ShortString
                                      $keep_vms_on: Boolean) {
                                     updateRdsPool(connection_types: $connection_types, pool_id: $pool_id, verbose_name: $verbose_name,
                                      keep_vms_on: $keep_vms_on ) {
@@ -399,13 +404,16 @@ export class PoolDetailsService {
         if (pool_type === 'automated' || pool_type === 'guest') {
             return this.service.mutate<any>({
                 mutation: gql`
-                                mutation pools($connection_types: [PoolConnectionTypes!], $pool_id: UUID!,$verbose_name: String,
-                                    $increase_step: Int , $reserve_size: Int, $total_size: Int , $vm_name_template: String ,
-                                     $keep_vms_on: Boolean, $create_thin_clones: Boolean, $prepare_vms: Boolean, $ad_ou: String ) {
+                                mutation pools($connection_types: [PoolConnectionTypes!], $pool_id: UUID!,$verbose_name: ShortString,
+                                    $increase_step: Int , $reserve_size: Int, $total_size: Int , $vm_name_template: ShortString ,
+                                     $keep_vms_on: Boolean, $create_thin_clones: Boolean, $enable_vms_remote_access: Boolean,
+                                     $start_vms: Boolean, $set_vms_hostnames: Boolean, $include_vms_in_ad: Boolean, $ad_ou: ShortString ) {
                                     updateDynamicPool(connection_types: $connection_types, pool_id: $pool_id, verbose_name: $verbose_name,
                                         increase_step: $increase_step, reserve_size: $reserve_size, total_size: $total_size,
                                         vm_name_template: $vm_name_template, keep_vms_on: $keep_vms_on,
-                                         create_thin_clones: $create_thin_clones, prepare_vms: $prepare_vms, ad_ou: $ad_ou ) {
+                                        create_thin_clones: $create_thin_clones, enable_vms_remote_access: $enable_vms_remote_access,
+                                        start_vms: $start_vms, set_vms_hostnames: $set_vms_hostnames, include_vms_in_ad: $include_vms_in_ad,
+                                        ad_ou: $ad_ou ) {
                                         ok
                                     }
                                 }
@@ -420,7 +428,10 @@ export class PoolDetailsService {
                     vm_name_template,
                     keep_vms_on,
                     create_thin_clones,
-                    prepare_vms,
+                    enable_vms_remote_access,
+                    start_vms,
+                    set_vms_hostnames,
+                    include_vms_in_ad,
                     ad_ou,
                     connection_types
                 }
@@ -433,7 +444,7 @@ export class PoolDetailsService {
     public assignVmToUser(vm_id: string, username: string) {
         return this.service.mutate<any>({
             mutation: gql`
-                            mutation pools($vm_id: ID!,$username: String!) {
+                            mutation pools($vm_id: ID!,$username: ShortString!) {
                                 assignVmToUser(vm_id: $vm_id,username: $username) {
                                     ok
                                 }
@@ -770,7 +781,7 @@ export class PoolDetailsService {
 
     public getVm(pool_id: string, vm_id: string, controller_address: string, offset = 0): QueryRef<any, any> {
         return  this.service.watchQuery({
-            query: gql` query pools($pool_id: String, $vm_id: UUID, $controller_address: UUID, $offset: Int) {
+            query: gql` query pools($pool_id: ShortString, $vm_id: UUID, $controller_address: UUID, $offset: Int) {
                                 pool(pool_id: $pool_id) {
                                   vm(vm_id: $vm_id, controller_id: $controller_address) {
                                       id
@@ -874,7 +885,7 @@ export class PoolDetailsService {
     public getSpice(pool_id: string, vm_id: string, controller_address: string): QueryRef<any, any> {
         return this.service.watchQuery({
             query: gql`
-                query pools($pool_id: String, $vm_id: UUID, $controller_address: UUID) {
+                query pools($pool_id: ShortString, $vm_id: UUID, $controller_address: UUID) {
                     pool(pool_id: $pool_id) {
                         vm(vm_id: $vm_id, controller_id: $controller_address) {
                             id
@@ -901,7 +912,7 @@ export class PoolDetailsService {
     public getVnc(pool_id: string, vm_id: string, controller_address: string): QueryRef<any, any> {
         return this.service.watchQuery({
             query: gql`
-                query pools($pool_id: String, $vm_id: UUID, $controller_address: UUID) {
+                query pools($pool_id: ShortString, $vm_id: UUID, $controller_address: UUID) {
                     pool(pool_id: $pool_id) {
                         vm(vm_id: $vm_id, controller_id: $controller_address) {
                             id

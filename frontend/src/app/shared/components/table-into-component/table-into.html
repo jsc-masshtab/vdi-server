@@ -1,5 +1,5 @@
 <div class="table-area">
-  <div *ngFor="let obj of collection" class="table-area-object">   <!--строка-->
+  <div *ngFor="let obj of collection" class="table-area-object" [class.table-group]="obj.group">   <!--строка-->
 
       <div class="table-area-title">
         <span>{{ obj.title }}</span>
@@ -7,6 +7,7 @@
           <fa-icon [icon]="['fas','edit']" size="xs"></fa-icon>
         </button>
       </div>
+
       <div class="table-area-value" *ngIf="item; else nothing">
 
         <ng-container *ngIf="obj.property_lv2">
@@ -26,8 +27,6 @@
         <ng-container *ngIf="obj.property === 'assignment_type'">
             <span>{{ item[obj.property] | assignmentType }}</span>
         </ng-container>
-       
-      
 
 <!-- obj.property -> all-types-here-->
         <ng-container *ngIf="obj.property && obj.property != 'status' && obj.property != 'assignment_type' && !obj.property_lv2">
@@ -74,6 +73,10 @@
               </ul>
             </ng-container>
           </ng-container>
+        </ng-container>
+
+        <ng-container *ngIf="obj.group">
+          <vdi-table-into [item]="item" [collection]="obj.group" (edit)="edit.emit($event)" (action)="action.emit($event)"></vdi-table-into>
         </ng-container>
       </div>
       

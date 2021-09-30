@@ -7,6 +7,7 @@ from typing import Optional, Tuple
 from asyncpg.exceptions import UniqueViolationError
 
 import ldap
+from ldap.controls.libldap import SimplePagedResultsControl as LdapPageCtrl
 
 from sqlalchemy import Enum as AlchemyEnum, Index
 from sqlalchemy.dialects.postgresql import JSONB, UUID
@@ -40,6 +41,12 @@ from common.veil.veil_gino import (
     VeilModel,
 )
 
+PAGE_SIZE = 999
+
+
+# На время работы search_ext_s, result3 текщий процесс не будет отвечать на запросы.
+# По-хорошему нужен асинхронный аналог модуля для работы с ldap. Но так как добавление AD -
+# это очень редкая операция, то мб и так сойдет.
 
 class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
     """Модель служб каталогов для авторизации пользователей в системе.
@@ -410,8 +417,10 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
                 account_name
             )
         # получаем данные пользователя из AD
-        user_info, user_groups = ldap_server.search_s(
-            base, ldap.SCOPE_SUBTREE, user_info_filter, ["memberOf"]
+        req_ctrl = LdapPageCtrl(criticality=True, size=PAGE_SIZE, cookie="")
+        user_info, user_groups = ldap_server.search_ext_s(
+            base=base, scope=ldap.SCOPE_SUBTREE, filterstr=user_info_filter,
+            attrlist=["memberOf"], serverctrls=[req_ctrl]
         )[0]
 
         return user_info, user_groups
@@ -620,16 +629,15 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
                 await self.update(status=Status.ACTIVE).apply()
         return ldap_connection
 
-    @property
-    async def assigned_ad_groups(self):
+    async def assigned_ad_groups(self, group_name=""):  # implement later
         """Список групп у которых не пустое поле GroupModel.ad_guid."""
         query = GroupModel.query.where(GroupModel.ad_guid.isnot(None))
         return await query.gino.all()
 
-    async def build_group_filter(self):
+    async def build_group_filter(self, group_name=""):
         """Строим фильтр для поиска групп в Authentication Directory."""
         # Список групп у которых есть признак синхронизации
-        assigned_groups = await self.assigned_ad_groups
+        assigned_groups = await self.assigned_ad_groups()
 
         # Фильтр для поиска групп
         if self.directory_type == self.DirectoryTypes.ActiveDirectory:
@@ -639,12 +647,14 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
                 "(!(objectGUID={}))".format(pack_guid(group.ad_guid))
                 for group in assigned_groups
             ]
+            groups_filter.append("(Name={}*)".format(group_name))  # wildcard * не хочет работать впереди
         elif self.directory_type == self.DirectoryTypes.FreeIPA:
             base_filter = "(&(objectclass=ipausergroup)(!(nsaccountlock=TRUE))"
             groups_filter = [
                 "(!(ipaUniqueID={}))".format(group.ad_guid)
                 for group in assigned_groups
             ]
+            groups_filter.append("(cn=*{}*)".format(group_name))  # В случае IPA  wildcard работает с обеих сторон
         else:
             raise NotImplementedError(
                 "{} not implemented yet.".format(self.directory_type))
@@ -722,24 +732,27 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
                         break
         return groups
 
-    async def get_possible_ad_groups(self) -> list:
+    async def get_possible_ad_groups(self, group_name="") -> list:
         """Список групп за вычетом уже синхронизированных."""
         connection = await self.get_connection()
         if not connection or self.directory_type == AuthenticationDirectory.DirectoryTypes.OpenLDAP:
             return list()
         try:
-            groups_filter = await self.build_group_filter()
-            ldap_groups = connection.search_s(self.dc_str, ldap.SCOPE_SUBTREE,
-                                              groups_filter)
+            req_ctrl = LdapPageCtrl(criticality=True, size=PAGE_SIZE, cookie="")
+            groups_filter = await self.build_group_filter(group_name)
+            ldap_groups = connection.search_ext_s(base=self.dc_str, scope=ldap.SCOPE_SUBTREE,
+                                                  filterstr=groups_filter, serverctrls=[req_ctrl])
+
             groups_list = self.extract_groups(ldap_groups)
         except ldap.LDAPError as err_msg:
             # На случай ошибочности запроса к AD
             msg = _local_(
                 "Fail to connect to Authentication Directory. Check service information."
             )
-            await system_logger.error(msg, entity=self.entity, description=err_msg)
+            await system_logger.error(msg, entity=self.entity, description=str(err_msg))
             await self.update(status=Status.FAILED).apply()
             groups_list = list()
+
         connection.unbind_s()
         return groups_list
 
@@ -868,22 +881,43 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
         connection = await self.get_connection()
         if not connection:
             return list()
+        users_list = list()
         try:
+            # Делаем серию запросов, чтобы извлечь всех пользователей группы
             users_filter = self.build_group_user_filter(group_cn)
-            ldap_response = connection.search_s(self.dc_str, ldap.SCOPE_SUBTREE,
-                                                users_filter)
+            req_ctrl = LdapPageCtrl(criticality=True, size=PAGE_SIZE, cookie="")
+            first_loop = True
+            final_ldap_response = []
+
+            while first_loop or req_ctrl.cookie:
+                first_loop = False
+                # async data request
+                msgid = connection.search_ext(
+                    base=self.dc_str, scope=ldap.SCOPE_SUBTREE,
+                    filterstr=users_filter, serverctrls=[req_ctrl]
+                )
+
+                # block and wait for response
+                result_type, ldap_response, msgid, serverctrls = connection.result3(msgid)
+                final_ldap_response.extend(ldap_response)
+
+                # Get cookie
+                req_ctrl.cookie = None
+                page_ctrls = [c for c in serverctrls if c.controlType == LdapPageCtrl.controlType]
+                if page_ctrls:
+                    req_ctrl.cookie = page_ctrls[0].cookie
+
             # Разбираем ответ от Authentication Directory
             if self.directory_type == self.DirectoryTypes.ActiveDirectory:
-                users_list = self.extract_ms_ad_group_members(ldap_response)
+                users_list = self.extract_ms_ad_group_members(final_ldap_response)
             elif self.directory_type == self.DirectoryTypes.FreeIPA:
-                users_list = self.extract_free_ipa_group_members(ldap_response)
-        except ldap.LDAPError:
+                users_list = self.extract_free_ipa_group_members(final_ldap_response)
+        except ldap.LDAPError as err_msg:
             msg = _local_(
                 "Fail to connect to Authentication Directory. Check service information."
             )
-            await system_logger.error(msg, entity=self.entity)
+            await system_logger.error(msg, entity=self.entity, description=str(err_msg))
             await self.update(status=Status.FAILED).apply()
-            users_list = list()
         connection.unbind_s()
         return users_list
 

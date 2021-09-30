@@ -21,7 +21,7 @@ export class PoolsService {
     };
 
     constructor(private service: Apollo) { }
-    
+
     public getAllControllers(): QueryRef<any, any> {
         return this.service.watchQuery({
             query: gql`
@@ -41,7 +41,7 @@ export class PoolsService {
 
 
         return this.service.watchQuery({
-            query: gql` query pools($ordering:String) {
+            query: gql` query pools($ordering:ShortString) {
                             pools(ordering: $ordering) {
                                 pool_id
                                 verbose_name

@@ -6,9 +6,6 @@ import { Subscription } from 'rxjs';
 import { WaitService } from '@core/components/wait/wait.service';
 import { SmtpService } from '../smtp.service';
 
-
-
-
 @Component({
   selector: 'vdi-smtp-confirm-modal',
   templateUrl: './confirm-modal.component.html'

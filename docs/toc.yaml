@@ -79,6 +79,7 @@ nav:
     - Cоздание локального репозитория: broker/faq/repo_without_inet.md
     - Резервные копии: broker/faq/backup.md
     - Службы системы: broker/faq/services.md
+    - Протоколы удаленного подключения: broker/faq/remote_conn_protocols.md
     - Подготовка эталонного образа на основе Windows 8.1/10: broker/faq/rdp/example_template_win.md
     - Работа по RDP с пулами ВРС: broker/faq/rdp/example_rdp.md
     - Настройка GPO через RDP для ВМ в домене MS AD: broker/faq/rdp/example_rdp_domain.md
@@ -141,7 +142,7 @@ nav:
       - Расширенная интеграция службы каталогов: broker/active_directory/ad_extend.md
       - Заведение ВРС в Active Directory: broker/active_directory/ad_vm_prepare.md
     - Пулы:
-      - Автоматический пул 3.0: broker/pools/automated_pool_v3.md
+      - Автоматический пул: broker/pools/automated_pool_v3.md
       - Гостевой пул: broker/pools/guest_pool.md
       - Пулы приложений: broker/pools/apps-pool.md
       - Подбор свободной ВМ: broker/pools/get-user-vm.md
@@ -206,6 +207,8 @@ nav:
       - 3.0.0: broker/changelog/3.0.0.md
       - 2.1.4: broker/changelog/2.1.4.md
     - VeiL Connect:
+      - 1.8.2: connect/changelog/1.8.2.md
+      - 1.8.1: connect/changelog/1.8.1.md
       - 1.8.0: connect/changelog/1.8.0.md
       - 1.7.2: connect/changelog/1.7.2.md
       - 1.7.1: connect/changelog/1.7.1.md
