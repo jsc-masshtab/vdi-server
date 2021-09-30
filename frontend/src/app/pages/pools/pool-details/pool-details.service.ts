@@ -105,7 +105,10 @@ export class PoolDetailsService {
                                         verbose_name
                                     }
                                     create_thin_clones
-                                    prepare_vms
+                                    enable_vms_remote_access
+                                    start_vms
+                                    set_vms_hostnames
+                                    include_vms_in_ad
                                     keep_vms_on
                                     assigned_groups(ordering: $ordering_groups) {
                                         id
@@ -359,7 +362,9 @@ export class PoolDetailsService {
         });
     }
 
-    public updatePool({pool_id, pool_type }, {connection_types, verbose_name, increase_step, reserve_size, total_size, vm_name_template, create_thin_clones, prepare_vms, keep_vms_on, ad_ou}) {
+    public updatePool({pool_id, pool_type }, {connection_types, verbose_name, increase_step, reserve_size, total_size,
+                                              vm_name_template, create_thin_clones, enable_vms_remote_access, start_vms,
+                                              set_vms_hostnames, include_vms_in_ad, keep_vms_on, ad_ou}) {
         if (pool_type === 'static') {
             return this.service.mutate<any>({
                 mutation: gql`
@@ -407,11 +412,14 @@ export class PoolDetailsService {
                 mutation: gql`
                                 mutation pools($connection_types: [PoolConnectionTypes!], $pool_id: UUID!,$verbose_name: ShortString,
                                     $increase_step: Int , $reserve_size: Int, $total_size: Int , $vm_name_template: ShortString ,
-                                     $keep_vms_on: Boolean, $create_thin_clones: Boolean, $prepare_vms: Boolean, $ad_ou: ShortString ) {
+                                     $keep_vms_on: Boolean, $create_thin_clones: Boolean, $enable_vms_remote_access: Boolean,
+                                     $start_vms: Boolean, $set_vms_hostnames: Boolean, $include_vms_in_ad: Boolean, $ad_ou: ShortString ) {
                                     updateDynamicPool(connection_types: $connection_types, pool_id: $pool_id, verbose_name: $verbose_name,
                                         increase_step: $increase_step, reserve_size: $reserve_size, total_size: $total_size,
                                         vm_name_template: $vm_name_template, keep_vms_on: $keep_vms_on,
-                                         create_thin_clones: $create_thin_clones, prepare_vms: $prepare_vms, ad_ou: $ad_ou ) {
+                                        create_thin_clones: $create_thin_clones, enable_vms_remote_access: $enable_vms_remote_access,
+                                        start_vms: $start_vms, set_vms_hostnames: $set_vms_hostnames, include_vms_in_ad: $include_vms_in_ad,
+                                        ad_ou: $ad_ou ) {
                                         ok
                                     }
                                 }
@@ -426,7 +434,10 @@ export class PoolDetailsService {
                     vm_name_template,
                     keep_vms_on,
                     create_thin_clones,
-                    prepare_vms,
+                    enable_vms_remote_access,
+                    start_vms,
+                    set_vms_hostnames,
+                    include_vms_in_ad,
                     ad_ou,
                     connection_types
                 }

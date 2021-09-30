@@ -913,7 +913,7 @@ export class VmDetalsPopupComponent implements OnInit {
   }
 
   public prepareVM() {
-    if (this.data.typePool === 'automated') {
+    if (this.data.typePool === 'automated' || this.data.typePool === 'guest') {
       this.dialog.open(YesNoFormComponent, {
         disableClose: true,
         width: '500px',

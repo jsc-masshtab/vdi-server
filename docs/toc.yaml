@@ -142,7 +142,7 @@ nav:
       - Расширенная интеграция службы каталогов: broker/active_directory/ad_extend.md
       - Заведение ВРС в Active Directory: broker/active_directory/ad_vm_prepare.md
     - Пулы:
-      - Автоматический пул 3.0: broker/pools/automated_pool_v3.md
+      - Автоматический пул: broker/pools/automated_pool_v3.md
       - Гостевой пул: broker/pools/guest_pool.md
       - Пулы приложений: broker/pools/apps-pool.md
       - Подбор свободной ВМ: broker/pools/get-user-vm.md

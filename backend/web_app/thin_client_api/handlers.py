@@ -154,8 +154,8 @@ class PoolGetVm(BaseHttpHandler):
         veil_domain = await vm.vm_client
         domain_info = await veil_domain.info()
         vm_controller = await vm.controller
-        is_ok, response, vm_address, vm_port = await self._get_conn_data(remote_protocol, vm_controller,
-                                                                         veil_domain, domain_info)
+        is_ok, response, vm_address, vm_port, vm_token = await self._get_conn_data(remote_protocol, vm_controller,
+                                                                                   veil_domain, domain_info)
         if not is_ok:
             return await self.log_finish(response)
 
@@ -170,6 +170,7 @@ class PoolGetVm(BaseHttpHandler):
             "data": dict(
                 host=vm_address,
                 port=vm_port,
+                token=vm_token,
                 password=veil_domain.graphics_password,
                 vm_verbose_name=veil_domain.verbose_name,
                 vm_controller_address=vm_controller.address,
@@ -200,7 +201,7 @@ class PoolGetVm(BaseHttpHandler):
         veil_client = vm_controller.veil_client
         if not veil_client:
             response = self.form_err_res(_local_("The remote controller is unavailable."))
-            return False, response, None, None
+            return False, response, None, None, None
 
         if self._is_rdp(remote_protocol) or remote_protocol == PoolM.PoolConnectionTypes.X2GO.name:
 
@@ -212,7 +213,7 @@ class PoolGetVm(BaseHttpHandler):
             except asyncio.TimeoutError:
                 response = self.form_err_res(
                     _local_("The controller didn`t provide a VM address. Try again in 1 minute."), "005")
-                return False, response, None, None
+                return False, response, None, None, None
 
         elif remote_protocol == PoolM.PoolConnectionTypes.SPICE_DIRECT.name:
             # Нужен адрес сервера поэтому делаем запрос
@@ -225,7 +226,14 @@ class PoolGetVm(BaseHttpHandler):
             vm_address = vm_controller.address
             vm_port = veil_domain.remote_access_port
 
-        return True, None, vm_address, vm_port
+        #  Для подключения по спайсу через web нужен токен
+        vm_token = None
+        if self._is_spice(remote_protocol):
+            spice = await veil_domain.spice_conn()
+            if spice and spice.valid:
+                vm_token = spice.token
+
+        return True, None, vm_address, vm_port, vm_token
 
     async def _prepare_vm_if_required(self, vm, remote_protocol):
         """Prepare VM if it's not ready. Return true if everything is ok."""
