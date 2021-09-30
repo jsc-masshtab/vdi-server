@@ -16,6 +16,10 @@
     min-height: 25px;
     padding: 3px;
     flex-shrink: 0;
+
+    &:last-child {
+        border-bottom: 0;
+    }
 }
 
 .table-area-title {
