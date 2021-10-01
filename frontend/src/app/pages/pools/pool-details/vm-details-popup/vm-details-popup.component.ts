@@ -1016,7 +1016,7 @@ export class VmDetalsPopupComponent implements OnInit {
       data: {
         form: {
           header: 'Подтверждение действия',
-          question: 'Перевести ВМ в статус "зарезервировано"?',
+          question: `Перевести ВМ ${this.data.vm.verbose_name} в статус "зарезервировано"?`,
           button: 'Выполнить'
         },
         request: {
@@ -1030,6 +1030,7 @@ export class VmDetalsPopupComponent implements OnInit {
       }
     }).afterClosed().subscribe(() => {
       this.service.getPool(this.data.idPool, this.data.typePool).refetch();
+      this.service.getVm(this.data.idPool, this.data.vm.id, this.data.controller_id).refetch();
     })
   }
 
@@ -1040,7 +1041,7 @@ export class VmDetalsPopupComponent implements OnInit {
       data: {
         form: {
           header: 'Подтверждение действия',
-          question: 'Активировать ВМ?',
+          question: `Активировать ВМ ${this.data.vm.verbose_name}?`,
           button: 'Выполнить'
         },
         request: {
@@ -1054,6 +1055,7 @@ export class VmDetalsPopupComponent implements OnInit {
       }
     }).afterClosed().subscribe(() => {
       this.service.getPool(this.data.idPool, this.data.typePool).refetch();
+      this.service.getVm(this.data.idPool, this.data.vm.id, this.data.controller_id).refetch();
     })
   }
 }

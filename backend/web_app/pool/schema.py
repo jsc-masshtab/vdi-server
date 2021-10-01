@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import asyncio
 import re
-import uuid
 
 from asyncpg.exceptions import UniqueViolationError
 
@@ -1367,13 +1366,13 @@ class AssignVmToUser(graphene.Mutation):
     class Arguments:
         vm_id = graphene.ID(required=True)
         username = ShortString()  # Legacy
-        user_id = graphene.ID()
+        users = graphene.List(graphene.NonNull(graphene.UUID))
 
     ok = graphene.Boolean()
     vm = graphene.Field(VmType)
 
     @administrator_required
-    async def mutate(self, _info, vm_id, username=None, user_id=None, creator="system"):
+    async def mutate(self, _info, vm_id, username=None, users=None, creator="system"):
 
         # Ранее назначение происходило по имени пользователя, далее был добавлено user_id.
         # Использовать либо username, либо user_id.
@@ -1386,13 +1385,6 @@ class AssignVmToUser(graphene.Mutation):
 
         pool_id = vm.pool_id
 
-        if user_id:
-            cur_user_id = uuid.UUID(user_id)
-        elif username:
-            cur_user_id = await User.get_id(username)
-        else:
-            raise SimpleError(_local_("Provide user_id or username."))
-
         if pool_id:
             pool = await Pool.get(pool_id)
             # Если пул гостевой и ВМ уже имеет пользователя, то возвращаем ошибку. Назначение ВМ
@@ -1400,43 +1392,53 @@ class AssignVmToUser(graphene.Mutation):
             # будет удалена после отключения от нее любого пользователя.
             users_count = await vm.get_users_count()
             if pool.pool_type == Pool.PoolTypes.GUEST and users_count > 0:
-                raise SimpleError(_local_("Impossible to assign more than 1 user to VM in guest pool."))
-
-            # check if the user is entitled to the pool(pool_id) the vm belongs to
-            user_entitled_to_pool = await pool.check_if_user_assigned(cur_user_id)
-
-            if not user_entitled_to_pool:
-                # Requested user is not entitled to the pool the requested vm belongs to
                 raise SimpleError(
-                    _local_("User does not have the right to use pool, which has VM.")
-                )
+                    _local_("Impossible to assign more than 1 user to VM {} in guest pool.").format(vm.verbose_name))
 
-            # another vm in the pool may have this user as owner. Remove assignment
-            await pool.free_user_vms(cur_user_id)
+            if username:
+                users = list()
+                user_id = await User.get_id(username)
+                users.append(user_id)
+            elif not users and not username:
+                raise SimpleError(_local_("Provide users list or username."))
 
-        await vm.add_user(cur_user_id, creator)
-        return AssignVmToUser(ok=True, vm=vm)
+            for user in users:
+                # check if the user is entitled to the pool(pool_id) the vm belongs to
+                user_entitled_to_pool = await pool.check_if_user_assigned(user)
+
+                if not user_entitled_to_pool:
+                    # Requested user is not entitled to the pool the requested vm belongs to
+                    raise SimpleError(
+                        _local_("User does not have the right to use pool, which has VM.")
+                    )
+
+                # another vm in the pool may have this user as owner. Remove assignment
+                await pool.free_user_vms(user)
+
+                await vm.add_user(user, creator)
+            return AssignVmToUser(ok=True, vm=vm)
+        return AssignVmToUser(ok=False, vm=vm)
 
 
 class FreeVmFromUser(graphene.Mutation):
     class Arguments:
         vm_id = graphene.ID(required=True)
         username = ShortString()
-        user_id = graphene.UUID()
+        users = graphene.List(graphene.NonNull(graphene.UUID))
 
     ok = graphene.Boolean()
 
     @administrator_required
-    async def mutate(self, _info, vm_id, username=None, user_id=None, creator="system"):
+    async def mutate(self, _info, vm_id, username=None, users=None, creator="system"):
         vm = await Vm.get(vm_id)
         if vm:
-            if user_id:
-                cur_user_id = user_id
-            elif username:
-                cur_user_id = await User.get_id(username)
-            user_list = list()
-            user_list.append(cur_user_id)
-            await vm.remove_users(creator=creator, users_list=user_list)
+            if username:
+                users = list()
+                user_id = await User.get_id(username)
+                users.append(user_id)
+            elif not users and not username:
+                raise SimpleError(_local_("Provide users list or username."))
+            await vm.remove_users(creator=creator, users_list=users)
             return FreeVmFromUser(ok=True)
         return FreeVmFromUser(ok=False)
 
