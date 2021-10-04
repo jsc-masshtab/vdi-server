@@ -235,7 +235,7 @@ class User(AbstractSortableStatusModel, VeilModel):
         # Валидация для синхронизации пользователей из AD
         if not username:
             raise SimpleError(_local_("username can`t be empty."))
-        username_re = re.compile("^[a-zA-Z][a-zA-Z0-9.-_+]{3,128}$")
+        username_re = re.compile("^[a-zA-Z][a-zA-Z0-9.-_+]{1,128}$")
         template_name = re.match(username_re, username.strip())
         if template_name:
             return username
