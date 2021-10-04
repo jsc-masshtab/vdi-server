@@ -1,4 +1,4 @@
-import { Component, Inject, OnDestroy } from '@angular/core';
+import { Component, Inject, OnDestroy, OnInit } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { MatDialogRef } from '@angular/material/dialog';
 import { MAT_DIALOG_DATA } from '@angular/material/dialog';
@@ -15,7 +15,7 @@ import { AuthenticationDirectoryService } from '../../auth-directory.service';
   templateUrl: './remove-group.component.html'
 })
 
-export class RemoveGroupComponent implements OnDestroy {
+export class RemoveGroupComponent implements OnInit, OnDestroy {
 
   public pending: boolean = false;
   public group: string;

@@ -80,8 +80,8 @@ export class AuthenticationDirectoryService {
                     `,
         variables: {
           method: 'GET',
-          id: id,
-          group_name: group_name
+          id: `${id}`,
+          group_name: `${group_name}`
         }
       });
     }
