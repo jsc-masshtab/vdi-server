@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import re
+from operator import itemgetter
 
 import graphene
 from graphene import Enum as GrapheneEnum
@@ -164,8 +165,8 @@ class AuthenticationDirectoryType(graphene.ObjectType):
         offset=graphene.Int(default_value=0),
     )
 
-    assigned_ad_groups = graphene.List(AuthenticationDirectoryGroupType, group_name=graphene.String(default_value=""))
-    possible_ad_groups = graphene.List(AuthenticationDirectoryGroupType, group_name=graphene.String(default_value=""))
+    assigned_ad_groups = graphene.List(AuthenticationDirectoryGroupType, group_name=ShortString(default_value=""))
+    possible_ad_groups = graphene.List(AuthenticationDirectoryGroupType, group_name=ShortString(default_value=""))
 
     async def resolve_service_password(self, _info):
         """Will showed dummy value for not displayed field."""
@@ -184,8 +185,9 @@ class AuthenticationDirectoryType(graphene.ObjectType):
         """Получить список доступных групп из AuthenticationDirectory."""
         auth_dir = await AuthenticationDirectory.get(self.id)
         groups = await auth_dir.get_possible_ad_groups(group_name=group_name)
-        if groups:
-            return groups
+        sorted_groups = sorted(groups, key=itemgetter("verbose_name"))
+        if sorted_groups:
+            return sorted_groups
         return list()
 
 
