@@ -141,7 +141,7 @@ class TestUserSchema:
     async def test_user_create_bad_username(self, snapshot, fixt_auth_context):  # noqa
         query = """mutation {
                 createUser(
-                username: "d",
+                username: "",
                 password: "qwQ123$%",
                 groups: [],
                 email: "",
@@ -162,7 +162,7 @@ class TestUserSchema:
         try:
             await execute_scheme(user_schema, query, context=fixt_auth_context)
         except ExecError as E:
-            assert "имя пользователя должно быть >= 1 символов (буквы, цифры, _, -, +), начинаться с буквы и не содержать пробелов." in str(E)
+            assert "имя пользователя не может быть пустым." in str(E)
 
     async def test_user_edit(self, snapshot, fixt_auth_context):  # noqa
         user_obj = await User.get_object(
