@@ -9,16 +9,10 @@
     <label class="field">
       <mat-form-field>
         <mat-label *ngIf="pending">Загрузка ...</mat-label>
-        <mat-label *ngIf="assigned_ad_groups?.length && !pending">Выберите группу</mat-label>
-        <mat-label *ngIf="!assigned_ad_groups?.length && !pending">- нет групп -</mat-label>
-
+        <mat-label *ngIf="data.groups?.length && !pending">Выберите группу</mat-label>
+        <mat-label *ngIf="!data.groups?.length && !pending">- нет групп -</mat-label>
         <mat-select (selectionChange)="select($event)">
-          <mat-option class="mat-filter-option" disabled="disabled">
-            <mat-label>Поиск: </mat-label>
-            <input matInput [formControl]="group_name" placeholder="">
-          </mat-option>
-
-          <mat-option *ngFor="let group of assigned_ad_groups" [value]="group.ad_guid">
+          <mat-option *ngFor="let group of data.groups" [value]="group.ad_guid">
             {{ group.verbose_name }}
           </mat-option>
         </mat-select>
