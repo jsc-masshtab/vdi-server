@@ -606,7 +606,9 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
 
     async def assigned_ad_groups(self, group_name=""):  # implement later
         """Список групп у которых не пустое поле GroupModel.ad_guid."""
-        query = GroupModel.query.where(GroupModel.ad_guid.isnot(None))
+        query = GroupModel.query.order_by("verbose_name").where(GroupModel.ad_guid.isnot(None))
+        if group_name:
+            query = query.where(GroupModel.verbose_name.ilike("%{}%".format(group_name)))
         return await query.gino.all()
 
     async def build_group_filter(self, group_name=""):
