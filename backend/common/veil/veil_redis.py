@@ -324,12 +324,13 @@ async def publish_to_redis(channel, message):
 
 
 async def publish_data_in_internal_channel(resource_type: str, event_type: str,
-                                           model, additional_model_to_json_data=None):
+                                           model, additional_model_to_json_data=None, description=None):
     """Publish db model data in redis channel INTERNAL_EVENTS_CHANNEL."""
     msg_dict = dict(
         resource=resource_type,
         msg_type=WsMessageType.DATA.value,
         event=event_type,
+        description=description
     )
 
     msg_dict.update(gino_model_to_json_serializable_dict(model))
