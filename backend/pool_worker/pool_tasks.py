@@ -467,7 +467,7 @@ class PrepareVmTask(AbstractTask):
             ).gino.first()
             ad_ou = auto_pool.ad_ou
 
-        await vm.prepare_with_timeout(active_directory_object, ad_ou, auto_pool)
+            await vm.prepare_with_timeout(active_directory_object, ad_ou, auto_pool)
 
     async def _do_light_preparation(self, vm):
         """Only remote access."""
