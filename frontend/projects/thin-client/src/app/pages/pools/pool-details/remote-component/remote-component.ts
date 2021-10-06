@@ -35,7 +35,7 @@ export class RemoteComponent implements OnInit, OnDestroy{
     ngOnInit() {
       const {pool, connectionType} = this.data;
       let url: string;
-      if(connectionType === 'vnc') {
+      if (connectionType === 'vnc') {
 
         url = `novnc/${connectionType}.html?/host=${pool.host}`;
 
@@ -58,10 +58,10 @@ export class RemoteComponent implements OnInit, OnDestroy{
         
         url += `&path=websockify?token=${pool.token}`;
         
-      }else if( connectionType === 'spice'){
+      }else if ( connectionType === 'spice'){
         url = `spice/${connectionType}.html?/host=${pool.host}`;
 
-        if(pool.port){
+        if (pool.port){
           url += `&port=${pool.port}`;
         }
 
@@ -92,7 +92,7 @@ export class RemoteComponent implements OnInit, OnDestroy{
       this.subPool$.unsubscribe();
     }
 
-    this.subPool$ = this.poolSerive.getPoolDetail(this.data.idPool).subscribe((res)=>{
+    this.subPool$ = this.poolSerive.getPoolDetail(this.data.idPool).subscribe( (res) => {
       this.data = { pool: PoolDetailMapper.transformToClient(res.data), ...this.data };
       
     })    

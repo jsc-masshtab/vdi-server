@@ -21,7 +21,7 @@ export class AuthInterceptor implements HttpInterceptor {
         return next.handle(authReq).pipe(
             tap(event => {
                 if (event instanceof HttpResponse) { 
-                    if(event.body.errors){
+                    if (event.body.errors){
                         this.errorService.setError(event.body.errors);
                     }
                     return;
@@ -29,7 +29,7 @@ export class AuthInterceptor implements HttpInterceptor {
             }, err => {
                     if (err instanceof HttpErrorResponse) {                        
                         this.errorService.setError(err.error.errors);
-                     if (err.status === 401) { this.authStorageService.logout(); }
+                        if (err.status === 401) { this.authStorageService.logout(); }
                 }
             }));
     }
