@@ -13,10 +13,4 @@ export class ManageVmComponent{
     this.manageVM.emit(action)
   }
 
-
-  public refresh(): void {
-    console.log('refresh');
-    
-  }
-
 }

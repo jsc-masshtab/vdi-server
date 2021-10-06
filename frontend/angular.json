@@ -168,7 +168,9 @@
             "tsConfig": "projects/thin-client/tsconfig.app.json",
             "aot": false,
             "assets": [
-              "projects/thin-client/src/assets"
+              "projects/thin-client/src/assets",
+              "projects/thin-client/src/novnc",
+              "projects/thin-client/src/spice"
               ],  
             "styles": [
               "src/reset.scss",

@@ -34,17 +34,44 @@ export class RemoteComponent implements OnInit, OnDestroy{
   
     ngOnInit() {
       const {pool, connectionType} = this.data;
-      let url = `/${connectionType}?/host=${pool.host}`;
-      
-      if (pool.port){
-        url += `&port=${pool.port}`;
-      }
-      if (pool.password){
-        url += `&password=${pool.password}`;
-      }
-      
-      url += `&path=websockify?token=${pool.token}`;
+      let url: string;
+      if(connectionType === 'vnc') {
 
+        url = `novnc/${connectionType}.html?/host=${pool.host}`;
+
+        const prot = window.location.protocol;
+
+        let port = 80;
+
+        if (prot === 'https:') {
+          port = 443;
+        }
+        if (pool.port){
+          port = pool.port;
+        }
+
+        url += `&port=${port}`;
+
+        if (pool.password){
+          url += `&password=${pool.password}`;
+        }
+        
+        url += `&path=websockify?token=${pool.token}`;
+        
+      }else if( connectionType === 'spice'){
+        url = `spice/${connectionType}.html?/host=${pool.host}`;
+
+        if(pool.port){
+          url += `&port=${pool.port}`;
+        }
+
+        if (pool.password){
+          url += `&password=${pool.password}`;
+        }
+        
+        url += `&path=websockify?token=${pool.token}`;
+      }
+      
       this.url = this.sanitizer.bypassSecurityTrustResourceUrl(url);
 
       }
@@ -87,7 +114,7 @@ export class RemoteComponent implements OnInit, OnDestroy{
               service: this.poolSerive,
               action: 'manageVM',
               body: {
-                id: this.data.pool.vmId,
+                id: this.data.idPool,
                 action: VMActions.Start,
               }
             }
@@ -129,7 +156,7 @@ export class RemoteComponent implements OnInit, OnDestroy{
               service: this.poolSerive,
               action: 'manageVM',
               body: {
-                id: this.data.pool.vmId,
+                id: this.data.idPool,
                 action: VMActions.Shutdown,
               }
             }
@@ -150,7 +177,7 @@ export class RemoteComponent implements OnInit, OnDestroy{
               service: this.poolSerive,
               action: 'manageVM',
               body: {
-                id: this.data.pool.vmId,
+                id: this.data.idPool,
                 action: VMActions.Reboot,
               }
             }

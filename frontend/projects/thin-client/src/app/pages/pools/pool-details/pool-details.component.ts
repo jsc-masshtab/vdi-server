@@ -76,7 +76,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
         this.connectionControl = new FormControl(this.connectionTypes[0]);
         this.getPool();
       } else {
-        this.close()
+        this.close();
       }
 
     });
