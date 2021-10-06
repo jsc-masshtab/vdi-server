@@ -1,13 +1,12 @@
 import { Component, Inject, OnDestroy, OnInit } from '@angular/core';
 import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { Subscription } from 'rxjs';
 
 import { YesNoFormComponent } from '@app/shared/forms-dinamic/yes-no-form/yes-no-form.component';
-import { Subscription } from 'rxjs';
 import { PoolsService, VMActions } from '../../pools.service';
 import { PoolDetailMapper } from '../pool-detail.mapper';
 import { RemoteData } from '../pool-details.component';
-
 
 
 
@@ -35,48 +34,51 @@ export class RemoteComponent implements OnInit, OnDestroy{
     ngOnInit() {
       const {pool, connectionType} = this.data;
       let url: string;
-      if (connectionType === 'vnc') {
+      switch (connectionType) {
+        case 'SPICE':
+          url = `spice/spice_auto.html?/host=${pool.host}`;
 
-        url = `novnc/${connectionType}.html?/host=${pool.host}`;
-
-        const prot = window.location.protocol;
-
-        let port = 80;
-
-        if (prot === 'https:') {
-          port = 443;
-        }
-        if (pool.port){
-          port = pool.port;
-        }
-
-        url += `&port=${port}`;
-
-        if (pool.password){
-          url += `&password=${pool.password}`;
-        }
-        
-        url += `&path=websockify?token=${pool.token}`;
-        
-      }else if ( connectionType === 'spice'){
-        url = `spice/${connectionType}.html?/host=${pool.host}`;
-
-        if (pool.port){
-          url += `&port=${pool.port}`;
-        }
-
-        if (pool.password){
-          url += `&password=${pool.password}`;
-        }
-        
-        url += `&path=websockify?token=${pool.token}`;
-      }
-      
-      this.url = this.sanitizer.bypassSecurityTrustResourceUrl(url);
-
-      }
-
+          if (pool.port){
+            url += `&port=${pool.port}`;
+          }
   
+          if (pool.password){
+            url += `&password=${pool.password}`;
+          }
+          
+          url += `&path=websockify?token=${pool.token}`;
+          break;
+        case 'VNC':
+          url = `novnc/${connectionType}.html?/host=${pool.host}`;
+
+          const prot = window.location.protocol;
+  
+          let port = 80;
+  
+          if (prot === 'https:') {
+            port = 443;
+          }
+          if (pool.port){
+            port = pool.port;
+          }
+  
+          url += `&port=${port}`;
+  
+          if (pool.password){
+            url += `&password=${pool.password}`;
+          }
+          
+          url += `&path=websockify?token=${pool.token}`;
+          break
+        default:
+          throw new Error('Method is not implemented');
+          
+      }
+     
+      this.url = this.sanitizer.bypassSecurityTrustResourceUrl(url);
+      
+      }
+
   public get name(): string {
     return this.data.pool.vmVerboseName;
   }
