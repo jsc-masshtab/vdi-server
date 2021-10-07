@@ -218,6 +218,7 @@ export class AddPoolService {
                 $reserve_size: Int
                 $total_size: Int
                 $initial_size: Int
+                $waiting_time: Int
             ) {
                 addDynamicPool(
                     connection_types: $connection_types
@@ -232,6 +233,7 @@ export class AddPoolService {
                     reserve_size: $reserve_size
                     total_size: $total_size
                     initial_size: $initial_size
+                    waiting_time: $waiting_time
                     create_thin_clones: true
                     enable_vms_remote_access: true
                     start_vms: true

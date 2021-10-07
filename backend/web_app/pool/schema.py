@@ -452,6 +452,7 @@ class PoolType(graphene.ObjectType):
     initial_size = graphene.Int()
     reserve_size = graphene.Int()
     total_size = graphene.Int()
+    waiting_time = graphene.Int()
     vm_name_template = ShortString()
     os_type = ShortString()
     ad_ou = ShortString()
@@ -637,6 +638,7 @@ def pool_obj_to_type(pool_obj: Pool) -> PoolType:
         "initial_size": pool_obj.initial_size,
         "reserve_size": pool_obj.reserve_size,
         "total_size": pool_obj.total_size,
+        "waiting_time": pool_obj.waiting_time,
         "vm_name_template": pool_obj.vm_name_template,
         "os_type": pool_obj.os_type,
         "keep_vms_on": pool_obj.keep_vms_on,
@@ -1084,6 +1086,7 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator, ControllerFe
             description="Наименование организационной единицы для добавления ВМ в AD"
         )
         is_guest = graphene.Boolean(default_value=False)
+        waiting_time = graphene.Int()
 
     pool = graphene.Field(lambda: PoolType)
     ok = graphene.Boolean()
@@ -1112,6 +1115,7 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator, ControllerFe
         connection_types,
         ad_ou: str = None,
         is_guest: bool = False,
+        waiting_time: int = None
     ):
         """Мутация создания Автоматического(Динамического) пула виртуальных машин."""
         await cls.validate(vm_name_template=vm_name_template, verbose_name=verbose_name)
@@ -1142,6 +1146,7 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator, ControllerFe
                 ad_ou=ad_ou,
                 tag=tag,
                 is_guest=is_guest,
+                waiting_time=waiting_time
             )
         except UniqueViolationError as ex:
             error_msg = _local_("Failed to create pool {}.").format(verbose_name)
@@ -1175,6 +1180,7 @@ class UpdateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
         set_vms_hostnames = graphene.Boolean()
         include_vms_in_ad = graphene.Boolean()
         ad_ou = ShortString()
+        waiting_time = graphene.Int()
         connection_types = graphene.List(graphene.NonNull(ConnectionTypesGraphene))
 
     ok = graphene.Boolean()
@@ -1235,6 +1241,7 @@ class UpdateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
                     set_vms_hostnames=kwargs.get("set_vms_hostnames"),
                     include_vms_in_ad=kwargs.get("include_vms_in_ad"),
                     ad_ou=kwargs.get("ad_ou"),
+                    waiting_time=kwargs.get("waiting_time"),
                     connection_types=kwargs.get("connection_types"),
                     creator=creator,
                 )
