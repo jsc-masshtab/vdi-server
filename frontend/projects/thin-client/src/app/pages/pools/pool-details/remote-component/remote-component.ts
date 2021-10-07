@@ -36,7 +36,8 @@ export class RemoteComponent implements OnInit, OnDestroy{
       let url: string;
       switch (connectionType) {
         case 'SPICE':
-          url = `spice/spice_auto.html?/host=${pool.host}`;
+          
+          url = `/spice/spice_auto.html?host=${pool.host}`;
 
           if (pool.port){
             url += `&port=${pool.port}`;
@@ -74,8 +75,9 @@ export class RemoteComponent implements OnInit, OnDestroy{
           throw new Error('Method is not implemented');
           
       }
-     
+      
       this.url = this.sanitizer.bypassSecurityTrustResourceUrl(url);
+  
       
       }
 
