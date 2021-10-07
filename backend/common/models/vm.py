@@ -1036,12 +1036,13 @@ class Vm(VeilModel):
             await domain_entity.is_in_ad() if domain_entity.os_windows else True
         )
         if active_directory_obj and domain_entity.os_windows and not already_in_domain:
-            ad_params_dict = {"domain_name": active_directory_obj.domain_name,
+            ad_params_dict = {"domain_name": str(active_directory_obj.dc_str),
                               "login": active_directory_obj.service_username,
                               "password": active_directory_obj.password}
             # Если передан параметр группы AD - добавляем
             if ad_ou and isinstance(ad_ou, str):
-                ad_params_dict["oupath"] = ad_ou
+                ad_params_dict["oupath"] = ",".join(
+                    [ad_ou, AuthenticationDirectory.convert_dc_str(active_directory_obj.dc_str)])
             # Вызываем команду на ECP VeiL
             action_response = await domain_entity.add_to_ad(
                 **ad_params_dict
