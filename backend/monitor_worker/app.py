@@ -34,7 +34,7 @@ def main():
     # free resources
     loop.run_until_complete(resources_monitor_manager.stop())
     loop.run_until_complete(stop_gino())
-    redis_deinit()
+    loop.run_until_complete(redis_deinit())
 
 
 if __name__ == "__main__":

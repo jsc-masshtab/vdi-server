@@ -58,7 +58,7 @@ def get_test_pool_name():
 async def fixt_redis_client():
     redis_init()
     await yield_()
-    redis_deinit()
+    await redis_deinit()
 
 
 @pytest.fixture
