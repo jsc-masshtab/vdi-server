@@ -16,13 +16,15 @@ export class TableIntoComponent  {
   @Output() action: EventEmitter<object> = new EventEmitter<object>();
   @Output() edit: EventEmitter<any> = new EventEmitter<any>();
 
-  constructor() {
-   
-  }
+  constructor() {}
 
   public actionEditField(method, info = null) {
     this.action.emit(method);
     this.edit.emit(info);
+  }
+
+  checkLength(array) {
+    return array ? [...array].length : 0
   }
 
   parseNothing(obj, item) {
@@ -34,11 +36,10 @@ export class TableIntoComponent  {
       return typeof item[obj.property][obj.property_lv2] === 'number' ? 0 : '--';
     }
     
-    if (obj.property) {
-      console.log(item.level);
-      
+    if (obj.property) {      
       return typeof item[obj.property] === 'number' ? 0 : '--';
     }
+
     return '--';
   }
 
