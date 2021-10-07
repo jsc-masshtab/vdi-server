@@ -113,7 +113,8 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
 
     this.dialog.open(RemoteComponent, {
       disableClose: true,
-      width: '1000px',
+      width: '90vw',
+      height: '90vh',
       data: remoteData
     });
   
