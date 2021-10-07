@@ -161,6 +161,11 @@
         "build": {
           "builder": "@angular-devkit/build-angular:browser",
           "options": {
+            "allowedCommonJsDependencies": [
+              "graphql-tag",
+              "zen-observable",
+              "qrcode"
+            ],
             "outputPath": "dist/thin-client",
             "index": "projects/thin-client/src/index.html",
             "main": "projects/thin-client/src/main.ts",
