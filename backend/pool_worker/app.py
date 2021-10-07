@@ -33,7 +33,7 @@ def main():
 
     loop.run_until_complete(stop_gino())
 
-    redis_deinit()
+    loop.run_until_complete(redis_deinit())
 
 
 if __name__ == "__main__":

@@ -37,9 +37,8 @@ from common.veil.veil_handlers import BaseHttpHandler, BaseWsHandler
 from common.veil.veil_redis import (
     ThinClientCmd,
     publish_to_redis,
-    redis_block_get_message,
     redis_get_lock,
-    redis_get_pubsub,
+    redis_get_subscriber,
     request_to_execute_pool_task,
 )
 
@@ -567,109 +566,107 @@ class ThinClientWsHandler(BaseWsHandler):
 
     async def _send_messages_co(self):
         """Отсылка сообщений на ТК. Сообщения достаются из редис каналов."""
-        pubsub = redis_get_pubsub()
-        await pubsub.subscribe(INTERNAL_EVENTS_CHANNEL, WS_MONITOR_CHANNEL_OUT, REDIS_TEXT_MSG_CHANNEL)
+        with redis_get_subscriber([INTERNAL_EVENTS_CHANNEL,
+                                   WS_MONITOR_CHANNEL_OUT,
+                                   REDIS_TEXT_MSG_CHANNEL]) as subscriber:
+            while True:
+                try:
+                    redis_message = await subscriber.get_msg()
 
-        while True:
-            try:
-                redis_message = await redis_block_get_message(pubsub)
+                    if redis_message["type"] == "message":
+                        redis_message_data = redis_message["data"].decode()
+                        redis_message_data_dict = json.loads(redis_message_data)
 
-                if redis_message["type"] == "message":
-                    redis_message_data = redis_message["data"].decode()
-                    redis_message_data_dict = json.loads(redis_message_data)
+                        msg_type = redis_message_data_dict.get("msg_type")
+                        if not msg_type:
+                            continue
 
-                    msg_type = redis_message_data_dict.get("msg_type")
-                    if not msg_type:
-                        continue
-
-                    if msg_type == WsMessageType.DATA.value:
-                        # Пересылаем сообщения об апдейте ВМ.
-                        resource = redis_message_data_dict["resource"]
-                        if resource == "/domains/":
-                            vm_id = await ActiveTkConnection.get_vm_id(self.conn_id)
-                            if vm_id and redis_message_data_dict["id"] == str(vm_id):
+                        if msg_type == WsMessageType.DATA.value:
+                            # Пересылаем сообщения об апдейте ВМ.
+                            resource = redis_message_data_dict["resource"]
+                            if resource == "/domains/":
+                                vm_id = await ActiveTkConnection.get_vm_id(self.conn_id)
+                                if vm_id and redis_message_data_dict["id"] == str(vm_id):
+                                    await self.write_msg(redis_message_data)
+                            # Пересылем сообщения о событиях, связанных с ТК
+                            elif resource == EVENTS_THIN_CLIENT_SUBSCRIPTION and \
+                                redis_message_data_dict["user_id"] == str(self.user_id):  # noqa
                                 await self.write_msg(redis_message_data)
-                        # Пересылем сообщения о событиях, связанных с ТК
-                        elif resource == EVENTS_THIN_CLIENT_SUBSCRIPTION and \
-                            redis_message_data_dict["user_id"] == str(self.user_id):  # noqa
-                            await self.write_msg(redis_message_data)
 
-                    elif (
-                        msg_type == WsMessageType.TEXT_MSG.value
-                        and redis_message_data_dict["direction"]  # noqa: W503
-                        == WsMessageDirection.ADMIN_TO_USER.value  # noqa: W503
-                    ):
-                        # Посылка текстовых сообщений (от админа) на ТК
-                        recipient_id = redis_message_data_dict.get("recipient_id")
-
-                        # Если recipient is None то считаем что  сообщение предназначено для всех текущих
-                        # пользователей ТК, если не None, то шлем только указанному
-                        if (recipient_id is None) or (
-                            recipient_id == str(self.user_id)
+                        elif (
+                            msg_type == WsMessageType.TEXT_MSG.value
+                            and redis_message_data_dict["direction"]  # noqa: W503
+                            == WsMessageDirection.ADMIN_TO_USER.value  # noqa: W503
                         ):
-                            await self.write_msg(redis_message_data)
+                            # Посылка текстовых сообщений (от админа) на ТК
+                            recipient_id = redis_message_data_dict.get("recipient_id")
 
-            except asyncio.CancelledError:
-                break
-            except (KeyError, ValueError, TypeError, JSONDecodeError) as ex:
-                await system_logger.debug(
-                    message="Sending msg error in thin client ws handler.",
-                    description=str(ex),
-                )
+                            # Если recipient is None то считаем что  сообщение предназначено для всех текущих
+                            # пользователей ТК, если не None, то шлем только указанному
+                            if (recipient_id is None) or (
+                                recipient_id == str(self.user_id)
+                            ):
+                                await self.write_msg(redis_message_data)
+
+                except asyncio.CancelledError:
+                    break
+                except (KeyError, ValueError, TypeError, JSONDecodeError) as ex:
+                    await system_logger.debug(
+                        message="Sending msg error in thin client ws handler.",
+                        description=str(ex),
+                    )
 
     async def _listen_for_cmd(self):
         """Команды от админа."""
-        pubsub = redis_get_pubsub()
-        await pubsub.subscribe(REDIS_THIN_CLIENT_CMD_CHANNEL)
+        with redis_get_subscriber([REDIS_THIN_CLIENT_CMD_CHANNEL]) as subscriber:
+            while True:
+                try:
+                    redis_message = await subscriber.get_msg()
 
-        while True:
-            try:
-                redis_message = await redis_block_get_message(pubsub)
+                    if redis_message["type"] == "message":
+                        redis_message_data = redis_message["data"].decode()
+                        redis_message_data_dict = json.loads(redis_message_data)
 
-                if redis_message["type"] == "message":
-                    redis_message_data = redis_message["data"].decode()
-                    redis_message_data_dict = json.loads(redis_message_data)
+                        if (
+                            redis_message_data_dict["command"]
+                            == ThinClientCmd.DISCONNECT.name  # noqa: W503
+                        ):
+                            # Завершаем соедниение в зависимости от полученных параметров
+                            disconnect_current_tk = False
+                            conn_id = redis_message_data_dict.get("conn_id")
+                            user_id = redis_message_data_dict.get("user_id")
 
-                    if (
-                        redis_message_data_dict["command"]
-                        == ThinClientCmd.DISCONNECT.name  # noqa: W503
-                    ):
-                        # Завершаем соедниение в зависимости от полученных параметров
-                        disconnect_current_tk = False
-                        conn_id = redis_message_data_dict.get("conn_id")
-                        user_id = redis_message_data_dict.get("user_id")
-
-                        # Команда на закрытие всех соединений
-                        if conn_id is None and user_id is None:
-                            disconnect_current_tk = True
-                        # Команда закрыть конкретное соединение
-                        elif conn_id and self.conn_id and conn_id == str(self.conn_id):
-                            disconnect_current_tk = True
-                        # Команда закрыть соеднинения пользователя
-                        elif user_id and self.conn_id:
-                            tk_conn = await ActiveTkConnection.get(self.conn_id)
-                            current_user_id = tk_conn.user_id
-                            if user_id == str(current_user_id):
+                            # Команда на закрытие всех соединений
+                            if conn_id is None and user_id is None:
                                 disconnect_current_tk = True
+                            # Команда закрыть конкретное соединение
+                            elif conn_id and self.conn_id and conn_id == str(self.conn_id):
+                                disconnect_current_tk = True
+                            # Команда закрыть соеднинения пользователя
+                            elif user_id and self.conn_id:
+                                tk_conn = await ActiveTkConnection.get(self.conn_id)
+                                current_user_id = tk_conn.user_id
+                                if user_id == str(current_user_id):
+                                    disconnect_current_tk = True
 
-                        if disconnect_current_tk:
-                            # Отсылаем клиенту команду. По ней он отключится от машины
-                            response = {
-                                "msg_type": WsMessageType.CONTROL.value,
-                                "cmd": ThinClientCmd.DISCONNECT.name,
-                                "error": False,
-                                "msg": "Disconnect requested",
-                            }
-                            await self.write_msg(json.dumps(response))
-                            self.close()
+                            if disconnect_current_tk:
+                                # Отсылаем клиенту команду. По ней он отключится от машины
+                                response = {
+                                    "msg_type": WsMessageType.CONTROL.value,
+                                    "cmd": ThinClientCmd.DISCONNECT.name,
+                                    "error": False,
+                                    "msg": "Disconnect requested",
+                                }
+                                await self.write_msg(json.dumps(response))
+                                self.close()
 
-            except asyncio.CancelledError:
-                break
-            except (KeyError, ValueError, TypeError, JSONDecodeError) as ex:
-                await system_logger.debug(
-                    message="Thin client ws listening commands error.",
-                    description=str(ex),
-                )
+                except asyncio.CancelledError:
+                    break
+                except (KeyError, ValueError, TypeError, JSONDecodeError) as ex:
+                    await system_logger.debug(
+                        message="Thin client ws listening commands error.",
+                        description=str(ex),
+                    )
 
 
 @jwtauth

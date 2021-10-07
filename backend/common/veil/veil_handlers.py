@@ -32,7 +32,7 @@ class BaseHandler(RequestHandler, ABC):
         return remote_ip
 
 
-class BaseHttpHandler(BaseHandler):
+class BaseHttpHandler(BaseHandler):  # todo: нужно реализовать все абстрактные методы чтоб изчезло предупреждение
     args = dict()
 
     def prepare(self):

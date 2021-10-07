@@ -1,8 +1,10 @@
 import { Component, Inject, OnDestroy, OnInit } from '@angular/core';
+import { FormControl } from '@angular/forms';
 import { MatDialogRef } from '@angular/material/dialog';
 import { MAT_DIALOG_DATA } from '@angular/material/dialog';
+
 import { Subject } from 'rxjs';
-import { takeUntil, map } from 'rxjs/operators';
+import { takeUntil, map, debounceTime } from 'rxjs/operators';
 
 import { WaitService } from '../../../../../core/components/wait/wait.service';
 import { AuthenticationDirectoryService } from '../../auth-directory.service';
@@ -19,7 +21,9 @@ export class AddGropComponent implements OnInit, OnDestroy {
   private destroy: Subject<any> = new Subject<any>();
   public valid: boolean = true;
 
-  possible_ad_groups: [] = []
+  group_name = new FormControl('');
+
+  possible_ad_groups: [] = [];
 
   constructor(private service: AuthenticationDirectoryService,
               private waitService: WaitService,
@@ -27,11 +31,20 @@ export class AddGropComponent implements OnInit, OnDestroy {
               @Inject(MAT_DIALOG_DATA) public data: any) { }
 
   ngOnInit() {
+    this.searching();
     this.load();
   }
 
+  public searching() {
+    this.group_name.valueChanges.pipe(
+      debounceTime(1000)
+    ).subscribe(() => {
+      this.load()
+    })
+  }
+
   public load() {
-    this.service.getAuthenticationDirectoryGroups(this.data.id)
+    this.service.getAuthenticationDirectoryGroups(this.data.id, this.group_name.value)
       .valueChanges.pipe(map(data => data.data))
       .subscribe((data) => {
         this.possible_ad_groups = data.auth_dir.possible_ad_groups
