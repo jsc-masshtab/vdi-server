@@ -34,6 +34,7 @@ export class VmDetalsPopupComponent implements OnInit {
   public testing: boolean = false;
   public tested: boolean = false;
   public connected: boolean = false;
+  
   public collectionIntoVmAutomated: any[] = [
     {
       title: 'Название',
