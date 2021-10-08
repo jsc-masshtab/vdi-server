@@ -88,7 +88,7 @@ class TestAuthenticationDirectoryCreate:
         test_password = "Bazalt1!"
         query = """mutation {createAuthDir(
                       domain_name: "BAZALT"
-                      dc_str: "dc=bazalt,dc=team"
+                      dc_str: "bazalt.team"
                       verbose_name: "test"
                       directory_url: "ldap://192.168.14.167"
                       connection_type: LDAP
@@ -114,7 +114,7 @@ class TestAuthenticationDirectoryCreate:
         test_password = "bad"
         query = """mutation {createAuthDir(
                              domain_name: "BAZALT"
-                             dc_str: "dc=bazalt,dc=team"
+                             dc_str: "bazalt.team"
                              verbose_name: "test"
                              directory_url: "ldap://192.168.14.167"
                              connection_type: LDAP
@@ -141,7 +141,7 @@ class TestAuthenticationDirectoryCreate:
         """При создании с неправильным паролем статус должен быть FAILED."""
         query = """mutation {createAuthDir(
                               domain_name: "BAZALT"
-                              dc_str: "dc=bazalt,dc=team"
+                              dc_str: "bazalt.team"
                               verbose_name: "test"
                               directory_url: "ldap://127.0.0.1"
                               connection_type: LDAP

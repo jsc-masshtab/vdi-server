@@ -132,7 +132,7 @@ snapshots['TestAuthenticationDirectoryMappings.test_edit_auth_dir_mapp 1'] = {
 snapshots['TestAuthenticationDirectoryQuery.test_auth_dir_get_by_id 1'] = {
     'auth_dir': {
         'connection_type': 'LDAP',
-        'dc_str': 'dc=bazalt,dc=local',
+        'dc_str': 'bazalt.local',
         'description': None,
         'directory_type': 'ActiveDirectory',
         'directory_url': 'ldap://192.168.14.167',

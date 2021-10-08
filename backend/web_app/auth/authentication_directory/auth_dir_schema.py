@@ -232,21 +232,13 @@ class CreateAuthenticationDirectoryMutation(
     class Arguments:
         verbose_name = ShortString(required=True, description="Имя")
         description = ShortString(description="Описание")
-        directory_url = ShortString(
-            required=True, description="Адрес службы каталогов"
-        )
+        directory_url = ShortString(required=True, description="Адрес службы каталогов")
         connection_type = ConnectionTypesGraphene(description="Тип подключения")
         directory_type = DirectoryTypesGraphene(description="Тип службы каталогов")
-        domain_name = ShortString(
-            required=True, description="Имя контроллера доменов"
-        )
-        dc_str = ShortString(required=True, description="Класс объекта домена")
-        service_username = ShortString(
-            description="пользователь имеющий права для управления AD"
-        )
-        service_password = ShortString(
-            description="пароль пользователя имеющего права для управления AD"
-        )
+        domain_name = ShortString(required=True, description="NetBIOS — имя домена")
+        dc_str = ShortString(required=True, description="FQDN — полное имя домена")
+        service_username = ShortString(description="пользователь имеющий права для управления AD")
+        service_password = ShortString(description="пароль пользователя имеющего права для управления AD")
 
     auth_dir = graphene.Field(lambda: AuthenticationDirectoryType)
     ok = graphene.Boolean(default_value=False)
@@ -309,14 +301,10 @@ class UpdateAuthenticationDirectoryMutation(
         connection_type = ConnectionTypesGraphene(description="Тип подключения")
         description = ShortString(description="Описание")
         directory_type = DirectoryTypesGraphene(description="Тип службы каталогов")
-        domain_name = ShortString(description="Имя контроллера доменов")
-        dc_str = ShortString(description="Класс объекта домена")
-        service_username = ShortString(
-            description="Пользователь имеющий права для управления AD"
-        )
-        service_password = ShortString(
-            description="Пароль пользователя имеющего права для управления AD"
-        )
+        domain_name = ShortString(description="NetBIOS — имя домена")
+        dc_str = ShortString(description="FQDN — полное имя домена")
+        service_username = ShortString(description="Пользователь имеющий права для управления AD")
+        service_password = ShortString(description="Пароль пользователя имеющего права для управления AD")
 
     auth_dir = graphene.Field(lambda: AuthenticationDirectoryType)
     ok = graphene.Boolean(default_value=False)
