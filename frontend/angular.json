@@ -161,18 +161,25 @@
         "build": {
           "builder": "@angular-devkit/build-angular:browser",
           "options": {
+            "allowedCommonJsDependencies": [
+              "graphql-tag",
+              "zen-observable",
+              "qrcode"
+            ],
             "outputPath": "dist/thin-client",
             "index": "projects/thin-client/src/index.html",
             "main": "projects/thin-client/src/main.ts",
             "polyfills": "projects/thin-client/src/polyfills.ts",
             "tsConfig": "projects/thin-client/tsconfig.app.json",
-            "aot": true,
+            "aot": false,
             "assets": [
-              "projects/thin-client/src/favicon.ico",
-              "projects/thin-client/src/assets"
-            ],
+              "projects/thin-client/src/assets",
+              "projects/thin-client/src/novnc",
+              "projects/thin-client/src/spice"
+              ],  
             "styles": [
-              "projects/thin-client/src/styles.scss"
+              "src/reset.scss",
+              "src/styles.scss"
             ],
             "scripts": []
           },
@@ -189,6 +196,7 @@
               "sourceMap": false,
               "extractCss": true,
               "namedChunks": false,
+              "aot":true,
               "extractLicenses": true,
               "vendorChunk": false,
               "buildOptimizer": true,
@@ -210,7 +218,8 @@
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
           "options": {
-            "browserTarget": "thin-client:build"
+            "browserTarget": "thin-client:build",
+            "proxyConfig": "src/proxy.conf.json"
           },
           "configurations": {
             "production": {

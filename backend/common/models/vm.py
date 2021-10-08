@@ -873,6 +873,7 @@ class Vm(VeilModel):
                         set_vms_hostnames=automated_pool.set_vms_hostnames,
                         include_vms_in_ad=automated_pool.include_vms_in_ad,
                         ad_ou=automated_pool.ad_ou,
+                        waiting_time=automated_pool.waiting_time,
                         connection_types=pool.connection_types,
                         creator=creator,
                     )

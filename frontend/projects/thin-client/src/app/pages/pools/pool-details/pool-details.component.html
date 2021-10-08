@@ -1,0 +1,40 @@
+<div class="details-wrap">
+
+    <div class="details-header">
+        <div class="title"><fa-icon [icon]="['fas','desktop']" size="s" ></fa-icon><span class="name">Пул <span *ngIf="host">{{pool.vmVerboseName}}</span></span></div>
+        <div class="btns-part">
+            <button class="btn-close" (click)="close()"><fa-icon [icon]="['fas','times-circle']"></fa-icon></button>
+        </div>
+    </div>
+    <div class="details-control-panel">
+        <app-button-refresh (clickRefresh)="getPool()"></app-button-refresh>
+        <mat-form-field class="connections-field">
+            <mat-label>Тип подключения</mat-label>
+            <mat-select [formControl]="connectionControl">
+              <mat-option *ngFor="let connectionType of connectionTypes" [value]="connectionType">
+                {{connectionType}}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+          <button  (click)="clickConnect()" title="Подключиться" class="btn-control connect">
+            <fa-icon [icon]="['fas','play']" size="xs"></fa-icon>
+            <span class="name">Подключиться</span>
+        </button>
+    </div>
+
+    <div class="details-row">
+        <ul class="details-menu">
+            <li (click)="routeTo('info')" [class.active]="menuActive === 'info'" title="Информация о пуле"> <fa-icon [icon]="['fas','chart-bar']"></fa-icon><span class="name">Информация</span></li>
+        </ul>
+
+        <div class="details-slide" *ngIf="host">
+            <div class="details-slide-header">
+                <ng-container *ngIf="menuActive === 'info'">Информация о пулах рабочих столов</ng-container>
+            </div>
+            <div class="details-slide-into">
+                <vdi-table-into *ngIf="menuActive === 'info'" [item]="pool" [collection]="collectionDetails" (action)="actionEdit($event)"></vdi-table-into>
+
+            </div>
+        </div>
+    </div>
+</div>

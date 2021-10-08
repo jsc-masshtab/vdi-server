@@ -26,6 +26,7 @@ export interface IFinishPoolView {
     vm_name_template: string; // auto
     create_thin_clones: boolean;// stat
     enable_vms_remote_access: boolean;
+    waiting_time: number;
     start_vms: boolean;
     set_vms_hostnames: boolean;
     include_vms_in_ad: boolean;
@@ -47,6 +48,7 @@ export interface IFinishPoolForm {
         increase_step: number; // auto
         reserve_size: number;
     }
+    waiting_time: number;
     create_thin_clones: boolean;// stat
     enable_vms_remote_access: boolean;
     start_vms: boolean;
