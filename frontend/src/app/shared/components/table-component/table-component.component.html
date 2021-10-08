@@ -83,9 +83,11 @@
 
                     <span *ngIf="obj.type === 'array-type'" [class.name-entity]="obj.class == 'name-start'"  class="for-wrap">{{ item }}</span>
 
-                    <ul *ngIf="obj.type === 'users-array'">
-                      <li *ngFor="let item of item[obj.property]">{{ item.username }}</li>
-                    </ul>
+                    <ng-container *ngIf="obj.type === 'users-array'">
+                      <ul *ngIf="checkLength(item[obj.property]) > 0; else nothing">
+                        <li *ngFor="let item of item[obj.property]">{{ item.username }}</li>
+                      </ul>
+                    </ng-container>
 
                     <span *ngIf="obj.type === 'array-type-rename'" [class.name-entity]="obj.class == 'name-start'"  class="for-wrap">{{ item | rename }}</span>
 
