@@ -251,6 +251,7 @@ class Pool(VeilModel):
                 AutomatedPool.set_vms_hostnames,
                 AutomatedPool.include_vms_in_ad,
                 AutomatedPool.ad_ou,
+                AutomatedPool.waiting_time,
                 Pool.pool_type,
                 Pool.connection_types,
             ]
@@ -307,6 +308,7 @@ class Pool(VeilModel):
                 AutomatedPool.set_vms_hostnames,
                 AutomatedPool.include_vms_in_ad,
                 AutomatedPool.ad_ou,
+                AutomatedPool.waiting_time,
                 RdsPool.id,
                 Controller.address,
             )
@@ -1528,6 +1530,7 @@ class AutomatedPool(db.Model):
     # Группы/Контейнеры в Active Directory для назначения виртуальным машинам пула
     ad_ou = db.Column(db.Unicode(length=1000), nullable=True)
     is_guest = db.Column(db.Boolean(), nullable=False, default=False)
+    waiting_time = db.Column(db.Integer(), nullable=True)
 
     # ----- ----- ----- ----- ----- ----- -----
     # Properties:
@@ -1595,6 +1598,7 @@ class AutomatedPool(db.Model):
         include_vms_in_ad,
         connection_types,
         tag,
+        waiting_time: int = None,
         ad_ou: str = None,
         is_guest: bool = False,
     ):
@@ -1627,6 +1631,7 @@ class AutomatedPool(db.Model):
                 include_vms_in_ad=include_vms_in_ad,
                 ad_ou=ad_ou,
                 is_guest=is_guest,
+                waiting_time=waiting_time
             )
             # Записываем событие в журнал
             description = _local_(
@@ -1665,6 +1670,7 @@ class AutomatedPool(db.Model):
         include_vms_in_ad: bool,
         connection_types,
         ad_ou: str,
+        waiting_time
     ):
         pool_kwargs = dict()
         auto_pool_kwargs = dict()
@@ -1716,6 +1722,8 @@ class AutomatedPool(db.Model):
                 auto_pool_kwargs["set_vms_hostnames"] = set_vms_hostnames
             if isinstance(include_vms_in_ad, bool):
                 auto_pool_kwargs["include_vms_in_ad"] = include_vms_in_ad
+            if waiting_time:
+                auto_pool_kwargs["waiting_time"] = waiting_time
             if auto_pool_kwargs:
                 desc = str(auto_pool_kwargs)
                 await system_logger.debug(

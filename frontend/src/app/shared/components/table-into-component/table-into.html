@@ -32,11 +32,12 @@
         <ng-container *ngIf="obj.property && obj.property != 'status' && obj.property != 'assignment_type' && !obj.property_lv2">
           <ng-container *ngIf="item[obj.property] || !!item[obj.property] === false && obj.type; else nothing">
             <span *ngIf="obj.type === 'string'">{{ item[obj.property] ? item[obj.property] : "--" }} </span>
-            
+
             <span *ngIf="obj.type === 'metric'">{{ item[obj.property] }} {{ obj.unit }}</span>
 
             <span *ngIf="obj.type === 'bites'">{{ formatBytes(item[obj.property], obj.delimiter) }}</span>
 
+            <span *ngIf="obj.type === 'waiting_time'">{{ item[obj.property] }} сек</span>
             <span *ngIf="obj.type === 'array-length'">{{ item[obj.property]?.length }}</span>
             <span *ngIf="obj.type === 'level'">{{ lvlDescription }}</span>
             <span *ngIf="obj.type === 'pool_type'">{{ item[obj.property] | poolType }}</span>
@@ -44,15 +45,15 @@
             <span *ngIf="obj.type === 'boolean'">
               {{ item[obj.property] ? "вкл" : "выкл"}}
             </span>
-            
+
             <ng-container *ngIf="obj.type === 'array'">
               <ul *ngIf="checkLength(item[obj.property]) > 0; else nothing">
                 <li *ngFor="let item of item[obj.property]">{{item}}</li>
               </ul>
             </ng-container>
-            
+
             <span *ngIf="obj.type === 'time'">{{item[obj.property] | date:'dd.MM.yyyy hh:mm:ss 	ZZZZZ'}}</span>
-            
+
             <ng-container *ngIf="obj.type.typeDepend === 'propertyInObjectsInArray'">
               <ng-container *ngIf="item[obj.property]?.length; else nothing">
                 <span *ngFor="let objInItem of item[obj.property];let i = index">
@@ -82,7 +83,7 @@
           <vdi-table-into [item]="item" [collection]="obj.group" (edit)="edit.emit($event)" (action)="action.emit($event)"></vdi-table-into>
         </ng-container>
       </div>
-      
+
       <ng-template #nothing>
         <div *ngIf="!item; else noitem" class="table-area-value">
           {{ parseNothing(obj, item) }}

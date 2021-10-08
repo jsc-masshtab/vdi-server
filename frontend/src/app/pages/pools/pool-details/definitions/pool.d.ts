@@ -53,6 +53,7 @@ interface ISettingsAutoPool {
   increase_step: number;
   reserve_size: number;
   total_size: number;
+  waiting_time: number;
   vm_name_template: string;
   ad_ou: string;
 }

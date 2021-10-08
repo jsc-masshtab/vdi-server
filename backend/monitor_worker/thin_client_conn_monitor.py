@@ -35,6 +35,6 @@ class ThinClientConnMonitor:
             ).gino.all()
 
             for tk_conn in tk_connections_to_deactivate:
-                await tk_conn.deactivate()
+                await tk_conn.deactivate(by_disconnect=True)
 
             await asyncio.sleep(WS_PING_TIMEOUT)
