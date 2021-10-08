@@ -536,6 +536,11 @@ class Pool(VeilModel):
             )
         return await finish_query.limit(limit).offset(offset).gino.all()
 
+    async def check_if_user_assigned(self, user_id):
+        assigned_users_query = await self.get_assigned_users_query()
+        user = await assigned_users_query.where(UserModel.id == user_id).gino.first()
+        return user
+
     async def get_possible_users_query(self):
 
         query = EntityModel.query.where(
@@ -1103,31 +1108,33 @@ class Pool(VeilModel):
             await self.tag_remove_entities(tag=self.tag, vm_objects=vms_list)
 
     async def free_user_vms(self, user_id):
-        """Т.к. на тонком клиенте нет выбора VM - будут сложности если у пользователя несколько VM в рамках 1 пула."""
+        """Освобождение ВМ от пользователя user_id."""
         vms_query = VmModel.select("id").where(VmModel.pool_id == self.id)
         entity_query = EntityModel.select("id").where(
             (EntityModel.entity_type == EntityType.VM)
             & (EntityModel.entity_uuid.in_(vms_query))  # noqa: W503
         )
-        exists_count = (
-            await db.select([db.func.count()])
-            .where(
-                (EntityOwnerModel.user_id == user_id)
-                & (EntityOwnerModel.entity_id.in_(entity_query))  # noqa: W503
-            )
-            .gino.scalar()
-        )
-        if exists_count > 0:
-            role_owner_query = EntityOwnerModel.select("entity_id").where(
-                (EntityOwnerModel.user_id == user_id)
-                & (EntityOwnerModel.entity_id.in_(entity_query))  # noqa: W503
-            )
-            exists_vm_query = EntityModel.select("entity_uuid").where(
-                EntityModel.id.in_(role_owner_query)
-            )
-            await VmModel.update.values(status=Status.RESERVED).where(
-                VmModel.id.in_(exists_vm_query)
-            ).gino.status()
+        # Закоментировано резервирование, так как оно идет в противоречие с возможностью владения
+        # машиной множеством пользователей
+        # exists_count = (
+        #     await db.select([db.func.count()])
+        #     .where(
+        #         (EntityOwnerModel.user_id == user_id)
+        #         & (EntityOwnerModel.entity_id.in_(entity_query))  # noqa: W503
+        #     )
+        #     .gino.scalar()
+        # )
+        # if exists_count > 0:
+        #     role_owner_query = EntityOwnerModel.select("entity_id").where(
+        #         (EntityOwnerModel.user_id == user_id)
+        #         & (EntityOwnerModel.entity_id.in_(entity_query))  # noqa: W503
+        #     )
+        #     exists_vm_query = EntityModel.select("entity_uuid").where(
+        #         EntityModel.id.in_(role_owner_query)
+        #     )
+        #     await VmModel.update.values(status=Status.RESERVED).where(
+        #         VmModel.id.in_(exists_vm_query)
+        #     ).gino.status()
         ero_query = EntityOwnerModel.delete.where(
             (EntityOwnerModel.user_id == user_id)
             & (EntityOwnerModel.entity_id.in_(entity_query))  # noqa: W503

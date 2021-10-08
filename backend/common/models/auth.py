@@ -474,6 +474,9 @@ class User(AbstractSortableStatusModel, VeilModel):
         cmd_dict = dict(command=ThinClientCmd.DISCONNECT.name, user_id=str(self.id))
         await publish_to_redis(REDIS_THIN_CLIENT_CMD_CHANNEL, json.dumps(cmd_dict))
 
+        # Удаляем владения ВМ пользователем
+        await EntityOwner.delete.where(EntityOwner.user_id == self.id).gino.status()
+
         return operation_status
 
     async def pam_lock(self, creator):

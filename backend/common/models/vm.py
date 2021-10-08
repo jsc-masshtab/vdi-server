@@ -346,14 +346,28 @@ class Vm(VeilModel):
             (EntityModel.entity_type == self.entity_type)
             & (EntityModel.entity_uuid == self.id)  # noqa: W503
         )
-        #  Машина лишаемая пользователя помечается статусом RESERVED
-        await self.soft_update(id=self.id, status=Status.RESERVED, creator=creator)
-        await system_logger.info(
-            _local_("VM {} is clear from users.").format(self.verbose_name),
-            user=creator,
-            entity=self.entity,
-        )
-        if not users_list:
+        # Машина лишаемая пользователя помечается статусом RESERVED
+        # Закоментировано, так как идет в противоречие с возможностью владения машиной множеством пользователей
+        # await self.soft_update(id=self.id, status=Status.RESERVED, creator=creator)
+
+        if users_list:
+            names = list()
+            for user_id in users_list:
+                user = await UserModel.get(user_id)
+                names.append(user.username)
+
+            await system_logger.info(
+                _local_("VM {} is clear from {} users.").format(self.verbose_name, len(names)),
+                user=creator,
+                entity=self.entity,
+                description=names
+            )
+        else:
+            await system_logger.info(
+                _local_("VM {} is clear from users.").format(self.verbose_name),
+                user=creator,
+                entity=self.entity
+            )
             return await EntityOwnerModel.delete.where(
                 EntityOwnerModel.entity_id == entity
             ).gino.status()
@@ -361,6 +375,12 @@ class Vm(VeilModel):
             (EntityOwnerModel.user_id.in_(users_list))
             & (EntityOwnerModel.entity_id == entity)  # noqa: W503
         ).gino.status()
+
+    async def reserve(self, creator, reserve):
+        if reserve:
+            await self.soft_update(id=self.id, status=Status.RESERVED, creator=creator)
+        else:
+            await self.soft_update(id=self.id, status=Status.ACTIVE, creator=creator)
 
     @classmethod
     def get_free_vms_ids_query(cls, pool_id: uuid.UUID, status=Status.ACTIVE):
@@ -410,6 +430,12 @@ class Vm(VeilModel):
             .where(EntityOwnerModel.entity_id == entity_query)
         )
         return query
+
+    async def get_users_count(self):
+        users_query = await self.get_users_query()
+        count = await db.select([db.func.count()]).select_from(
+            users_query.alias()).gino.scalar()
+        return count
 
     @staticmethod
     async def copy(
