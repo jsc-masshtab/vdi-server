@@ -171,7 +171,7 @@ class ThinClientQuery(graphene.ObjectType):
         )
 
         query = query.select_from(
-            ActiveTkConnection.join(User, ActiveTkConnection.user_id == User.id).join(
+            ActiveTkConnection.join(User, ActiveTkConnection.user_id == User.id, isouter=True).join(
                 Vm, ActiveTkConnection.vm_id == Vm.id, isouter=True
             )
         )
