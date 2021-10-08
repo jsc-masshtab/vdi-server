@@ -69,6 +69,15 @@
       <fa-icon [icon]="['fas','wrench']" size="xs"></fa-icon>
       <span class="name">Преобразовать в шаблон</span>
     </button>
+
+    <div class="toggle" title="ВМ в статусе 'зарезервировано' не будут выдаваться пользователям">
+      <label class="switch">
+        <input type="checkbox" (click)="toggleReserve($event)" [checked]="data?.vm?.status == 'RESERVED'">
+        <span class="slider"></span>
+        <span class="slider-name" *ngIf="data?.vm?.status != 'RESERVED'">Зарезервировать ВМ</span>
+        <span class="slider-name" *ngIf="data?.vm?.status == 'RESERVED'">ВМ зарезервирована</span>
+      </label>
+    </div>
   </div>
 
   <div class="details-row">

@@ -1,7 +1,7 @@
 import { Component,  Input, EventEmitter, Output, ChangeDetectionStrategy } from '@angular/core';
+import { Levels } from '@app/shared/enums/levels';
 
 import { ISmtpSettings } from '@pages/settings/smtp/smtp.service';
-import { Levels } from '@pages/settings/smtp/smtp-modal/smtp-modal.component';
 
 @Component({
   selector: 'vdi-table-into',
@@ -16,13 +16,15 @@ export class TableIntoComponent  {
   @Output() action: EventEmitter<object> = new EventEmitter<object>();
   @Output() edit: EventEmitter<any> = new EventEmitter<any>();
 
-  constructor() {
-   
-  }
+  constructor() {}
 
   public actionEditField(method, info = null) {
     this.action.emit(method);
     this.edit.emit(info);
+  }
+
+  checkLength(array) {
+    return array ? [...array].length : 0
   }
 
   parseNothing(obj, item) {
@@ -34,11 +36,10 @@ export class TableIntoComponent  {
       return typeof item[obj.property][obj.property_lv2] === 'number' ? 0 : '--';
     }
     
-    if (obj.property) {
-      console.log(item.level);
-      
+    if (obj.property) {      
       return typeof item[obj.property] === 'number' ? 0 : '--';
     }
+
     return '--';
   }
 
