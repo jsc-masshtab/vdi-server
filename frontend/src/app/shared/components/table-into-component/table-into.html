@@ -46,9 +46,11 @@
               {{ item[obj.property] ? "вкл" : "выкл"}}
             </span>
 
-            <ul *ngIf="obj.type === 'array'">
-              <li *ngFor="let item of item[obj.property]">{{item}}</li>
-            </ul>
+            <ng-container *ngIf="obj.type === 'array'">
+              <ul *ngIf="checkLength(item[obj.property]) > 0; else nothing">
+                <li *ngFor="let item of item[obj.property]">{{item}}</li>
+              </ul>
+            </ng-container>
 
             <span *ngIf="obj.type === 'time'">{{item[obj.property] | date:'dd.MM.yyyy hh:mm:ss 	ZZZZZ'}}</span>
 
@@ -67,10 +69,11 @@
             </ng-container>
 
             <ng-container *ngIf="obj.type.typeDepend === 'tags_array'">
-              <ul *ngFor="let dict of item[obj.property]">
-                <li>
+              <ul *ngIf="checkLength(item[obj.property]) > 0; else nothing">
+                <li *ngFor="let dict of item[obj.property]">
                   <fa-icon [icon]="['fas', 'circle']" [style.color]="dict['colour']"></fa-icon>
                   <span> {{ dict['verbose_name'] }}</span>
+                </li>
               </ul>
             </ng-container>
           </ng-container>
