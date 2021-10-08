@@ -5,14 +5,10 @@ import { Subscription } from 'rxjs';
 
 import { WaitService } from '@core/components/wait/wait.service';
 import { ISmtpSettings, SmtpService } from '../smtp.service';
+import { Levels } from '@app/shared/enums/levels';
 
 
-export enum Levels {
-  Off = 'Отключено',
-  All = 'Все сообщения',
-  Warnings = 'Предупреждения и ошибки',
-  Errors = 'Только ошибки',
-}
+
 
 @Component({
   selector: 'vdi-smtp-modal',

@@ -1,7 +1,7 @@
 import { Component,  Input, EventEmitter, Output, ChangeDetectionStrategy } from '@angular/core';
+import { Levels } from '@app/shared/enums/levels';
 
 import { ISmtpSettings } from '@pages/settings/smtp/smtp.service';
-import { Levels } from '@pages/settings/smtp/smtp-modal/smtp-modal.component';
 
 @Component({
   selector: 'vdi-table-into',
