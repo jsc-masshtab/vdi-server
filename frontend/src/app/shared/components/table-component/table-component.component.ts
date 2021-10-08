@@ -55,6 +55,10 @@ export class TableComponentComponent implements OnInit, OnChanges {
     }
   }
 
+  checkLength(array) {
+    return array ? [...array].length : 0
+  }
+
   public clickRow(item: object) {
     this.clickRowData.emit(item);
   }
