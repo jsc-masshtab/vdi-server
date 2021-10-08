@@ -1,13 +1,9 @@
 import { NgModule } from '@angular/core';
-
 import { Routes, RouterModule } from '@angular/router';
 
 import { LoginGuard } from '../../core/services/login.guard';
 import { PoolsComponent } from '../pools/all-pools/pools.component';
 import { PoolDetailsComponent } from '../pools/pool-details/pool-details.component';
-
-
-
 import { DashboardComponent } from './dashboard.component';
 
 

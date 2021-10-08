@@ -7,6 +7,7 @@ import { YesNoFormComponent } from '@app/shared/forms-dinamic/yes-no-form/yes-no
 import { PoolsService, VMActions } from '../../pools.service';
 import { PoolDetailMapper } from '../pool-detail.mapper';
 import { RemoteData } from '../pool-details.component';
+import { WaitService } from '../../../../core/wait/wait.service';
 
 
 
@@ -23,6 +24,7 @@ export class RemoteComponent implements OnInit, OnDestroy{
     
     constructor(
         private poolSerive: PoolsService,
+        private waitService: WaitService,
         private sanitizer: DomSanitizer,
         private dialog: MatDialog,
         private dialogRef: MatDialogRef<RemoteComponent>,
@@ -32,61 +34,62 @@ export class RemoteComponent implements OnInit, OnDestroy{
     }
   
     ngOnInit() {
-      const {pool, connectionType} = this.data;
-      let url: string;
-      switch (connectionType) {
-        case 'SPICE':
-          
-          url = `/spice/spice_auto.html?host=${pool.host}`;
-
-          if (pool.port){
-            url += `&port=${pool.port}`;
-          }
-  
-          if (pool.password){
-            url += `&password=${pool.password}`;
-          }
-          
-          url += `&path=websockify?token=${pool.token}`;
-          break;
-        case 'VNC':
-          url = `novnc/${connectionType}.html?/host=${pool.host}`;
-
-          const prot = window.location.protocol;
-  
-          let port = 80;
-  
-          if (prot === 'https:') {
-            port = 443;
-          }
-          if (pool.port){
-            port = pool.port;
-          }
-  
-          url += `&port=${port}`;
-  
-          if (pool.password){
-            url += `&password=${pool.password}`;
-          }
-          
-          url += `&path=websockify?token=${pool.token}`;
-          break
-        default:
-          throw new Error('Method is not implemented');
-          
+        this.generateUrl();
       }
-      
-      this.url = this.sanitizer.bypassSecurityTrustResourceUrl(url);
   
+  public generateUrl(): void {
+    const {pool, connectionType} = this.data;
+    let url: string;
       
-      }
+    switch (connectionType) {
+      case 'SPICE':
+        
+        url = `/spice/spice_auto.html?host=${pool.host}`;
+
+        if (pool.port){
+          url += `&port=${pool.port}`;
+        }
+
+        if (pool.password){
+          url += `&password=${pool.password}`;
+        }
+        
+        url += `&path=websockify?token=${pool.token}`;
+        break;
+      case 'VNC':
+        url = `novnc/${connectionType}.html?/host=${pool.host}`;
+
+        const prot = window.location.protocol;
+
+        let port = 80;
+
+        if (prot === 'https:') {
+          port = 443;
+        }
+        if (pool.port){
+          port = pool.port;
+        }
+
+        url += `&port=${port}`;
+
+        if (pool.password){
+          url += `&password=${pool.password}`;
+        }
+        
+        url += `&path=websockify?token=${pool.token}`;
+        break
+      default:
+        throw new Error('Method is not implemented');
+    }
+      
+    this.url = this.sanitizer.bypassSecurityTrustResourceUrl(url);
+  
+  }
 
   public get name(): string {
     return this.data.pool.vmVerboseName;
   }
   
-
-
   public close(): void {
     this.dialogRef.close();
   }
@@ -95,10 +98,12 @@ export class RemoteComponent implements OnInit, OnDestroy{
     if (this.subPool$) {
       this.subPool$.unsubscribe();
     }
+    this.waitService.setWait(true);   
 
     this.subPool$ = this.poolSerive.getPoolDetail(this.data.idPool).subscribe( (res) => {
       this.data = { pool: PoolDetailMapper.transformToClient(res.data), ...this.data };
-      
+      this.generateUrl();
+      this.waitService.setWait(false);       
     })    
   }
 
@@ -139,7 +144,7 @@ export class RemoteComponent implements OnInit, OnDestroy{
               service: this.poolSerive,
               action: 'manageVM',
               body: {
-                id: this.data.pool.vmId,
+                id: this.data.idPool,
                 action: VMActions.Suspend,
               }
             }

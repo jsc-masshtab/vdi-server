@@ -4,6 +4,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute, ParamMap, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 
+import { WaitService } from '../../../core/wait/wait.service';
 import { PoolsService } from '../pools.service';
 import { IPoolDetailClient, PoolDetailMapper } from './pool-detail.mapper';
 import { RemoteComponent } from './remote-component/remote-component';
@@ -64,6 +65,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
   constructor(private activatedRoute: ActivatedRoute,
               private router: Router,
               private poolService: PoolsService,
+              private waitService: WaitService,
               public  dialog: MatDialog) { }
 
   ngOnInit() {
@@ -86,12 +88,13 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
     if (this.subPool$) {
       this.subPool$.unsubscribe();
     }
-
+    this.waitService.setWait(true);   
     this.host = false;
     this.subPool$ = this.poolService.getPoolDetail(this.idPool).subscribe((res) => {
 
         this.pool =  PoolDetailMapper.transformToClient(res.data);
         this.host = true;
+        this.waitService.setWait(false);   
       })
   }
 
