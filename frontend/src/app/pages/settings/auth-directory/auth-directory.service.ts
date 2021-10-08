@@ -59,24 +59,31 @@ export class AuthenticationDirectoryService {
         });
     }
 
-    public getAuthenticationDirectoryGroups(id: string): QueryRef<any, any> {
-        return this.service.watchQuery({
-            query: gql` query auth_dirs($id:UUID) {
+    public getAuthenticationDirectoryGroups(id: string, group_name: string = ''): QueryRef<any, any> {
+      return this.service.watchQuery({
+        query: gql` query auth_dirs($id:UUID, $group_name:ShortString) {
                             auth_dir(id: $id) {
                                 id
-                                possible_ad_groups {
+                                possible_ad_groups(group_name: $group_name) {
                                     ad_guid
                                     verbose_name
                                     ad_search_cn
                                 }
+                                assigned_ad_groups(group_name: $group_name) {
+                                    id
+                                    ad_search_cn
+                                    ad_guid
+                                    verbose_name
+                                }
                             }
                         }
                     `,
-            variables: {
-                method: 'GET',
-                id: `${id}`
-            }
-        });
+        variables: {
+          method: 'GET',
+          id: `${id}`,
+          group_name: `${group_name}`
+        }
+      });
     }
 
     // public getAuthenticationDirectoryGroupsMember(auth_dir_id: string, group_cn): QueryRef<any, any> {

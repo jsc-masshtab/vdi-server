@@ -251,6 +251,7 @@ class Pool(VeilModel):
                 AutomatedPool.set_vms_hostnames,
                 AutomatedPool.include_vms_in_ad,
                 AutomatedPool.ad_ou,
+                AutomatedPool.waiting_time,
                 Pool.pool_type,
                 Pool.connection_types,
             ]
@@ -307,6 +308,7 @@ class Pool(VeilModel):
                 AutomatedPool.set_vms_hostnames,
                 AutomatedPool.include_vms_in_ad,
                 AutomatedPool.ad_ou,
+                AutomatedPool.waiting_time,
                 RdsPool.id,
                 Controller.address,
             )
@@ -533,6 +535,11 @@ class Pool(VeilModel):
                 else finish_query.order_by(ordering)
             )
         return await finish_query.limit(limit).offset(offset).gino.all()
+
+    async def check_if_user_assigned(self, user_id):
+        assigned_users_query = await self.get_assigned_users_query()
+        user = await assigned_users_query.where(UserModel.id == user_id).gino.first()
+        return user
 
     async def get_possible_users_query(self):
 
@@ -1101,31 +1108,33 @@ class Pool(VeilModel):
             await self.tag_remove_entities(tag=self.tag, vm_objects=vms_list)
 
     async def free_user_vms(self, user_id):
-        """Т.к. на тонком клиенте нет выбора VM - будут сложности если у пользователя несколько VM в рамках 1 пула."""
+        """Освобождение ВМ от пользователя user_id."""
         vms_query = VmModel.select("id").where(VmModel.pool_id == self.id)
         entity_query = EntityModel.select("id").where(
             (EntityModel.entity_type == EntityType.VM)
             & (EntityModel.entity_uuid.in_(vms_query))  # noqa: W503
         )
-        exists_count = (
-            await db.select([db.func.count()])
-            .where(
-                (EntityOwnerModel.user_id == user_id)
-                & (EntityOwnerModel.entity_id.in_(entity_query))  # noqa: W503
-            )
-            .gino.scalar()
-        )
-        if exists_count > 0:
-            role_owner_query = EntityOwnerModel.select("entity_id").where(
-                (EntityOwnerModel.user_id == user_id)
-                & (EntityOwnerModel.entity_id.in_(entity_query))  # noqa: W503
-            )
-            exists_vm_query = EntityModel.select("entity_uuid").where(
-                EntityModel.id.in_(role_owner_query)
-            )
-            await VmModel.update.values(status=Status.RESERVED).where(
-                VmModel.id.in_(exists_vm_query)
-            ).gino.status()
+        # Закоментировано резервирование, так как оно идет в противоречие с возможностью владения
+        # машиной множеством пользователей
+        # exists_count = (
+        #     await db.select([db.func.count()])
+        #     .where(
+        #         (EntityOwnerModel.user_id == user_id)
+        #         & (EntityOwnerModel.entity_id.in_(entity_query))  # noqa: W503
+        #     )
+        #     .gino.scalar()
+        # )
+        # if exists_count > 0:
+        #     role_owner_query = EntityOwnerModel.select("entity_id").where(
+        #         (EntityOwnerModel.user_id == user_id)
+        #         & (EntityOwnerModel.entity_id.in_(entity_query))  # noqa: W503
+        #     )
+        #     exists_vm_query = EntityModel.select("entity_uuid").where(
+        #         EntityModel.id.in_(role_owner_query)
+        #     )
+        #     await VmModel.update.values(status=Status.RESERVED).where(
+        #         VmModel.id.in_(exists_vm_query)
+        #     ).gino.status()
         ero_query = EntityOwnerModel.delete.where(
             (EntityOwnerModel.user_id == user_id)
             & (EntityOwnerModel.entity_id.in_(entity_query))  # noqa: W503
@@ -1528,6 +1537,7 @@ class AutomatedPool(db.Model):
     # Группы/Контейнеры в Active Directory для назначения виртуальным машинам пула
     ad_ou = db.Column(db.Unicode(length=1000), nullable=True)
     is_guest = db.Column(db.Boolean(), nullable=False, default=False)
+    waiting_time = db.Column(db.Integer(), nullable=True)
 
     # ----- ----- ----- ----- ----- ----- -----
     # Properties:
@@ -1595,6 +1605,7 @@ class AutomatedPool(db.Model):
         include_vms_in_ad,
         connection_types,
         tag,
+        waiting_time: int = None,
         ad_ou: str = None,
         is_guest: bool = False,
     ):
@@ -1627,6 +1638,7 @@ class AutomatedPool(db.Model):
                 include_vms_in_ad=include_vms_in_ad,
                 ad_ou=ad_ou,
                 is_guest=is_guest,
+                waiting_time=waiting_time
             )
             # Записываем событие в журнал
             description = _local_(
@@ -1665,6 +1677,7 @@ class AutomatedPool(db.Model):
         include_vms_in_ad: bool,
         connection_types,
         ad_ou: str,
+        waiting_time
     ):
         pool_kwargs = dict()
         auto_pool_kwargs = dict()
@@ -1716,6 +1729,8 @@ class AutomatedPool(db.Model):
                 auto_pool_kwargs["set_vms_hostnames"] = set_vms_hostnames
             if isinstance(include_vms_in_ad, bool):
                 auto_pool_kwargs["include_vms_in_ad"] = include_vms_in_ad
+            if waiting_time:
+                auto_pool_kwargs["waiting_time"] = waiting_time
             if auto_pool_kwargs:
                 desc = str(auto_pool_kwargs)
                 await system_logger.debug(

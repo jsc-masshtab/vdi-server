@@ -10,6 +10,7 @@ export interface IPool extends ISettingsAutoPool, ISettingsStaticPool  {
     verbose_name: string;
   };
   users: {
+    id: string;
     username: string;
   };
 
@@ -35,6 +36,7 @@ export interface IPoolVms  {
   verbose_name: string;
   status: string;
   user: {
+    id: string;
     username: string;
   },
   template: {
@@ -53,6 +55,7 @@ interface ISettingsAutoPool {
   increase_step: number;
   reserve_size: number;
   total_size: number;
+  waiting_time: number;
   vm_name_template: string;
   ad_ou: string;
 }

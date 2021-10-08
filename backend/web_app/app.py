@@ -122,7 +122,7 @@ def exit_handler(sig, frame):  # noqa
         await stop_veil_client()
         await system_logger.info(_local_("VDI broker stopped."))
         await stop_gino()
-        redis_deinit()
+        await redis_deinit()
         io_loop.stop()
 
     io_loop.add_callback_from_signal(shutdown)

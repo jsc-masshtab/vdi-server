@@ -202,12 +202,16 @@ class ActiveTkConnection(db.Model, AbstractSortableStatusModel):
                           loss_percentage=loss_percentage,
                           data_received=func.now()).apply()
 
-    async def deactivate(self):
+    async def deactivate(self, by_disconnect=False):
         """Соединение неативно, когда у него выставлено время дисконнекта."""
         await self.update(disconnected=func.now()).apply()
         # front ws notification
-        await publish_data_in_internal_channel(THIN_CLIENTS_SUBSCRIPTION,
-                                               "UPDATED", self)
+        if by_disconnect:
+            await publish_data_in_internal_channel(THIN_CLIENTS_SUBSCRIPTION,
+                                                   "UPDATED", self, description="Loss of connection")
+        else:
+            await publish_data_in_internal_channel(THIN_CLIENTS_SUBSCRIPTION,
+                                                   "UPDATED", self)
 
         try:
             if self.vm_id:

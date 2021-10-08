@@ -123,6 +123,7 @@ REDIS_PORT = 6379
 REDIS_DB = 0
 REDIS_PASSWORD = "4NZ7GpHn4IlshPhb"
 REDIS_TIMEOUT = 5
+REDIS_MAX_CLIENT_CONN = 200
 REDIS_THIN_CLIENT_CMD_CHANNEL = (
     "TC_CMD_CHANNEL"
 )  # канал для комманд обработчикам ws тонких клиентов.
@@ -132,6 +133,7 @@ REDIS_TEXT_MSG_CHANNEL = (
 )  # Канал для обмена текстовыми сообщениями между админом и
 # пользователями ТК
 REDIS_ASYNC_TIMEOUT = 0.01
+REDIS_RECONNECT_TIMEOUT = 5
 
 POOL_TASK_QUEUE = "POOL_TASK_QUEUE"  # Очередь задач воркера
 POOL_WORKER_CMD_QUEUE = (

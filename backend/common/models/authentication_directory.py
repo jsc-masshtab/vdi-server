@@ -145,10 +145,10 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
         """Логин с доменом."""
         if self.directory_type == AuthenticationDirectory.DirectoryTypes.FreeIPA:
             return LDAP_LOGIN_PATTERN.format(
-                username=self.service_username, dc=self.dc_str)
+                username=self.service_username, dc=self.convert_dc_str(self.dc_str))
         elif self.directory_type == AuthenticationDirectory.DirectoryTypes.OpenLDAP:
             return OPENLDAP_LOGIN_PATTERN.format(
-                username=self.service_username, dc=self.dc_str)
+                username=self.service_username, dc=self.convert_dc_str(self.dc_str))
         return (
             "\\".join([self.domain_name, self.service_username])
             if self.service_username and self.domain_name
@@ -191,11 +191,6 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
         # Шифруем пароль
         if service_password and isinstance(service_password, str):
             service_password = encrypt(service_password)
-        dc_str = (
-            cls.convert_dc_str(dc_str)
-            if dc_str and isinstance(dc_str, str)
-            else "dc={}".format(domain_name)
-        )
 
         auth_dir_dict = {
             "verbose_name": verbose_name,
@@ -239,9 +234,7 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
         if kwargs and isinstance(kwargs, dict):
             if kwargs.get("service_password"):
                 kwargs["service_password"] = encrypt(kwargs["service_password"])
-            if kwargs.get("dc_str"):
-                kwargs["dc_str"] = cls.convert_dc_str(kwargs["dc_str"])
-            # Переводим имя домена в верхний регистр
+            # Переводим NetBIOS имя домена в верхний регистр
             domain_name = kwargs.get("domain_name")
             if domain_name and isinstance(domain_name, str):
                 kwargs["domain_name"] = domain_name.upper()
@@ -379,7 +372,8 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
     async def sync_openldap_users(self, ou):
         if self.directory_type == AuthenticationDirectory.DirectoryTypes.OpenLDAP:
             ldap_server = ldap.initialize(self.directory_url)
-            openldap_users = ldap_server.search_s("ou={},{}".format(ou, self.dc_str), ldap.SCOPE_SUBTREE)
+            dc_str = self.convert_dc_str(self.dc_str)
+            openldap_users = ldap_server.search_s("ou={},{}".format(ou, dc_str), ldap.SCOPE_SUBTREE)
             sync_members = list()
             for user in openldap_users:
                 if user[1].get("ou"):
@@ -408,11 +402,12 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
         """
         # Расширено 31.05.2021
         # формируем запрос для AD
+        dc_str = self.convert_dc_str(self.dc_str)
         if self.directory_type == self.DirectoryTypes.FreeIPA:
-            base = LDAP_LOGIN_PATTERN.format(username=account_name, dc=self.dc_str)
+            base = LDAP_LOGIN_PATTERN.format(username=account_name, dc=dc_str)
             user_info_filter = "(objectClass=person)"
         else:
-            base = self.dc_str
+            base = dc_str
             user_info_filter = "(&(objectClass=user)(sAMAccountName={}))".format(
                 account_name
             )
@@ -553,10 +548,11 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
 
         account_name, domain_name = extract_domain_from_username(username)
         user, created = await cls._get_user(account_name)
+        dc_str = cls.convert_dc_str(authentication_directory.dc_str)
         # Добавлено 31.05.2021
         if authentication_directory.directory_type == AuthenticationDirectory.DirectoryTypes.FreeIPA:
             username = LDAP_LOGIN_PATTERN.format(
-                username=username, dc=authentication_directory.dc_str)
+                username=username, dc=dc_str)
         elif authentication_directory.directory_type == AuthenticationDirectory.DirectoryTypes.ActiveDirectory:
             if not domain_name:
                 domain_name = authentication_directory.domain_name
@@ -629,9 +625,11 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
                 await self.update(status=Status.ACTIVE).apply()
         return ldap_connection
 
-    async def assigned_ad_groups(self, group_name=""):  # implement later
+    async def assigned_ad_groups(self, group_name=""):
         """Список групп у которых не пустое поле GroupModel.ad_guid."""
-        query = GroupModel.query.where(GroupModel.ad_guid.isnot(None))
+        query = GroupModel.query.order_by("verbose_name").where(GroupModel.ad_guid.isnot(None))
+        if group_name:
+            query = query.where(GroupModel.verbose_name.ilike("%{}%".format(group_name)))
         return await query.gino.all()
 
     async def build_group_filter(self, group_name=""):
@@ -740,7 +738,8 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
         try:
             req_ctrl = LdapPageCtrl(criticality=True, size=PAGE_SIZE, cookie="")
             groups_filter = await self.build_group_filter(group_name)
-            ldap_groups = connection.search_ext_s(base=self.dc_str, scope=ldap.SCOPE_SUBTREE,
+            dc_str = self.convert_dc_str(self.dc_str)
+            ldap_groups = connection.search_ext_s(base=dc_str, scope=ldap.SCOPE_SUBTREE,
                                                   filterstr=groups_filter, serverctrls=[req_ctrl])
 
             groups_list = self.extract_groups(ldap_groups)
@@ -891,9 +890,10 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
 
             while first_loop or req_ctrl.cookie:
                 first_loop = False
+                dc_str = self.convert_dc_str(self.dc_str)
                 # async data request
                 msgid = connection.search_ext(
-                    base=self.dc_str, scope=ldap.SCOPE_SUBTREE,
+                    base=dc_str, scope=ldap.SCOPE_SUBTREE,
                     filterstr=users_filter, serverctrls=[req_ctrl]
                 )
 

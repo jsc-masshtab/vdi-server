@@ -11,11 +11,18 @@
         <mat-label *ngIf="pending">Загрузка ...</mat-label>
         <mat-label *ngIf="possible_ad_groups?.length && !pending">Выберите  группу</mat-label>
         <mat-label *ngIf="!possible_ad_groups?.length && !pending">- нет групп -</mat-label>
-        <mat-select
-          (selectionChange)="select('groups', $event)">
+
+        <mat-select (selectionChange)="select('groups', $event)">
+
+          <mat-option class="mat-filter-option" disabled="disabled">
+            <mat-label>Поиск: </mat-label>
+            <input matInput [formControl]="group_name" placeholder="">
+          </mat-option>
+
           <mat-option *ngFor="let group of possible_ad_groups" [value]="group">
             {{ group.verbose_name }}
           </mat-option>
+
         </mat-select>
       </mat-form-field>
       <div class="error" *ngIf="!valid">Выберите группу</div>

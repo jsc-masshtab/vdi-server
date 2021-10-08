@@ -138,6 +138,7 @@ class VmManager:
                 await system_logger.debug(message="Redis connection error.", description=str(ex))
                 await asyncio.sleep(REDIS_TIMEOUT)
             except asyncio.CancelledError:
+                pubsub.reset()
                 raise
             except Exception as ex:
                 await system_logger.debug(

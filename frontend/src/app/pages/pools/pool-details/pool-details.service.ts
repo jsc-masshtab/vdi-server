@@ -78,6 +78,9 @@ export class PoolDetailsService {
                                             verbose_name
                                         }
                                         qemu_state
+                                        assigned_users {
+                                          username
+                                        }
                                         status
                                         parent_name
                                     }
@@ -90,9 +93,11 @@ export class PoolDetailsService {
                                     reserve_size
                                     total_size
                                     increase_step
+                                    waiting_time
                                     vm_name_template
                                     ad_ou
                                     users(ordering: $ordering_users) {
+                                        id
                                         username
                                     }
                                     resource_pool {
@@ -148,6 +153,10 @@ export class PoolDetailsService {
                                         }
                                         qemu_state
                                         status
+                                        assigned_users {
+                                            id
+                                            username
+                                        }
                                         parent_name
                                         controller {
                                             id
@@ -160,6 +169,7 @@ export class PoolDetailsService {
                                     }
                                     resource_pool_id
                                     users(ordering: $ordering_users) {
+                                        id
                                         username
                                     }
                                     resource_pool {
@@ -357,8 +367,9 @@ export class PoolDetailsService {
     }
 
     public updatePool({pool_id, pool_type }, {connection_types, verbose_name, increase_step, reserve_size, total_size,
-                                              vm_name_template, create_thin_clones, enable_vms_remote_access, start_vms,
-                                              set_vms_hostnames, include_vms_in_ad, keep_vms_on, ad_ou}) {
+                                              waiting_time, vm_name_template, create_thin_clones,
+                                              enable_vms_remote_access, start_vms, set_vms_hostnames, include_vms_in_ad,
+                                              keep_vms_on, ad_ou}) {
         if (pool_type === 'static') {
             return this.service.mutate<any>({
                 mutation: gql`
@@ -405,12 +416,12 @@ export class PoolDetailsService {
             return this.service.mutate<any>({
                 mutation: gql`
                                 mutation pools($connection_types: [PoolConnectionTypes!], $pool_id: UUID!,$verbose_name: ShortString,
-                                    $increase_step: Int , $reserve_size: Int, $total_size: Int , $vm_name_template: ShortString ,
+                                    $increase_step: Int, $reserve_size: Int, $total_size: Int, $waiting_time: Int, $vm_name_template: ShortString,
                                      $keep_vms_on: Boolean, $create_thin_clones: Boolean, $enable_vms_remote_access: Boolean,
                                      $start_vms: Boolean, $set_vms_hostnames: Boolean, $include_vms_in_ad: Boolean, $ad_ou: ShortString ) {
                                     updateDynamicPool(connection_types: $connection_types, pool_id: $pool_id, verbose_name: $verbose_name,
                                         increase_step: $increase_step, reserve_size: $reserve_size, total_size: $total_size,
-                                        vm_name_template: $vm_name_template, keep_vms_on: $keep_vms_on,
+                                        vm_name_template: $vm_name_template, keep_vms_on: $keep_vms_on, waiting_time: $waiting_time,
                                         create_thin_clones: $create_thin_clones, enable_vms_remote_access: $enable_vms_remote_access,
                                         start_vms: $start_vms, set_vms_hostnames: $set_vms_hostnames, include_vms_in_ad: $include_vms_in_ad,
                                         ad_ou: $ad_ou ) {
@@ -425,6 +436,7 @@ export class PoolDetailsService {
                     increase_step,
                     reserve_size,
                     total_size,
+                    waiting_time,
                     vm_name_template,
                     keep_vms_on,
                     create_thin_clones,
@@ -441,37 +453,38 @@ export class PoolDetailsService {
 
     // назначение пользователя вм
 
-    public assignVmToUser(vm_id: string, username: string) {
+    public assignVmToUser(vm_id: string, users: [string]) {
         return this.service.mutate<any>({
             mutation: gql`
-                            mutation pools($vm_id: ID!,$username: ShortString!) {
-                                assignVmToUser(vm_id: $vm_id,username: $username) {
-                                    ok
-                                }
-                            }
+                mutation pools($vm_id: ID!,$users: [UUID!]) {
+                    assignVmToUser(vm_id: $vm_id, users: $users) {
+                        ok
+                    }
+                }
             `,
             variables: {
                 method: 'POST',
                 vm_id,
-                username
+                users
             }
         });
     }
 
     // отлучить пользователя вм
 
-    public freeVmFromUser(vm_id: string) {
+    public freeVmFromUser(vm_id: string, users: [string]) {
         return this.service.mutate<any>({
             mutation: gql`
-                            mutation pools($vm_id: ID!) {
-                                freeVmFromUser(vm_id: $vm_id) {
-                                    ok
-                                }
-                            }
+                mutation pools($vm_id: ID!,$users: [UUID!]) {
+                    freeVmFromUser(vm_id: $vm_id, users: $users) {
+                        ok
+                    }
+                }
             `,
             variables: {
                 method: 'POST',
-                vm_id
+                vm_id,
+                users
             }
         });
     }
@@ -783,92 +796,96 @@ export class PoolDetailsService {
         return  this.service.watchQuery({
             query: gql` query pools($pool_id: ShortString, $vm_id: UUID, $controller_address: UUID, $offset: Int) {
                                 pool(pool_id: $pool_id) {
-                                  vm(vm_id: $vm_id, controller_id: $controller_address) {
-                                      id
-                                      verbose_name
-                                      description
-                                      os_type
-                                      os_version
-                                      cpu_count
-                                      memory_count
-                                      tablet
-                                      ha_enabled
-                                      disastery_enabled
-                                      guest_agent
-                                      remote_access
-                                      spice_stream
-                                      user_power_state
-                                      boot_type
-                                      thin
-                                      start_on_boot
-                                      address
-                                      status
-                                      hostname
-                                      domain_tags {
-                                          colour
-                                          verbose_name
-                                          slug
-                                      }
-                                      parent_name
-                                      resource_pool {
-                                          id
-                                          verbose_name
-                                      }
-                                      controller {
-                                          id
-                                          verbose_name
-                                      }
-                                      node {
+                                    vm(vm_id: $vm_id, controller_id: $controller_address) {
+                                        id
+                                        verbose_name
+                                        description
+                                        os_type
+                                        os_version
+                                        cpu_count
+                                        memory_count
+                                        tablet
+                                        ha_enabled
+                                        disastery_enabled
+                                        guest_agent
+                                        remote_access
+                                        spice_stream
+                                        user_power_state
+                                        boot_type
+                                        thin
+                                        start_on_boot
+                                        address
+                                        status
+                                        hostname
+                                        domain_tags {
+                                            colour
+                                            verbose_name
+                                            slug
+                                        }
+                                        parent_name
+                                        resource_pool {
                                             id
                                             verbose_name
-                                      }
-                                      events(offset: $offset) {
-                                          id
-                                          event_type
-                                          message
-                                          description
-                                          created
-                                          user
-                                          read_by {
-                                              id
-                                              username
-                                          }
-                                      }
-                                      spice_connection {
-                                        password
-                                        host
-                                        token
-                                        connection_url
-                                        connection_type
-                                      }
-                                      vnc_connection {
-                                        password
-                                        host
-                                        token
-                                        connection_url
-                                        connection_type
-                                      }
-                                      count
-                                      controller {
-                                          id
-                                      }
-                                      backups {
-                                          file_id
-                                          vm_id
-                                          filename
-                                          datapool {
-                                              id
-                                              verbose_name
-                                          }
-                                          node {
-                                              id
-                                              verbose_name
-                                          }
-                                          assignment_type
-                                          size
-                                          status
-                                      }
-                                  }
+                                        }
+                                        controller {
+                                            id
+                                            verbose_name
+                                        }
+                                        node {
+                                                id
+                                                verbose_name
+                                        }
+                                        assigned_users {
+                                                id
+                                                username
+                                            }
+                                        events(offset: $offset) {
+                                            id
+                                            event_type
+                                            message
+                                            description
+                                            created
+                                            user
+                                            read_by {
+                                                id
+                                                username
+                                            }
+                                        }
+                                        spice_connection {
+                                            password
+                                            host
+                                            token
+                                            connection_url
+                                            connection_type
+                                        }
+                                        vnc_connection {
+                                            password
+                                            host
+                                            token
+                                            connection_url
+                                            connection_type
+                                        }
+                                        count
+                                        controller {
+                                            id
+                                        }
+                                        backups {
+                                            file_id
+                                            vm_id
+                                            filename
+                                            datapool {
+                                                id
+                                                verbose_name
+                                            }
+                                            node {
+                                                id
+                                                verbose_name
+                                            }
+                                            assignment_type
+                                            size
+                                            status
+                                        }
+                                    }
                                 }
                         }
                     `,
@@ -935,4 +952,21 @@ export class PoolDetailsService {
             }
         });
     }
+
+
+  public reserveVm(params: any) {
+    return this.service.mutate<any>({
+      mutation: gql`
+        mutation pools($vm_id: UUID!, $reserve: Boolean!) {
+            reserveVm(vm_id: $vm_id, reserve: $reserve){
+            ok
+          }
+        }
+      `,
+      variables: {
+        method: 'POST',
+        ...params
+      }
+    });
+  }
 }

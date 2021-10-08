@@ -23,7 +23,7 @@ from common.subscription_sources import (
 )
 from common.veil.auth.veil_jwt import jwtauth_ws
 from common.veil.veil_handlers import BaseWsHandler
-from common.veil.veil_redis import redis_block_get_message, redis_get_pubsub
+from common.veil.veil_redis import redis_get_subscriber
 
 
 @jwtauth_ws
@@ -114,40 +114,39 @@ class VdiFrontWsHandler(BaseWsHandler):  # noqa
         """Wait for message and send it to front client."""
         # subscribe to channels  INTERNAL_EVENTS_CHANNEL and WS_MONITOR_CHANNEL_OUT
 
-        pubsub = redis_get_pubsub()
-        await pubsub.subscribe(INTERNAL_EVENTS_CHANNEL, WS_MONITOR_CHANNEL_OUT, REDIS_TEXT_MSG_CHANNEL)
+        with redis_get_subscriber([INTERNAL_EVENTS_CHANNEL,
+                                   WS_MONITOR_CHANNEL_OUT,
+                                   REDIS_TEXT_MSG_CHANNEL]) as subscriber:
+            while True:
+                try:
+                    redis_message = await subscriber.get_msg()
+                    if redis_message["type"] == "message":
+                        redis_message_data = redis_message["data"].decode()
+                        redis_message_data_dict = json.loads(redis_message_data)
 
-        while True:
-            try:
-                redis_message = await redis_block_get_message(pubsub)
+                        resource = redis_message_data_dict.get("resource")
+                        if not resource:
+                            continue
 
-                if redis_message["type"] == "message":
-                    redis_message_data = redis_message["data"].decode()
-                    redis_message_data_dict = json.loads(redis_message_data)
-
-                    resource = redis_message_data_dict.get("resource")
-                    if not resource:
-                        continue
-
-                    elif resource in self._subscriptions:
-                        # USERS_SUBSCRIPTION resource
-                        if resource == USERS_SUBSCRIPTION:
-                            if (
-                                redis_message_data_dict["msg_type"]
-                                == WsMessageType.TEXT_MSG.value  # noqa: W503
-                                and redis_message_data_dict["direction"]  # noqa: W503
-                                == WsMessageDirection.USER_TO_ADMIN.value  # noqa: W503
-                            ):
-                                # Текстовые сообщения (от пользователей ТК) администратору
+                        elif resource in self._subscriptions:
+                            # USERS_SUBSCRIPTION resource
+                            if resource == USERS_SUBSCRIPTION:
+                                if (
+                                    redis_message_data_dict["msg_type"]
+                                    == WsMessageType.TEXT_MSG.value  # noqa: W503
+                                    and redis_message_data_dict["direction"]  # noqa: W503
+                                    == WsMessageDirection.USER_TO_ADMIN.value  # noqa: W503
+                                ):
+                                    # Текстовые сообщения (от пользователей ТК) администратору
+                                    await self.write_msg(redis_message_data)
+                            # other resources
+                            else:
                                 await self.write_msg(redis_message_data)
-                        # other resources
-                        else:
-                            await self.write_msg(redis_message_data)
 
-            except asyncio.CancelledError:
-                break
-            except (KeyError, ValueError, TypeError, JSONDecodeError) as ex:
-                await system_logger.debug(
-                    message="Sending msg error in frontend ws handler.",
-                    description=str(ex),
-                )
+                except asyncio.CancelledError:
+                    break
+                except (KeyError, ValueError, TypeError, JSONDecodeError) as ex:
+                    await system_logger.debug(
+                        message="Sending msg error in frontend ws handler.",
+                        description=str(ex),
+                    )

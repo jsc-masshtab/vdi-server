@@ -45,7 +45,7 @@ export class AuthenticationDirectoryDetailsComponent implements OnInit, OnDestro
       }
     },
     {
-      title: 'Имя домена',
+      title: 'NetBIOS имя домена',
       property: 'domain_name',
       type: 'string',
       edit: 'openEditForm',
@@ -55,7 +55,7 @@ export class AuthenticationDirectoryDetailsComponent implements OnInit, OnDestro
       }
     },
     {
-      title: 'Класс объекта домена (dc)',
+      title: 'Полное имя домена',
       property: 'dc_str',
       type: 'string',
       edit: 'openEditForm',

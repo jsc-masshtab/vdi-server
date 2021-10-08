@@ -276,6 +276,12 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       edit: 'changeAutomatedPoolKeep_vms_on'
     },
     {
+      title: 'Время жизни ВМ после потери связи',
+      property: 'waiting_time',
+      type: 'waiting_time',
+      edit: 'changeGuestPoolWaitingTime'
+    },
+    {
       title: 'Пул ресурсов',
       property: 'resource_pool',
       property_lv2: 'verbose_name'
@@ -376,10 +382,9 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
     //   }
     // },
     {
-      title: 'Пользователь',
-      property: 'user',
-      property_lv2: 'username',
-      sort: true
+      title: 'Пользователи',
+      property: 'assigned_users',
+      type: 'users-array'
     },
     {
       title: 'Статус',
@@ -410,10 +415,9 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       sort: true
     },
     {
-      title: 'Пользователь',
-      property: 'user',
-      property_lv2: 'username',
-      sort: true
+      title: 'Пользователи',
+      property: 'assigned_users',
+      type: 'users-array'
     },
     {
       title: 'Статус',
@@ -446,10 +450,9 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
     //   }
     // },
     {
-      title: 'Пользователь',
-      property: 'user',
-      property_lv2: 'username',
-      sort: true
+      title: 'Пользователи',
+      property: 'assigned_users',
+      type: 'users-array'
     },
     {
       title: 'Статус',
@@ -948,6 +951,43 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
             type: 'number',
             fieldName: 'reserve_size',
             fieldValue: this.pool.reserve_size,
+          }]
+        },
+        update: {
+          method: 'getPool',
+          refetch: true,
+          params: [
+            this.idPool,
+            this.typePool
+          ]
+        }
+      }
+    });
+  }
+
+  // @ts-ignore: Unreachable code error
+  private changeGuestPoolWaitingTime(): void {
+    this.dialog.open(FormForEditComponent, {
+      disableClose: true,
+      width: '500px',
+      data: {
+        post: {
+          service: this.poolService,
+          method: 'updatePool',
+          params: {
+            pool_id: this.idPool,
+            pool_type: this.typePool
+          }
+        },
+        settings: {
+          entity: 'pool-details',
+          header: 'Изменение времени жизни ВМ после потери связи (сек)',
+          buttonAction: 'Изменить',
+          form: [{
+            tag: 'input',
+            type: 'number',
+            fieldName: 'waiting_time',
+            fieldValue: this.pool.waiting_time,
           }]
         },
         update: {
