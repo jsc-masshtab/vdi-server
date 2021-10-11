@@ -1,6 +1,5 @@
 import asyncio
 import functools
-import re
 import signal
 from enum import Enum
 
