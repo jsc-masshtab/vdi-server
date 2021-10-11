@@ -1,7 +1,7 @@
 """Task type column to string
 
 Revision ID: ba1b6817b510
-Revises: 836f611f1cab
+Revises: 6d4gr26hpv7a
 Create Date: 2021-10-07 15:29:40.480245
 
 """
@@ -11,7 +11,7 @@ from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
 revision = 'ba1b6817b510'
-down_revision = '836f611f1cab'
+down_revision = '6d4gr26hpv7a'
 branch_labels = None
 depends_on = None
 
