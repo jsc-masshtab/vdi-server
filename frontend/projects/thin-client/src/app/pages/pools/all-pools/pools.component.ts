@@ -20,10 +20,9 @@ import { IPoolClient, PoolMapper } from './pools.mapper';
 export class PoolsComponent extends DetailsMove implements OnInit, OnDestroy {
 
   private getPoolsSub: Subscription;
-
   public pools: IPoolClient[];
   public controllers: any[] = [];
-
+  
   public collection: ReadonlyArray<object> = [
     {
       title: 'Название',
@@ -45,7 +44,6 @@ export class PoolsComponent extends DetailsMove implements OnInit, OnDestroy {
     private poolService: PoolsService,
     private router: Router,
     private waitService: WaitService,
- 
   ) {
     super();
   }
@@ -54,7 +52,6 @@ export class PoolsComponent extends DetailsMove implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.getAllPools();
-  
   }
 
   public getAllPools(): void {
@@ -117,9 +114,11 @@ export class PoolsComponent extends DetailsMove implements OnInit, OnDestroy {
     this.getAllPools();
   }
 
-  ngOnDestroy() {
+  public ngOnDestroy() {
     this.getPoolsSub.unsubscribe();
     this.poolService.paramsForGetPools.spin = true;
     this.poolService.paramsForGetPools.nameSort = undefined;
   }
+
+
 }

@@ -1,10 +1,10 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Observable, Subscription } from 'rxjs';
 
-import { WebsocketService } from '@shared/classes/websock.service';
 
 import { EventsService } from '@pages/log/events/all-events/events.service';
 import { ICopyrightData, LicenseService } from '@pages/settings/license/license.service';
+import { WebsocketService } from '@app/core/services/websock.service';
 
 
 
