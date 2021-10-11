@@ -95,7 +95,15 @@ async def test_update_automated_pool(
             reserve_size: 1,
             total_size: 4,
             increase_step: 2,
-            keep_vms_on: true){
+            keep_vms_on: true,
+            vm_name_template: "vdi-test",
+            ad_ou: "",
+            create_thin_clones: true,
+            enable_vms_remote_access: true,
+            start_vms: true,
+            set_vms_hostnames: false,
+            include_vms_in_ad: false,
+            waiting_time: 60){
             ok
         }
     }""" % (

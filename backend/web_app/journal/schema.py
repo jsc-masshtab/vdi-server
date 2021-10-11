@@ -393,19 +393,6 @@ class UnmarkEventsReadByMutation(graphene.Mutation):
         return UnmarkEventsReadByMutation(ok=True)
 
 
-# class RemoveAllEventsMutation(graphene.Mutation):
-#     class Arguments:
-#         ok = graphene.Boolean()
-#
-#     ok = graphene.Boolean()
-#
-#     @administrator_required
-#     async def mutate(self, _info, **kwargs):
-#         await Event.delete.gino.status()
-#         await system_logger.info(_('Journal is clear.'), entity=self.entity)
-#         return RemoveAllEventsMutation(ok=True)
-
-
 class EventExportMutation(graphene.Mutation):
     class Arguments:
         start = graphene.DateTime(

@@ -153,8 +153,6 @@ class Event(db.Model):
                     user=user,
                     entity_id=entity.id,
                 )
-                # 3. Создаем связь
-                # await EventEntity.create(entity_id=entity.id, event_id=event.id)
             return event
 
     @classmethod
@@ -178,13 +176,6 @@ class Event(db.Model):
             await publish_to_redis(INTERNAL_EVENTS_CHANNEL, json.dumps(msg_dict))
         except (TypeError):  # Can`t serialize
             pass
-
-
-# class EventEntity(db.Model):
-#     """Связывающая сущность"""
-#     __tablename__ = 'event_entities'
-#     event_id = db.Column(UUID(), db.ForeignKey('event.id'), nullable=False)
-#     entity_id = db.Column(UUID(), db.ForeignKey('entity.id'), nullable=False)
 
 
 class EventReadByUser(db.Model):

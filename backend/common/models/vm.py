@@ -80,21 +80,6 @@ class Vm(VeilModel):
         ).gino.first()
 
     @property
-    def controller_query(self):
-        from common.models.controller import Controller as ControllerModel
-        from common.models.pool import Pool as PoolModel
-
-        return db.select([ControllerModel.address]).select_from(
-            ControllerModel.join(
-                PoolModel.query.where(PoolModel.id == self.pool_id).alias()
-            ).alias()
-        )
-
-    @property
-    async def controller_address(self):
-        return await self.controller_query.gino.scalar()
-
-    @property
     async def username(self):
         entity_query = EntityModel.select("id").where(
             (EntityModel.entity_type == EntityType.VM)

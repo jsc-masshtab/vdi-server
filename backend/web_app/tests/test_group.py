@@ -137,7 +137,8 @@ class TestGroupSchema:
 
         query = """mutation {
                       updateGroup(id: "10913d5d-ba7a-4049-88c5-769267a6cbe4",
-                        verbose_name: "test group updated") {
+                        verbose_name: "test group updated",
+                        description: "test") {
                         group {
                           verbose_name
                           assigned_users {

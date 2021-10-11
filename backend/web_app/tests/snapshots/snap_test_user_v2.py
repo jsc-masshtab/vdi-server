@@ -63,6 +63,19 @@ snapshots['TestUserSchema.test_user_edit 1'] = {
     }
 }
 
+snapshots['TestUserSchema.test_user_edit 2'] = {
+    'updateUser': {
+        'ok': True,
+        'user': {
+            'email': 'test1@test.ru',
+            'first_name': 'test_firstname',
+            'is_superuser': False,
+            'last_name': 'test_lastname',
+            'username': 'devyatkin'
+        }
+    }
+}
+
 snapshots['TestUserSchema.test_user_role 1'] = {
     'addUserRole': {
         'ok': True,
