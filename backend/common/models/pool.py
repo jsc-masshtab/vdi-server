@@ -128,18 +128,6 @@ class Pool(VeilModel):
 
         return await Controller.get(self.controller)
 
-    @property
-    async def has_vms(self):
-        """Проверяем наличие виртуальных машин."""
-        vm_count = (
-            await db.select([db.func.count(VmModel.id)])
-            .where(VmModel.pool_id == self.id)
-            .gino.scalar()
-        )
-        if vm_count == 0:
-            return False
-        return True
-
     async def get_vms(self, limit=None, offset=0):
         """Возвращаем виртуальные машины привязанные к пулу.
 
@@ -152,10 +140,6 @@ class Pool(VeilModel):
             return await query.gino.all()
         else:
             return await query.limit(limit).offset(offset).gino.all()
-
-    @property
-    async def is_automated_pool(self):
-        return await AutomatedPool.get(self.id)
 
     @property
     async def template_id(self):
@@ -369,17 +353,6 @@ class Pool(VeilModel):
             query = query.order_by(Pool.verbose_name)
         return await query.limit(limit).offset(offset).gino.all()
 
-    @staticmethod
-    async def get_controller_ip(pool_id):
-        from common.models.controller import Controller as ControllerModel
-
-        query = (
-            db.select([ControllerModel.address])
-            .select_from(ControllerModel.join(Pool))
-            .where(Pool.id == pool_id)
-        )
-        return await query.gino.scalar()
-
     async def get_vm_amount(self, only_free=False):
         """Нужно дорабатывать - отказаться от in и дублирования кода.
 
@@ -448,10 +421,6 @@ class Pool(VeilModel):
             & (EntityModel.entity_uuid == self.id)  # noqa: W503
         ).alias()
         return GroupModel.join(EntityOwnerModel.join(query).alias()).select()
-
-    @property
-    async def assigned_groups(self):
-        return await self.assigned_groups_query.gino.load(GroupModel).all()
 
     async def assigned_groups_paginator(self, limit, offset, ordering):
         query = self.assigned_groups_query
@@ -1566,10 +1535,6 @@ class AutomatedPool(db.Model):
         pool = await Pool.get(self.id)
         if pool:
             return pool.resource_pool_id
-
-    @property
-    async def controller_ip(self):
-        return await Pool.get_controller_ip(self.id)
 
     @property
     async def keep_vms_on(self):

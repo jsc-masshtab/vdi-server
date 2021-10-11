@@ -5,7 +5,7 @@
 
 import pytest
 
-from web_app.tests.fixtures import fixt_db, fixt_redis_client, fixt_auth_context, fixt_user  # noqa
+from web_app.tests.fixtures import fixt_db, fixt_group, fixt_redis_client, fixt_auth_context, fixt_user  # noqa
 from web_app.tests.utils import execute_scheme, ExecError
 from web_app.auth.user_schema import user_schema
 from common.models.auth import User
@@ -88,12 +88,12 @@ class TestUserSchema:
         executed = await execute_scheme(user_schema, query, context=fixt_auth_context)
         snapshot.assert_match(executed)
 
-    async def test_user_create(self, snapshot, fixt_auth_context):  # noqa
+    async def test_user_create(self, snapshot, fixt_auth_context, fixt_group):  # noqa
         query = """mutation {
                 createUser(
                 username: "devyatkin",  # !обязательное поле
                 password: "qwQ123$%",  # !обязательное поле
-                groups: [],  # !обязательное поле
+                groups: [{id: "10913d5d-ba7a-4049-88c5-769267a6cbe4", verbose_name: "test_group_1"}],  # !обязательное поле
                 email: "a.devyatkin@mashtab.org",  # необязательное поле
                 last_name: "Devyatkin",  # необязательное поле
                 first_name: "Aleksey",  # необязательное поле
@@ -178,6 +178,30 @@ class TestUserSchema:
                         email: "test@test.ru",
                         last_name: "test_lastname",
                         is_superuser: true
+                      ) {
+                        ok,
+                        user{
+                          username,
+                          email,
+                          first_name,
+                          last_name,
+                          is_superuser
+                        }
+                      }
+                    }"""
+            % user_obj.id
+        )
+        executed = await execute_scheme(user_schema, query, context=fixt_auth_context)
+        snapshot.assert_match(executed)
+
+        query = (
+            """mutation {
+                      updateUser(
+                        id: "%s", # !обязательное поле
+                        first_name: "test_firstname",
+                        email: "test1@test.ru",
+                        last_name: "test_lastname",
+                        is_superuser: false
                       ) {
                         ok,
                         user{

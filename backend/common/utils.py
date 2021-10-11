@@ -1,6 +1,5 @@
 import asyncio
 import functools
-import re
 import signal
 from enum import Enum
 
@@ -8,11 +7,6 @@ from enum import Enum
 def clamp_value(my_value, min_value, max_value):
     """Limit value by min_value and max_value."""
     return max(min(my_value, max_value), min_value)
-
-
-def validate_name(name_string):
-    """Validate if name correct."""
-    return re.match("^[а-яА-ЯёЁa-zA-Z0-9]+[а-яА-ЯёЁa-zA-Z0-9.-_+ ]*$", name_string)
 
 
 async def cancel_async_task(async_task, wait_for_result=True):
