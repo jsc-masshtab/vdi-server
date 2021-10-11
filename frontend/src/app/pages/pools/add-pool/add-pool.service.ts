@@ -36,6 +36,20 @@ export class AddPoolService {
             `;
         }
 
+        if (type === 'data_pools') {
+            query = `query
+                controllers($id_: UUID, $resource_pool_id: UUID) {
+                    controller(id_: $id_) {
+                        id
+                        data_pools(resource_pool_id: $resource_pool_id) {
+                            id
+                            verbose_name
+                        }
+                    }
+                }
+            `;
+        }
+
         if (type === 'vms') {
             query = `query
                 controllers($id_: UUID, $resource_pool_id: UUID) {

@@ -427,6 +427,7 @@ class Vm(VeilModel):
         verbose_name: str,
         domain_id: str,
         resource_pool_id: str,
+        datapool_id: str,
         controller_id,
         create_thin_clones: bool,
         count: int = 1,
@@ -449,6 +450,7 @@ class Vm(VeilModel):
             vm_configuration = DomainConfiguration(
                 verbose_name=verbose_name,
                 resource_pool=resource_pool_id,
+                datapool=datapool_id,
                 parent=domain_id,
                 count=count,
             )

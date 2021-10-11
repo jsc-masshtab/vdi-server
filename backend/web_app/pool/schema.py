@@ -444,6 +444,7 @@ class PoolType(graphene.ObjectType):
 
     # AutomatedPool fields
     automated_pool_id = graphene.UUID()
+    datapool_id = graphene.UUID()
     template_id = graphene.UUID()
     increase_step = graphene.Int()
     max_amount_of_create_attempts = graphene.Int()
@@ -483,6 +484,7 @@ class PoolType(graphene.ObjectType):
     # Затрагивает запрос ресурсов на VeiL ECP.
     template = graphene.Field(VeilShortEntityType)
     resource_pool = graphene.Field(VeilShortEntityType)
+    datapool = graphene.Field(VeilShortEntityType)
     vms = graphene.List(VmType,
                         limit=graphene.Int(default_value=500),
                         offset=graphene.Int(default_value=0),
@@ -612,6 +614,18 @@ class PoolType(graphene.ObjectType):
         veil_domain.id = veil_domain.api_object_id
         return veil_domain
 
+    async def resolve_datapool(self, _info):
+        pool = await Pool.get(self.pool_id)
+        pool_controller = await pool.controller_obj
+        # Прерываем выполнение при отсутствии клиента
+        if not pool_controller.veil_client:
+            return
+        veil_datapool = pool_controller.veil_client.data_pool(str(pool.datapool_id))
+        await veil_datapool.info()
+        # попытка не использовать id
+        veil_datapool.id = veil_datapool.api_object_id
+        return veil_datapool
+
     async def resolve_assigned_connection_types(self, _info):
         pool = await Pool.get(self.pool_id)
         return pool.connection_types
@@ -630,6 +644,7 @@ def pool_obj_to_type(pool_obj: Pool) -> PoolType:
         "resource_pool_id": pool_obj.resource_pool_id,
         "static_pool_id": pool_obj.master_id,
         "automated_pool_id": pool_obj.master_id,
+        "datapool_id": pool_obj.datapool_id,
         "template_id": pool_obj.template_id,
         "increase_step": pool_obj.increase_step,
         "max_amount_of_create_attempts": pool_obj.max_amount_of_create_attempts,
@@ -1056,6 +1071,7 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator, ControllerFe
     class Arguments:
         controller_id = graphene.UUID(required=True)
         resource_pool_id = graphene.UUID(required=True)
+        datapool_id = graphene.UUID(required=True)
         template_id = graphene.UUID(required=True)
 
         verbose_name = ShortString(required=True)
@@ -1098,6 +1114,7 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator, ControllerFe
         creator,
         controller_id,
         resource_pool_id,
+        datapool_id,
         template_id,
         verbose_name,
         increase_step,
@@ -1129,6 +1146,7 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator, ControllerFe
                 verbose_name=verbose_name,
                 controller_id=controller_id,
                 resource_pool_id=resource_pool_id,
+                datapool_id=datapool_id,
                 template_id=template_id,
                 increase_step=increase_step,
                 initial_size=initial_size,
