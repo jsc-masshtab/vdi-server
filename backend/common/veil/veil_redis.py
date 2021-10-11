@@ -296,7 +296,7 @@ async def request_to_execute_pool_task(entity_id, task_type, **additional_data):
     """Send request to task worker to execute a task. Return task id."""
     from common.models.task import Task
 
-    task = await Task.soft_create(entity_id=entity_id, task_type=task_type)
+    task = await Task.soft_create(entity_id=entity_id, task_type=task_type.name)
     task_id = str(task.id)
     data = {"task_id": task_id, "task_type": task_type.name, **additional_data}
     await A_REDIS_CLIENT.rpush(settings.POOL_TASK_QUEUE, json.dumps(data))
@@ -315,7 +315,7 @@ async def execute_delete_pool_task(
 
     # send command to pool worker
     task_id = await request_to_execute_pool_task(
-        pool_id, PoolTaskType.POOL_DELETE, deletion_full=full
+        pool_id, PoolTaskType.POOL_DELETE, full_deletion=full
     )
 
     # wait for result

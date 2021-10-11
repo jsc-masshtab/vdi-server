@@ -9,10 +9,8 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
 
 from common.database import db
-from common.languages import _local_
-from common.models.auth import Entity
 from common.subscription_sources import VDI_TASKS_SUBSCRIPTION
-from common.veil.veil_gino import AbstractSortableStatusModel, EntityType
+from common.veil.veil_gino import AbstractSortableStatusModel
 from common.veil.veil_redis import publish_data_in_internal_channel
 
 
@@ -46,7 +44,8 @@ class Task(db.Model, AbstractSortableStatusModel):
     status = db.Column(
         AlchemyEnum(TaskStatus), nullable=False, index=True, default=TaskStatus.INITIAL
     )
-    task_type = db.Column(AlchemyEnum(PoolTaskType), nullable=False, index=True)
+    task_type = db.Column(db.Unicode(length=256), nullable=False, index=True)  # тип строка а не enum
+    # для облегчения добавлния новых типов задач, чтобы не создавать каждый раз миграцию
     created = db.Column(db.DateTime(timezone=True), server_default=func.now())
     started = db.Column(db.DateTime(timezone=True))
     finished = db.Column(db.DateTime(timezone=True))
@@ -71,33 +70,6 @@ class Task(db.Model, AbstractSortableStatusModel):
 
         return str(duration)[:-7]
 
-    async def form_user_friendly_text(self):
-
-        entity_name = await self.get_associated_entity_name()
-        if self.task_type == PoolTaskType.POOL_CREATE:
-            task_message = _local_("Creation of pool {}.").format(entity_name)
-        elif self.task_type == PoolTaskType.POOL_EXPAND:
-            task_message = _local_("Expanding of pool {}.").format(entity_name)
-        elif self.task_type == PoolTaskType.POOL_DELETE:
-            task_message = _local_("Deleting of pool {}.").format(entity_name)
-        elif self.task_type == PoolTaskType.POOL_DECREASE:
-            task_message = _local_("Decreasing of pool {}.").format(entity_name)
-        elif self.task_type == PoolTaskType.VM_PREPARE:
-            task_message = _local_("Preparation of vm {}.").format(entity_name)
-        elif self.task_type == PoolTaskType.VMS_BACKUP:
-            task_message = _local_("Backup of {}.").format(entity_name)
-        elif self.task_type == PoolTaskType.VMS_REMOVE:
-            task_message = _local_("Removal of VMs from pool {}.").format(entity_name)
-        elif self.task_type == PoolTaskType.VM_GUEST_RECREATION:
-            task_message = _local_(
-                "Automatic recreation of VM {} in the guest pool.").format(
-                entity_name)
-        else:
-            task_message = ""
-        if task_message and isinstance(task_message, str):
-            return task_message[:-1]
-        return ""
-
     async def set_status(self, status: TaskStatus, message: str = None):
 
         if status == self.status:
@@ -106,10 +78,9 @@ class Task(db.Model, AbstractSortableStatusModel):
         await self.update(status=status).apply()
 
         # msg
-        if message is None:
-            message = await self.form_user_friendly_text()
-        shorten_msg = textwrap.shorten(message, width=256)
-        await self.update(message=shorten_msg).apply()
+        if message:
+            shorten_msg = textwrap.shorten(message, width=256)
+            await self.update(message=shorten_msg).apply()
 
         # datetime data
         if status == TaskStatus.IN_PROGRESS:
@@ -141,30 +112,6 @@ class Task(db.Model, AbstractSortableStatusModel):
 
         # publish task event
         await publish_data_in_internal_channel(VDI_TASKS_SUBSCRIPTION, "UPDATED", self)
-
-    async def get_associated_entity_name(self):
-        # Запоминаем имя так как его не будет после удаления пула, например.
-        if not hasattr(self, "_associated_entity_name"):
-            # В зависимости от типа сущности узнаем verbose_name
-            # get entity_type
-            self._associated_entity_name = ""
-            entity = await Entity.query.where(
-                Entity.entity_uuid == self.entity_id
-            ).gino.first()
-            if entity:
-                if entity.entity_type == EntityType.POOL:
-                    from common.models.pool import Pool
-
-                    pool = await Pool.get(self.entity_id)
-                    self._associated_entity_name = pool.verbose_name if pool else ""
-
-                elif entity.entity_type == EntityType.VM:
-                    from common.models.vm import Vm
-
-                    vm = await Vm.get(self.entity_id)
-                    self._associated_entity_name = vm.verbose_name if vm else ""
-
-        return self._associated_entity_name
 
     @classmethod
     async def soft_create(cls, entity_id, task_type, **kwargs):
