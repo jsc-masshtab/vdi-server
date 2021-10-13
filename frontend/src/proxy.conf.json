@@ -12,5 +12,10 @@
   "/websockify": {
     "target": "ws://192.168.11.105",
     "ws": true
+  },
+  "/global": {
+    "target": "http://192.168.14.77:10001",
+    "pathRewrite": {"^/global" : ""},
+    "secure": false
   }
 }
