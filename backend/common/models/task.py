@@ -171,7 +171,7 @@ class Task(db.Model, AbstractSortableStatusModel):
         if task_status:
             where_conditions.append(Task.status == task_status)
         if task_type:
-            where_conditions.append(Task.task_type == task_type)
+            where_conditions.append(Task.task_type == task_type.name)
 
         tasks = await Task.query.where(and_(*where_conditions)).gino.all()
         return tasks

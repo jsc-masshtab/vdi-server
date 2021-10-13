@@ -125,7 +125,7 @@ class PoolGetVm(BaseHttpHandler):
                 if vm:
                     await self._expand_pool_if_required(pool, expandable_pool)
                 elif expandable_pool and not await auto_pool.check_if_total_size_reached():
-                    await self._expand_pool_if_required(pool)
+                    await self._expand_pool_if_required(pool, expandable_pool)
                     response = self.form_err_res(
                         _local_("The pool doesn`t have free machines. Try again after 5 minutes."), "002")
                     return await self.log_finish(response)
