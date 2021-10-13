@@ -44,7 +44,7 @@ export class RemoteComponent implements OnInit, OnDestroy{
     switch (connectionType) {
       case 'SPICE':
         
-        url = `/spice/spice_auto.html?host=${pool.host}`;
+        url = `/spice-html5/spice_auto.html?host=${pool.host}`;
 
         if (pool.port){
           url += `&port=${pool.port}`;

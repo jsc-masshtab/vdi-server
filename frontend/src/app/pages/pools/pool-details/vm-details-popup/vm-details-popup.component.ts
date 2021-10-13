@@ -20,7 +20,6 @@ interface Backup {
   };
 }
 
-
 @Component({
   selector: 'vdi-details-popup',
   templateUrl: './vm-details-popup.component.html'
@@ -723,7 +722,7 @@ export class VmDetalsPopupComponent implements OnInit {
       this.waitService.setWait(true)
 
       this.service.getVnc(this.data.idPool, this.data.vmActive, this.data.controller_id).valueChanges.subscribe((res) => {
-        const vnc = res.data.pool.vm.vnc_connection
+        const vnc: any = res.data.pool.vm.vnc_connection
         const prot = window.location.protocol;
 
         let port = 80;
@@ -748,8 +747,9 @@ export class VmDetalsPopupComponent implements OnInit {
       this.waitService.setWait(true)
 
       this.service.getSpice(this.data.idPool, this.data.vmActive, this.data.controller_id).valueChanges.subscribe((res) => {
-        const spice = res.data.pool.vm
-        this.spice = spice;
+        const spice: any = res.data.pool.vm.spice_connection
+
+        this.spice = this.sanitizer.bypassSecurityTrustResourceUrl(spice.connection_url);
 
         this.show = true;
         this.waitService.setWait(false)

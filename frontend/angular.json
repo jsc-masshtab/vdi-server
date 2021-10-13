@@ -30,7 +30,8 @@
             "tsConfig": "src/tsconfig.app.json",
             "assets": [
               "src/assets",
-              "src/novnc"
+              "src/novnc",
+              "src/spice-html5"
             ],
             "styles": [
               "src/reset.scss",
@@ -175,7 +176,7 @@
             "assets": [
               "projects/thin-client/src/assets",
               "projects/thin-client/src/novnc",
-              "projects/thin-client/src/spice"
+              "projects/thin-client/src/spice-html5"
               ],  
             "styles": [
               "src/reset.scss",
