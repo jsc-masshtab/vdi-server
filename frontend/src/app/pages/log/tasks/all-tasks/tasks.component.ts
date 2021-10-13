@@ -5,12 +5,10 @@ import { Subscription } from 'rxjs';
 import { map } from 'rxjs/operators';
 
 import { WaitService } from '@core/components/wait/wait.service';
-
-import { WebsocketService } from '@shared/classes/websock.service';
 import { IParams } from '@shared/types';
-
 import { InfoTaskComponent } from '../info-tasks/info-tasks.component';
 import { TasksService } from './tasks.service';
+import { WebsocketService } from '@app/core/services/websock.service';
 
 @Component({
   selector: 'vdi-tasks',

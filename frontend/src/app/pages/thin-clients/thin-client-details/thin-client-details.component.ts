@@ -4,7 +4,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute, ParamMap, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 
-import { WebsocketService } from '../../../shared/classes/websock.service';
+import { WebsocketService } from '@app/core/services/websock.service';
 import { ThinClientsService } from '../thin-clients.service';
 import { DisconnectThinClientComponent } from './disconnect-thin-client/disconnect-thin-client.component';
 
