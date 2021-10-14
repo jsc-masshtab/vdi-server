@@ -26,6 +26,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
   private socketSub: Subscription;
   private subPool$: Subscription;
 
+  public messages: any[] = [];
   public host: boolean = false;
   public pool: IPoolDetailClient;
   public connectionTypes: string[];
@@ -142,8 +143,41 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
     }
 
     this.socketSub = this.ws.stream('/domains/').subscribe((message: any) => {
-       console.log(message);
-        
+       if (message.msg_type === 'text_msg' ) {
+        this.messages.push({
+          sender: message.sender_name,
+          self: false,
+          text: message.message,
+          time: new Date().toLocaleTimeString()
+        })
+
+      //   // if (this.messenger) {
+      //   //   setTimeout(() => {
+      //   //     this.messenger.nativeElement.scrollTop = this.messenger.nativeElement.scrollHeight
+      //   //   })
+      //   // }
+       }
+       console.log(this.messages);
+       
     });
+  }
+
+  public sendMessage(message: string): void {
+    console.log(message);
+    
+    this.messages.push({
+      sender: 'Вы',
+      self: true,
+      text: message,
+      time: new Date().toLocaleTimeString()
+    })
+
+    
+
+    // setTimeout(() => {
+    //   this.messenger.nativeElement.scrollTop = this.messenger.nativeElement.scrollHeight
+    // })
+    
+    // this.service.sendMessageToThinClient(this.entity.user_id, message).subscribe()
   }
 }
