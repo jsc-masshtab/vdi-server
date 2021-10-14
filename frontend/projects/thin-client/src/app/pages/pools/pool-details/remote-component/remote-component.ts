@@ -3,11 +3,11 @@ import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dial
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { Subscription } from 'rxjs';
 
-import { YesNoFormComponent } from '@app/shared/forms-dinamic/yes-no-form/yes-no-form.component';
 import { PoolsService, VMActions } from '../../pools.service';
 import { PoolDetailMapper } from '../pool-detail.mapper';
 import { RemoteData } from '../pool-details.component';
 import { WaitService } from '../../../../core/wait/wait.service';
+import { YesNoFormComponent } from '../../../../components/yes-no-form/yes-no-form.component';
 
 
 
@@ -44,7 +44,7 @@ export class RemoteComponent implements OnInit, OnDestroy{
     switch (connectionType) {
       case 'SPICE':
         
-        url = `/spice/spice_auto.html?host=${pool.host}`;
+        url = `/spice-html5/spice_auto.html?host=${pool.host}`;
 
         if (pool.port){
           url += `&port=${pool.port}`;

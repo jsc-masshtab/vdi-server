@@ -1,7 +1,7 @@
 import { Component, OnInit, HostListener, OnDestroy } from '@angular/core';
-import { MatDialog } from '@angular/material/dialog';
 
-import { WebsocketService } from '../../shared/classes/websock.service';
+import { MatDialog } from '@angular/material/dialog';
+import { WebsocketService } from '@app/core/services/websock.service';
 
 
 @Component({
