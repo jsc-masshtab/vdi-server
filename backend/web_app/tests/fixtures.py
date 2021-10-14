@@ -141,7 +141,7 @@ async def fixt_create_automated_pool(fixt_controller):
                         verbose_name: "%s",
                         controller_id: "%s",
                         resource_pool_id: "%s",
-                        datapool_id: %s,
+                        datapool_id: "%s",
                         template_id: "%s",
                         initial_size: 1,
                         reserve_size: 1,
