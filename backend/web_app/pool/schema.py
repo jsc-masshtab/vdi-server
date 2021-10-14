@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import asyncio
 import re
+from uuid import UUID
 
 from asyncpg.exceptions import UniqueViolationError
 
@@ -1276,6 +1277,32 @@ class UpdateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
         return UpdateAutomatedPoolMutation(ok=False)
 
 
+class CopyAutomatedPoolMutation(graphene.Mutation):
+    class Arguments:
+        pool_id = graphene.UUID(required=True)
+
+    pool_settings = graphene.JSONString()
+
+    @administrator_required
+    async def mutate(self, _info, pool_id, creator):
+        simple_pool = await Pool.query.where(Pool.id == pool_id).gino.first()
+        auto_pool = await AutomatedPool.query.where(AutomatedPool.id == pool_id).gino.first()
+        pool_settings = {**simple_pool.__values__, **auto_pool.__values__}
+        for key, val in pool_settings.items():
+            if isinstance(val, UUID):
+                pool_settings[key] = str(val)
+            elif isinstance(val, Pool.PoolTypes):
+                pool_settings[key] = val.value
+            elif isinstance(val, Status):
+                pool_settings[key] = val.value
+            elif isinstance(val, list):
+                pool_settings[key] = [element.value for element in val]
+        await system_logger.info(_local_("Settings of pool {} is copied.").format(simple_pool.verbose_name),
+                                 description=str(pool_settings),
+                                 user=creator)
+        return CopyAutomatedPoolMutation(pool_settings=pool_settings)
+
+
 class RemoveVmsFromPoolMutation(graphene.Mutation):
     class Arguments:
         pool_id = graphene.ID(required=True)
@@ -1826,6 +1853,7 @@ class PoolMutations(graphene.ObjectType):
     removeVmsFromDynamicPool = RemoveVmsFromPoolMutation.Field()
     removePool = DeletePoolMutation.Field()
     updateDynamicPool = UpdateAutomatedPoolMutation.Field()
+    copyDynamicPool = CopyAutomatedPoolMutation.Field()
     updateStaticPool = UpdateStaticPoolMutation.Field()
     updateRdsPool = UpdateRdsPoolMutation.Field()
     expandPool = ExpandPoolMutation.Field()
