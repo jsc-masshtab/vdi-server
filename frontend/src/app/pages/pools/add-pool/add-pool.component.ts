@@ -101,6 +101,7 @@ export class PoolAddComponent implements OnInit, OnDestroy {
     });
 
     this.dynamicPool = this.fb.group({
+      data_pool_id: ['', Validators.required],
       template_id: ['', Validators.required],
       vm_name_template: ['', [Validators.required, Validators.pattern(/^([a-zA-Z]+[a-zA-Z0-9-]*){0,63}$/)]],
       ...this.auth_dirs.length ? { ad_ou: [''] } : {},
@@ -118,6 +119,7 @@ export class PoolAddComponent implements OnInit, OnDestroy {
     }, { validators: this.totalSizeValidator() });
 
     this.guestPool = this.fb.group({
+      data_pool_id: ['', Validators.required],
       template_id: ['', Validators.required],
       vm_name_template: ['', [Validators.required, Validators.pattern(/^([a-zA-Z]+[a-zA-Z0-9-]*){0,63}$/)]],
       ...this.auth_dirs.length ? { ad_ou: [''] } : {},
@@ -156,6 +158,7 @@ export class PoolAddComponent implements OnInit, OnDestroy {
       connection_types: this.type === 'rds' ? ['RDP', 'NATIVE_RDP'] : ['RDP', 'NATIVE_RDP', 'SPICE', 'SPICE_DIRECT', 'X2GO'],
       controllers: [],
       resource_pools: [],
+      data_pools: [],
       vms: [],
       templates: []
     };
@@ -238,15 +241,40 @@ export class PoolAddComponent implements OnInit, OnDestroy {
               resource_pool_id: this.sharedData.get('resource_pool_id').value
             });
           }
+        });
 
+        this.sharedData.controls['resource_pool_id'].valueChanges.subscribe((value) => {
+          this.dynamicPool.controls['data_pool_id'].reset(); // Очистка поля под текущим
+          this.guestPool.controls['data_pool_id'].reset(); // Очистка поля под текущим
+
+          if (value) {
+            this.getData('data_pools', {
+              id_: this.sharedData.get('controller_id').value,
+              resource_pool_id: value
+            });
+          } // запрос данных для выборки в очищенном поле
+        });
+
+        this.dynamicPool.controls['data_pool_id'].valueChanges.subscribe((value) => {
           this.dynamicPool.controls['template_id'].reset();
 
+          if (value) {
+            this.getData('templates', {
+              id_: this.sharedData.get('controller_id').value,
+              resource_pool_id: this.sharedData.get('resource_pool_id').value,
+              data_pool_id: value
+            });
+          }
+        });
+
+        this.guestPool.controls['data_pool_id'].valueChanges.subscribe((value) => {
           this.guestPool.controls['template_id'].reset();
 
           if (value) {
             this.getData('templates', {
               id_: this.sharedData.get('controller_id').value,
-              resource_pool_id: this.sharedData.get('resource_pool_id').value
+              resource_pool_id: this.sharedData.get('resource_pool_id').value,
+              data_pool_id: value
             });
           }
         });

@@ -134,6 +134,16 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       property_lv2: 'verbose_name'
     },
     {
+      title: 'Пул данных',
+      property: 'datapool',
+      property_lv2: 'verbose_name'
+    },
+    {
+      title: 'Шаблон ВМ',
+      property: 'template',
+      property_lv2: 'verbose_name'
+    },
+    {
       title: 'Начальное количество ВМ',
       property: 'initial_size',
       type: 'string'
@@ -162,11 +172,6 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       title: 'Количество доступных ВМ',
       property: 'vms',
       type: 'array-length'
-    },
-    {
-      title: 'Шаблон ВМ',
-      property: 'template',
-      property_lv2: 'verbose_name'
     },
     {
       title: 'Шаблон для имени ВМ',
@@ -287,6 +292,16 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       property_lv2: 'verbose_name'
     },
     {
+      title: 'Пул данных',
+      property: 'datapool',
+      property_lv2: 'verbose_name'
+    },
+    {
+      title: 'Шаблон ВМ',
+      property: 'template',
+      property_lv2: 'verbose_name'
+    },
+    {
       title: 'Начальное количество ВМ',
       property: 'initial_size',
       type: 'string'
@@ -313,11 +328,6 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       title: 'Количество доступных ВМ',
       property: 'vms',
       type: 'array-length'
-    },
-    {
-      title: 'Шаблон ВМ',
-      property: 'template',
-      property_lv2: 'verbose_name'
     },
     {
       title: 'Шаблон для имени ВМ',

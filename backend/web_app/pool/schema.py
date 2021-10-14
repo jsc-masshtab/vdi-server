@@ -161,10 +161,12 @@ class VmType(VeilResourceType):
     async def resolve_assigned_users(self, _info, limit, offset):
         """Получить список пользователей ВМ."""
         vm = await Vm.get(self.id)
-        users_query = await vm.get_users_query()
-        users = await users_query.limit(limit).offset(offset).gino.all()
-        objects = [UserType.instance_to_type(user) for user in users]
-        return objects
+        if vm:
+            users_query = await vm.get_users_query()
+            users = await users_query.limit(limit).offset(offset).gino.all()
+            objects = [UserType.instance_to_type(user) for user in users]
+            return objects
+        return list()
 
     async def resolve_assigned_users_count(self, _info):
         vm = await Vm.get(self.id)
@@ -620,11 +622,13 @@ class PoolType(graphene.ObjectType):
         # Прерываем выполнение при отсутствии клиента
         if not pool_controller.veil_client:
             return
-        veil_datapool = pool_controller.veil_client.data_pool(str(pool.datapool_id))
-        await veil_datapool.info()
-        # попытка не использовать id
-        veil_datapool.id = veil_datapool.api_object_id
-        return veil_datapool
+        if pool.datapool_id:
+            veil_datapool = pool_controller.veil_client.data_pool(str(pool.datapool_id))
+            await veil_datapool.info()
+            # попытка не использовать id
+            veil_datapool.id = veil_datapool.api_object_id
+            return veil_datapool
+        return None
 
     async def resolve_assigned_connection_types(self, _info):
         pool = await Pool.get(self.pool_id)

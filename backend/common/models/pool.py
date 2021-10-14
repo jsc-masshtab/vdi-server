@@ -720,8 +720,8 @@ class Pool(VeilModel):
 
     @classmethod
     async def create(
-        cls, verbose_name, resource_pool_id, datapool_id, controller_id,
-        connection_types, tag, pool_type
+        cls, verbose_name, resource_pool_id, controller_id,
+        connection_types, tag, pool_type, datapool_id=None
     ):
         if not controller_id:
             raise ValidationError(
@@ -1817,7 +1817,7 @@ class AutomatedPool(db.Model):
             "verbose_name": verbose_name,
             "domain_id": str(self.template_id),
             "resource_pool_id": str(await self.resource_pool_id),
-            "datapool_id": str(await self.datapool_id),
+            "datapool_id": await self.datapool_id,
             "controller_id": pool_controller.id,
             "create_thin_clones": self.create_thin_clones,
             "count": count,

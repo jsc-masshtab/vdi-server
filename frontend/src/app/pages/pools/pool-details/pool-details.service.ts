@@ -103,6 +103,9 @@ export class PoolDetailsService {
                                     resource_pool {
                                         verbose_name
                                     }
+                                    datapool {
+                                        verbose_name
+                                    }
                                     template {
                                         verbose_name
                                     }
