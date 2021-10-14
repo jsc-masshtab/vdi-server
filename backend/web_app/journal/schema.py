@@ -55,7 +55,7 @@ class EventType(graphene.ObjectType):
     id = graphene.UUID()
     event_type = graphene.Int()
     message = graphene.Field(ShortString)
-    description = graphene.Field(ShortString)
+    description = graphene.Field(graphene.String)
     created = graphene.DateTime()
     user = graphene.Field(ShortString)
     read_by = graphene.List(UserType)
@@ -68,7 +68,7 @@ class VeilEventType(VeilResourceType):
     id = graphene.UUID()
     event_type = graphene.Int()
     message = graphene.Field(ShortString)
-    description = graphene.Field(ShortString)
+    description = graphene.Field(graphene.String)
     created = graphene.DateTime()
     user = graphene.Field(ShortString)
 
