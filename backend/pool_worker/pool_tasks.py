@@ -360,7 +360,7 @@ class RecreationGuestVmTask(AbstractTask):
 
         async with pool_lock:
             async with template_lock:
-                # Проверяем, что максимальное значение ВМ в пуле не достигнуто
+
                 pool = await Pool.get(automated_pool.id)
 
                 # Удаление и добавление 1 ВМ.

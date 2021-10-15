@@ -277,8 +277,8 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
     },
     {
       title: 'Время жизни ВМ после потери связи',
-      property: 'waiting_time',
-      type: 'waiting_time',
+      property: 'vm_disconnect_action_timeout',
+      type: 'vm_disconnect_action_timeout',
       edit: 'changeGuestPoolWaitingTime'
     },
     {
@@ -986,8 +986,8 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
           form: [{
             tag: 'input',
             type: 'number',
-            fieldName: 'waiting_time',
-            fieldValue: this.pool.waiting_time,
+            fieldName: 'vm_disconnect_action_timeout',
+            fieldValue: this.pool.vm_disconnect_action_timeout,
           }]
         },
         update: {

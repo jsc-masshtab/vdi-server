@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import asyncio
 import uuid
-from enum import IntEnum
+from enum import Enum, IntEnum
 
 from asyncpg.exceptions import UniqueViolationError
 
@@ -48,6 +48,16 @@ class VmPowerState(IntEnum):
     OFF = 1
     SUSPENDED = 2
     ON = 3
+
+
+class VmActionUponUserDisconnect(Enum):
+    """Действие над ВМ после отключения от нее пользователя."""
+
+    NONE = "NONE"  # Нет действий. По умолчанию для всех типов пулов кроме гостевого
+    RECREATE = "RECREATE"  # Только для гостевого пула. Неизменяемое действие по умолчанию
+    SHUTDOWN = "SHUTDOWN"
+    SHUTDOWN_FORCED = "SHUTDOWN_FORCED"
+    SUSPEND = "SUSPEND"
 
 
 class Vm(VeilModel):
@@ -852,13 +862,14 @@ class Vm(VeilModel):
                         increase_step=automated_pool.increase_step,
                         vm_name_template=automated_pool.vm_name_template,
                         keep_vms_on=pool.keep_vms_on,
+                        vm_action_upon_user_disconnect=pool.vm_action_upon_user_disconnect,
+                        vm_disconnect_action_timeout=pool.vm_disconnect_action_timeout,
                         create_thin_clones=automated_pool.create_thin_clones,
                         enable_vms_remote_access=automated_pool.enable_vms_remote_access,
                         start_vms=automated_pool.start_vms,
                         set_vms_hostnames=automated_pool.set_vms_hostnames,
                         include_vms_in_ad=automated_pool.include_vms_in_ad,
                         ad_ou=automated_pool.ad_ou,
-                        waiting_time=automated_pool.waiting_time,
                         connection_types=pool.connection_types,
                         creator=creator,
                     )

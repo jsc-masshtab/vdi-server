@@ -63,13 +63,7 @@ class TestMessageChat(VdiHttpTestCase):
             )
 
             # Thin client connection to ws
-            ws_url = (
-                "ws://localhost:" + str(self.get_http_port()) + "/ws/client?token={}"
-                "&is_conn_init_by_user=0"
-                "&veil_connect_version=1.4.1"
-                "&tk_os=Linux".format(tk_access_token)
-            )
-            tk_ws_client = await tornado.websocket.websocket_connect(ws_url)
+            tk_ws_client = await self.connect_to_thin_client_ws(tk_access_token)
             assert tk_ws_client
 
             # Admin login
