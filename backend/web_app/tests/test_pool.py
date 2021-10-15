@@ -204,7 +204,6 @@ class PoolTestCase(VdiHttpTestCase):
 
 @pytest.mark.asyncio
 async def test_copy_automated_pool(
-    snapshot,
     fixt_launch_workers,
     fixt_db,
     fixt_create_automated_pool,  # noqa
@@ -227,7 +226,7 @@ async def test_copy_automated_pool(
         pool_id,
     )
     executed = await execute_scheme(pool_schema, qu, context=fixt_auth_context)
-    snapshot.assert_match(executed)
+    assert executed["copyDynamicPool"]["pool_settings"]
 
 # ----------------------------------------------
 
