@@ -1,7 +1,7 @@
 import { Component, EventEmitter, Output } from '@angular/core';
 
 @Component({
-  selector: 'app-button-refresh',
+  selector: 'tc-button-refresh',
   templateUrl: './button-refresh.component.html',
   styleUrls: ['./button-refresh.component.scss']
 })

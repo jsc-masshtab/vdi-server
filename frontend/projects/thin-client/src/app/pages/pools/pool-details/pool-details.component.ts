@@ -3,8 +3,8 @@ import { FormControl } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute, ParamMap, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
-import { WebsocketService } from '../../../core/services/websock.service';
 
+import { WebsocketService } from '../../../core/services/websock.service';
 import { WaitService } from '../../../core/wait/wait.service';
 import { PoolsService } from '../pools.service';
 import { IPoolDetailClient, PoolDetailMapper } from './pool-detail.mapper';
@@ -22,10 +22,8 @@ export type RemoteData = {
 })
 
 export class PoolDetailsComponent implements OnInit, OnDestroy {
-  private idPool: string;
-  private socketSub: Subscription;
   private subPool$: Subscription;
-
+  private idPool: string;
   public messages: any[] = [];
   public host: boolean = false;
   public pool: IPoolDetailClient;
@@ -86,18 +84,17 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       }
 
     });
-   
-    this.listenSockets()
+
   }
 
   public getPool(): void {
     if (this.subPool$) {
       this.subPool$.unsubscribe();
     }
+
     this.waitService.setWait(true);   
     this.host = false;
     this.subPool$ = this.poolService.getPoolDetail(this.idPool).subscribe((res) => {
-
         this.pool =  PoolDetailMapper.transformToClient(res.data);
         this.host = true;
   
@@ -135,49 +132,5 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
     if (this.subPool$) {
       this.subPool$.unsubscribe();
     }
-  }
-
-  private listenSockets() {
-    if (this.socketSub) {
-      this.socketSub.unsubscribe();
-    }
-
-    this.socketSub = this.ws.stream('/domains/').subscribe((message: any) => {
-       if (message.msg_type === 'text_msg' ) {
-        this.messages.push({
-          sender: message.sender_name,
-          self: false,
-          text: message.message,
-          time: new Date().toLocaleTimeString()
-        })
-
-      //   // if (this.messenger) {
-      //   //   setTimeout(() => {
-      //   //     this.messenger.nativeElement.scrollTop = this.messenger.nativeElement.scrollHeight
-      //   //   })
-      //   // }
-       }
-       console.log(this.messages);
-       
-    });
-  }
-
-  public sendMessage(message: string): void {
-    console.log(message);
-    
-    this.messages.push({
-      sender: 'Вы',
-      self: true,
-      text: message,
-      time: new Date().toLocaleTimeString()
-    })
-
-    
-
-    // setTimeout(() => {
-    //   this.messenger.nativeElement.scrollTop = this.messenger.nativeElement.scrollHeight
-    // })
-    
-    // this.service.sendMessageToThinClient(this.entity.user_id, message).subscribe()
   }
 }

@@ -4,7 +4,7 @@ import { AuthStorageService } from '../../core/services/authStorage.service';
 import { LoginService } from '../../core/services/login.service';
 
 @Component({
-  selector: 'app-dashboard',
+  selector: 'tc-dashboard',
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss']
 })

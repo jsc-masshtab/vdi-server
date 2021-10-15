@@ -11,7 +11,7 @@ import { WaitService } from './wait.service';
 
 
 @Component({
-  selector: 'app-wait',
+  selector: 'tc-wait',
   templateUrl: './wait.component.html',
   animations: [
     trigger('animForm', [

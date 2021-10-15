@@ -1,7 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { Subject, Observable, Subscription } from 'rxjs';
-import { filter } from 'rxjs/operators';
 
 import { AuthStorageService } from './authStorage.service';
 import { environment } from 'environments/environment';
@@ -19,7 +18,7 @@ export class WebsocketService {
 
   private ws: WebSocket;
 
-  private event = new Subject();
+  private event  = new Subject();
   event$ = this.event.asObservable();
 
   constructor(
@@ -63,7 +62,7 @@ export class WebsocketService {
       let sub: Subscription;
 
       sub = this.event$
-        .pipe(filter((ws: any) => ws.resource === listener))
+        // .pipe(filter((ws: any) => ws.resource === listener))
         .subscribe((message: any) => observer.next(message));
 
       return () => {
@@ -145,7 +144,7 @@ export class WebsocketService {
         console.log(`%c[WS] Listener ${resource} subscribed x${this.connections[resource]}`, 'color: #9a6f0f');
       } else {
         this.connections[resource] = 1;
-        this.send('add', resource);
+        // this.send('add', resource);
       }
     }
   }
@@ -157,7 +156,7 @@ export class WebsocketService {
         console.log(`%c[WS] Listener ${resource} unsubscribe`, 'color: #9a6f0f');
       } else {
         delete this.connections[resource];
-        this.send('delete', resource);
+        // this.send('delete', resource);
       }
     }
   }

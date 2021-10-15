@@ -156,7 +156,7 @@
       },
       "root": "projects/thin-client",
       "sourceRoot": "projects/thin-client/src",
-      "prefix": "thin-client",
+      "prefix": "tc",
       "architect": {
         "build": {
           "builder": "@angular-devkit/build-angular:browser",

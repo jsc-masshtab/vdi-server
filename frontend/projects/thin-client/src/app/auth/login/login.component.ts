@@ -7,7 +7,7 @@ import { LoginService } from '../../core/services/login.service';
 import { ErrorsService } from '../../core/errors/errors.service';
 
 @Component({
-  selector: 'app-client-login',
+  selector: 'tc-login',
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.scss']
 })
