@@ -6,6 +6,7 @@ import uuid
 
 from graphql.execution.executors.asyncio import AsyncioExecutor
 from graphql.graphql import graphql
+import tornado
 from tornado.testing import AsyncHTTPTestCase
 from tornado.ioloop import IOLoop
 from tornado.escape import json_decode
@@ -120,3 +121,13 @@ class VdiHttpTestCase(AsyncHTTPTestCase):
         response_dict = json_decode(response.body)
         self.assertIsInstance(response_dict, dict)
         return response_dict
+
+    async def connect_to_thin_client_ws(self, access_token):
+        ws_url = (
+            "ws://localhost:" + str(self.get_http_port()) + "/ws/client?token={}"
+            "&is_conn_init_by_user=1"
+            "&veil_connect_version=1.4.1"
+            "&tk_os=Linux".format(access_token)
+        )
+        ws_client = await tornado.websocket.websocket_connect(ws_url)
+        return ws_client

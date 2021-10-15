@@ -1541,7 +1541,7 @@ msgstr "В пуле нет свободных машин."
 
 #: ../web_app/thin_client_api/handlers.py:140
 msgid "Machine is being prepared."
-msgstr "ВМ подготовлена."
+msgstr "ВМ подготавливается."
 
 #: ../web_app/thin_client_api/handlers.py:145
 msgid "User {} connected to pool {}."

@@ -125,7 +125,7 @@ export class PoolAddComponent implements OnInit, OnDestroy {
       reserve_size: [1, [Validators.required, Validators.max(200), Validators.min(1)]],
       initial_size: [1, [Validators.required, Validators.max(200), Validators.min(1)]],
       total_size: [1, [Validators.required, Validators.max(10000), Validators.min(1)]],
-      waiting_time: [60, [Validators.required, Validators.min(1)]],
+      vm_disconnect_action_timeout: [60, [Validators.required, Validators.min(1)]],
 
       create_thin_clones: true,
       is_guest: true,
@@ -372,7 +372,7 @@ export class PoolAddComponent implements OnInit, OnDestroy {
         this.guestPool.get('initial_size').setValue(1);
         this.guestPool.get('total_size').setValue(1);
         this.guestPool.get('reserve_size').setValue(1);
-        this.guestPool.get('waiting_time').setValue(60);
+        this.guestPool.get('vm_disconnect_action_timeout').setValue(60);
         this.guestPool.get('create_thin_clones').setValue(true);
         this.guestPool.get('is_guest').setValue(true);
         this.guestPool.get('enable_vms_remote_access').setValue(true);

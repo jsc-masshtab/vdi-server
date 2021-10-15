@@ -234,6 +234,26 @@ async def read_license_dict(dict_name):
     return read_dict
 
 
+async def redis_wait_for_message(redis_channel, predicate):
+    """Asynchronously wait for message.
+
+    :param predicate: condition to find required message. Signature: def fun(redis_message) -> bool
+    :return message: return message when awaited message received.
+     Ожидание потенциально бесконечно.
+    """
+    with redis_get_subscriber([redis_channel]) as subscriber:
+
+        while True:
+            # try to receive message
+            redis_message = await subscriber.get_msg()
+            if (
+                redis_message
+                and redis_message.get("type") == "message"  # noqa: W503
+                and predicate(redis_message)  # noqa: W503
+            ):
+                return redis_message
+
+
 async def a_redis_wait_for_task_completion(task_id):
     """Ждем завершения таски и возвращаем статус с которым она завершилась.
 
@@ -396,7 +416,7 @@ async def publish_to_redis(channel, message):
 
 
 async def publish_data_in_internal_channel(resource_type: str, event_type: str,
-                                           model, additional_model_to_json_data=None, description=None):
+                                           model, additional_data: dict = None, description: str = None):
     """Publish db model data in redis channel INTERNAL_EVENTS_CHANNEL."""
     msg_dict = dict(
         resource=resource_type,
@@ -406,6 +426,6 @@ async def publish_data_in_internal_channel(resource_type: str, event_type: str,
     )
 
     msg_dict.update(gino_model_to_json_serializable_dict(model))
-    if additional_model_to_json_data:
-        msg_dict.update(additional_model_to_json_data)
+    if additional_data:
+        msg_dict.update(additional_data)
     await publish_to_redis(settings.INTERNAL_EVENTS_CHANNEL, json.dumps(msg_dict))
