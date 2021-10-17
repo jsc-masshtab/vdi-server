@@ -179,7 +179,7 @@ class VmManager:
                 # Создаем таску пересоздания ВМ
                 task_id = await request_to_execute_pool_task(vm.id, PoolTaskType.VM_GUEST_RECREATION,
                                                              vm_id=str(vm.id))
-                status = await wait_for_task_result(task_id, 60)
+                status = await wait_for_task_result(task_id, 180)
                 is_action_successful = status and (status == TaskStatus.FINISHED.name)
 
             elif action == VmActionUponUserDisconnect.SHUTDOWN:
@@ -200,12 +200,14 @@ class VmManager:
         except Exception as e:
             await system_logger.warning(message=_local_("Vm post disconnect action error."),
                                         description=str(e))
+        finally:
+            if vm_id in self._disconnect_action_coroutines:
+                del self._disconnect_action_coroutines[vm_id]
 
     async def _cancel_vm_action_coroutine(self, vm_id):
         """Cancel pending vm actions."""
         if vm_id in self._disconnect_action_coroutines:
             await cancel_async_task(self._disconnect_action_coroutines[vm_id], True)
-            del self._disconnect_action_coroutines[vm_id]
 
     async def _do_actions_when_user_disconnects_from_vm(self):
         """Производим действия (через интервал времени) с ВМ после отключения пользователя.
