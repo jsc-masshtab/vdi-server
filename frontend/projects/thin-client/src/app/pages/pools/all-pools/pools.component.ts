@@ -12,7 +12,7 @@ import { IPoolClient, PoolMapper } from './pools.mapper';
 
 
 @Component({
-  selector: 'app-pools',
+  selector: 'tc-pools',
   templateUrl: './pools.component.html',
   styleUrls: ['./pools.component.scss']
 })
