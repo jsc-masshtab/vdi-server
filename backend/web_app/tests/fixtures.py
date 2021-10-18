@@ -141,6 +141,7 @@ async def fixt_create_automated_pool(fixt_controller):
                         verbose_name: "%s",
                         controller_id: "%s",
                         resource_pool_id: "%s",
+                        datapool_id: "%s",
                         template_id: "%s",
                         initial_size: 1,
                         reserve_size: 1,
@@ -163,6 +164,7 @@ async def fixt_create_automated_pool(fixt_controller):
         get_test_pool_name(),
         resources["controller_id"],
         resources["resource_pool_id"],
+        resources["datapool_id"],
         resources["template_id"],
     )
     context = await get_auth_context()
