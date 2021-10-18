@@ -233,6 +233,7 @@ class ControllerType(graphene.ObjectType, ControllerFetcher):
         ControllerVmType,
         cluster_id=graphene.UUID(),
         resource_pool_id=graphene.UUID(),
+        data_pool_id=graphene.UUID(),
         node_id=graphene.UUID(),
         ordering=ShortString(),
         limit=graphene.Int(default_value=100),
@@ -347,6 +348,7 @@ class ControllerType(graphene.ObjectType, ControllerFetcher):
         offset,
         cluster_id=None,
         resource_pool_id=None,
+        data_pool_id=None,
         node_id=None,
         ordering: str = None,
     ):
@@ -361,6 +363,7 @@ class ControllerType(graphene.ObjectType, ControllerFetcher):
             template=1,
             cluster_id=cluster_id,
             resource_pool=resource_pool_id,
+            data_pool_id=data_pool_id,
             node_id=node_id,
         ).list(paginator=paginator)
         return [ControllerVmType(**data) for data in veil_response.paginator_results]

@@ -91,6 +91,7 @@ class Pool(VeilModel):
     id = db.Column(UUID(), primary_key=True, default=uuid.uuid4, unique=True)
     verbose_name = db.Column(db.Unicode(length=128), nullable=False, unique=True)
     resource_pool_id = db.Column(UUID(), nullable=True)
+    datapool_id = db.Column(UUID(), nullable=True)
     status = db.Column(AlchemyEnum(Status), nullable=False, index=True)
     controller = db.Column(
         UUID(), db.ForeignKey("controller.id", ondelete="CASCADE"), nullable=False
@@ -228,6 +229,7 @@ class Pool(VeilModel):
                 Pool.id.label("master_id"),
                 Pool.verbose_name,
                 Pool.resource_pool_id,
+                Pool.datapool_id,
                 Pool.status,
                 Pool.controller,
                 Pool.keep_vms_on,
@@ -285,6 +287,7 @@ class Pool(VeilModel):
                 Pool.id,
                 Pool.verbose_name,
                 Pool.resource_pool_id,
+                Pool.datapool_id,
                 Pool.status,
                 Pool.controller,
                 Pool.keep_vms_on,
@@ -733,7 +736,8 @@ class Pool(VeilModel):
     @classmethod
     async def create(
         cls, verbose_name, resource_pool_id, controller_id,
-        connection_types, tag, pool_type, vm_action_upon_user_disconnect, vm_disconnect_action_timeout
+        connection_types, tag, pool_type, vm_action_upon_user_disconnect, vm_disconnect_action_timeout,
+        datapool_id=None
     ):
         if not controller_id:
             raise ValidationError(
@@ -742,6 +746,7 @@ class Pool(VeilModel):
         pool = await super().create(
             verbose_name=verbose_name,
             resource_pool_id=resource_pool_id,
+            datapool_id=datapool_id,
             controller=controller_id,
             status=Status.CREATING,
             connection_types=connection_types,
@@ -1551,6 +1556,12 @@ class AutomatedPool(db.Model):
             return pool.resource_pool_id
 
     @property
+    async def datapool_id(self):
+        pool = await Pool.get(self.id)
+        if pool:
+            return pool.datapool_id
+
+    @property
     async def keep_vms_on(self):
         pool = await Pool.get(self.id)
         if pool:
@@ -1571,6 +1582,7 @@ class AutomatedPool(db.Model):
         verbose_name,
         controller_id,
         resource_pool_id,
+        datapool_id,
         template_id,
         increase_step,
         initial_size,
@@ -1596,6 +1608,7 @@ class AutomatedPool(db.Model):
             pool = await Pool.create(
                 verbose_name=verbose_name,
                 resource_pool_id=resource_pool_id,
+                datapool_id=datapool_id,
                 controller_id=controller_id,
                 connection_types=connection_types,
                 tag=tag,
@@ -1823,6 +1836,7 @@ class AutomatedPool(db.Model):
             "verbose_name": verbose_name,
             "domain_id": str(self.template_id),
             "resource_pool_id": str(await self.resource_pool_id),
+            "datapool_id": await self.datapool_id,
             "controller_id": pool_controller.id,
             "create_thin_clones": self.create_thin_clones,
             "count": count,

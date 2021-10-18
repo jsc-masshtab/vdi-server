@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 import asyncio
 import re
+from enum import Enum
+from uuid import UUID
 
 from asyncpg.exceptions import UniqueViolationError
 
@@ -163,10 +165,12 @@ class VmType(VeilResourceType):
     async def resolve_assigned_users(self, _info, limit, offset):
         """Получить список пользователей ВМ."""
         vm = await Vm.get(self.id)
-        users_query = await vm.get_users_query()
-        users = await users_query.limit(limit).offset(offset).gino.all()
-        objects = [UserType.instance_to_type(user) for user in users]
-        return objects
+        if vm:
+            users_query = await vm.get_users_query()
+            users = await users_query.limit(limit).offset(offset).gino.all()
+            objects = [UserType.instance_to_type(user) for user in users]
+            return objects
+        return list()
 
     async def resolve_assigned_users_count(self, _info):
         vm = await Vm.get(self.id)
@@ -484,6 +488,7 @@ class PoolType(graphene.ObjectType):
 
     # AutomatedPool fields
     automated_pool_id = graphene.UUID()
+    datapool_id = graphene.UUID()
     template_id = graphene.UUID()
     increase_step = graphene.Int()
     max_amount_of_create_attempts = graphene.Int()
@@ -522,6 +527,7 @@ class PoolType(graphene.ObjectType):
     # Затрагивает запрос ресурсов на VeiL ECP.
     template = graphene.Field(VeilShortEntityType)
     resource_pool = graphene.Field(VeilShortEntityType)
+    datapool = graphene.Field(VeilShortEntityType)
     vms = graphene.List(VmType,
                         limit=graphene.Int(default_value=500),
                         offset=graphene.Int(default_value=0),
@@ -653,6 +659,20 @@ class PoolType(graphene.ObjectType):
         veil_domain.id = veil_domain.api_object_id
         return veil_domain
 
+    async def resolve_datapool(self, _info):
+        pool = await Pool.get(self.pool_id)
+        pool_controller = await pool.controller_obj
+        # Прерываем выполнение при отсутствии клиента
+        if not pool_controller.veil_client:
+            return
+        if pool.datapool_id:
+            veil_datapool = pool_controller.veil_client.data_pool(str(pool.datapool_id))
+            await veil_datapool.info()
+            # попытка не использовать id
+            veil_datapool.id = veil_datapool.api_object_id
+            return veil_datapool
+        return None
+
     async def resolve_assigned_connection_types(self, _info):
         pool = await Pool.get(self.pool_id)
         return pool.connection_types
@@ -673,6 +693,7 @@ def pool_obj_to_type(pool_obj: Pool) -> PoolType:
         "resource_pool_id": pool_obj.resource_pool_id,
         "static_pool_id": pool_obj.master_id,
         "automated_pool_id": pool_obj.master_id,
+        "datapool_id": pool_obj.datapool_id,
         "template_id": pool_obj.template_id,
         "increase_step": pool_obj.increase_step,
         "max_amount_of_create_attempts": pool_obj.max_amount_of_create_attempts,
@@ -1115,6 +1136,7 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator, ControllerFe
     class Arguments:
         controller_id = graphene.UUID(required=True)
         resource_pool_id = graphene.UUID(required=True)
+        datapool_id = graphene.UUID(required=True)
         template_id = graphene.UUID(required=True)
 
         verbose_name = ShortString(required=True)
@@ -1158,6 +1180,7 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator, ControllerFe
         creator,
         controller_id,
         resource_pool_id,
+        datapool_id,
         template_id,
         verbose_name,
         increase_step,
@@ -1188,7 +1211,6 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator, ControllerFe
             if vm_action_upon_user_disconnect is None:
                 vm_action_upon_user_disconnect = VmActionUponUserDisconnect.NONE.name
         await cls.custom_validate_vm_action_upon_user_disconnect(vm_action_upon_user_disconnect, pool_type)
-
         # Создание записей в БД
         try:
             controller = await cls.fetch_by_id(controller_id)
@@ -1201,6 +1223,7 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator, ControllerFe
                 verbose_name=verbose_name,
                 controller_id=controller_id,
                 resource_pool_id=resource_pool_id,
+                datapool_id=datapool_id,
                 template_id=template_id,
                 increase_step=increase_step,
                 initial_size=initial_size,
@@ -1331,6 +1354,30 @@ class UpdateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
             else:
                 return UpdateAutomatedPoolMutation(ok=True)
         return UpdateAutomatedPoolMutation(ok=False)
+
+
+class CopyAutomatedPoolMutation(graphene.Mutation):
+    class Arguments:
+        pool_id = graphene.UUID(required=True)
+
+    pool_settings = graphene.JSONString()
+
+    @administrator_required
+    async def mutate(self, _info, pool_id, creator):
+        simple_pool = await Pool.query.where(Pool.id == pool_id).gino.first()
+        auto_pool = await AutomatedPool.query.where(AutomatedPool.id == pool_id).gino.first()
+        pool_settings = {**simple_pool.__values__, **auto_pool.__values__}
+        for key, val in pool_settings.items():
+            if isinstance(val, UUID):
+                pool_settings[key] = str(val)
+            elif isinstance(val, Enum):
+                pool_settings[key] = val.value
+            elif isinstance(val, list):
+                pool_settings[key] = [element.value for element in val]
+        await system_logger.info(_local_("Settings of pool {} is copied.").format(simple_pool.verbose_name),
+                                 description=str(pool_settings),
+                                 user=creator)
+        return CopyAutomatedPoolMutation(pool_settings=pool_settings)
 
 
 class RemoveVmsFromPoolMutation(graphene.Mutation):
@@ -1883,6 +1930,7 @@ class PoolMutations(graphene.ObjectType):
     removeVmsFromDynamicPool = RemoveVmsFromPoolMutation.Field()
     removePool = DeletePoolMutation.Field()
     updateDynamicPool = UpdateAutomatedPoolMutation.Field()
+    copyDynamicPool = CopyAutomatedPoolMutation.Field()
     updateStaticPool = UpdateStaticPoolMutation.Field()
     updateRdsPool = UpdateRdsPoolMutation.Field()
     expandPool = ExpandPoolMutation.Field()

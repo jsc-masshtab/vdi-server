@@ -221,6 +221,32 @@ class PoolTestCase(VdiHttpTestCase):
             self.assertEqual(2, vms_amount)  # Тут ожидаем, что уже 2
 
 
+@pytest.mark.asyncio
+async def test_copy_automated_pool(
+    fixt_launch_workers,
+    fixt_db,
+    fixt_create_automated_pool,  # noqa
+    fixt_auth_context,
+):  # noqa
+    """Create automated pool, update this pool, remove this pool"""
+
+    # check that pool was successfully created'
+    assert fixt_create_automated_pool["is_pool_successfully_created"]
+
+    pool_id = fixt_create_automated_pool["id"]
+
+    qu = """
+    mutation {
+        copyDynamicPool(
+            pool_id: "%s"){
+            pool_settings
+        }
+    }""" % (
+        pool_id,
+    )
+    executed = await execute_scheme(pool_schema, qu, context=fixt_auth_context)
+    assert executed["copyDynamicPool"]["pool_settings"]
+
 # ----------------------------------------------
 
 
@@ -544,6 +570,9 @@ async def test_pools_ordering(
                     pool_type
                     resource_pool_id
                     resource_pool {
+                      verbose_name
+                    }
+                    datapool {
                       verbose_name
                     }
                     template_id

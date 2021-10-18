@@ -162,6 +162,22 @@
 
   <ng-container *ngIf="step == 'dynamic'">
     <div class="form-fields" [formGroup]="dynamicPool" *ngIf="type === 'dynamic'">
+      <label class="field">
+        <mat-form-field>
+          <mat-label *ngIf="data.data_pools?.length">Выберите Пул данных</mat-label>
+          <mat-label *ngIf="!data.data_pools?.length">- нет пулов данных -</mat-label>
+
+          <mat-select formControlName="data_pool_id">
+            <mat-option *ngFor="let data_pool of data.data_pools" [value]="data_pool.id">
+              {{data_pool.verbose_name}}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <ng-container *ngIf="sharedData.hasError('required', 'data_pool_id') && checkValid">
+          <ng-container *ngTemplateOutlet="errorTemp"></ng-container>
+        </ng-container>
+      </label>
 
       <label class="field">
         <mat-form-field>
@@ -313,6 +329,22 @@
 
   <ng-container *ngIf="step == 'guest'">
     <div class="form-fields" [formGroup]="guestPool" *ngIf="type === 'guest'">
+      <label class="field">
+        <mat-form-field>
+          <mat-label *ngIf="data.data_pools?.length">Выберите Пул данных</mat-label>
+          <mat-label *ngIf="!data.data_pools?.length">- нет пулов данных -</mat-label>
+
+          <mat-select formControlName="data_pool_id">
+            <mat-option *ngFor="let data_pool of data.data_pools" [value]="data_pool.id">
+              {{data_pool.verbose_name}}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <ng-container *ngIf="sharedData.hasError('required', 'data_pool_id') && checkValid">
+          <ng-container *ngTemplateOutlet="errorTemp"></ng-container>
+        </ng-container>
+      </label>
 
       <label class="field">
         <mat-form-field>

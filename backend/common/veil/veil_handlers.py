@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import json
 import textwrap
 from abc import ABC
 from typing import Any, Awaitable, Optional
@@ -13,6 +14,7 @@ from common.languages import _local_
 from common.log.journal import system_logger
 from common.models.auth import User
 from common.models.pool import Pool
+from common.subscription_sources import WsMessageType
 from common.veil.auth.veil_jwt import (
     extract_user,
     extract_user_object,
@@ -158,8 +160,18 @@ class BaseWsHandler(BaseHandler, websocket.WebSocketHandler):
                 message=_local_("Ws write error."), description=(str(ex))
             )
 
-    async def close_with_msg(self, msg, code=4001):
-        await self.write_msg(msg)
+    async def send_msg(self, is_error=False, msg="", **kwargs):
+        response = {
+            "msg_type": WsMessageType.CONTROL.value,
+            "error": is_error,
+            "msg": msg,
+        }
+        response.update(kwargs)
+        await self.write_msg(json.dumps(response))
+
+    async def close_with_msg(self, is_error=False, msg="", code=4001, **kwargs):
+
+        await self.send_msg(is_error, msg, **kwargs)
         self.close(code=code, reason=msg)
 
     # unused abstract method implementation
