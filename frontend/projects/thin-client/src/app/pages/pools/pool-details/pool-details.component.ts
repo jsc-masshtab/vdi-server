@@ -25,7 +25,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
   private subPool$: Subscription;
   private socketSub$: Subscription;
   private idPool: string;
-  public notifications: number;
+  public notifications: number = 0;
   public host: boolean = false;
   public pool: IPoolDetailClient;
   public connectionTypes: string[];

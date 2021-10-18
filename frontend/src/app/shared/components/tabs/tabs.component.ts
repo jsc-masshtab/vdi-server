@@ -23,7 +23,7 @@ export class TabsComponent implements AfterContentInit {
     this.tabs.toArray().forEach( (t: TabComponent) => t.active = false);
     
     tab.active = true;
-    if(tab.notifications) {
+    if (tab.notifications) {
       this.clickTab.emit()
     }
   }
