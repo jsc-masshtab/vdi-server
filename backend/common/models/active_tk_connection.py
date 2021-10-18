@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import uuid
+from enum import Enum
 
 from sqlalchemy import (
     Enum as AlchemyEnum
@@ -11,17 +12,20 @@ from common.database import db
 from common.languages import _local_
 from common.log.journal import system_logger
 from common.models.auth import User
-from common.models.pool import AutomatedPool, Pool
-from common.models.task import PoolTaskType
+from common.models.pool import Pool
 from common.models.vm import Vm
 from common.subscription_sources import THIN_CLIENTS_SUBSCRIPTION
-from common.veil.veil_gino import AbstractSortableStatusModel, Status
+from common.veil.veil_gino import AbstractSortableStatusModel
 from common.veil.veil_redis import (
-    publish_data_in_internal_channel,
-    request_to_execute_pool_task
+    publish_data_in_internal_channel
 )
 
 from web_app.auth.license.utils import License
+
+
+class TkConnectionEvent(Enum):
+    VM_DATA_CHANGED = "VM_DATA_CHANGED"
+    CONNECTION_CLOSED = "CONNECTION_CLOSED"
 
 
 class ActiveTkConnection(db.Model, AbstractSortableStatusModel):
@@ -123,41 +127,19 @@ class ActiveTkConnection(db.Model, AbstractSortableStatusModel):
         current_clients_count = await ActiveTkConnection.get_thin_clients_conn_count()
         return current_clients_count >= current_license.thin_clients_limit
 
-    async def recreation_guest_vm(self):
-        vm = await Vm.get(self.vm_id)
-        auto_pool = await AutomatedPool.get(vm.pool_id)
-
-        if auto_pool.is_guest:
-            vm = await Vm.get(self.vm_id)
-
-            # Открепляем пользователя и устанавливаем статус "Удаляется"
-            users = list()
-            users.append(vm.user_id)
-            await vm.remove_users(creator="system", users_list=users)
-            await vm.update(status=Status.DELETING).apply()
-
-            # Создаем таску пересоздания ВМ
-            await request_to_execute_pool_task(
-                vm.id, PoolTaskType.VM_GUEST_RECREATION,
-                vm_id=str(vm.id)
-            )
-
     async def update_vm_data(self, vm_id, conn_type, is_conn_secure):
-        try:
-            if not vm_id:
-                await self.recreation_guest_vm()
-        except Exception as e:
-            await system_logger.debug("GUEST POOL EXPAND EXCEPTION: {}.".format(e))
 
         is_conn_secure = is_conn_secure if (is_conn_secure is not None) else False
         prev_vm_id = self.vm_id
+
         await self.update(vm_id=vm_id, connection_type=conn_type,
                           is_connection_secure=is_conn_secure,
                           data_received=func.now()).apply()
 
         # front ws notification
-        await publish_data_in_internal_channel(THIN_CLIENTS_SUBSCRIPTION, "UPDATED",
-                                               self)
+        additional_data = dict(prev_vm_id=str(prev_vm_id))
+        await publish_data_in_internal_channel(THIN_CLIENTS_SUBSCRIPTION, "UPDATED", self, additional_data,
+                                               description=TkConnectionEvent.VM_DATA_CHANGED.name)
         # log
         user = await User.get(self.user_id) if self.user_id else None
         if user:
@@ -169,14 +151,15 @@ class ActiveTkConnection(db.Model, AbstractSortableStatusModel):
                     user=user.username,
                 )
             else:
-                vm = await Vm.get(prev_vm_id) if prev_vm_id else None
-                vm_verbose_name = vm.verbose_name if vm else ""
-                vm_entity = vm.entity if vm else None
-                await system_logger.info(
-                    _local_("User {} disconnected from VM {}.").format(user.username, vm_verbose_name),
-                    entity=vm_entity,
-                    user=user.username,
-                )
+                vm = await Vm.get(prev_vm_id)
+                if vm:
+                    vm_verbose_name = vm.verbose_name
+                    vm_entity = vm.entity
+                    await system_logger.info(
+                        _local_("User {} disconnected from VM {}.").format(user.username, vm_verbose_name),
+                        entity=vm_entity,
+                        user=user.username,
+                    )
 
     async def update_last_interaction(self):
         await self.update(last_interaction=func.now(), data_received=func.now()).apply()
@@ -202,19 +185,11 @@ class ActiveTkConnection(db.Model, AbstractSortableStatusModel):
                           loss_percentage=loss_percentage,
                           data_received=func.now()).apply()
 
-    async def deactivate(self, by_disconnect=False):
-        """Соединение неативно, когда у него выставлено время дисконнекта."""
+    async def deactivate(self, dead_connection_detected=False):
+        """Соединение неактивно, когда у него выставлено время дисконнекта."""
         await self.update(disconnected=func.now()).apply()
-        # front ws notification
-        if by_disconnect:
-            await publish_data_in_internal_channel(THIN_CLIENTS_SUBSCRIPTION,
-                                                   "UPDATED", self, description="Loss of connection")
-        else:
-            await publish_data_in_internal_channel(THIN_CLIENTS_SUBSCRIPTION,
-                                                   "UPDATED", self)
 
-        try:
-            if self.vm_id:
-                await self.recreation_guest_vm()
-        except Exception as e:
-            await system_logger.debug("GUEST POOL EXPAND EXCEPTION: ", e)
+        # send event
+        additional_data = dict(dead_connection_detected=dead_connection_detected)
+        await publish_data_in_internal_channel(THIN_CLIENTS_SUBSCRIPTION, "UPDATED", self, additional_data,
+                                               description=TkConnectionEvent.CONNECTION_CLOSED.name)

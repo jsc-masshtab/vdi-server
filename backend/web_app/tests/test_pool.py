@@ -96,14 +96,15 @@ async def test_update_automated_pool(
             total_size: 4,
             increase_step: 2,
             keep_vms_on: true,
+            vm_action_upon_user_disconnect: SHUTDOWN,
+            vm_disconnect_action_timeout: 55,
             vm_name_template: "vdi-test",
             ad_ou: "",
             create_thin_clones: true,
             enable_vms_remote_access: true,
             start_vms: true,
             set_vms_hostnames: false,
-            include_vms_in_ad: false,
-            waiting_time: 60){
+            include_vms_in_ad: false){
             ok
         }
     }""" % (
@@ -112,6 +113,24 @@ async def test_update_automated_pool(
     )
     executed = await execute_scheme(pool_schema, qu, context=fixt_auth_context)
     assert executed["updateDynamicPool"]["ok"]
+
+    # Check
+    qu = """
+    {
+        pool(pool_id: "%s") {
+            status
+            reserve_size
+            total_size
+            increase_step
+            keep_vms_on
+            pool_type
+            vm_disconnect_action_timeout
+            vm_action_upon_user_disconnect
+        }
+    }
+    """ % pool_id
+    executed = await execute_scheme(pool_schema, qu, context=fixt_auth_context)
+    snapshot.assert_match(executed)
 
     # decrease total_size (Это особый случай и запустит задачу в воркере)
     qu = (
@@ -276,7 +295,7 @@ async def test_create_static_pool(
 
 @pytest.mark.asyncio
 async def test_update_static_pool(
-    fixt_launch_workers, fixt_db, fixt_create_static_pool, fixt_auth_context  # noqa
+    snapshot, fixt_launch_workers, fixt_db, fixt_create_static_pool, fixt_auth_context  # noqa
 ):  # noqa
     """Create static pool, update this pool, remove this pool"""
     pool_id = fixt_create_static_pool["id"]
@@ -284,7 +303,11 @@ async def test_update_static_pool(
     new_pool_name = "test-pool-{}".format(str(uuid.uuid4())[:7])
     qu = """
     mutation {
-        updateStaticPool(pool_id: "%s", verbose_name: "%s", keep_vms_on: true){
+        updateStaticPool(
+            pool_id: "%s",
+            verbose_name: "%s",
+            keep_vms_on: true,
+            vm_disconnect_action_timeout: 55){
          ok
     }
     }""" % (
@@ -293,6 +316,21 @@ async def test_update_static_pool(
     )
     executed = await execute_scheme(pool_schema, qu, context=fixt_auth_context)
     assert executed["updateStaticPool"]["ok"]
+
+    # Check
+    qu = """
+    {
+        pool(pool_id: "%s") {
+            status
+            keep_vms_on
+            pool_type
+            vm_disconnect_action_timeout
+            vm_action_upon_user_disconnect
+        }
+    }
+    """ % pool_id
+    executed = await execute_scheme(pool_schema, qu, context=fixt_auth_context)
+    snapshot.assert_match(executed)
 
 
 @pytest.mark.asyncio

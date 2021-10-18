@@ -13,12 +13,14 @@ from web_app.tests.utils import VdiHttpTestCase
 from common.models.active_tk_connection import ActiveTkConnection
 from common.models.auth import User
 from common.models.pool import Pool
-from common.models.vm import Vm
+from common.models.vm import Vm, VmActionUponUserDisconnect
 from common.models.user_tk_permission import TkPermission
+from common.veil.veil_redis import redis_wait_for_message
 
 from web_app.tests.utils import execute_scheme
 from web_app.thin_client_api.schema import thin_client_schema
-from common.settings import PAM_AUTH
+from common.settings import INTERNAL_EVENTS_CHANNEL, PAM_AUTH
+
 from web_app.tests.fixtures import (
     fixt_db,  # noqa: F401
     fixt_redis_client,
@@ -27,6 +29,7 @@ from web_app.tests.fixtures import (
     fixt_user_admin,  # noqa: F401
     fixt_auth_dir,  # noqa: F401
     fixt_mapping,  # noqa: F401
+    fixt_launch_workers, # noqa
     fixt_group,  # noqa: F401
     fixt_group_role,  # noqa: F401
     fixt_create_static_pool,  # noqa: F401
@@ -37,7 +40,7 @@ from web_app.tests.fixtures import (
     several_static_pools_with_user,  # noqa: F401
 )
 
-from common.subscription_sources import WsMessageType
+from common.subscription_sources import EVENTS_SUBSCRIPTION, WsMessageType
 
 
 pytestmark = [
@@ -55,19 +58,13 @@ class TestWebsockets(VdiHttpTestCase):
     async def test_ws_connect_update_disconnect_ok(self):
         """Check ws communication"""
         # clear all
-        await db.status(db.text('TRUNCATE TABLE active_tk_connection CASCADE;'))
+        await db.status(db.text("TRUNCATE TABLE active_tk_connection CASCADE;"))
 
         # login
         (user_name, access_token) = await self.do_login()
 
         # connect to ws
-        ws_url = (
-            "ws://localhost:" + str(self.get_http_port()) + "/ws/client?token={}"
-            "&is_conn_init_by_user=0"
-            "&veil_connect_version=1.4.1"
-            "&tk_os=Linux".format(access_token)
-        )
-        ws_client = await tornado.websocket.websocket_connect(ws_url)
+        ws_client = await self.connect_to_thin_client_ws(access_token)
         assert ws_client
 
         try:
@@ -135,7 +132,6 @@ class TestWebsockets(VdiHttpTestCase):
                 "loss_percentage": 0,
             }
             ws_client.write_message(json.dumps(update_data_dict))
-            await asyncio.sleep(1)  # Подождем так как на update ответов не присылается
 
             # disconnect request
             qu = (
@@ -159,7 +155,92 @@ class TestWebsockets(VdiHttpTestCase):
             await asyncio.sleep(0.1)
 
 
+class VmActionWhenUserDisconnectsTestCase(VdiHttpTestCase):
+    """Проверка выполнения заданного действия над ВМ при отключении пользователя от этой ВМ."""
+
+    @pytest.mark.usefixtures("fixt_db",
+                             "fixt_user_admin",
+                             "fixt_create_static_pool",
+                             "fixt_launch_workers")
+    @gen_test
+    async def test_vm_action_when_user_disconnects(self):
+
+        await asyncio.sleep(2)  # время воркеру чтобы запуститься и начать выполнение рабочих корутин
+        # clear all
+        await db.status(db.text("TRUNCATE TABLE active_tk_connection CASCADE;"))
+
+        # login
+        (user_name, access_token) = await self.do_login()
+
+        # Connect to ws
+        tk_ws_client = await self.connect_to_thin_client_ws(access_token)
+        assert tk_ws_client
+
+        try:
+            # Get vm from pool
+            # Не нашел способ как вытащщить id пула из фикстуры fixt_create_static_pool
+            # Ожидается что в бд в этот момент только один пул, так что должно быть логично просто достать его
+            pool = await Pool.query.where(Pool.pool_type == Pool.PoolTypes.STATIC).gino.first()
+            vms = await pool.get_vms()
+            assert vms
+
+            vm = vms[0]
+            vm_id = str(vm.id)
+
+            # Set vm disconnect action and timeout for it
+            vm_action_upon_user_disconnect = VmActionUponUserDisconnect.SHUTDOWN
+            vm_disconnect_action_timeout = 3
+            await pool.update(vm_action_upon_user_disconnect=vm_action_upon_user_disconnect,
+                              vm_disconnect_action_timeout=vm_disconnect_action_timeout).apply()
+
+            # update (Эмулировать подключение к ВМ)
+            update_data_dict = {
+                "msg_type": WsMessageType.UPDATED.value,
+                "vm_id": vm_id,
+                "event": "vm_changed",
+            }
+            tk_ws_client.write_message(json.dumps(update_data_dict))
+            await asyncio.sleep(0.5)  # Подождем пока данные дойдут до процесса воркера
+
+            # update (Эмулировать отключение от ВМ)
+            update_data_dict = {
+                "msg_type": WsMessageType.UPDATED.value,
+                "vm_id": None,
+                "event": "vm_changed",
+            }
+            tk_ws_client.write_message(json.dumps(update_data_dict))
+
+            # Далее после отключения пользователя через таймаут vm_disconnect_action_timeout
+            # должно выполниться действие vm_action_upon_user_disconnect
+            # Ждем сообщение об его выполнении
+            redis_message = await redis_wait_for_message(INTERNAL_EVENTS_CHANNEL, self.predicate)
+            assert redis_message
+
+        except Exception:
+            raise
+        finally:
+            # disconnect
+            tk_ws_client.close()
+            await asyncio.sleep(0.1)
+
+    @staticmethod
+    def predicate(redis_message):
+        redis_message_data = redis_message["data"].decode()
+        redis_message_data_dict = json.loads(redis_message_data)
+
+        resource = redis_message_data_dict.get("resource")
+        message = redis_message_data_dict.get("message")
+
+        # Опираемся на текст в событии
+        if resource and resource == EVENTS_SUBSCRIPTION and \
+                message and VmActionUponUserDisconnect.SHUTDOWN.name in message and ": True" in message:
+            return True
+        else:
+            return False
+
+
 class TestPool(VdiHttpTestCase):
+    """Проверка получения инфомации о пулах."""
 
     API_URL = "/client/pools/"
 

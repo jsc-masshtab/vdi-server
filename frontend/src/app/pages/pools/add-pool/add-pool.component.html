@@ -442,14 +442,14 @@
 
       <label class="field">
         <p class="field-name">Время жизни ВМ после потери связи (сек)</p>
-        <input type="number" placeholder="рекомендуемое - 60 сек" formControlName="waiting_time" min="1">
+        <input type="number" placeholder="рекомендуемое - 60 сек" formControlName="vm_disconnect_action_timeout" min="1">
 
-        <ng-container *ngIf="guestPool.hasError('required', 'waiting_time') && checkValid">
+        <ng-container *ngIf="guestPool.hasError('required', 'vm_disconnect_action_timeout') && checkValid">
           <ng-container *ngTemplateOutlet="errorTemp"></ng-container>
         </ng-container>
 
-        <ng-container *ngIf="guestPool.get('waiting_time').touched && guestPool.get('waiting_time').dirty">
-          <div class="error" [@animForm]="error" *ngIf="guestPool.hasError('min', 'waiting_time')">
+        <ng-container *ngIf="guestPool.get('vm_disconnect_action_timeout').touched && guestPool.get('vm_disconnect_action_timeout').dirty">
+          <div class="error" [@animForm]="error" *ngIf="guestPool.hasError('min', 'vm_disconnect_action_timeout')">
             Время жизни ВМ должно быть больше 1 секунды (рекомендуемое - 60 сек)</div>
         </ng-container>
       </label>

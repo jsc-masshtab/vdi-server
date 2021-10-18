@@ -65,3 +65,26 @@ snapshots['TestPoolPermissionsSchema.test_pool_user_permission 2'] = {
         }
     }
 }
+
+snapshots['test_update_automated_pool 1'] = {
+    'pool': {
+        'increase_step': 2,
+        'keep_vms_on': True,
+        'pool_type': 'AUTOMATED',
+        'reserve_size': 1,
+        'status': 'ACTIVE',
+        'total_size': 4,
+        'vm_action_upon_user_disconnect': 'SHUTDOWN',
+        'vm_disconnect_action_timeout': 55
+    }
+}
+
+snapshots['test_update_static_pool 1'] = {
+    'pool': {
+        'keep_vms_on': True,
+        'pool_type': 'STATIC',
+        'status': 'ACTIVE',
+        'vm_action_upon_user_disconnect': 'NONE',
+        'vm_disconnect_action_timeout': 55
+    }
+}

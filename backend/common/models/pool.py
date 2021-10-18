@@ -38,11 +38,12 @@ from common.models.auth import (
 )
 from common.models.authentication_directory import AuthenticationDirectory
 from common.models.task import Task
-from common.models.vm import Vm as VmModel
+from common.models.vm import Vm as VmModel, VmActionUponUserDisconnect
 from common.settings import (
     DEFAULT_NAME,
     DOMAIN_CREATION_MAX_STEP,
     POOL_MAX_CREATE_ATTEMPTS,
+    VEIL_DEFAULT_VM_DISCONNECT_ACTION_TIMEOUT,
     VEIL_MAX_IDS_LEN,
     VEIL_OPERATION_WAITING,
 )
@@ -50,7 +51,6 @@ from common.subscription_sources import POOLS_SUBSCRIPTION
 from common.utils import extract_ordering_data
 from common.veil.veil_errors import (
     PoolCreationError,
-    SilentError,
     SimpleError,
     ValidationError,
     VmCreationError
@@ -103,6 +103,12 @@ class Pool(VeilModel):
     tag = db.Column(UUID(), nullable=True)
 
     pool_type = db.Column(AlchemyEnum(PoolTypes), nullable=False)
+
+    vm_action_upon_user_disconnect = db.Column(AlchemyEnum(VmActionUponUserDisconnect), nullable=False,
+                                               default=VmActionUponUserDisconnect.NONE)
+    vm_disconnect_action_timeout = db.Column(db.Integer(), nullable=False,
+                                             default=VEIL_DEFAULT_VM_DISCONNECT_ACTION_TIMEOUT)
+    # на дисконнект пользователя
 
     # ----- ----- ----- ----- ----- ----- -----
     # Properties and getters:
@@ -223,6 +229,8 @@ class Pool(VeilModel):
                 Pool.status,
                 Pool.controller,
                 Pool.keep_vms_on,
+                Pool.vm_action_upon_user_disconnect,
+                Pool.vm_disconnect_action_timeout,
                 AutomatedPool.template_id,
                 AutomatedPool.increase_step,
                 AutomatedPool.max_amount_of_create_attempts,
@@ -237,7 +245,6 @@ class Pool(VeilModel):
                 AutomatedPool.set_vms_hostnames,
                 AutomatedPool.include_vms_in_ad,
                 AutomatedPool.ad_ou,
-                AutomatedPool.waiting_time,
                 Pool.pool_type,
                 Pool.connection_types,
             ]
@@ -280,6 +287,8 @@ class Pool(VeilModel):
                 Pool.status,
                 Pool.controller,
                 Pool.keep_vms_on,
+                Pool.vm_action_upon_user_disconnect,
+                Pool.vm_disconnect_action_timeout,
                 AutomatedPool.id,
                 AutomatedPool.template_id,
                 AutomatedPool.increase_step,
@@ -295,7 +304,6 @@ class Pool(VeilModel):
                 AutomatedPool.set_vms_hostnames,
                 AutomatedPool.include_vms_in_ad,
                 AutomatedPool.ad_ou,
-                AutomatedPool.waiting_time,
                 RdsPool.id,
                 Controller.address,
             )
@@ -311,7 +319,8 @@ class Pool(VeilModel):
 
     @staticmethod
     async def soft_update_base_params(
-        id, verbose_name, keep_vms_on, connection_types, creator
+        id, verbose_name, keep_vms_on, connection_types, creator, vm_action_upon_user_disconnect,
+        vm_disconnect_action_timeout
     ):
         old_pool_obj = await Pool.get(id)
         async with db.transaction():
@@ -321,6 +330,8 @@ class Pool(VeilModel):
                 keep_vms_on=keep_vms_on,
                 connection_types=connection_types,
                 creator=creator,
+                vm_action_upon_user_disconnect=vm_action_upon_user_disconnect,
+                vm_disconnect_action_timeout=vm_disconnect_action_timeout
             )
 
             msg = _local_("Pool {} has been updated.").format(old_pool_obj.verbose_name)
@@ -721,7 +732,8 @@ class Pool(VeilModel):
     @classmethod
     async def create(
         cls, verbose_name, resource_pool_id, controller_id,
-        connection_types, tag, pool_type, datapool_id=None
+        connection_types, tag, pool_type, vm_action_upon_user_disconnect, vm_disconnect_action_timeout,
+        datapool_id=None
     ):
         if not controller_id:
             raise ValidationError(
@@ -735,7 +747,9 @@ class Pool(VeilModel):
             status=Status.CREATING,
             connection_types=connection_types,
             tag=tag,
-            pool_type=pool_type
+            pool_type=pool_type,
+            vm_action_upon_user_disconnect=vm_action_upon_user_disconnect,
+            vm_disconnect_action_timeout=vm_disconnect_action_timeout
         )
 
         # Оповещаем о создании пула
@@ -929,7 +943,8 @@ class Pool(VeilModel):
 
     async def get_vms_info(self, limit=500, offset=0, ordering=None):
         """Возвращает информацию для всех ВМ в пуле."""
-        from web_app.pool.schema import VmType
+        from web_app.pool.schema import VmType  # todo: это плохо. Common не должен зависеть от производного
+        # Перенести этот метод в схему либо вернуть отсюда vms_list
 
         # Получаем список ВМ
         vms = await self.get_vms(limit=limit, offset=offset)
@@ -1278,7 +1293,7 @@ class RdsPool(db.Model):
         cls, id, verbose_name, keep_vms_on, connection_types, creator
     ):
         await Pool.soft_update_base_params(id, verbose_name, keep_vms_on,
-                                           connection_types, creator)
+                                           connection_types, creator, VmActionUponUserDisconnect.NONE, 0)
         return True
 
     @classmethod
@@ -1293,7 +1308,9 @@ class RdsPool(db.Model):
                 tag=None,
                 controller_id=controller_id,
                 connection_types=connection_types,
-                pool_type=Pool.PoolTypes.RDS
+                pool_type=Pool.PoolTypes.RDS,
+                vm_action_upon_user_disconnect=VmActionUponUserDisconnect.NONE,
+                vm_disconnect_action_timeout=0
             )
             pool = await super().create(id=base_pool.id)
 
@@ -1314,16 +1331,6 @@ class RdsPool(db.Model):
 
             await pool.activate()
         return pool
-
-    @staticmethod
-    def validate_conn_types(connection_types):
-        if not connection_types:
-            return
-
-        for conn_type in connection_types:
-            if conn_type not in RdsPool.get_supported_conn_types():
-                raise SilentError(
-                    _local_("Connection type {} is not supported.").format(conn_type))
 
     @staticmethod
     def get_supported_conn_types():
@@ -1413,6 +1420,8 @@ class StaticPool(db.Model):
         controller_id,
         resource_pool_id: str,
         connection_types: list,
+        vm_action_upon_user_disconnect,
+        vm_disconnect_action_timeout,
     ):
         """Nested transactions are atomic."""
         async with db.transaction():
@@ -1423,7 +1432,9 @@ class StaticPool(db.Model):
                 resource_pool_id=resource_pool_id,
                 connection_types=connection_types,
                 tag=tag,
-                pool_type=Pool.PoolTypes.STATIC
+                pool_type=Pool.PoolTypes.STATIC,
+                vm_action_upon_user_disconnect=vm_action_upon_user_disconnect,
+                vm_disconnect_action_timeout=vm_disconnect_action_timeout
             )
             pool = await super().create(id=pl.id)
             # Создаем ВМ
@@ -1463,10 +1474,11 @@ class StaticPool(db.Model):
 
     @classmethod
     async def soft_update(
-        cls, id, verbose_name, keep_vms_on, connection_types, creator
+        cls, id, verbose_name, keep_vms_on, connection_types, creator, vm_action_upon_user_disconnect,
+        vm_disconnect_action_timeout
     ):
-        await Pool.soft_update_base_params(id, verbose_name, keep_vms_on,
-                                           connection_types, creator)
+        await Pool.soft_update_base_params(id, verbose_name, keep_vms_on, connection_types, creator,
+                                           vm_action_upon_user_disconnect, vm_disconnect_action_timeout)
         return True
 
     async def activate(self):
@@ -1510,7 +1522,6 @@ class AutomatedPool(db.Model):
     # Группы/Контейнеры в Active Directory для назначения виртуальным машинам пула
     ad_ou = db.Column(db.Unicode(length=1000), nullable=True)
     is_guest = db.Column(db.Boolean(), nullable=False, default=False)
-    waiting_time = db.Column(db.Integer(), nullable=True)
 
     # ----- ----- ----- ----- ----- ----- -----
     # Properties:
@@ -1581,9 +1592,10 @@ class AutomatedPool(db.Model):
         include_vms_in_ad,
         connection_types,
         tag,
-        waiting_time: int = None,
+        vm_action_upon_user_disconnect,
+        vm_disconnect_action_timeout,
         ad_ou: str = None,
-        is_guest: bool = False,
+        is_guest: bool = False
     ):
         """Nested transactions are atomic."""
         current_pool_type = Pool.PoolTypes.GUEST if is_guest else Pool.PoolTypes.AUTOMATED
@@ -1596,7 +1608,9 @@ class AutomatedPool(db.Model):
                 controller_id=controller_id,
                 connection_types=connection_types,
                 tag=tag,
-                pool_type=current_pool_type
+                pool_type=current_pool_type,
+                vm_action_upon_user_disconnect=vm_action_upon_user_disconnect,
+                vm_disconnect_action_timeout=vm_disconnect_action_timeout
             )
             # Создаем AutomatedPool
             automated_pool = await super().create(
@@ -1614,8 +1628,7 @@ class AutomatedPool(db.Model):
                 set_vms_hostnames=set_vms_hostnames,
                 include_vms_in_ad=include_vms_in_ad,
                 ad_ou=ad_ou,
-                is_guest=is_guest,
-                waiting_time=waiting_time
+                is_guest=is_guest
             )
             # Записываем событие в журнал
             description = _local_(
@@ -1647,14 +1660,15 @@ class AutomatedPool(db.Model):
         increase_step,
         vm_name_template,
         keep_vms_on: bool,
+        vm_action_upon_user_disconnect,
+        vm_disconnect_action_timeout,
         create_thin_clones: bool,
         enable_vms_remote_access: bool,
         start_vms: bool,
         set_vms_hostnames: bool,
         include_vms_in_ad: bool,
         connection_types,
-        ad_ou: str,
-        waiting_time
+        ad_ou: str
     ):
         pool_kwargs = dict()
         auto_pool_kwargs = dict()
@@ -1673,7 +1687,10 @@ class AutomatedPool(db.Model):
                 pool_kwargs["keep_vms_on"] = keep_vms_on
             if connection_types:
                 pool_kwargs["connection_types"] = connection_types
-
+            if vm_action_upon_user_disconnect:
+                pool_kwargs["vm_action_upon_user_disconnect"] = vm_action_upon_user_disconnect
+            if vm_disconnect_action_timeout:
+                pool_kwargs["vm_disconnect_action_timeout"] = vm_disconnect_action_timeout
             if pool_kwargs:
                 await system_logger.debug(
                     _local_("Update Pool {} values.").format(
@@ -1706,8 +1723,6 @@ class AutomatedPool(db.Model):
                 auto_pool_kwargs["set_vms_hostnames"] = set_vms_hostnames
             if isinstance(include_vms_in_ad, bool):
                 auto_pool_kwargs["include_vms_in_ad"] = include_vms_in_ad
-            if waiting_time:
-                auto_pool_kwargs["waiting_time"] = waiting_time
             if auto_pool_kwargs:
                 desc = str(auto_pool_kwargs)
                 await system_logger.debug(
