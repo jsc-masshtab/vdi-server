@@ -22,12 +22,12 @@
         </button>
     </div>
     <div class="details-row">
-        <vdi-tabs>
+        <vdi-tabs (clickTab)="clearNotifications()" >
             <vdi-tab title="Информация о пулах рабочих столов" iconName="chart-bar">
                 <vdi-table-into [item]="pool" [collection]="collectionDetails"></vdi-table-into>
             </vdi-tab>
-            <vdi-tab title="Диалоги" iconName="comment-dots">
-                <tc-messenger></tc-messenger>
+            <vdi-tab title="Диалоги" iconName="comment-dots" [notifications]="notifications">
+                <tc-messenger ></tc-messenger>
             </vdi-tab>
         </vdi-tabs>
     </div>

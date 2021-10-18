@@ -23,8 +23,9 @@ export type RemoteData = {
 
 export class PoolDetailsComponent implements OnInit, OnDestroy {
   private subPool$: Subscription;
+  private socketSub$: Subscription;
   private idPool: string;
-  public messages: any[] = [];
+  public notifications: number;
   public host: boolean = false;
   public pool: IPoolDetailClient;
   public connectionTypes: string[];
@@ -59,8 +60,6 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
     
   ];
 
-
-
   public  menuActive: string = 'info';
 
   constructor(private activatedRoute: ActivatedRoute,
@@ -82,8 +81,8 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       } else {
         this.close();
       }
-
     });
+    this.listenSockets()
 
   }
 
@@ -133,4 +132,22 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       this.subPool$.unsubscribe();
     }
   }
+
+  private listenSockets() {
+    if (this.socketSub$) {
+      this.socketSub$.unsubscribe();
+    }
+
+    this.socketSub$ = this.ws.event$.subscribe((message: any) => {
+      
+      if (message.msg_type === 'text_msg' ) {
+        this.notifications++;
+      }         
+    });
+  }
+
+  public clearNotifications(): void {
+    this.notifications = 0;
+  }
+
 }
