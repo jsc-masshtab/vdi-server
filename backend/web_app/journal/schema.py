@@ -55,7 +55,7 @@ class EventType(graphene.ObjectType):
     id = graphene.UUID()
     event_type = graphene.Int()
     message = graphene.Field(ShortString)
-    description = graphene.Field(ShortString)
+    description = graphene.Field(graphene.String)
     created = graphene.DateTime()
     user = graphene.Field(ShortString)
     read_by = graphene.List(UserType)
@@ -68,7 +68,7 @@ class VeilEventType(VeilResourceType):
     id = graphene.UUID()
     event_type = graphene.Int()
     message = graphene.Field(ShortString)
-    description = graphene.Field(ShortString)
+    description = graphene.Field(graphene.String)
     created = graphene.DateTime()
     user = graphene.Field(ShortString)
 
@@ -391,19 +391,6 @@ class UnmarkEventsReadByMutation(graphene.Mutation):
     async def mutate(self, _info, user, events=None, **kwargs):
         await Event.unmark_read_by(user, events)
         return UnmarkEventsReadByMutation(ok=True)
-
-
-# class RemoveAllEventsMutation(graphene.Mutation):
-#     class Arguments:
-#         ok = graphene.Boolean()
-#
-#     ok = graphene.Boolean()
-#
-#     @administrator_required
-#     async def mutate(self, _info, **kwargs):
-#         await Event.delete.gino.status()
-#         await system_logger.info(_('Journal is clear.'), entity=self.entity)
-#         return RemoveAllEventsMutation(ok=True)
 
 
 class EventExportMutation(graphene.Mutation):

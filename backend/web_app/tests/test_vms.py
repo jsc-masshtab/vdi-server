@@ -85,72 +85,47 @@ class TestVmPermissionsSchema:
         current_user = await self.get_test_vm_username()
         assert current_user is None
 
+        # Проверяем, количество свободных ВМ в пуле
+        count_vm = await pool_obj.get_vm_amount(only_free=True)
+        assert count_vm == 2
 
-#@pytest.mark.asyncio
-#@pytest.mark.usefixtures("fixt_db", "fixt_user_admin", "fixt_create_static_pool")
-#class TestVmStatus:
-#    async def test_reserved_status(self, snapshot, fixt_auth_context):  # noqa
-#        # vm = await Vm.get("10913d5d-ba7a-4049-88c5-769267a6cbe4")
-#        pool_id = await Pool.select("id").gino.scalar()
-#
-#        vm = await Vm.query.where(pool_id == pool_id).gino.first()
-#
-#        qu = (
-#            """mutation{
-#                assignVmToUser(vm_id: "%s", username: "vdiadmin") {ok}}"""
-#            % vm.id
-#        )
-#
-#        executed = await execute_scheme(
-#            pool_schema, qu, context=fixt_auth_context
-#        )  # noqa
-#        # snapshot.assert_match(executed)
-#
-#        qu = """{pools {vms {status
-#                            user {username}}
-#                 }}"""
-#        executed = await execute_scheme(
-#            pool_schema, qu, context=fixt_auth_context
-#        )  # noqa
-#        snapshot.assert_match(executed)
-#
-#        qu = (
-#            """mutation{
-#                freeVmFromUser(vm_id: "%s") {ok}}"""
-#            % vm.id
-#        )
-#
-#        executed = await execute_scheme(
-#            pool_schema, qu, context=fixt_auth_context
-#        )  # noqa
-#        # snapshot.assert_match(executed)
-#
-#        qu = """{pools {vms {status
-#                            user {username}}
-#                         }}"""
-#        executed = await execute_scheme(
-#            pool_schema, qu, context=fixt_auth_context
-#        )  # noqa
-#        snapshot.assert_match(executed)
-#
-#        qu = (
-#            """mutation{
-#                assignVmToUser(vm_id: "%s", username: "vdiadmin") {ok}}"""
-#            % vm.id
-#        )
-#
-#        executed = await execute_scheme(
-#            pool_schema, qu, context=fixt_auth_context
-#        )  # noqa
-#        # snapshot.assert_match(executed)
-#
-#        qu = """{pools {vms {status
-#                            user {username}}
-#                         }}"""
-#        executed = await execute_scheme(
-#            pool_schema, qu, context=fixt_auth_context
-#        )  # noqa
-#        snapshot.assert_match(executed)
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures("fixt_db", "fixt_user_admin", "fixt_create_static_pool")
+class TestVmStatus:
+    async def test_reserved_status(self, snapshot, fixt_auth_context):  # noqa
+        # vm = await Vm.get("10913d5d-ba7a-4049-88c5-769267a6cbe4")
+        pool_id = await Pool.select("id").gino.scalar()
+
+        vm = await Vm.query.where(pool_id == pool_id).gino.first()
+
+        qu = (
+            """mutation{
+                reserveVm(vm_id: "%s", reserve: true) {ok}}"""
+            % vm.id
+        )
+
+        executed = await execute_scheme(pool_schema, qu, context=fixt_auth_context)
+        assert executed["reserveVm"]["ok"]
+
+        qu = """{pools {vms {status}
+                 }}"""
+        executed = await execute_scheme(pool_schema, qu, context=fixt_auth_context)
+        snapshot.assert_match(executed)
+
+        qu = (
+            """mutation{
+                reserveVm(vm_id: "%s", reserve: false) {ok}}"""
+            % vm.id
+        )
+
+        executed = await execute_scheme(pool_schema, qu, context=fixt_auth_context)
+        assert executed["reserveVm"]["ok"]
+
+        qu = """{pools {vms {status}
+                         }}"""
+        executed = await execute_scheme(pool_schema, qu, context=fixt_auth_context)
+        snapshot.assert_match(executed)
 
 
 @pytest.mark.asyncio

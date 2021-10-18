@@ -403,17 +403,6 @@ class User(AbstractSortableStatusModel, VeilModel):
 
             return remove
 
-    async def remove_groups(self, creator="system"):
-        groups = await self.assigned_groups
-        users_list = [self.id]
-        for group in groups:
-            await group.remove_users(creator=creator, user_id_list=users_list)
-            await system_logger.info(
-                _local_("Group {} is removed for user {}.").format(group,
-                                                                   self.username),
-                entity=self.entity,
-            )
-
     async def activate(self, creator):
         query = User.update.values(is_active=True).where(User.id == self.id)
         operation_status = await query.gino.status()

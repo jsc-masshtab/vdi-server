@@ -56,15 +56,9 @@ class Controller(AbstractSortableStatusModel, VeilModel):
     token = db.Column(db.Unicode(length=1024), nullable=False)
 
     @property
-    def id_str(self):
-        """Convert UUID(id) to str."""
-        return str(self.id)
-
-    @property
     async def check_jwt_token(self):
         if self.token[0:4] == "jwt ":
             token = encrypt(self.token)
-            print("TOKEN: ", self.token)
             await self.update(token=token).apply()
             return self.token
         else:

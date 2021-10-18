@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 import asyncio
 import re
+from enum import Enum
+from uuid import UUID
 
 from asyncpg.exceptions import UniqueViolationError
 
@@ -14,11 +16,12 @@ from common.models.auth import Entity, User
 from common.models.controller import Controller
 from common.models.pool import AutomatedPool, Pool, RdsPool, StaticPool
 from common.models.task import PoolTaskType, Task, TaskStatus
-from common.models.vm import Vm
+from common.models.vm import Vm, VmActionUponUserDisconnect
 from common.settings import (
     DOMAIN_CREATION_MAX_STEP,
     POOL_MAX_SIZE,
-    POOL_MIN_SIZE
+    POOL_MIN_SIZE,
+    VEIL_DEFAULT_VM_DISCONNECT_ACTION_TIMEOUT
 )
 from common.veil.veil_decorators import administrator_required
 from common.veil.veil_errors import SilentError, SimpleError, ValidationError
@@ -49,6 +52,7 @@ from web_app.controller.schema import ControllerType
 from web_app.journal.schema import EntityType as TypeEntity, EventType
 
 ConnectionTypesGraphene = graphene.Enum.from_enum(Pool.PoolConnectionTypes)
+VmActionUponUserDisconnectGraphene = graphene.Enum.from_enum(VmActionUponUserDisconnect)
 
 # TODO: отсутствует валидация входящих ресурсов вроде node_uid, cluster_uid и т.п. Ранее шла речь,
 #  о том, что мы будем кешированно хранить какие-то ресурсы полученные от ECP Veil. Возможно стоит
@@ -161,10 +165,12 @@ class VmType(VeilResourceType):
     async def resolve_assigned_users(self, _info, limit, offset):
         """Получить список пользователей ВМ."""
         vm = await Vm.get(self.id)
-        users_query = await vm.get_users_query()
-        users = await users_query.limit(limit).offset(offset).gino.all()
-        objects = [UserType.instance_to_type(user) for user in users]
-        return objects
+        if vm:
+            users_query = await vm.get_users_query()
+            users = await users_query.limit(limit).offset(offset).gino.all()
+            objects = [UserType.instance_to_type(user) for user in users]
+            return objects
+        return list()
 
     async def resolve_assigned_users_count(self, _info):
         vm = await Vm.get(self.id)
@@ -384,7 +390,7 @@ class PoolValidator(MutationValidation):
         if value is None:
             return
 
-        total_size = obj_dict["total_size"] if obj_dict.get("total_size") else None
+        total_size = obj_dict.get("total_size")
         if total_size is None:
             pool_id = obj_dict.get("pool_id")
             automated_pool = await AutomatedPool.get(pool_id)
@@ -406,6 +412,42 @@ class PoolValidator(MutationValidation):
     async def validate_connection_types(obj_dict, value):
         if not value:
             raise ValidationError(_local_("Connection type cannot be empty."))
+
+    @staticmethod
+    async def validate_vm_disconnect_action_timeout(obj_dict, value):
+        if value < 0:
+            raise ValidationError(_local_("Vm action timeout must be a positive number."))
+
+    @staticmethod
+    async def custom_validate_vm_action_upon_user_disconnect(vm_action, pool_type):
+
+        if not vm_action:
+            return
+
+        if pool_type == Pool.PoolTypes.AUTOMATED or pool_type == Pool.PoolTypes.STATIC:
+            if vm_action == VmActionUponUserDisconnect.RECREATE.name:
+                raise ValidationError(_local_("Vm disconnect action RECREATE is not allowed "
+                                              "for pool type {}.").format(pool_type.name))
+        elif pool_type == Pool.PoolTypes.GUEST:
+            if vm_action != VmActionUponUserDisconnect.RECREATE.name:
+                raise ValidationError(_local_("Guest pool must have vm disconnect action RECREATE."))
+        elif pool_type == Pool.PoolTypes.RDS:
+            if vm_action != VmActionUponUserDisconnect.NONE.name:
+                raise ValidationError(_local_("RDS pool is not allowed to have vm disconnect actions."))
+
+    @staticmethod
+    async def custom_validate_connection_types(connection_types, pool_type):
+
+        if not connection_types:
+            return
+
+        if pool_type == Pool.PoolTypes.RDS:
+            not_allowed_types = [conn_type for conn_type in connection_types
+                                 if conn_type not in RdsPool.get_supported_conn_types()]
+
+            if not_allowed_types:
+                raise ValidationError(
+                    _local_("Connection types {} are not supported.").format(str(not_allowed_types)))
 
 
 class PoolGroupType(graphene.ObjectType):
@@ -435,6 +477,8 @@ class PoolType(graphene.ObjectType):
     verbose_name = ShortString()
     status = StatusGraphene()
     pool_type = ShortString()
+    vm_action_upon_user_disconnect = VmActionUponUserDisconnectGraphene()
+    vm_disconnect_action_timeout = graphene.Int()
     resource_pool_id = graphene.UUID()
     controller = graphene.Field(ControllerType)
     vm_amount = graphene.Int()
@@ -444,13 +488,13 @@ class PoolType(graphene.ObjectType):
 
     # AutomatedPool fields
     automated_pool_id = graphene.UUID()
+    datapool_id = graphene.UUID()
     template_id = graphene.UUID()
     increase_step = graphene.Int()
     max_amount_of_create_attempts = graphene.Int()
     initial_size = graphene.Int()
     reserve_size = graphene.Int()
     total_size = graphene.Int()
-    waiting_time = graphene.Int()
     vm_name_template = ShortString()
     os_type = ShortString()
     ad_ou = ShortString()
@@ -483,6 +527,7 @@ class PoolType(graphene.ObjectType):
     # Затрагивает запрос ресурсов на VeiL ECP.
     template = graphene.Field(VeilShortEntityType)
     resource_pool = graphene.Field(VeilShortEntityType)
+    datapool = graphene.Field(VeilShortEntityType)
     vms = graphene.List(VmType,
                         limit=graphene.Int(default_value=500),
                         offset=graphene.Int(default_value=0),
@@ -612,6 +657,20 @@ class PoolType(graphene.ObjectType):
         veil_domain.id = veil_domain.api_object_id
         return veil_domain
 
+    async def resolve_datapool(self, _info):
+        pool = await Pool.get(self.pool_id)
+        pool_controller = await pool.controller_obj
+        # Прерываем выполнение при отсутствии клиента
+        if not pool_controller.veil_client:
+            return
+        if pool.datapool_id:
+            veil_datapool = pool_controller.veil_client.data_pool(str(pool.datapool_id))
+            await veil_datapool.info()
+            # попытка не использовать id
+            veil_datapool.id = veil_datapool.api_object_id
+            return veil_datapool
+        return None
+
     async def resolve_assigned_connection_types(self, _info):
         pool = await Pool.get(self.pool_id)
         return pool.connection_types
@@ -627,16 +686,18 @@ def pool_obj_to_type(pool_obj: Pool) -> PoolType:
         "master_id": pool_obj.master_id,
         "verbose_name": pool_obj.verbose_name,
         "pool_type": pool_obj.pool_type.name,
+        "vm_action_upon_user_disconnect": pool_obj.vm_action_upon_user_disconnect.name,
+        "vm_disconnect_action_timeout": pool_obj.vm_disconnect_action_timeout,
         "resource_pool_id": pool_obj.resource_pool_id,
         "static_pool_id": pool_obj.master_id,
         "automated_pool_id": pool_obj.master_id,
+        "datapool_id": pool_obj.datapool_id,
         "template_id": pool_obj.template_id,
         "increase_step": pool_obj.increase_step,
         "max_amount_of_create_attempts": pool_obj.max_amount_of_create_attempts,
         "initial_size": pool_obj.initial_size,
         "reserve_size": pool_obj.reserve_size,
         "total_size": pool_obj.total_size,
-        "waiting_time": pool_obj.waiting_time,
         "vm_name_template": pool_obj.vm_name_template,
         "os_type": pool_obj.os_type,
         "keep_vms_on": pool_obj.keep_vms_on,
@@ -750,13 +811,11 @@ class ClearPoolMutation(graphene.Mutation):
 
 # --- --- --- --- ---
 # Static pool mutations
-class CreateStaticPoolMutation(graphene.Mutation, ControllerFetcher):
+class CreateStaticPoolMutation(graphene.Mutation, PoolValidator, ControllerFetcher):
     """Создание статического пула.
 
     Стаический пул это группа ВМ, которые уже созданы на VeiL ECP.
-    на данный момент ВМ не может одновременно находиться в нескольких статических пулах
-    валидатор исключен, потому что все входные параметры можно провалидировать
-    только после отправки команды на ECP VeiL.
+    На данный момент ВМ не может одновременно находиться в нескольких статических пулах.
     """
 
     class Arguments:
@@ -768,6 +827,10 @@ class CreateStaticPoolMutation(graphene.Mutation, ControllerFetcher):
             graphene.NonNull(ConnectionTypesGraphene),
             default_value=[Pool.PoolConnectionTypes.SPICE.value],
         )
+        vm_action_upon_user_disconnect = VmActionUponUserDisconnectGraphene(
+            default_value=VmActionUponUserDisconnect.NONE
+        )
+        vm_disconnect_action_timeout = graphene.Int(default_value=VEIL_DEFAULT_VM_DISCONNECT_ACTION_TIMEOUT)
 
     pool = graphene.Field(lambda: PoolType)
     ok = graphene.Boolean()
@@ -784,6 +847,8 @@ class CreateStaticPoolMutation(graphene.Mutation, ControllerFetcher):
         verbose_name,
         vms,
         connection_types,
+        vm_action_upon_user_disconnect,
+        vm_disconnect_action_timeout
     ):
         """Мутация создания Статического пула виртуальных машин.
 
@@ -795,6 +860,11 @@ class CreateStaticPoolMutation(graphene.Mutation, ControllerFetcher):
         6. Разрешение удаленного доступа к VM на veil
         7. Активация Pool
         """
+        await cls.validate(verbose_name=verbose_name,
+                           vm_disconnect_action_timeout=vm_disconnect_action_timeout)
+        await cls.custom_validate_vm_action_upon_user_disconnect(
+            vm_action_upon_user_disconnect, Pool.PoolTypes.STATIC)
+
         # Проверяем наличие записи
         controller = await cls.fetch_by_id(controller_id)
 
@@ -810,6 +880,8 @@ class CreateStaticPoolMutation(graphene.Mutation, ControllerFetcher):
                 resource_pool_id=resource_pool_id,
                 controller_id=controller_id,
                 connection_types=connection_types,
+                vm_action_upon_user_disconnect=vm_action_upon_user_disconnect,
+                vm_disconnect_action_timeout=vm_disconnect_action_timeout,
                 tag=tag,
                 creator=creator,
             )
@@ -856,9 +928,8 @@ class CreateRdsPoolMutation(graphene.Mutation, PoolValidator, ControllerFetcher)
     async def mutate(cls, root, info, creator, controller_id,
                      resource_pool_id, rds_vm, verbose_name, connection_types):
 
-        RdsPool.validate_conn_types(connection_types)
-
         await cls.validate(verbose_name=verbose_name)
+        await cls.custom_validate_connection_types(connection_types, Pool.PoolTypes.RDS)
 
         # Create pool
         pool = await RdsPool.soft_create(
@@ -939,6 +1010,8 @@ class UpdateStaticPoolMutation(graphene.Mutation, PoolValidator):
         verbose_name = ShortString()
         keep_vms_on = graphene.Boolean()
         connection_types = graphene.List(graphene.NonNull(ConnectionTypesGraphene))
+        vm_action_upon_user_disconnect = VmActionUponUserDisconnectGraphene()
+        vm_disconnect_action_timeout = graphene.Int()
 
     ok = graphene.Boolean()
 
@@ -946,6 +1019,9 @@ class UpdateStaticPoolMutation(graphene.Mutation, PoolValidator):
     @administrator_required
     async def mutate(cls, _root, _info, creator, **kwargs):
         await cls.validate(**kwargs)
+        await cls.custom_validate_vm_action_upon_user_disconnect(
+            kwargs.get("vm_action_upon_user_disconnect"), Pool.PoolTypes.STATIC)
+
         try:
             ok = await StaticPool.soft_update(
                 kwargs["pool_id"],
@@ -953,6 +1029,8 @@ class UpdateStaticPoolMutation(graphene.Mutation, PoolValidator):
                 kwargs.get("keep_vms_on"),
                 kwargs.get("connection_types"),
                 creator,
+                kwargs.get("vm_action_upon_user_disconnect"),
+                kwargs.get("vm_disconnect_action_timeout"),
             )
         except UniqueViolationError:
             error_msg = _local_(
@@ -976,16 +1054,16 @@ class UpdateRdsPoolMutation(graphene.Mutation, PoolValidator):
     @administrator_required
     async def mutate(cls, _root, _info, creator, **kwargs):
 
-        pool_id = kwargs["pool_id"]
-        connection_types = kwargs.get("connection_types")
-        RdsPool.validate_conn_types(connection_types)
         await cls.validate(**kwargs)
+        await cls.custom_validate_connection_types(kwargs.get("connection_types"), Pool.PoolTypes.RDS)
+
+        pool_id = kwargs["pool_id"]
         try:
             ok = await RdsPool.soft_update(
                 pool_id,
                 kwargs.get("verbose_name"),
                 kwargs.get("keep_vms_on"),
-                connection_types,
+                kwargs.get("connection_types"),
                 creator,
             )
         except UniqueViolationError:
@@ -1056,6 +1134,7 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator, ControllerFe
     class Arguments:
         controller_id = graphene.UUID(required=True)
         resource_pool_id = graphene.UUID(required=True)
+        datapool_id = graphene.UUID(required=True)
         template_id = graphene.UUID(required=True)
 
         verbose_name = ShortString(required=True)
@@ -1080,11 +1159,12 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator, ControllerFe
             graphene.NonNull(ConnectionTypesGraphene),
             default_value=[Pool.PoolConnectionTypes.SPICE.value],
         )
+        vm_disconnect_action_timeout = graphene.Int(default_value=VEIL_DEFAULT_VM_DISCONNECT_ACTION_TIMEOUT)
+        vm_action_upon_user_disconnect = VmActionUponUserDisconnectGraphene()
         ad_ou = ShortString(
             description="Наименование организационной единицы для добавления ВМ в AD"
         )
         is_guest = graphene.Boolean(default_value=False)
-        waiting_time = graphene.Int()
 
     pool = graphene.Field(lambda: PoolType)
     ok = graphene.Boolean()
@@ -1098,6 +1178,7 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator, ControllerFe
         creator,
         controller_id,
         resource_pool_id,
+        datapool_id,
         template_id,
         verbose_name,
         increase_step,
@@ -1111,12 +1192,23 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator, ControllerFe
         set_vms_hostnames,
         include_vms_in_ad,
         connection_types,
+        vm_disconnect_action_timeout,
+        vm_action_upon_user_disconnect=None,
         ad_ou: str = None,
-        is_guest: bool = False,
-        waiting_time: int = None
+        is_guest: bool = False
     ):
         """Мутация создания Автоматического(Динамического) пула виртуальных машин."""
-        await cls.validate(vm_name_template=vm_name_template, verbose_name=verbose_name)
+        await cls.validate(vm_name_template=vm_name_template, verbose_name=verbose_name,
+                           vm_disconnect_action_timeout=vm_disconnect_action_timeout)
+        if is_guest:
+            pool_type = Pool.PoolTypes.GUEST
+            if vm_action_upon_user_disconnect is None:
+                vm_action_upon_user_disconnect = VmActionUponUserDisconnect.RECREATE.name
+        else:
+            pool_type = Pool.PoolTypes.AUTOMATED
+            if vm_action_upon_user_disconnect is None:
+                vm_action_upon_user_disconnect = VmActionUponUserDisconnect.NONE.name
+        await cls.custom_validate_vm_action_upon_user_disconnect(vm_action_upon_user_disconnect, pool_type)
         # Создание записей в БД
         try:
             controller = await cls.fetch_by_id(controller_id)
@@ -1129,6 +1221,7 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator, ControllerFe
                 verbose_name=verbose_name,
                 controller_id=controller_id,
                 resource_pool_id=resource_pool_id,
+                datapool_id=datapool_id,
                 template_id=template_id,
                 increase_step=increase_step,
                 initial_size=initial_size,
@@ -1141,10 +1234,11 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator, ControllerFe
                 set_vms_hostnames=set_vms_hostnames,
                 include_vms_in_ad=include_vms_in_ad,
                 connection_types=connection_types,
+                vm_action_upon_user_disconnect=vm_action_upon_user_disconnect,
+                vm_disconnect_action_timeout=vm_disconnect_action_timeout,
                 ad_ou=ad_ou,
                 tag=tag,
-                is_guest=is_guest,
-                waiting_time=waiting_time
+                is_guest=is_guest
             )
         except UniqueViolationError as ex:
             error_msg = _local_("Failed to create pool {}.").format(verbose_name)
@@ -1172,13 +1266,14 @@ class UpdateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
         increase_step = graphene.Int()
         vm_name_template = ShortString()
         keep_vms_on = graphene.Boolean()
+        vm_action_upon_user_disconnect = VmActionUponUserDisconnectGraphene()
+        vm_disconnect_action_timeout = graphene.Int()
         create_thin_clones = graphene.Boolean()
         enable_vms_remote_access = graphene.Boolean()
         start_vms = graphene.Boolean()
         set_vms_hostnames = graphene.Boolean()
         include_vms_in_ad = graphene.Boolean()
         ad_ou = ShortString()
-        waiting_time = graphene.Int()
         connection_types = graphene.List(graphene.NonNull(ConnectionTypesGraphene))
 
     ok = graphene.Boolean()
@@ -1187,7 +1282,12 @@ class UpdateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
     @administrator_required
     async def mutate(cls, root, info, creator, **kwargs):
         await cls.validate(**kwargs)
+        pool = await Pool.get(kwargs["pool_id"])
+        await cls.custom_validate_vm_action_upon_user_disconnect(
+            kwargs.get("vm_action_upon_user_disconnect"), pool.pool_type)
+
         automated_pool = await AutomatedPool.get(kwargs["pool_id"])
+
         if automated_pool:
             # total_size опасно уменьшать, так как в это время может выполняться задача расширения пула, что может
             # привести к тому, что в пуле будет больше машин, чем total_size (максимальное число машин)
@@ -1214,7 +1314,6 @@ class UpdateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
             vm_name_template = kwargs.get("vm_name_template")
             if vm_name_template != automated_pool.vm_name_template:
 
-                pool = await Pool.get(kwargs["pool_id"])
                 vms = await pool.get_vms()
                 await asyncio.gather(
                     *[
@@ -1233,13 +1332,14 @@ class UpdateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
                     increase_step=kwargs.get("increase_step"),
                     vm_name_template=vm_name_template,
                     keep_vms_on=kwargs.get("keep_vms_on"),
+                    vm_action_upon_user_disconnect=kwargs.get("vm_action_upon_user_disconnect"),
+                    vm_disconnect_action_timeout=kwargs.get("vm_disconnect_action_timeout"),
                     create_thin_clones=kwargs.get("create_thin_clones"),
                     enable_vms_remote_access=kwargs.get("enable_vms_remote_access"),
                     start_vms=kwargs.get("start_vms"),
                     set_vms_hostnames=kwargs.get("set_vms_hostnames"),
                     include_vms_in_ad=kwargs.get("include_vms_in_ad"),
                     ad_ou=kwargs.get("ad_ou"),
-                    waiting_time=kwargs.get("waiting_time"),
                     connection_types=kwargs.get("connection_types"),
                     creator=creator,
                 )
@@ -1252,6 +1352,30 @@ class UpdateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
             else:
                 return UpdateAutomatedPoolMutation(ok=True)
         return UpdateAutomatedPoolMutation(ok=False)
+
+
+class CopyAutomatedPoolMutation(graphene.Mutation):
+    class Arguments:
+        pool_id = graphene.UUID(required=True)
+
+    pool_settings = graphene.JSONString()
+
+    @administrator_required
+    async def mutate(self, _info, pool_id, creator):
+        simple_pool = await Pool.query.where(Pool.id == pool_id).gino.first()
+        auto_pool = await AutomatedPool.query.where(AutomatedPool.id == pool_id).gino.first()
+        pool_settings = {**simple_pool.__values__, **auto_pool.__values__}
+        for key, val in pool_settings.items():
+            if isinstance(val, UUID):
+                pool_settings[key] = str(val)
+            elif isinstance(val, Enum):
+                pool_settings[key] = val.value
+            elif isinstance(val, list):
+                pool_settings[key] = [element.value for element in val]
+        await system_logger.info(_local_("Settings of pool {} is copied.").format(simple_pool.verbose_name),
+                                 description=str(pool_settings),
+                                 user=creator)
+        return CopyAutomatedPoolMutation(pool_settings=pool_settings)
 
 
 class RemoveVmsFromPoolMutation(graphene.Mutation):
@@ -1804,6 +1928,7 @@ class PoolMutations(graphene.ObjectType):
     removeVmsFromDynamicPool = RemoveVmsFromPoolMutation.Field()
     removePool = DeletePoolMutation.Field()
     updateDynamicPool = UpdateAutomatedPoolMutation.Field()
+    copyDynamicPool = CopyAutomatedPoolMutation.Field()
     updateStaticPool = UpdateStaticPoolMutation.Field()
     updateRdsPool = UpdateRdsPoolMutation.Field()
     expandPool = ExpandPoolMutation.Field()

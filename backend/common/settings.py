@@ -66,7 +66,7 @@ JWT_ALGORITHM = "HS256"
 # Websocket settings
 # -----------------------------
 WS_PING_INTERVAL = 10
-WS_PING_TIMEOUT = 60
+WS_PING_TIMEOUT = 35
 
 # ECP Veil settings
 # -----------------------------
@@ -83,6 +83,8 @@ VEIL_VM_REMOVE_TIMEOUT = 1200.0
 VEIL_MAX_URL_LEN = 6000
 VEIL_MAX_IDS_LEN = 3780
 VEIL_MAX_VM_CREATE_ATTEMPTS = 10
+VEIL_DEFAULT_VM_DISCONNECT_ACTION_TIMEOUT = 60  # Время, через которое над ВМ выполнится действие
+# после дисконнекта пользователя, сек
 
 # Cache settings
 # -----------------------------

@@ -134,6 +134,16 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       property_lv2: 'verbose_name'
     },
     {
+      title: 'Пул данных',
+      property: 'datapool',
+      property_lv2: 'verbose_name'
+    },
+    {
+      title: 'Шаблон ВМ',
+      property: 'template',
+      property_lv2: 'verbose_name'
+    },
+    {
       title: 'Начальное количество ВМ',
       property: 'initial_size',
       type: 'string'
@@ -162,11 +172,6 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       title: 'Количество доступных ВМ',
       property: 'vms',
       type: 'array-length'
-    },
-    {
-      title: 'Шаблон ВМ',
-      property: 'template',
-      property_lv2: 'verbose_name'
     },
     {
       title: 'Шаблон для имени ВМ',
@@ -277,13 +282,23 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
     },
     {
       title: 'Время жизни ВМ после потери связи',
-      property: 'waiting_time',
-      type: 'waiting_time',
+      property: 'vm_disconnect_action_timeout',
+      type: 'vm_disconnect_action_timeout',
       edit: 'changeGuestPoolWaitingTime'
     },
     {
       title: 'Пул ресурсов',
       property: 'resource_pool',
+      property_lv2: 'verbose_name'
+    },
+    {
+      title: 'Пул данных',
+      property: 'datapool',
+      property_lv2: 'verbose_name'
+    },
+    {
+      title: 'Шаблон ВМ',
+      property: 'template',
       property_lv2: 'verbose_name'
     },
     {
@@ -313,11 +328,6 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       title: 'Количество доступных ВМ',
       property: 'vms',
       type: 'array-length'
-    },
-    {
-      title: 'Шаблон ВМ',
-      property: 'template',
-      property_lv2: 'verbose_name'
     },
     {
       title: 'Шаблон для имени ВМ',
@@ -986,8 +996,8 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
           form: [{
             tag: 'input',
             type: 'number',
-            fieldName: 'waiting_time',
-            fieldValue: this.pool.waiting_time,
+            fieldName: 'vm_disconnect_action_timeout',
+            fieldValue: this.pool.vm_disconnect_action_timeout,
           }]
         },
         update: {

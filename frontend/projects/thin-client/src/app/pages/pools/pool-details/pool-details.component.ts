@@ -3,6 +3,7 @@ import { FormControl } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute, ParamMap, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
+import { WebsocketService } from '../../../core/services/websock.service';
 
 import { WaitService } from '../../../core/wait/wait.service';
 import { PoolsService } from '../pools.service';
@@ -21,6 +22,9 @@ export type RemoteData = {
 })
 
 export class PoolDetailsComponent implements OnInit, OnDestroy {
+  private idPool: string;
+  private socketSub: Subscription;
+  private subPool$: Subscription;
 
   public host: boolean = false;
   public pool: IPoolDetailClient;
@@ -57,16 +61,15 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
   ];
 
 
-  private idPool: string;
-  public  menuActive: string = 'info';
 
-  private subPool$: Subscription;
+  public  menuActive: string = 'info';
 
   constructor(private activatedRoute: ActivatedRoute,
               private router: Router,
               private poolService: PoolsService,
               private waitService: WaitService,
-              public  dialog: MatDialog) { }
+              private ws: WebsocketService,
+              private dialog: MatDialog) { }
 
   ngOnInit() {
     
@@ -82,6 +85,8 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       }
 
     });
+   
+    this.listenSockets()
   }
 
   public getPool(): void {
@@ -94,6 +99,8 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
 
         this.pool =  PoolDetailMapper.transformToClient(res.data);
         this.host = true;
+  
+        this.ws.init(this.pool.vmId);
         this.waitService.setWait(false);   
       })
   }
@@ -123,9 +130,20 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
   
   }
 
-  ngOnDestroy() {
+  public ngOnDestroy() {
     if (this.subPool$) {
       this.subPool$.unsubscribe();
     }
+  }
+
+  private listenSockets() {
+    if (this.socketSub) {
+      this.socketSub.unsubscribe();
+    }
+
+    this.socketSub = this.ws.stream('/domains/').subscribe((message: any) => {
+       console.log(message);
+        
+    });
   }
 }

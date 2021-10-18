@@ -7,12 +7,10 @@ import { map } from 'rxjs/operators';
 
 
 import { WaitService } from '@core/components/wait/wait.service';
-
 import { DetailsMove } from '@shared/classes/details-move';
-import { WebsocketService } from '@shared/classes/websock.service';
 import { IParams } from '@shared/types';
-
 import { ThinClientsService } from './thin-clients.service';
+import { WebsocketService } from '@app/core/services/websock.service';
 
 @Component({
   selector: 'vdi-thin-clients',

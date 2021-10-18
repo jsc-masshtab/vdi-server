@@ -39,10 +39,7 @@ snapshots['TestVmStatus.test_reserved_status 1'] = {
         {
             'vms': [
                 {
-                    'status': 'ACTIVE',
-                    'user': {
-                        'username': 'vdiadmin'
-                    }
+                    'status': 'RESERVED'
                 }
             ]
         }
@@ -54,25 +51,7 @@ snapshots['TestVmStatus.test_reserved_status 2'] = {
         {
             'vms': [
                 {
-                    'status': 'RESERVED',
-                    'user': {
-                        'username': None
-                    }
-                }
-            ]
-        }
-    ]
-}
-
-snapshots['TestVmStatus.test_reserved_status 3'] = {
-    'pools': [
-        {
-            'vms': [
-                {
-                    'status': 'ACTIVE',
-                    'user': {
-                        'username': 'vdiadmin'
-                    }
+                    'status': 'ACTIVE'
                 }
             ]
         }

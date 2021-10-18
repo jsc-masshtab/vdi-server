@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import asyncio
 import uuid
-from enum import IntEnum
+from enum import Enum, IntEnum
 
 from asyncpg.exceptions import UniqueViolationError
 
@@ -50,6 +50,16 @@ class VmPowerState(IntEnum):
     ON = 3
 
 
+class VmActionUponUserDisconnect(Enum):
+    """Действие над ВМ после отключения от нее пользователя."""
+
+    NONE = "NONE"  # Нет действий. По умолчанию для всех типов пулов кроме гостевого
+    RECREATE = "RECREATE"  # Только для гостевого пула. Неизменяемое действие по умолчанию
+    SHUTDOWN = "SHUTDOWN"
+    SHUTDOWN_FORCED = "SHUTDOWN_FORCED"
+    SUSPEND = "SUSPEND"
+
+
 class Vm(VeilModel):
     """Vm однажды включенные в пулы."""
 
@@ -78,21 +88,6 @@ class Vm(VeilModel):
             (EntityModel.entity_type == self.entity_type)
             & (EntityModel.entity_uuid == self.id)  # noqa: W503
         ).gino.first()
-
-    @property
-    def controller_query(self):
-        from common.models.controller import Controller as ControllerModel
-        from common.models.pool import Pool as PoolModel
-
-        return db.select([ControllerModel.address]).select_from(
-            ControllerModel.join(
-                PoolModel.query.where(PoolModel.id == self.pool_id).alias()
-            ).alias()
-        )
-
-    @property
-    async def controller_address(self):
-        return await self.controller_query.gino.scalar()
 
     @property
     async def username(self):
@@ -442,6 +437,7 @@ class Vm(VeilModel):
         verbose_name: str,
         domain_id: str,
         resource_pool_id: str,
+        datapool_id,
         controller_id,
         create_thin_clones: bool,
         count: int = 1,
@@ -460,19 +456,46 @@ class Vm(VeilModel):
         # Получаем сущность Domain для запросов к VeiL ECP
         vm_client = vm_controller.veil_client.domain(domain_id)
         # Параметры создания ВМ
+        # Legacy для пулов без датапулов
+        node_id = None
         if create_thin_clones:
-            vm_configuration = DomainConfiguration(
-                verbose_name=verbose_name,
-                resource_pool=resource_pool_id,
-                parent=domain_id,
-                count=count,
-            )
+            if datapool_id:
+                veil_response = await vm_controller.veil_client.data_pool().list()
+                for data in veil_response.response:
+                    resource = data.public_attrs
+                    node_id = resource["nodes_connected"][0]["id"]
+                vm_configuration = DomainConfiguration(
+                    verbose_name=verbose_name,
+                    node=node_id,
+                    datapool=datapool_id,
+                    parent=domain_id,
+                    count=count,
+                )
+            else:
+                vm_configuration = DomainConfiguration(
+                    verbose_name=verbose_name,
+                    resource_pool=resource_pool_id,
+                    parent=domain_id,
+                    count=count,
+                )
         else:
-            vm_configuration = DomainCloneConfiguration(
-                verbose_name=verbose_name,
-                resource_pool=resource_pool_id,
-                count=count
-            )
+            if datapool_id:
+                veil_response = await vm_controller.veil_client.data_pool().list()
+                for data in veil_response.response:
+                    resource = data.public_attrs
+                    node_id = resource["nodes_connected"][0]["id"]
+                vm_configuration = DomainCloneConfiguration(
+                    verbose_name=verbose_name,
+                    node=node_id,
+                    datapool=datapool_id,
+                    count=count
+                )
+            else:
+                vm_configuration = DomainCloneConfiguration(
+                    verbose_name=verbose_name,
+                    resource_pool=resource_pool_id,
+                    count=count
+                )
         # попытка создать ВМ
         inner_retry_count = 0
         while inner_retry_count < VEIL_MAX_VM_CREATE_ATTEMPTS:
@@ -867,13 +890,14 @@ class Vm(VeilModel):
                         increase_step=automated_pool.increase_step,
                         vm_name_template=automated_pool.vm_name_template,
                         keep_vms_on=pool.keep_vms_on,
+                        vm_action_upon_user_disconnect=pool.vm_action_upon_user_disconnect,
+                        vm_disconnect_action_timeout=pool.vm_disconnect_action_timeout,
                         create_thin_clones=automated_pool.create_thin_clones,
                         enable_vms_remote_access=automated_pool.enable_vms_remote_access,
                         start_vms=automated_pool.start_vms,
                         set_vms_hostnames=automated_pool.set_vms_hostnames,
                         include_vms_in_ad=automated_pool.include_vms_in_ad,
                         ad_ou=automated_pool.ad_ou,
-                        waiting_time=automated_pool.waiting_time,
                         connection_types=pool.connection_types,
                         creator=creator,
                     )

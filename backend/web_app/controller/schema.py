@@ -233,6 +233,7 @@ class ControllerType(graphene.ObjectType, ControllerFetcher):
         ControllerVmType,
         cluster_id=graphene.UUID(),
         resource_pool_id=graphene.UUID(),
+        data_pool_id=graphene.UUID(),
         node_id=graphene.UUID(),
         ordering=ShortString(),
         limit=graphene.Int(default_value=100),
@@ -347,6 +348,7 @@ class ControllerType(graphene.ObjectType, ControllerFetcher):
         offset,
         cluster_id=None,
         resource_pool_id=None,
+        data_pool_id=None,
         node_id=None,
         ordering: str = None,
     ):
@@ -356,13 +358,14 @@ class ControllerType(graphene.ObjectType, ControllerFetcher):
         if not controller.veil_client:
             return
         paginator = VeilRestPaginator(ordering=ordering, limit=limit, offset=offset)
-        # with_vdisks: 2 - все домены, 0 - только без vdisk'ов, 1/ничего - только с vdisk'ами
+        # with_vdisks: None - все домены, 0 - только без vdisk'ов, 1 - только с vdisk'ами
         veil_response = await controller.veil_client.domain(
             template=1,
             cluster_id=cluster_id,
             resource_pool=resource_pool_id,
+            data_pool_id=data_pool_id,
             node_id=node_id,
-        ).list(with_vdisks=2, paginator=paginator)
+        ).list(paginator=paginator)
         return [ControllerVmType(**data) for data in veil_response.paginator_results]
 
     async def resolve_vms(
@@ -382,13 +385,13 @@ class ControllerType(graphene.ObjectType, ControllerFetcher):
         vms = await Vm.query.gino.all()
         # Прерываем выполнение при отсутствии клиента
         if controller.veil_client:
-            # with_vdisks: 2 - все домены, 0 - только без vdisk'ов, 1/ничего - только с vdisk'ами
+            # with_vdisks: None - все домены, 0 - только без vdisk'ов, 1 - только с vdisk'ами
             veil_response = await controller.veil_client.domain(
                 template=0,
                 cluster_id=cluster_id,
                 resource_pool=resource_pool_id,
                 node_id=node_id,
-            ).list(with_vdisks=2, paginator=paginator)
+            ).list(paginator=paginator)
             resolves = veil_response.paginator_results
         else:
             resolves = dict()

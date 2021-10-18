@@ -64,6 +64,7 @@ async def test_cancel_tasks(
                         verbose_name: "pool-name",
                         controller_id: "%s",
                         resource_pool_id: "%s",
+                        datapool_id: "%s",
                         template_id: "%s",
                         vm_name_template: "vdi-test") {
                           pool {
@@ -74,6 +75,7 @@ async def test_cancel_tasks(
                     }""" % (
         resources["controller_id"],
         resources["resource_pool_id"],
+        resources["datapool_id"],
         resources["template_id"],
     )
     context = await get_auth_context()
