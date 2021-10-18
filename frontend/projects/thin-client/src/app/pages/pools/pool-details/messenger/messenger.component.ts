@@ -54,7 +54,7 @@ export class MessengerComponent implements OnInit, OnDestroy{
       this.socketSub.unsubscribe();
     }
 
-    this.socketSub = this.ws.stream('/domains/').subscribe((message: any) => {
+    this.socketSub = this.ws.event$.subscribe((message: any) => {
       
       if (message.msg_type === 'text_msg' ) {
         this.messages.push({

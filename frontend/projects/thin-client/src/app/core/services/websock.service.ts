@@ -4,6 +4,7 @@ import { Subject, Observable, Subscription } from 'rxjs';
 
 import { AuthStorageService } from './authStorage.service';
 import { environment } from 'environments/environment';
+import { filter } from 'rxjs/operators';
 
 
 
@@ -62,7 +63,7 @@ export class WebsocketService {
       let sub: Subscription;
 
       sub = this.event$
-        // .pipe(filter((ws: any) => ws.resource === listener))
+        .pipe(filter((ws: any) => ws.resource === listener))
         .subscribe((message: any) => observer.next(message));
 
       return () => {
@@ -144,7 +145,7 @@ export class WebsocketService {
         console.log(`%c[WS] Listener ${resource} subscribed x${this.connections[resource]}`, 'color: #9a6f0f');
       } else {
         this.connections[resource] = 1;
-        // this.send('add', resource);
+        this.send('add', resource);
       }
     }
   }
@@ -156,7 +157,7 @@ export class WebsocketService {
         console.log(`%c[WS] Listener ${resource} unsubscribe`, 'color: #9a6f0f');
       } else {
         delete this.connections[resource];
-        // this.send('delete', resource);
+        this.send('delete', resource);
       }
     }
   }
