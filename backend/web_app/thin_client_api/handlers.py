@@ -491,21 +491,10 @@ class ThinClientWsHandler(BaseWsHandler):
             )
             self.conn_id = tk_conn.id
 
-            response = {
-                "msg_type": WsMessageType.CONTROL.value,
-                "error": False,
-                "msg": "Auth success",
-            }
-            await self.write_msg(json.dumps(response))
+            await self.send_msg(False, "Auth success")
 
         except Exception as ex:  # noqa
-            response = {
-                "msg_type": WsMessageType.CONTROL.value,
-                "error": True,
-                "msg": str(ex),
-            }
-            await self.write_msg(json.dumps(response))
-            self.close(code=4000)
+            await self.close_with_msg(True, str(ex), 4000)
 
         # start tasks
         loop = asyncio.get_event_loop()
@@ -534,12 +523,7 @@ class ThinClientWsHandler(BaseWsHandler):
                         await tk_conn.update_network_stats(**recv_data_dict)
 
         except (KeyError, ValueError, TypeError, JSONDecodeError) as ex:
-            response = {
-                "msg_type": WsMessageType.CONTROL.value,
-                "error": True,
-                "msg": "Wrong msg format " + str(ex),
-            }
-            await self.write_msg(json.dumps(response))
+            await self.send_msg(True, "Wrong msg format " + str(ex))
 
     def on_close(self):
         loop = asyncio.get_event_loop()
@@ -650,15 +634,9 @@ class ThinClientWsHandler(BaseWsHandler):
                                     disconnect_current_tk = True
 
                             if disconnect_current_tk:
-                                # Отсылаем клиенту команду. По ней он отключится от машины
-                                response = {
-                                    "msg_type": WsMessageType.CONTROL.value,
-                                    "cmd": ThinClientCmd.DISCONNECT.name,
-                                    "error": False,
-                                    "msg": "Disconnect requested",
-                                }
-                                await self.write_msg(json.dumps(response))
-                                self.close()
+                                # Отсылаем клиенту команду. По ней он отключится от машины и разлогинится
+                                await self.close_with_msg(False, "Disconnect requested", 2000,
+                                                          cmd=ThinClientCmd.DISCONNECT.name)
 
                 except asyncio.CancelledError:
                     break

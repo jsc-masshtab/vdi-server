@@ -48,11 +48,11 @@ def jwtauth_ws(handler_class):
 
                 except jwt.ExpiredSignature:
                     msg = _local_("Token expired.")
-                    await self.close_with_msg(msg)
+                    await self.close_with_msg(True, msg, 4001)
 
                 except Exception as ex:  # noqa
                     msg = "Token validation error. {}".format(str(ex))
-                    await self.close_with_msg(msg)
+                    await self.close_with_msg(True, msg, 4001)
 
             else:  # invoke original open without auth
                 await open_method(self)
