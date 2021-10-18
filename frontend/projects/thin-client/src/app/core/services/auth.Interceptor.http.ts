@@ -21,7 +21,7 @@ export class AuthInterceptor implements HttpInterceptor {
         return next.handle(authReq).pipe(
             tap(event => {
                 if (event instanceof HttpResponse) { 
-                    if (event.body.errors){
+                    if (event.body && event.body.errors){
                         this.errorService.setError(event.body.errors);
                     }
                     return;
