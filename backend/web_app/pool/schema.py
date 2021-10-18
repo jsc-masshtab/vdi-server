@@ -525,7 +525,8 @@ class PoolType(graphene.ObjectType):
     vms = graphene.List(VmType,
                         limit=graphene.Int(default_value=500),
                         offset=graphene.Int(default_value=0),
-                        ordering=ShortString())
+                        ordering=ShortString(),
+                        verbose_name=ShortString())
     vm = graphene.Field(VmType, vm_id=graphene.UUID(), controller_id=graphene.UUID())
 
     async def resolve_controller(self, info):
@@ -569,10 +570,11 @@ class PoolType(graphene.ObjectType):
             return await pool.assigned_users(ordering=ordering, limit=limit, offset=offset)
         return await pool.possible_users(limit=limit, offset=offset)  # ordered by name inside the method
 
-    async def resolve_vms(self, _info, limit=500, offset=0, ordering=None):
+    async def resolve_vms(self, _info, limit=500, offset=0, ordering=None, verbose_name=None):
 
         pool = await Pool.get(self.pool_id)
-        vms_info = await pool.get_vms_info(limit=limit, offset=offset, ordering=ordering)
+        vms_info = await pool.get_vms_info(limit=limit, offset=offset,
+                                           ordering=ordering, verbose_name=verbose_name)
         return vms_info
 
     @classmethod
