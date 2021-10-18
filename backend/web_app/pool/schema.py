@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import asyncio
 import re
+from enum import Enum
 from uuid import UUID
 
 from asyncpg.exceptions import UniqueViolationError
@@ -1367,9 +1368,7 @@ class CopyAutomatedPoolMutation(graphene.Mutation):
         for key, val in pool_settings.items():
             if isinstance(val, UUID):
                 pool_settings[key] = str(val)
-            elif isinstance(val, Pool.PoolTypes):
-                pool_settings[key] = val.value
-            elif isinstance(val, Status):
+            elif isinstance(val, Enum):
                 pool_settings[key] = val.value
             elif isinstance(val, list):
                 pool_settings[key] = [element.value for element in val]
