@@ -30,7 +30,8 @@
         transition: all 300ms;
         width: calc(100% - 2px);
         white-space: nowrap;
-
+        position: relative;
+        
         &:hover {
             color: rgba(0,0,0,0.6);
             cursor: pointer;
@@ -53,6 +54,18 @@
         white-space: nowrap;
         text-overflow: ellipsis;
         overflow: hidden;
+    }
+    .notifications {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        position: absolute;
+        top: 0;
+        right: -1px;
+        padding: 1px 6px 3px 8px;
+        border-radius: 0 0 0 12px;
+        background-color: rgba(230,181,91,.652);
+        color: rgba(0,0,0,.733);
     }
 }
 

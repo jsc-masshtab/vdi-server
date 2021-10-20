@@ -3,8 +3,8 @@ import { FormControl } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute, ParamMap, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
-import { WebsocketService } from '../../../core/services/websock.service';
 
+import { WebsocketService } from '../../../core/services/websock.service';
 import { WaitService } from '../../../core/wait/wait.service';
 import { PoolsService } from '../pools.service';
 import { IPoolDetailClient, PoolDetailMapper } from './pool-detail.mapper';
@@ -22,10 +22,10 @@ export type RemoteData = {
 })
 
 export class PoolDetailsComponent implements OnInit, OnDestroy {
-  private idPool: string;
-  private socketSub: Subscription;
   private subPool$: Subscription;
-
+  private socketSub$: Subscription;
+  private idPool: string;
+  public notifications: number = 0;
   public host: boolean = false;
   public pool: IPoolDetailClient;
   public connectionTypes: string[];
@@ -60,8 +60,6 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
     
   ];
 
-
-
   public  menuActive: string = 'info';
 
   constructor(private activatedRoute: ActivatedRoute,
@@ -83,20 +81,19 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       } else {
         this.close();
       }
-
     });
-   
     this.listenSockets()
+
   }
 
   public getPool(): void {
     if (this.subPool$) {
       this.subPool$.unsubscribe();
     }
+
     this.waitService.setWait(true);   
     this.host = false;
     this.subPool$ = this.poolService.getPoolDetail(this.idPool).subscribe((res) => {
-
         this.pool =  PoolDetailMapper.transformToClient(res.data);
         this.host = true;
   
@@ -137,13 +134,20 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
   }
 
   private listenSockets() {
-    if (this.socketSub) {
-      this.socketSub.unsubscribe();
+    if (this.socketSub$) {
+      this.socketSub$.unsubscribe();
     }
 
-    this.socketSub = this.ws.stream('/domains/').subscribe((message: any) => {
-       console.log(message);
-        
+    this.socketSub$ = this.ws.event$.subscribe((message: any) => {
+      
+      if (message.msg_type === 'text_msg' ) {
+        this.notifications++;
+      }         
     });
   }
+
+  public clearNotifications(): void {
+    this.notifications = 0;
+  }
+
 }

@@ -15,6 +15,7 @@ import { ManageVmComponent } from './pool-details/manage-vm/manage-vm.component'
 import { SharedModule } from '@app/shared/shared.module';
 import { ButtonRefreshComponent } from '../../components/button-refresh/button-refresh.component';
 import { YesNoFormModule } from '../../components/yes-no-form/yes-no-form.module';
+import { MessengerComponent } from './pool-details/messenger/messenger.component';
 
 
 @NgModule({
@@ -23,7 +24,8 @@ import { YesNoFormModule } from '../../components/yes-no-form/yes-no-form.module
     PoolDetailsComponent,
     RemoteComponent,
     ManageVmComponent,
-    ButtonRefreshComponent
+    ButtonRefreshComponent,
+    MessengerComponent,
     ],
   imports: [
     CommonModule,
