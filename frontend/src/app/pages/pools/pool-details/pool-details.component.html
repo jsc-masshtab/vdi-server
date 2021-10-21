@@ -14,12 +14,17 @@
         <button (click)="getPool()" class="btn-refresh" title="Обновить">
             <fa-icon [icon]="['fas','sync-alt']"></fa-icon>
         </button>
-
-        <button (click)="expandPool()" *ngIf="menuActive === 'info' && (pool?.pool_type == 'AUTOMATED' || pool?.pool_type == 'GUEST')" title="Расширить пул" class="btn-control">
-            <fa-icon [icon]="['fas','expand']" size="xs"></fa-icon>
-            <span class="name">Расширить пул</span>
-        </button>
-
+        <ng-container *ngIf="menuActive === 'info' && (pool?.pool_type == 'AUTOMATED' || pool?.pool_type == 'GUEST')">
+            <button (click)="expandPool()"  title="Расширить пул" class="btn-control">
+                <fa-icon [icon]="['fas','expand']" size="xs"></fa-icon>
+                <span class="name">Расширить пул</span>
+            </button>
+            <button (click)="copyPool()"  title="Создать резервные копии всех ВМ в пуле" class="btn-control">
+                <fa-icon [icon]="['fas','clone']" size="xs"></fa-icon>
+                <span class="name">Копировать пул</span>
+            </button>
+        </ng-container>
+     
         <button (click)="removePool()" *ngIf="menuActive === 'info' && pool" title="Удалить пул" class="btn-control">
             <fa-icon [icon]="['fas','trash-alt']" size="xs"></fa-icon>
             <span class="name">Удалить пул</span>
