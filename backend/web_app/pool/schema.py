@@ -169,6 +169,7 @@ class VmType(VeilResourceType):
             users_query = await vm.get_users_query()
             users = await users_query.limit(limit).offset(offset).gino.all()
             objects = [UserType.instance_to_type(user) for user in users]
+            objects.sort(key=lambda name: name.username)
             return objects
         return list()
 

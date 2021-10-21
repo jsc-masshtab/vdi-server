@@ -521,6 +521,8 @@ class Pool(VeilModel):
                 if reverse
                 else finish_query.order_by(ordering)
             )
+        else:
+            finish_query = finish_query.order_by(UserModel.username)
         return await finish_query.limit(limit).offset(offset).gino.all()
 
     async def check_if_user_assigned(self, user_id):
