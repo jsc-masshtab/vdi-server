@@ -19,8 +19,15 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   @HostListener('window:keydown', ['$event'])
   public closePopup(e) {
-    if (e.keyCode === 27) {
+    
+    if (e.key === 'Escape') {
       this.dialog.closeAll();
+    }
+
+    if (e.key === 'Enter' && this.dialog.openDialogs.length) {
+      if (this.dialog.openDialogs[this.dialog.openDialogs.length - 1].componentInstance.send) {
+        this.dialog.openDialogs[this.dialog.openDialogs.length - 1].componentInstance.send();
+      }
     }
   }
 
