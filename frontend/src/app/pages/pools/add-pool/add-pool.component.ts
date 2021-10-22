@@ -62,7 +62,7 @@ export class PoolAddComponent implements OnInit, OnDestroy {
     }
 
   ngOnInit() {
-    if (this.poolSettings){
+    if (this.poolSettings){      
       this.initFormsForCopy();
     }else{
       this.getAllAuthenticationDirectory();
@@ -166,6 +166,7 @@ export class PoolAddComponent implements OnInit, OnDestroy {
         vm_disconnect_action_timeout,
         vm_name_template
       } = this.poolSettings;
+
     this.sharedData = this.fb.group({
       verbose_name: [ '' , [Validators.required, Validators.pattern(/^[а-яА-ЯёЁa-zA-Z0-9.\-]*$/)]],
       connection_types: [connection_types, Validators.required],
@@ -210,9 +211,16 @@ export class PoolAddComponent implements OnInit, OnDestroy {
     if (this.poolSettings.pool_type === 'GUEST'){
       this.type = 'guest';
     }else if (this.poolSettings.pool_type === 'AUTOMATED'){
+      this.warming_vm.setValue(this.isAnyVmWarmingFieldChecked());
       this.type = 'dynamic';
     }
     this.toStep('static');
+  }
+  
+  public isAnyVmWarmingFieldChecked(): boolean {
+    const {enable_vms_remote_access, start_vms, set_vms_hostnames} = this.poolSettings;
+    const checkboxes = [enable_vms_remote_access, start_vms, set_vms_hostnames];
+    return checkboxes.some( checkbox => checkbox === true); 
   }
 
   getData(type, data: any = {}) {
@@ -416,19 +424,20 @@ export class PoolAddComponent implements OnInit, OnDestroy {
 
       case 'dynamic': {
         this.step = step;
-        this.dynamicPool.get('increase_step').setValue(1);
-        this.dynamicPool.get('initial_size').setValue(1);
-        this.dynamicPool.get('total_size').setValue(1);
-        this.dynamicPool.get('reserve_size').setValue(1);
-        this.dynamicPool.get('create_thin_clones').setValue(true);
-        this.warming_vm.setValue(true);
-        this.dynamicPool.get('enable_vms_remote_access').setValue(true);
-        this.dynamicPool.get('start_vms').setValue(true);
-        this.dynamicPool.get('set_vms_hostnames').setValue(true);
-        if (this.auth_dirs.length) { this.dynamicPool.get('include_vms_in_ad').setValue(true); }
-
+        if (!this.poolSettings){
+          this.dynamicPool.get('increase_step').setValue(1);
+          this.dynamicPool.get('initial_size').setValue(1);
+          this.dynamicPool.get('total_size').setValue(1);
+          this.dynamicPool.get('reserve_size').setValue(1);
+          this.dynamicPool.get('create_thin_clones').setValue(true);
+          this.dynamicPool.get('enable_vms_remote_access').setValue(true);
+          this.dynamicPool.get('start_vms').setValue(true);
+          this.dynamicPool.get('set_vms_hostnames').setValue(true);
+          this.warming_vm.setValue(true);
+          if (this.auth_dirs.length) { this.dynamicPool.get('include_vms_in_ad').setValue(true); }
+        }  
         this.warming_vm.valueChanges.subscribe((value) => {
-
+        
           if (value) {
             this.warming_all = true;
             this.dynamicPool.get('enable_vms_remote_access').setValue(true);
@@ -471,7 +480,7 @@ export class PoolAddComponent implements OnInit, OnDestroy {
           }
         });
 
-        if (this.auth_dirs.length) {
+        if (this.auth_dirs.length && !this.poolSettings) {
           this.dynamicPool.get('include_vms_in_ad').valueChanges.subscribe((value) => {
             if (value) {
               this.dynamicPool.get('enable_vms_remote_access').setValue(true);
