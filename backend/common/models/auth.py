@@ -241,7 +241,7 @@ class User(AbstractSortableStatusModel, VeilModel):
             return username
         raise SimpleError(
             _local_(
-                "username {} must contain >= 3 chars (letters, digits, _, -, +), begin from letter and can't contain any spaces.").format(
+                "username {} must contain >= 1 chars (letters, digits, _, +), begin from letter and can't contain any spaces.").format(
                 username)
         )
 
