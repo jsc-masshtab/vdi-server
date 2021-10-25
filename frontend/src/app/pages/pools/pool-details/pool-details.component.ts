@@ -18,6 +18,7 @@ import { RemovePoolComponent } from './remove-pool/remove-pool.component';
 import { RemoveUsersPoolComponent } from './remove-users/remove-users.component';
 import { RemoveVMStaticPoolComponent } from './remove-vms/remove-vms.component';
 import { VmDetalsPopupComponent } from './vm-details-popup/vm-details-popup.component';
+import { PoolAddComponent } from '../add-pool/add-pool.component';
 
 
 @Component({
@@ -28,6 +29,7 @@ import { VmDetalsPopupComponent } from './vm-details-popup/vm-details-popup.comp
 export class PoolDetailsComponent implements OnInit, OnDestroy {
 
   public host: boolean = false;
+  public poolSettings; 
   user_power_state = new FormControl('all');
 
   public pool: IPool;
@@ -1269,7 +1271,22 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       }
     });
   }
+  public copyPool(): void {
+    this.poolService.copyPool(this.idPool).subscribe((res) => {
+       this.poolSettings = JSON.parse(res.data.copyDynamicPool.pool_settings); 
 
+       this.dialog.open(PoolAddComponent, {
+         disableClose: true,
+         width: '500px',
+         data: this.poolSettings
+       });
+    });
+   
+  }
+
+  public converData(): void {
+  
+  }
   ngOnDestroy() {
     if (this.sub_ws_create_pool) {
       this.sub_ws_create_pool.unsubscribe();

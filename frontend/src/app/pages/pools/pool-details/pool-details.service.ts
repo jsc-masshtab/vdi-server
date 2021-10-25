@@ -972,4 +972,20 @@ export class PoolDetailsService {
       }
     });
   }
+
+  public copyPool(pool_id: string) {
+    return this.service.mutate<any>({
+        mutation: gql`
+            mutation pools($pool_id: UUID!) {
+                copyDynamicPool(pool_id: $pool_id) {
+                    pool_settings
+                }
+            }
+        `,
+        variables: {
+            method: 'POST',
+            pool_id
+        }
+        })
+    }
 }
