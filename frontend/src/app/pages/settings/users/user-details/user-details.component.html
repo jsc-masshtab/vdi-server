@@ -31,7 +31,7 @@
         <span class="name">Активация пользователя</span>
       </button>
 
-      <button (click)="changeUserPassword()" title="Сброс пароля" class="btn-control">
+      <button *ngIf="!entity?.by_ad" (click)="changeUserPassword()" title="Сброс пароля" class="btn-control">
         <!-- <fa-icon [icon]="['fas','trash-alt']" size="xs"></fa-icon> -->
         <span class="name">Сброс пароля</span>
       </button>

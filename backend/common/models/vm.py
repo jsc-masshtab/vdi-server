@@ -1086,7 +1086,7 @@ class Vm(VeilModel):
         already_in_domain = (
             await domain_entity.is_in_ad() if domain_entity.os_windows else True
         )
-        if active_directory_obj and domain_entity.os_windows and not already_in_domain:
+        if active_directory_obj and domain_entity.os_windows and not already_in_domain and active_directory_obj.directory_type != active_directory_obj.DirectoryTypes.OpenLDAP:
             ad_params_dict = {"domain_name": str(active_directory_obj.dc_str),
                               "login": active_directory_obj.service_username,
                               "password": active_directory_obj.password}

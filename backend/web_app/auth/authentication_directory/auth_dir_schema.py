@@ -457,6 +457,22 @@ class SyncExistingAuthenticationDirectoryGroupUsers(graphene.Mutation):
         return SyncAuthenticationDirectoryGroupUsers(ok=True)
 
 
+class SyncAuthenticationDirectoryOpenLDAPUsers(graphene.Mutation):
+    class Arguments:
+        auth_dir_id = graphene.UUID(required=True)
+        ou = graphene.String(required=True)
+
+    ok = graphene.Boolean()
+
+    @security_administrator_required
+    async def mutate(self, _info, auth_dir_id, ou, **kwargs):
+        auth_dir = await AuthenticationDirectory.get(auth_dir_id)
+        if not auth_dir:
+            raise SilentError(_local_("No such Authentication Directory."))
+        ok = await auth_dir.sync_openldap_users(ou=ou)
+        return SyncAuthenticationDirectoryOpenLDAPUsers(ok=ok)
+
+
 class AuthenticationDirectoryMutations(graphene.ObjectType):
     createAuthDir = CreateAuthenticationDirectoryMutation.Field()
     updateAuthDir = UpdateAuthenticationDirectoryMutation.Field()
@@ -467,6 +483,7 @@ class AuthenticationDirectoryMutations(graphene.ObjectType):
     editAuthDirMapping = EditAuthDirMappingMutation.Field()
     syncAuthDirGroupUsers = SyncAuthenticationDirectoryGroupUsers.Field()
     syncExistAuthDirGroupUsers = SyncExistingAuthenticationDirectoryGroupUsers.Field()
+    syncOpenLDAPUsers = SyncAuthenticationDirectoryOpenLDAPUsers.Field()
 
 
 auth_dir_schema = graphene.Schema(

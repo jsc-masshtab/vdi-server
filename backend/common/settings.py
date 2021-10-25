@@ -105,6 +105,7 @@ LDAP_TIMEOUT = 15
 LDAP_NETWORK_TIMEOUT = 10
 LDAP_OPT_REFERRALS = 0
 LDAP_LOGIN_PATTERN = "uid={username},cn=users,cn=accounts,{dc}"
+OPENLDAP_LOGIN_PATTERN = "cn={username},ou=people,{dc}"
 
 # File system paths
 # -----------------------------

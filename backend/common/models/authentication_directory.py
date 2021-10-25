@@ -20,7 +20,8 @@ from common.models.auth import Group as GroupModel, User as UserModel
 from common.settings import (LDAP_LOGIN_PATTERN,
                              LDAP_NETWORK_TIMEOUT,
                              LDAP_OPT_REFERRALS,
-                             LDAP_TIMEOUT)
+                             LDAP_TIMEOUT,
+                             OPENLDAP_LOGIN_PATTERN)
 from common.veil.auth.auth_dir_utils import (
     extract_domain_from_username,
     get_ad_user_ou,
@@ -144,6 +145,9 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
         """Логин с доменом."""
         if self.directory_type == AuthenticationDirectory.DirectoryTypes.FreeIPA:
             return LDAP_LOGIN_PATTERN.format(
+                username=self.service_username, dc=self.convert_dc_str(self.dc_str))
+        elif self.directory_type == AuthenticationDirectory.DirectoryTypes.OpenLDAP:
+            return OPENLDAP_LOGIN_PATTERN.format(
                 username=self.service_username, dc=self.convert_dc_str(self.dc_str))
         return (
             "\\".join([self.domain_name, self.service_username])
@@ -364,6 +368,28 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
         return True
 
     # Authentication Directory synchronization methods
+
+    async def sync_openldap_users(self, ou):
+        if self.directory_type == AuthenticationDirectory.DirectoryTypes.OpenLDAP:
+            ldap_server = ldap.initialize(self.directory_url)
+            dc_str = self.convert_dc_str(self.dc_str)
+            openldap_users = ldap_server.search_s("ou={},{}".format(ou, dc_str), ldap.SCOPE_SUBTREE)
+            sync_members = list()
+            for user in openldap_users:
+                if user[1].get("ou"):
+                    continue
+                info = dict()
+                info["first_name"] = user[1].get("givenName")[0].decode("UTF-8") if user[1].get("givenName") else user[1].get("givenName")
+                info["username"] = user[1].get("cn")[0].decode("UTF-8") if user[1].get("cn") else user[1].get("cn")
+                info["last_name"] = user[1].get("sn")[0].decode("UTF-8") if user[1].get("sn") else user[1].get("sn")
+                info["email"] = user[1].get("mail")[0].decode("UTF-8") if user[1].get("mail") else user[1].get("mail")
+                sync_members.append(info)
+            # group = await GroupModel.soft_create(verbose_name="OpenLDAP", creator="system")
+            await self.sync_users(sync_members)
+            # new_users = await self.sync_users(sync_members)
+            # await group.add_users(user_id_list=new_users, creator="system")
+            return True
+        raise SilentError("Not OpenLDAP directory.")
 
     def _get_ad_user_attributes(
         self, account_name: str, ldap_server: "ldap.ldapobject.SimpleLDAPObject"
@@ -707,7 +733,7 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
     async def get_possible_ad_groups(self, group_name="") -> list:
         """Список групп за вычетом уже синхронизированных."""
         connection = await self.get_connection()
-        if not connection:
+        if not connection or self.directory_type == AuthenticationDirectory.DirectoryTypes.OpenLDAP:
             return list()
         try:
             req_ctrl = LdapPageCtrl(criticality=True, size=PAGE_SIZE, cookie="")

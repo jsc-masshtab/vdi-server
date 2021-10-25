@@ -235,7 +235,7 @@ class User(AbstractSortableStatusModel, VeilModel):
         # Валидация для синхронизации пользователей из AD
         if not username:
             raise SimpleError(_local_("username can`t be empty."))
-        username_re = re.compile("^[a-zA-Z][a-zA-Z0-9.-_+]{3,128}$")
+        username_re = re.compile("^[a-zA-Z][a-zA-Z0-9.-_+]{1,128}$")
         template_name = re.match(username_re, username.strip())
         if template_name:
             return username
@@ -649,7 +649,7 @@ class User(AbstractSortableStatusModel, VeilModel):
         try:
             async with db.transaction():
                 user_obj = await cls.create(**user_kwargs)
-                if PAM_AUTH:
+                if PAM_AUTH and not user_obj.by_ad:
                     pam_result = await user_obj.pam_create_user(
                         raw_password=password, superuser=is_superuser
                     )
@@ -851,13 +851,14 @@ class User(AbstractSortableStatusModel, VeilModel):
     async def check_2fa(username, code):
         try:
             two_factor = await User.select("two_factor").where(User.username == username).gino.first()
-            if two_factor[0]:
-                if isinstance(code, str):
-                    secret = await User.select("secret").where(User.username == username).gino.first()
-                    totp = pyotp.TOTP(secret[0])
-                    if totp.now() == code:
-                        return True
-                raise SilentError(_local_("One-time password does not match or is out of date."))
+            if two_factor:
+                if two_factor[0]:
+                    if isinstance(code, str):
+                        secret = await User.select("secret").where(User.username == username).gino.first()
+                        totp = pyotp.TOTP(secret[0])
+                        if totp.now() == code:
+                            return True
+                    raise SilentError(_local_("One-time password does not match or is out of date."))
         except AssertionError as e:
             raise AssertionError(e)
         return False
