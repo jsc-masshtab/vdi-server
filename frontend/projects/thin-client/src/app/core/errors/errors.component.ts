@@ -17,7 +17,7 @@ interface IError {
 }
 
 @Component({
-  selector: 'app-errors',
+  selector: 'tc-errors',
   templateUrl: './errors.component.html',
   styleUrls: ['./errors.component.scss'],
   animations: [

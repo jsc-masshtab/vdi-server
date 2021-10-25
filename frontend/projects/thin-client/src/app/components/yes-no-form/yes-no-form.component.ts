@@ -5,7 +5,7 @@ import { WaitService } from '../../core/wait/wait.service';
 
 
 @Component({
-  selector: 'app-yes-no-form',
+  selector: 'tc-yes-no-form',
   templateUrl: './yes-no-form.component.html',
   styleUrls: ['./yes-no-form.component.scss']
 })

@@ -1,10 +1,10 @@
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { Subject, Observable, Subscription } from 'rxjs';
-import { filter } from 'rxjs/operators';
 
 import { AuthStorageService } from './authStorage.service';
 import { environment } from 'environments/environment';
+import { filter } from 'rxjs/operators';
 
 
 
@@ -19,7 +19,7 @@ export class WebsocketService {
 
   private ws: WebSocket;
 
-  private event = new Subject();
+  private event  = new Subject();
   event$ = this.event.asObservable();
 
   constructor(

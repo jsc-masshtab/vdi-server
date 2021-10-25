@@ -9,7 +9,7 @@ import { LoginService } from '../services/login.service';
 
 
 @Component({
-  selector: 'app-header-user',
+  selector: 'tc-header-user',
   templateUrl: './header-user.component.html',
   styleUrls: ['./header-user.scss']
 })

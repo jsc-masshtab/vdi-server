@@ -9,7 +9,7 @@ export class TabComponent {
   @Input() title: string;
   @Input() iconName: string
   @Input() active = false;
-
+  @Input() notifications?: number 
   
   public get isActive(): boolean {
     return this.active;
