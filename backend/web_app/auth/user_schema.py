@@ -40,7 +40,7 @@ class UserValidator(MutationValidation):
             return value
         raise AssertError(
             _local_(
-                "username must contain >= 1 chars (letters, digits, _, -, +), begin from letter and can't contain any spaces."
+                "username must contain >= 1 chars (letters, digits, _, +), begin from letter and can't contain any spaces."
             )
         )
 
