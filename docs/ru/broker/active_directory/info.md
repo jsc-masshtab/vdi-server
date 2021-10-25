@@ -4,6 +4,7 @@
 
 * MS Windows Active Directory (далее MS AD);
 * Free IPA
+* OpenLDAP
 
 по Lightweight Directory Access Protocol (LDAP). Данная интеграция необходима для возможности использования
 авторизации пользователей из AD.
