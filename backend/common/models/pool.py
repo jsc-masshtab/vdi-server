@@ -135,13 +135,17 @@ class Pool(VeilModel):
 
         return await Controller.get(self.controller)
 
-    async def get_vms(self, limit=None, offset=0):
+    async def get_vms(self, limit=None, offset=0, verbose_name=None):
         """Возвращаем виртуальные машины привязанные к пулу.
 
         Если limit is None, то возвращаем все машины (игнорируя offset)
         """
         query = VmModel.query.where(VmModel.pool_id == self.id).order_by(
             VmModel.verbose_name)
+
+        if verbose_name:
+            query = query.where(VmModel.verbose_name.ilike("%{}%".format(verbose_name))).order_by(
+                VmModel.verbose_name)
 
         if limit is None:
             return await query.gino.all()
@@ -517,6 +521,8 @@ class Pool(VeilModel):
                 if reverse
                 else finish_query.order_by(ordering)
             )
+        else:
+            finish_query = finish_query.order_by(UserModel.username)
         return await finish_query.limit(limit).offset(offset).gino.all()
 
     async def check_if_user_assigned(self, user_id):
@@ -941,13 +947,13 @@ class Pool(VeilModel):
             if domain.qemu_state and domain.api_object_id:
                 return domain.api_object_id
 
-    async def get_vms_info(self, limit=500, offset=0, ordering=None):
+    async def get_vms_info(self, limit=500, offset=0, ordering=None, verbose_name=None):
         """Возвращает информацию для всех ВМ в пуле."""
         from web_app.pool.schema import VmType  # todo: это плохо. Common не должен зависеть от производного
         # Перенести этот метод в схему либо вернуть отсюда vms_list
 
         # Получаем список ВМ
-        vms = await self.get_vms(limit=limit, offset=offset)
+        vms = await self.get_vms(limit=limit, offset=offset, verbose_name=verbose_name)
 
         if not vms:
             return
