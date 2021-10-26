@@ -32,6 +32,7 @@ import { RemoveUserVmComponent } from './pool-details/vm-details-popup/remove-us
 import { SpiceComponent } from './pool-details/vm-details-popup/spice/spice.component';
 import { VmDetalsPopupComponent } from './pool-details/vm-details-popup/vm-details-popup.component';
 import { VmDetailsPopupService } from './pool-details/vm-details-popup/vm-details-popup.service';
+import { VmActionComponent } from './pool-details/vm-action/vm-action.component';
 
 @NgModule({
   declarations: [
@@ -51,7 +52,8 @@ import { VmDetailsPopupService } from './pool-details/vm-details-popup/vm-detail
     AddGropComponent,
     InfoBackupComponent,
     SpiceComponent,
-    ConvertToTemaplteComponent
+    ConvertToTemaplteComponent,
+    VmActionComponent
   ],
   imports: [
     SharedModule,
