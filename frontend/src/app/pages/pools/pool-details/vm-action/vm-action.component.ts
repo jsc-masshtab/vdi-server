@@ -21,7 +21,8 @@ enum VmActions {
 
 export class VmActionComponent implements OnInit {
   public vmActionForm: FormGroup;
-  
+  public showTimeoutInput: boolean;
+
   public actions = [
     {description: VmActions.None, value: 'NONE'},
     {description: VmActions.Shutdown, value: 'SHUTDOWN'},
@@ -43,23 +44,35 @@ export class VmActionComponent implements OnInit {
   
   ngOnInit() {
     const {action, timeout} = this.data;
+    this.showTimeoutInput = action === 'NONE' ? false : true;
+
     this.vmActionForm = this.fb.group({
       action: [action],
       timeout: [timeout]
     })
+    this.vmActionForm.get('action').valueChanges.subscribe( (a: string) => {
+      if (a === 'NONE'){
+        this.showTimeoutInput = false;
+        this.vmActionForm.get('timeout').setValue(0)
+      }else{
+        this.showTimeoutInput = true;
+      }
+      
+    })
+
   }
 
-  public send() {
+
+  public send(): void {
     const {
       idPool, 
       poolType, 
     } = this.data;
     const action = this.vmActionForm.get('action').value;
-    const timeout = action !== VmActions.None ? this.vmActionForm.get('timeout').value : null
-  
+    const timeout = this.vmActionForm.get('timeout').value;
     
     this.waitService.setWait(true);
-    this.poolDetailsService.setVmActions( idPool, poolType, action, timeout).subscribe((res) =>{
+    this.poolDetailsService.setVmActions( idPool, poolType, action, timeout).subscribe((res) => {
       
       if (res) {
         this.poolDetailsService.getPool( idPool, poolType).refetch();

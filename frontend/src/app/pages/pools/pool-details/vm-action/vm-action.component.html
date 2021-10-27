@@ -7,14 +7,14 @@
     <label class="field">
       <mat-form-field>
         <mat-label>Тип действия</mat-label>
-        <mat-select formControlName="action">
+        <mat-select formControlName="action" >
           <mat-option *ngFor="let action of actions" [value]="action.value">{{action.description}}</mat-option>
         </mat-select>
       </mat-form-field>
     </label>
-    <label class="field" >
+    <label class="field" *ngIf="showTimeoutInput" >
       <p class="field-name">Таймаут</p>
-      <input type="text" formControlName="timeout">
+      <input type="number" formControlName="timeout" min="0">
     </label>
   </div>
 
