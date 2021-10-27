@@ -19,6 +19,7 @@ import { RemoveUsersPoolComponent } from './remove-users/remove-users.component'
 import { RemoveVMStaticPoolComponent } from './remove-vms/remove-vms.component';
 import { VmDetalsPopupComponent } from './vm-details-popup/vm-details-popup.component';
 import { PoolAddComponent } from '../add-pool/add-pool.component';
+import { VmActionComponent } from './vm-action/vm-action.component';
 
 
 @Component({
@@ -78,10 +79,26 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       type: 'array-length'
     },
     {
+      title: 'Действие над ВМ',
+      edit: 'manageVm',
+      group: [
+        {
+          title: 'Действие',
+          property: 'vm_action_upon_user_disconnect',
+          type: 'string'
+        },
+        {
+          title: 'Таймаут',
+          property: 'vm_disconnect_action_timeout',
+          type: 'string'
+        }
+      ]
+    },
+    {
       title: 'Статус',
       property: 'status',
       type: 'string'
-    }
+    },
   ];
 
   public collectionDetailsAutomated: any[] = [
@@ -229,6 +246,22 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       title: 'Пользователи',
       property: 'users',
       type: 'array-length'
+    },
+    {
+      title: 'Действие над ВМ',
+      edit: 'manageVm',
+      group: [
+        {
+          title: 'Действие',
+          property: 'vm_action_upon_user_disconnect',
+          type: 'string'
+        },
+        {
+          title: 'Таймаут',
+          property: 'vm_disconnect_action_timeout',
+          type: 'string'
+        }
+      ]
     },
     {
       title: 'Статус',
@@ -620,6 +653,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       .valueChanges.pipe(map((data: any) => data.data['pool']))
       .subscribe((data) => {
         this.pool = data;
+        
         this.host = true;
       },
       () => {
@@ -1234,6 +1268,21 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
             this.typePool
           ]
         }
+      }
+    });
+  }
+
+  // @ts-ignore: Unreachable code error
+  private manageVm(): void {
+
+    this.dialog.open(VmActionComponent, {
+      disableClose: true,
+      width: '500px',
+      data: {
+        action: this.pool.vm_action_upon_user_disconnect,
+        timeout: this.pool.vm_disconnect_action_timeout,
+        idPool: this.idPool,
+        poolType: this.pool.pool_type.toLowerCase(),
       }
     });
   }
