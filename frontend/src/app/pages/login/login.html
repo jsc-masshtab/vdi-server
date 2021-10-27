@@ -34,9 +34,16 @@
 				<input type="text" placeholder="Введите 6-значный код" formControlName="code">
 			</label>
 			
-			<label class="field-inline">
+			<!-- <label class="field-inline">
 				<mat-checkbox [color]="'primary'" formControlName="ldap"></mat-checkbox>
 				<p class="description">LDAP</p>
+			</label> -->
+			<label [class.ldap-disabled]="ldapDomain===''">
+				<div class="checkbox-bg">
+					<input id="ldap" type="checkbox" >
+					<label class="toggle-btn ldap-toggle-btn" for="ldap"><span></span></label>
+					<label for="ldap" class="checkbox-bg-text">LDAP</label>
+				</div>
 			</label>
 		</div>
 
