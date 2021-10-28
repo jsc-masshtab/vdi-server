@@ -1,0 +1,10 @@
+Package: veil-connect-web
+Version: %%VER%%
+Architecture: amd64
+Maintainer: bazalt team <bazalt_dev@mashtab.org>
+Depends: apache2
+Section: devel
+Priority: extra
+Homepage: http://veil.mashtab.org
+Description: VeiL Connect web
+  (c) 2021 Mashtab
