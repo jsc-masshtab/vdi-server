@@ -1,0 +1,30 @@
+#!/bin/bash
+
+set -e
+
+reload_apache2()
+{
+	service apache2 reload
+}
+
+case "$1" in
+	configure)
+		# действия и при установке и при обновлении
+
+		reload_apache2
+
+		# действия только при установке
+		if [ ! -n "$2" ] ; then
+		    exit 0
+		fi
+
+		exit 0
+		;;
+	abort-upgrade|abort-remove|abort-deconfigure)
+		exit 0
+		;;
+	*)
+		echo "postinst called with unknown argument: $*" >&2
+		exit 1
+		;;
+esac
