@@ -5,6 +5,7 @@ import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
 
+
 @Injectable()
 export class PoolDetailsService {
 
@@ -59,6 +60,7 @@ export class PoolDetailsService {
     }
 
     public getPool(pool_id: string | number, type: string): QueryRef<any, any> {
+      
         if (type === 'automated' || type === 'guest') {
             return this.service.watchQuery({
                 query: gql`  query pools($pool_id: ShortString, $ordering_vms: ShortString, $ordering_users: ShortString, $ordering_groups: ShortString) {
@@ -125,6 +127,8 @@ export class PoolDetailsService {
                                     }
                                     assigned_connection_types
                                     status
+                                    vm_action_upon_user_disconnect
+                                    vm_disconnect_action_timeout
                                 }
                             }`,
                 variables: {
@@ -186,6 +190,8 @@ export class PoolDetailsService {
                                         id
                                         verbose_name
                                     }
+                                    vm_action_upon_user_disconnect
+                                    vm_disconnect_action_timeout
                                     assigned_connection_types
                                     status
                                 }
@@ -369,6 +375,44 @@ export class PoolDetailsService {
         });
     }
 
+    public setVmActions(idPool, poolType, action, timeout){
+        if (poolType === 'static'){
+            return this.service.mutate<any>({
+                mutation: gql`
+                    mutation pools($idPool: UUID!, $timeout: Int, $action: VmActionUponUserDisconnect) {
+                        updateStaticPool(pool_id: $idPool, vm_action_upon_user_disconnect: $action, vm_disconnect_action_timeout: $timeout ) {
+                            ok
+                        }
+                    }
+                `,
+                variables: {
+                    method: 'POST',
+                    idPool,
+                    poolType,
+                    action,
+                    timeout
+                }
+            });
+        }
+        if (poolType === 'automated'){
+            return this.service.mutate<any>({
+                mutation: gql`
+                    mutation pools($idPool: UUID!, $timeout: Int, $action: VmActionUponUserDisconnect) {
+                        updateDynamicPool(pool_id: $idPool, vm_action_upon_user_disconnect: $action, vm_disconnect_action_timeout: $timeout ) {
+                            ok
+                        }
+                    }
+                `,
+                variables: {
+                    method: 'POST',
+                    idPool,
+                    poolType,
+                    action,
+                    timeout
+                }
+            });
+        }
+    } 
     public updatePool({pool_id, pool_type }, {connection_types, verbose_name, increase_step, reserve_size, total_size,
                                               vm_disconnect_action_timeout, vm_name_template, create_thin_clones,
                                               enable_vms_remote_access, start_vms, set_vms_hostnames, include_vms_in_ad,
@@ -377,7 +421,7 @@ export class PoolDetailsService {
             return this.service.mutate<any>({
                 mutation: gql`
                                 mutation pools($connection_types: [PoolConnectionTypes!], $pool_id: UUID!,$verbose_name: ShortString
-                                     $keep_vms_on: Boolean) {
+                                     $keep_vms_on: Boolean ) {
                                     updateStaticPool(connection_types: $connection_types, pool_id: $pool_id, verbose_name: $verbose_name,
                                      keep_vms_on: $keep_vms_on ) {
                                         ok
@@ -419,12 +463,12 @@ export class PoolDetailsService {
             return this.service.mutate<any>({
                 mutation: gql`
                                 mutation pools($connection_types: [PoolConnectionTypes!], $pool_id: UUID!,$verbose_name: ShortString,
-                                    $increase_step: Int, $reserve_size: Int, $total_size: Int, $vm_disconnect_action_timeout: Int, $vm_name_template: ShortString,
+                                    $increase_step: Int, $reserve_size: Int, $total_size: Int, $vm_name_template: ShortString,
                                      $keep_vms_on: Boolean, $create_thin_clones: Boolean, $enable_vms_remote_access: Boolean,
                                      $start_vms: Boolean, $set_vms_hostnames: Boolean, $include_vms_in_ad: Boolean, $ad_ou: ShortString ) {
                                     updateDynamicPool(connection_types: $connection_types, pool_id: $pool_id, verbose_name: $verbose_name,
                                         increase_step: $increase_step, reserve_size: $reserve_size, total_size: $total_size,
-                                        vm_name_template: $vm_name_template, keep_vms_on: $keep_vms_on, vm_disconnect_action_timeout: $vm_disconnect_action_timeout,
+                                        vm_name_template: $vm_name_template, keep_vms_on: $keep_vms_on,
                                         create_thin_clones: $create_thin_clones, enable_vms_remote_access: $enable_vms_remote_access,
                                         start_vms: $start_vms, set_vms_hostnames: $set_vms_hostnames, include_vms_in_ad: $include_vms_in_ad,
                                         ad_ou: $ad_ou ) {

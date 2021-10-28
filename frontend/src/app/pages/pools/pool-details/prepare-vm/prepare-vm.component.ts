@@ -4,7 +4,7 @@ import { MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
-import { WaitService } from '../../../../core/components/wait/wait.service';
+import { WaitService } from '@core/components/wait/wait.service';
 import { PoolDetailsService } from '../pool-details.service';
 
 interface IData {

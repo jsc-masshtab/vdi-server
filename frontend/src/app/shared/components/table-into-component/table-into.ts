@@ -57,7 +57,6 @@ export class TableIntoComponent  {
   }
  
   get lvlDescription(): string {
-    console.log(this.item.level);
     
     switch (this.item.level) {
       case 0:
