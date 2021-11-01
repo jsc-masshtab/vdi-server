@@ -150,6 +150,10 @@ snapshots['TestAuthenticationDirectoryQuery.test_auth_dir_get_possible_ad_groups
         'id': '10913d5d-ba7a-4049-88c5-769267a6cbe5',
         'possible_ad_groups': [
             {
+                'ad_guid': '08c79257-d766-46c0-bec7-69439960a2fe',
+                'verbose_name': '131'
+            },
+            {
                 'ad_guid': '7ed075e1-770d-486d-9518-c689daf4878a',
                 'verbose_name': 'DnsUpdateProxy'
             },
