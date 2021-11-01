@@ -28,7 +28,7 @@
 Создание каждой ВМ состоит из нескольких задач на ECP VeiL, успешное выполнение задачи **_создание пула_**
 означает успешное выполнение всех подзадач на ECP VeiL. 
 Ознакомиться с задачами ECP VeiL можно в 
-[руководстве оператора ECP VeiL](https://veil.mashtab.org/docs/base/operator_guide/journal/tasks/). 
+[руководстве оператора ECP VeiL](https://veil.mashtab.org/docs/latest/base/operator_guide/journal/tasks/). 
 
 ### Расширение пула
 Расширение пула - это увеличение количество созданных ВМ при достижении порога свободных ВМ. При данном 
@@ -58,11 +58,11 @@
 
 ### Создание резервной копии ВМ
 Создание резервной копии ВМ вызывает аналогичное действие на ECP VeiL. Подробное описание
-смотрите в [документации ECP VeiL](https://veil.mashtab.org/docs/how_to/backup_vm/).
+смотрите в [документации ECP VeiL](https://veil.mashtab.org/docs/latest/how_to/backup_vm/).
 
 ### Удаление ВМ
 Задача является комплексной и запускает групповое 
-[удаление ВМ](https://veil.mashtab.org/docs/base/operator_guide/domains/remove/) на ECP VeiL.
+[удаление ВМ](https://veil.mashtab.org/docs/latest/base/operator_guide/domains/remove/) на ECP VeiL.
 
 ### Пересоздание ВМ
 Под пересозданием понимается удаление и создание новой ВМ из **_золотого образа_**. Основное 

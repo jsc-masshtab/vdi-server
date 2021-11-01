@@ -24,7 +24,7 @@
 Ниже приведено описание полей при создании автоматического пула:
 
 1. **Имя пула**  
-    Будет использовано как [тег](https://veil.mashtab.org/docs/base/operator_guide/domains/tags) на **ECP VeiL** 
+    Будет использовано как [тег](https://veil.mashtab.org/docs/latest/base/operator_guide/domains/tags) на **ECP VeiL** 
     для всех созданных ВМ.
 
 1. **Типы подключения**  
@@ -42,7 +42,7 @@
     необходимо, чтобы пользователь имел роль **Администратора**.
 
 1. **Пул ресурсов**  
-    Предварительно созданный [пул ресурсов](https://veil.mashtab.org/docs/base/operator_guide/resource_pools) 
+    Предварительно созданный [пул ресурсов](https://veil.mashtab.org/docs/latest/base/operator_guide/resource_pools) 
     на выбранном выше контроллере.
 
 ##### Пример формы создания пула ВМ
@@ -53,11 +53,11 @@
 Ниже приведено описание полей при создании ВМ в пуле:
 
 1. **Пул данных**
-    Предварительно созданный [пул данных](https://veil.mashtab.org/docs/base/operator_guide/storage/datapools) 
+    Предварительно созданный [пул данных](https://veil.mashtab.org/docs/latest/base/operator_guide/storage/datapools) 
     на выбранном выше контроллере.
 
 2. **Шаблон ВМ**  
-Предварительно созданный [шаблон](https://veil.mashtab.org/docs/base/operator_guide/domains/templates) для 
+Предварительно созданный [шаблон](https://veil.mashtab.org/docs/latest/base/operator_guide/domains/templates) для 
 создания ВМ в пуле.
 
     !!! info "Шаблон есть на ECP VeiL, но не отображается на брокере"
@@ -101,7 +101,7 @@
 9. **Создать тонкие клоны**  
 ВМ, созданные в пуле, будут являться тонкими клонами шаблона. Как результат создание 
 будет происходить быстрее, однако ВМ имеют ограничения по используемым дата-пулам. Подробнее можно ознакомиться в разделе 
-[Типы пулов данных](https://veil.mashtab.org/docs/base/operator_guide/storage/info).
+[Типы пулов данных](https://veil.mashtab.org/docs/latest/base/operator_guide/storage/info).
 
 10. **Подготавливать ВМ**  
 Необходимость запуска процедуры подготовки ВМ после их создания. Содержит в себе 4 этапа:

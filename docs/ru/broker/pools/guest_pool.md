@@ -20,7 +20,7 @@
 !!! info "Тонкие клоны"
         При создании гостевого пула все ВМ **ВСЕГДА** будут являться тонкими клонами шаблона. ВМ
         имеют ограничения по используемым дата-пулам. Подробнее можно ознакомиться в разделе 
-        [Типы пулов данных](https://veil.mashtab.org/docs/base/operator_guide/storage/info).
+        [Типы пулов данных](https://veil.mashtab.org/docs/latest/base/operator_guide/storage/info).
 
 !!! info "Подготовка ВМ"
         Также при создании гостевого пула все ВМ **ВСЕГДА** будут подготавливаться после их создания. 
@@ -39,7 +39,7 @@
 Ниже приведено описание полей при создании гостевого пула:
 
 1. **Имя пула**  
-Будет использовано как [тег](https://veil.mashtab.org/docs/base/operator_guide/domains/tags) на ECP VeiL для всех созданных ВМ
+Будет использовано как [тег](https://veil.mashtab.org/docs/latest/base/operator_guide/domains/tags) на ECP VeiL для всех созданных ВМ
 
 1. **Типы подключения**  
     Типы подключения к ВМ в пуле, которые будут доступны тонкому клиенту:
@@ -56,7 +56,7 @@
 необходимо, чтобы пользователь имел роль **Администратор**.
 
 1. **Пул ресурсов**  
-Предварительно созданный [пул ресурсов](https://veil.mashtab.org/docs/base/operator_guide/resource_pools) на выбранном выше контроллере.
+Предварительно созданный [пул ресурсов](https://veil.mashtab.org/docs/latest/base/operator_guide/resource_pools) на выбранном выше контроллере.
 
 #### Пример формы создания пула ВМ
 ![image](../../_assets/vdi/pool/autopool_v3_1.png)
@@ -66,11 +66,11 @@
 Ниже приведено описание полей при создании ВМ в пуле:
 
 1. **Пул данных**
-    Предварительно созданный [пул данных](https://veil.mashtab.org/docs/base/operator_guide/storage/datapools) 
+    Предварительно созданный [пул данных](https://veil.mashtab.org/docs/latest/base/operator_guide/storage/datapools) 
     на выбранном выше контроллере.
 
 2. **Шаблон ВМ**  
-Предварительно созданный [шаблон](https://veil.mashtab.org/docs/base/operator_guide/domains/templates) для создания ВМ в пуле.
+Предварительно созданный [шаблон](https://veil.mashtab.org/docs/latest/base/operator_guide/domains/templates) для создания ВМ в пуле.
     
     !!! warning "Шаблон ВМ"
         С шаблоном одновременно может происходить только одно действие, если Вы планируете создавать сразу
