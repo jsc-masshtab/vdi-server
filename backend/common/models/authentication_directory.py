@@ -434,15 +434,23 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
         if not isinstance(username, str):
             raise ValidationError(_local_("Username must be a string."))
 
-        username = username.lower()
+        username = username
         user = await UserModel.get_object(
             extra_field_name="username",
             extra_field_value=username,
             include_inactive=True,
         )
         if not user:
-            user = await UserModel.soft_create(username, creator="system")
-            created = True
+            # user = await UserModel.soft_create(username, by_ad=True, local_password=False, creator="system")
+            # created = True
+            users_list = await UserModel.get_object(
+                extra_field_name="username",
+                extra_field_value=username,
+                include_inactive=True,
+                similar=True
+            )
+            users = ", ".join([user.username for user in users_list]) if users_list else _local_("something other")
+            raise SilentError(_local_("Username {} is incorrect. Maybe you mean {}.").format(username, users))
         else:
             await user.update(is_active=True).apply()
             created = False

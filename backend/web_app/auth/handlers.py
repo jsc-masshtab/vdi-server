@@ -85,9 +85,18 @@ class AuthHandler(BaseHttpHandler, ABC):
             await self._create_error_msg_and_log(auth_error)
             response = {"errors": [{"message": str(auth_error)}]}
             self.set_status(403)
-        except (AssertionError, SilentError) as auth_error:
+        except AssertionError as auth_error:
             error_message = await self._create_error_msg_and_log(auth_error)
             response = {"errors": [{"message": error_message}]}
+            self.set_status(200)
+        except SilentError as auth_error:
+            error_description = "IP: {}\n{}".format(self.remote_ip, str(auth_error))
+            entity = {"entity_type": EntityType.SECURITY, "entity_uuid": None}
+            await system_logger.warning(
+                message=_local_("Authentication failed for user: {}.").format(self.args.get("username", "unknown")),
+                entity=entity, description=error_description
+            )
+            response = {"errors": [{"message": str(auth_error)}]}
             self.set_status(200)
         return await self.log_finish(response)
 

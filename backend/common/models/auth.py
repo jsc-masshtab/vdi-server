@@ -625,7 +625,11 @@ class User(AbstractSortableStatusModel, VeilModel):
         local_password=True
     ):
         """Если password будет None, то make_password вернет unusable password."""
-        username = await cls.validate_username(username)
+        if by_ad:
+            if not username:
+                raise SimpleError(_local_("username can`t be empty."))
+        else:
+            username = await cls.validate_username(username)
         encoded_password = hashers.make_password(password, salt=SECRET_KEY)
         user_kwargs = {
             "username": username,
