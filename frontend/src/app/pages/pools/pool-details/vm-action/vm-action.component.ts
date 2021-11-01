@@ -4,14 +4,10 @@ import { FormBuilder, FormGroup } from '@angular/forms';
 import { MatDialogRef } from '@angular/material/dialog';
 import { MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { WaitService } from '@app/core/components/wait/wait.service';
+import { VmActions } from '@app/shared/enums/vm-actions';
 import { PoolDetailsService } from '../pool-details.service';
 
-enum VmActions {
-  None = 'Нет действия',
-  Shutdown = 'Включить',
-  ShutdownForced = 'Выключить форсировано',
-  Suspend = 'Пауза'
-}
+
 
 @Component({
   selector: 'vdi-vm-action',
