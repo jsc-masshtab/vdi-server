@@ -2,7 +2,7 @@
 
 ### 1. Создание ВМ 
 
-Создайте ВМ в соответствии с [руководством оператора ECP VeiL](https://veil.mashtab.org/docs/base/operator_guide/domains/create).
+Создайте ВМ в соответствии с [руководством оператора ECP VeiL](https://veil.mashtab.org/docs/latest/base/operator_guide/domains/create).
 
 
    Перед созданием ВМ необходимо загрузить в пул данных iso-образ установочного диска **Windows 10/8.1** и 

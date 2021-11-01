@@ -24,7 +24,7 @@
     2. Загрузка iso-образа диска с антивирусным средством и файлом ключа активации выполняется 
     при наличии его в поставке.
     3. Загрузка iso-образов дисков выполняется в соответствии с 
-    [руководством оператора ECP VeiL](https://veil.mashtab.org/docs/base/operator_guide/storage/iso_upload/).
+    [руководством оператора ECP VeiL](https://veil.mashtab.org/docs/latest/base/operator_guide/storage/iso_upload/).
 
 
 Установка и настройка программы осуществляется в следующей последовательности:

@@ -4,7 +4,7 @@
 создания ВМ, последовательно заполняя поля информацией.
 
 Дополнительную информацию смотрите в разделе руководства оператора **ECP VeiL** 
-[Создание ВМ](https://veil.mashtab.org/docs/base/operator_guide/domains/create/).
+[Создание ВМ](https://veil.mashtab.org/docs/latest/base/operator_guide/domains/create/).
 
 !!! note "Примечание" 
     Для работы **VeiL Broker** можно воспользоваться готовой ВМ с ОС **Astra Linux Special Edition** версии **1.6** 
@@ -49,7 +49,7 @@
 После окончания создания ВМ, во избежание проблем с мышкой, необходимо сменить графический 
 адаптер на **_virtio_**, добавить новый USB2.0 контроллер **_ehci_**, а затем удалить базовый USB3.0 контроллер 
 **_nec xhci_**. Добавление и удаление контроллеров выполняется в соответствии с разделом руководства оператора ECP VeiL 
-[Контроллеры](https://veil.mashtab.org/docs/base/operator_guide/domains/controllers/).
+[Контроллеры](https://veil.mashtab.org/docs/latest/base/operator_guide/domains/controllers/).
 
 !!! note "Примечание" 
     Для корректной работы мышки после установки ОС рекомендуется установить гостевого 
@@ -61,7 +61,7 @@
 
 Настройки типа загрузчика ВМ и выбора порядка опроса загрузочных устройств выполняется 
 в соответствии с разделом руководства оператора **ECP VeiL** 
-[Опции загрузки](https://veil.mashtab.org/docs/base/operator_guide/domains/boot/).
+[Опции загрузки](https://veil.mashtab.org/docs/latest/base/operator_guide/domains/boot/).
 
 Этап создания ВМ окончен, переходите к следующему шагу - 
 [Установка ОС Astra Linux Special Edition версии 1.6 релиз Смоленск](../engineer_guide/install_os.md).

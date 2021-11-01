@@ -3,7 +3,7 @@
 !!! info ""
     Порты для протоколов **RDP**, **SPICE**, **VNC** задействуется не постоянно и назначаются динамически
     (при обмене информацией с конкретной ВМ). Детальнее можно ознакомиться в описании 
-    [Интервал портов](https://veil.mashtab.org/docs/base/operator_guide/domains/terminal).
+    [Интервал портов](https://veil.mashtab.org/docs/latest/base/operator_guide/domains/terminal).
 
 ## Перечень портов на ECP VeiL
 
