@@ -15,6 +15,7 @@ from web_app.tests.fixtures import (
     fixt_mapping,
     fixt_group,
     fixt_group_role,
+    fixt_auth_dir_with_sync_users
 )  # noqa
 
 from common.languages import _local_
@@ -161,7 +162,7 @@ class AuthLdapTestCase(VdiHttpTestCase):
             error_message = response_dict["errors"][0]["message"]
             self.assertIn("Ошибка авторизации пользователя: test_user.", error_message)
 
-    @pytest.mark.usefixtures("fixt_db", "fixt_auth_dir", "fixt_user")
+    @pytest.mark.usefixtures("fixt_db", "fixt_auth_dir_with_sync_users", "fixt_user")
     @gen_test
     def test_ldap_auth_ok(self):
         body = '{"username": "AD120", "password": "Bazalt1!", "ldap": true}'
@@ -182,7 +183,7 @@ class AuthLdapTestCase(VdiHttpTestCase):
             self.assertIn("Ошибка авторизации", error_message)
 
     @pytest.mark.usefixtures(
-        "fixt_db", "fixt_auth_dir", "fixt_group", "fixt_mapping", "fixt_group_role"
+        "fixt_db", "fixt_auth_dir_with_sync_users", "fixt_group", "fixt_mapping", "fixt_group_role"
     )
     @gen_test
     def test_user_mapping(self):
