@@ -164,7 +164,7 @@ class AuthLdapTestCase(VdiHttpTestCase):
     @pytest.mark.usefixtures("fixt_db", "fixt_auth_dir", "fixt_user")
     @gen_test
     def test_ldap_auth_ok(self):
-        body = '{"username": "ad120", "password": "Bazalt1!", "ldap": true}'
+        body = '{"username": "AD120", "password": "Bazalt1!", "ldap": true}'
         response_dict = yield self.get_response(body=body)
         self.check_external_auth(response_dict)
         if EXTERNAL_AUTH:
@@ -187,7 +187,7 @@ class AuthLdapTestCase(VdiHttpTestCase):
     @gen_test
     def test_user_mapping(self):
         """Проверяем назначена ли пользователю группа после входа."""
-        body = '{"username": "ad120", "password": "Bazalt1!", "ldap": true}'
+        body = '{"username": "AD120", "password": "Bazalt1!", "ldap": true}'
         response_dict = yield self.get_response(body=body)
         self.check_external_auth(response_dict)
         if EXTERNAL_AUTH:
