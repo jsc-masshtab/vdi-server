@@ -449,7 +449,7 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
                 include_inactive=True,
                 similar=True
             )
-            users = ", ".join([user.username for user in users_list]) if users_list else _local_("something other")
+            users = ", ".join([user.username for user in users_list]) if users_list else _local_("something other.")
             raise SilentError(_local_("Username {} is incorrect. Maybe you mean {}.").format(username, users))
         else:
             await user.update(is_active=True).apply()

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-25 14:46+0300\n"
+"POT-Creation-Date: 2021-11-01 18:39+0300\n"
 "PO-Revision-Date: 2020-07-30 11:25+0300\n"
 "Last-Translator: Emil <emil@emil-pc>\n"
 "Language-Team: English\n"
@@ -60,7 +60,8 @@ msgstr "User {} connected to VM {}."
 msgid "User {} disconnected from VM {}."
 msgstr "User {} disconnected from VM {}."
 
-#: ../common/models/auth.py:237 ../web_app/auth/user_schema.py:35
+#: ../common/models/auth.py:237 ../common/models/auth.py:630
+#: ../web_app/auth/user_schema.py:35
 msgid "username can`t be empty."
 msgstr "username can`t be empty."
 
@@ -138,119 +139,119 @@ msgstr "Password of user {username} has`t been changed."
 msgid "Password of user {} has been changed to the local password."
 msgstr "Password of user {} has been changed to the local password."
 
-#: ../common/models/auth.py:660
+#: ../common/models/auth.py:664
 msgid "User {} was created in Astra Linux. Please delete him there before trying to create in Broker again."
 msgstr "User {} was created in Astra Linux. Please delete him there before trying to create in Broker again."
 
-#: ../common/models/auth.py:669
+#: ../common/models/auth.py:673
 msgid "User {} creation error."
 msgstr "User {} creation error."
 
-#: ../common/models/auth.py:678
+#: ../common/models/auth.py:682
 msgid "Superuser."
 msgstr "Superuser."
 
-#: ../common/models/auth.py:678
+#: ../common/models/auth.py:682
 msgid "User."
 msgstr "User."
 
-#: ../common/models/auth.py:679
+#: ../common/models/auth.py:683
 msgid "{} {} created."
 msgstr "{} {} created."
 
-#: ../common/models/auth.py:737
+#: ../common/models/auth.py:742
 msgid "User {} update error."
 msgstr "User {} update error."
 
-#: ../common/models/auth.py:749
+#: ../common/models/auth.py:754
 msgid "Values of user {} is changed."
 msgstr "Values of user {} is changed."
 
-#: ../common/models/auth.py:756 ../common/models/auth.py:767
+#: ../common/models/auth.py:761 ../common/models/auth.py:772
 msgid "Roles: {}."
 msgstr "Roles: {}."
 
-#: ../common/models/auth.py:757
+#: ../common/models/auth.py:762
 #, python-brace-format
 msgid "User {username} has become a superuser."
 msgstr "User {username} has become a superuser."
 
-#: ../common/models/auth.py:768
+#: ../common/models/auth.py:773
 #, python-brace-format
 msgid "User {username} is no longer a superuser."
 msgstr "User {username} is no longer a superuser."
 
-#: ../common/models/auth.py:799
+#: ../common/models/auth.py:804
 #, python-brace-format
 msgid "User {username} has been logged in."
 msgstr "User {username} has been logged in."
 
-#: ../common/models/auth.py:802
+#: ../common/models/auth.py:807
 msgid "Auth type: {}, IP: {}, Client type: {}."
 msgstr "Auth type: {}, IP: {}, Client type: {}."
 
-#: ../common/models/auth.py:825
+#: ../common/models/auth.py:830
 #, python-brace-format
 msgid "User {username} has been logged out."
 msgstr "User {username} has been logged out."
 
-#: ../common/models/auth.py:842
+#: ../common/models/auth.py:847
 msgid "QR code and secret code of 2fa were repeated for user {}."
 msgstr "QR code and secret code of 2fa were repeated for user {}."
 
-#: ../common/models/auth.py:846
+#: ../common/models/auth.py:851
 msgid "New QR code and secret code of 2fa were generated for user {}."
 msgstr "New QR code and secret code of 2fa were generated for user {}."
 
-#: ../common/models/auth.py:861
+#: ../common/models/auth.py:866
 msgid "One-time password does not match or is out of date."
 msgstr "One-time password does not match or is out of date."
 
-#: ../common/models/auth.py:986
+#: ../common/models/auth.py:991
 msgid "Group {} is created."
 msgstr "Group {} is created."
 
-#: ../common/models/auth.py:1013
+#: ../common/models/auth.py:1018
 msgid "Group {} already has permission {}."
 msgstr "Group {} already has permission {}."
 
-#: ../common/models/auth.py:1021
+#: ../common/models/auth.py:1026
 msgid "Permission(s) {} added to group {}."
 msgstr "Permission(s) {} added to group {}."
 
-#: ../common/models/auth.py:1044
+#: ../common/models/auth.py:1049
 msgid "Permission(s) {} removed from group {}."
 msgstr "Permission(s) {} removed from group {}."
 
-#: ../common/models/auth.py:1053
+#: ../common/models/auth.py:1058
 msgid "Group {} permission(s): {}."
 msgstr "Group {} permission(s): {}."
 
-#: ../common/models/auth.py:1071
+#: ../common/models/auth.py:1076
 msgid "Values of group {} is updated."
 msgstr "Values of group {} is updated."
 
-#: ../common/models/auth.py:1093
+#: ../common/models/auth.py:1098
 msgid "User {} has been included to group {}."
 msgstr "User {} has been included to group {}."
 
-#: ../common/models/auth.py:1100
+#: ../common/models/auth.py:1105
 msgid "User {} is already in group {}."
 msgstr "User {} is already in group {}."
 
-#: ../common/models/auth.py:1112
+#: ../common/models/auth.py:1117
 msgid "Removing user {} from group {}."
 msgstr "Removing user {} from group {}."
 
-#: ../common/models/auth.py:1125
+#: ../common/models/auth.py:1130
 msgid "Role {} has been set to group {}."
 msgstr "Role {} has been set to group {}."
 
-#: ../common/models/auth.py:1132
+#: ../common/models/auth.py:1137
 msgid "Group {} has already role {}."
 msgstr "Group {} has already role {}."
 
-#: ../common/models/auth.py:1145
+#: ../common/models/auth.py:1150
 msgid "Roles: {} was deleted to group {}."
 msgstr "Roles: {} was deleted to group {}."
 
@@ -284,7 +285,7 @@ msgid "Mapping for auth directory {} is updated."
 msgstr "Mapping for auth directory {} is updated."
 
 #: ../common/models/authentication_directory.py:353
-#: ../common/models/authentication_directory.py:617
+#: ../common/models/authentication_directory.py:625
 msgid "Authentication directory server {} is down."
 msgstr "Authentication directory server {} is down."
 
@@ -296,66 +297,74 @@ msgstr "Authentication directory server {} is connected."
 msgid "Username must be a string."
 msgstr "Username must be a string."
 
-#: ../common/models/authentication_directory.py:468
+#: ../common/models/authentication_directory.py:452
+msgid "something other."
+msgstr "something other."
+
+#: ../common/models/authentication_directory.py:453
+msgid "Username {} is incorrect. Maybe you mean {}."
+msgstr "Username {} is incorrect. Maybe you mean {}."
+
+#: ../common/models/authentication_directory.py:476
 msgid "Mappings: {}."
 msgstr "Mappings: {}."
 
-#: ../common/models/authentication_directory.py:492
+#: ../common/models/authentication_directory.py:500
 msgid "escaped values: {}."
 msgstr "escaped values: {}."
 
-#: ../common/models/authentication_directory.py:494
+#: ../common/models/authentication_directory.py:502
 msgid "role mapping value type: {}."
 msgstr "role mapping value type: {}."
 
-#: ../common/models/authentication_directory.py:507
+#: ../common/models/authentication_directory.py:515
 msgid "User VeiL groups: {}."
 msgstr "User VeiL groups: {}."
 
-#: ../common/models/authentication_directory.py:515
+#: ../common/models/authentication_directory.py:523
 msgid "Attaching user {} to group: {}."
 msgstr "Attaching user {} to group: {}."
 
-#: ../common/models/authentication_directory.py:536
-#: ../common/models/authentication_directory.py:547
+#: ../common/models/authentication_directory.py:544
+#: ../common/models/authentication_directory.py:555
 msgid "No authentication directory controllers."
 msgstr "No authentication directory controllers."
 
-#: ../common/models/authentication_directory.py:577
+#: ../common/models/authentication_directory.py:585
 msgid "Invalid credentials (ldap): {}."
 msgstr "Invalid credentials (ldap): {}."
 
-#: ../common/models/authentication_directory.py:583
+#: ../common/models/authentication_directory.py:591
 msgid "Server down (ldap)."
 msgstr "Server down (ldap)."
 
-#: ../common/models/authentication_directory.py:601
+#: ../common/models/authentication_directory.py:609
 msgid "LDAP username and password can`t be empty."
 msgstr "LDAP username and password can`t be empty."
 
-#: ../common/models/authentication_directory.py:610
+#: ../common/models/authentication_directory.py:618
 msgid "Authentication directory server {} has bad auth info."
 msgstr "Authentication directory server {} has bad auth info."
 
-#: ../common/models/authentication_directory.py:749
-#: ../common/models/authentication_directory.py:917
+#: ../common/models/authentication_directory.py:757
+#: ../common/models/authentication_directory.py:925
 msgid "Fail to connect to Authentication Directory. Check service information."
 msgstr "Fail to connect to Authentication Directory. Check service information."
 
-#: ../common/models/authentication_directory.py:975
+#: ../common/models/authentication_directory.py:983
 msgid "{} new users synced from Authentication Directory."
 msgstr "{} new users synced from Authentication Directory."
 
-#: ../common/models/authentication_directory.py:986
+#: ../common/models/authentication_directory.py:994
 #: ../web_app/auth/group_schema.py:228
 msgid "No such Group."
 msgstr "No such Group."
 
-#: ../common/models/authentication_directory.py:990
+#: ../common/models/authentication_directory.py:998
 msgid "Group {} is not synchronized by AD."
 msgstr "Group {} is not synchronized by AD."
 
-#: ../common/models/authentication_directory.py:997
+#: ../common/models/authentication_directory.py:1005
 msgid "There is no users to sync."
 msgstr "There is no users to sync."
 
@@ -837,7 +846,7 @@ msgid "VeiL ECP {} request error."
 msgstr "VeiL ECP {} request error."
 
 #: ../common/veil/veil_decorators.py:42 ../common/veil/veil_decorators.py:48
-#: ../web_app/auth/license/handlers.py:36 ../web_app/tests/test_auth_v2.py:114
+#: ../web_app/auth/license/handlers.py:36 ../web_app/tests/test_auth_v2.py:115
 msgid "Invalid permissions."
 msgstr "Invalid permissions."
 
@@ -861,19 +870,19 @@ msgstr "Incorrect sort parameter {}."
 msgid "Incorrect request parameter {}."
 msgstr "Incorrect request parameter {}."
 
-#: ../common/veil/veil_gino.py:220
+#: ../common/veil/veil_gino.py:225
 msgid "{} {} has been disabled."
 msgstr "{} {} has been disabled."
 
-#: ../common/veil/veil_gino.py:222
+#: ../common/veil/veil_gino.py:227
 msgid "{} {} has`t been found in ECP VeiL. Switched to FAILED."
 msgstr "{} {} has`t been found in ECP VeiL. Switched to FAILED."
 
-#: ../common/veil/veil_gino.py:235
+#: ../common/veil/veil_gino.py:240
 msgid "Group {} has been deleted."
 msgstr "Group {} has been deleted."
 
-#: ../common/veil/veil_gino.py:239
+#: ../common/veil/veil_gino.py:244
 msgid "Soft_delete exception: {}."
 msgstr "Soft_delete exception: {}."
 
@@ -1044,23 +1053,23 @@ msgstr "Vm post disconnect action error."
 msgid "_do_actions_when_user_disconnects_from_vm error."
 msgstr "_do_actions_when_user_disconnects_from_vm error."
 
-#: ../web_app/app.py:123
+#: ../web_app/app.py:125
 msgid "VDI broker stopped."
 msgstr "VDI broker stopped."
 
-#: ../web_app/app.py:135
+#: ../web_app/app.py:137
 msgid "VDI broker started with {} worker(s)."
 msgstr "VDI broker started with {} worker(s)."
 
-#: ../web_app/app.py:139
+#: ../web_app/app.py:141
 msgid "Authentication system is disabled."
 msgstr "Authentication system is disabled."
 
-#: ../web_app/app.py:143
+#: ../web_app/app.py:145
 msgid "The license is expired. Some functions will be blocked. Contact your dealer."
 msgstr "The license is expired. Some functions will be blocked. Contact your dealer."
 
-#: ../web_app/app.py:147
+#: ../web_app/app.py:149
 msgid "DEBUG mode is enabled."
 msgstr "DEBUG mode is enabled."
 
@@ -1174,11 +1183,11 @@ msgstr "Auth system is disabled. Check broker settings."
 msgid "Thin client limit exceeded."
 msgstr "Thin client limit exceeded."
 
-#: ../web_app/auth/handlers.py:97
+#: ../web_app/auth/handlers.py:96 ../web_app/auth/handlers.py:106
 msgid "Authentication failed for user: {}."
 msgstr "Authentication failed for user: {}."
 
-#: ../web_app/auth/handlers.py:113
+#: ../web_app/auth/handlers.py:122
 msgid "User {} logged out."
 msgstr "User {} logged out."
 
@@ -1298,6 +1307,10 @@ msgstr "Already subscribed."
 #: ../web_app/front_ws_api/handlers.py:100
 msgid "Not subscribed."
 msgstr "Not subscribed."
+
+#: ../web_app/journal/handlers.py:24
+msgid "Failed to generate statistics report {}."
+msgstr "Failed to generate statistics report {}."
 
 #: ../web_app/journal/schema.py:415
 msgid "Journal is exported."
