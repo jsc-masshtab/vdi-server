@@ -45,6 +45,7 @@
             <span *ngIf="obj.type === 'boolean'">
               {{ item[obj.property] ? "вкл" : "выкл"}}
             </span>
+            <span *ngIf="obj.type === 'vmAction'">{{ actionName }}</span>
 
             <ng-container *ngIf="obj.type === 'array'">
               <ul *ngIf="checkLength(item[obj.property]) > 0; else nothing">

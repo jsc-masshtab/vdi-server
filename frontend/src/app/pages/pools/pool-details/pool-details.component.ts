@@ -85,7 +85,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
         {
           title: 'Действие',
           property: 'vm_action_upon_user_disconnect',
-          type: 'string'
+          type: 'vmAction'
         },
         {
           title: 'Таймаут',
@@ -254,7 +254,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
         {
           title: 'Действие',
           property: 'vm_action_upon_user_disconnect',
-          type: 'string'
+          type: 'vmAction'
         },
         {
           title: 'Таймаут',

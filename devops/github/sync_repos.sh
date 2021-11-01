@@ -13,7 +13,7 @@ MASHTAB_USER="d.proskurin"
 MASHTAB_PASS="..."
 
 GITHUB_USER="masshtab"
-GITHUB_PASS="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"
+GITHUB_PASS="..."
 
 #veil-connect
 cd /tmp
