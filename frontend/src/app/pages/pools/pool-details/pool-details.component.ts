@@ -30,7 +30,7 @@ import { VmActionComponent } from './vm-action/vm-action.component';
 export class PoolDetailsComponent implements OnInit, OnDestroy {
 
   public host: boolean = false;
-  public poolSettings; 
+  public poolSettings;
   user_power_state = new FormControl('all');
 
   public pool: IPool;
@@ -69,16 +69,6 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       property_lv2: 'verbose_name',
     },
     {
-      title: 'Всего ВМ',
-      property: 'vms',
-      type: 'array-length'
-    },
-    {
-      title: 'Пользователи',
-      property: 'users',
-      type: 'array-length'
-    },
-    {
       title: 'Действие над ВМ',
       edit: 'manageVm',
       group: [
@@ -93,6 +83,16 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
           type: 'string'
         }
       ]
+    },
+    {
+      title: 'Всего ВМ',
+      property: 'vms',
+      type: 'array-length'
+    },
+    {
+      title: 'Пользователи',
+      property: 'users',
+      type: 'array-length'
     },
     {
       title: 'Статус',
@@ -146,6 +146,22 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
         propertyDepend: ['Да', 'Нет']
       },
       edit: 'changeAutomatedPoolKeep_vms_on'
+    },
+    {
+      title: 'Действие над ВМ',
+      edit: 'manageVm',
+      group: [
+        {
+          title: 'Действие',
+          property: 'vm_action_upon_user_disconnect',
+          type: 'vmAction'
+        },
+        {
+          title: 'Таймаут',
+          property: 'vm_disconnect_action_timeout',
+          type: 'string'
+        }
+      ]
     },
     {
       title: 'Пул ресурсов',
@@ -246,22 +262,6 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       title: 'Пользователи',
       property: 'users',
       type: 'array-length'
-    },
-    {
-      title: 'Действие над ВМ',
-      edit: 'manageVm',
-      group: [
-        {
-          title: 'Действие',
-          property: 'vm_action_upon_user_disconnect',
-          type: 'vmAction'
-        },
-        {
-          title: 'Таймаут',
-          property: 'vm_disconnect_action_timeout',
-          type: 'string'
-        }
-      ]
     },
     {
       title: 'Статус',
@@ -653,7 +653,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       .valueChanges.pipe(map((data: any) => data.data['pool']))
       .subscribe((data) => {
         this.pool = data;
-        
+
         this.host = true;
       },
       () => {
@@ -1322,7 +1322,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
   }
   public copyPool(): void {
     this.poolService.copyPool(this.idPool).subscribe((res) => {
-       this.poolSettings = JSON.parse(res.data.copyDynamicPool.pool_settings); 
+       this.poolSettings = JSON.parse(res.data.copyDynamicPool.pool_settings);
 
        this.dialog.open(PoolAddComponent, {
          disableClose: true,
@@ -1330,11 +1330,11 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
          data: this.poolSettings
        });
     });
-   
+
   }
 
   public converData(): void {
-  
+
   }
   ngOnDestroy() {
     if (this.sub_ws_create_pool) {
