@@ -86,17 +86,6 @@ pipeline {
                     -d "{\\"username\\":\\"${VEIL_USER}\\", \\"password\\":\\"${VEIL_PASS}\\"}" \
                     http://${VEIL_ADDRESS}/auth/ | jq -r .token)
 
-                    # Get old VM id
-                    VM_ID=$(curl -s -f -S -H "Content-Type: application/json" \
-                    -H "Authorization: jwt ${TOKEN}" \
-                    http://${VEIL_ADDRESS}/api/domains/?name=${VM_NAME} | jq -r .results[].id)
-
-                    # Remove old VM
-                    curl -s -f -S -H "Content-Type: application/json" \
-                    -H "Authorization: jwt ${TOKEN}" \
-                    -d "{\\"full\\":\\"true\\"}" \
-                    http://${VEIL_ADDRESS}/api/domains/${VM_ID}/remove/
-
                     # Clone VM from template
                     TASK_ID=$(curl -s -f -S -H "Content-Type: application/json" \
                     -H "Authorization: jwt ${TOKEN}" \
@@ -188,6 +177,12 @@ pipeline {
 
                       echo "Task status is: $TASK_STATUS, progress: $TASK_PROGRESS %"
                     done
+
+                    # Remove VM
+                    curl -s -f -S -H "Content-Type: application/json" \
+                    -H "Authorization: jwt ${TOKEN}" \
+                    -d "{\\"full\\":\\"true\\"}" \
+                    http://${VEIL_ADDRESS}/api/domains/${VM_ID}/remove/
                 '''
             }
         }
