@@ -155,7 +155,7 @@ pipeline {
                     -d "{\\"force\\":false}" \
                     http://${VEIL_ADDRESS}/api/domains/$VM_ID/shutdown/
 
-                    sleep 30
+                    sleep 60
 
                     # Backup VM
                     TASK_ID=$(curl -s -f -S -XPOST -H "Content-Type: application/json" \
