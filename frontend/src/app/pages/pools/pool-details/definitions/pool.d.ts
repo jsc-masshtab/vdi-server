@@ -29,6 +29,7 @@ export interface IPool extends ISettingsAutoPool, ISettingsStaticPool  {
   include_vms_in_ad: boolean;
   keep_vms_on: boolean;
   status: string;
+  vm_action_upon_user_disconnect: string;
 }
 
 export interface IPoolVms  {

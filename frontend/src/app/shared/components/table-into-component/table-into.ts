@@ -1,5 +1,6 @@
 import { Component,  Input, EventEmitter, Output, ChangeDetectionStrategy } from '@angular/core';
 import { Levels } from '@app/shared/enums/levels';
+import { VmActions } from '@app/shared/enums/vm-actions';
 
 import { ISmtpSettings } from '@pages/settings/smtp/smtp.service';
 
@@ -56,8 +57,7 @@ export class TableIntoComponent  {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i + def];
   }
  
-  get lvlDescription(): string {
-    console.log(this.item.level);
+  public get lvlDescription(): string {
     
     switch (this.item.level) {
       case 0:
@@ -68,6 +68,22 @@ export class TableIntoComponent  {
         return Levels.Errors; 
       case 4:
         return Levels.Off;
+      default:
+        return '--';       
+    }
+  }
+
+  public get actionName(): string {
+    
+    switch (this.item.vm_action_upon_user_disconnect) {
+      case 'NONE':
+        return VmActions.None;
+      case 'SHUTDOWN':
+        return VmActions.Shutdown;
+      case 'SHUTDOWN_FORCED':
+        return VmActions.ShutdownForced; 
+      case 'SUSPEND':
+        return VmActions.Suspend;
       default:
         return '--';       
     }

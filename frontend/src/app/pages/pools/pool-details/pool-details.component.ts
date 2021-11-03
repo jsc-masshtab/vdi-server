@@ -19,6 +19,7 @@ import { RemoveUsersPoolComponent } from './remove-users/remove-users.component'
 import { RemoveVMStaticPoolComponent } from './remove-vms/remove-vms.component';
 import { VmDetalsPopupComponent } from './vm-details-popup/vm-details-popup.component';
 import { PoolAddComponent } from '../add-pool/add-pool.component';
+import { VmActionComponent } from './vm-action/vm-action.component';
 
 
 @Component({
@@ -29,7 +30,7 @@ import { PoolAddComponent } from '../add-pool/add-pool.component';
 export class PoolDetailsComponent implements OnInit, OnDestroy {
 
   public host: boolean = false;
-  public poolSettings; 
+  public poolSettings;
   user_power_state = new FormControl('all');
 
   public pool: IPool;
@@ -68,6 +69,22 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       property_lv2: 'verbose_name',
     },
     {
+      title: 'Действие над ВМ',
+      edit: 'manageVm',
+      group: [
+        {
+          title: 'Действие',
+          property: 'vm_action_upon_user_disconnect',
+          type: 'vmAction'
+        },
+        {
+          title: 'Таймаут',
+          property: 'vm_disconnect_action_timeout',
+          type: 'string'
+        }
+      ]
+    },
+    {
       title: 'Всего ВМ',
       property: 'vms',
       type: 'array-length'
@@ -81,7 +98,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       title: 'Статус',
       property: 'status',
       type: 'string'
-    }
+    },
   ];
 
   public collectionDetailsAutomated: any[] = [
@@ -129,6 +146,22 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
         propertyDepend: ['Да', 'Нет']
       },
       edit: 'changeAutomatedPoolKeep_vms_on'
+    },
+    {
+      title: 'Действие над ВМ',
+      edit: 'manageVm',
+      group: [
+        {
+          title: 'Действие',
+          property: 'vm_action_upon_user_disconnect',
+          type: 'vmAction'
+        },
+        {
+          title: 'Таймаут',
+          property: 'vm_disconnect_action_timeout',
+          type: 'string'
+        }
+      ]
     },
     {
       title: 'Пул ресурсов',
@@ -620,6 +653,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       .valueChanges.pipe(map((data: any) => data.data['pool']))
       .subscribe((data) => {
         this.pool = data;
+
         this.host = true;
       },
       () => {
@@ -1238,6 +1272,21 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
     });
   }
 
+  // @ts-ignore: Unreachable code error
+  private manageVm(): void {
+
+    this.dialog.open(VmActionComponent, {
+      disableClose: true,
+      width: '500px',
+      data: {
+        action: this.pool.vm_action_upon_user_disconnect,
+        timeout: this.pool.vm_disconnect_action_timeout,
+        idPool: this.idPool,
+        poolType: this.pool.pool_type.toLowerCase(),
+      }
+    });
+  }
+
   public routeTo(route: string): void {
     this.menuActive = route;
   }
@@ -1273,7 +1322,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
   }
   public copyPool(): void {
     this.poolService.copyPool(this.idPool).subscribe((res) => {
-       this.poolSettings = JSON.parse(res.data.copyDynamicPool.pool_settings); 
+       this.poolSettings = JSON.parse(res.data.copyDynamicPool.pool_settings);
 
        this.dialog.open(PoolAddComponent, {
          disableClose: true,
@@ -1281,11 +1330,11 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
          data: this.poolSettings
        });
     });
-   
+
   }
 
   public converData(): void {
-  
+
   }
   ngOnDestroy() {
     if (this.sub_ws_create_pool) {

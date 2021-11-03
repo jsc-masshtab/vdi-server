@@ -139,7 +139,7 @@ class User(AbstractSortableStatusModel, VeilModel):
 
     async def superuser(self) -> bool:
         """Следует использовать вместо is_superuser attr."""
-        if PAM_AUTH:
+        if PAM_AUTH and not self.by_ad:
             return await self.pam_user_in_group(PAM_SUPERUSER_GROUP)
         else:
             return self.is_superuser
@@ -407,7 +407,7 @@ class User(AbstractSortableStatusModel, VeilModel):
         query = User.update.values(is_active=True).where(User.id == self.id)
         operation_status = await query.gino.status()
 
-        if PAM_AUTH:
+        if PAM_AUTH and not self.by_ad:
             return await self.pam_unlock(creator=creator)
 
         info_message = _local_("User {username} has been activated.").format(
@@ -448,7 +448,7 @@ class User(AbstractSortableStatusModel, VeilModel):
         query = User.update.values(is_active=False).where(User.id == self.id)
         operation_status = await query.gino.status()
 
-        if PAM_AUTH:
+        if PAM_AUTH and not self.by_ad:
             return await self.pam_lock(creator=creator)
 
         info_message = _local_("User {username} has been deactivated.").format(
@@ -555,7 +555,7 @@ class User(AbstractSortableStatusModel, VeilModel):
         return await veil_auth_class.user_set_gecos(username=self.username, gecos=gecos)
 
     async def set_password(self, raw_password, creator):
-        if PAM_AUTH:
+        if PAM_AUTH and not self.by_ad:
             return await self.pam_set_password(
                 raw_password=raw_password, creator=creator
             )
@@ -625,7 +625,11 @@ class User(AbstractSortableStatusModel, VeilModel):
         local_password=True
     ):
         """Если password будет None, то make_password вернет unusable password."""
-        username = await cls.validate_username(username)
+        if by_ad:
+            if not username:
+                raise SimpleError(_local_("username can`t be empty."))
+        else:
+            username = await cls.validate_username(username)
         encoded_password = hashers.make_password(password, salt=SECRET_KEY)
         user_kwargs = {
             "username": username,
@@ -714,7 +718,8 @@ class User(AbstractSortableStatusModel, VeilModel):
                     two_factor=two_factor,
                     creator=creator,
                 )
-                if PAM_AUTH:
+                user_obj = await User.get(id)
+                if PAM_AUTH and not user_obj.by_ad:
                     # Параметры с фронта приходят по 1му, поэтому не страшно
                     if update_dict.get("is_superuser") is False:
                         pam_result = await update_type.pam_user_remove_group(
