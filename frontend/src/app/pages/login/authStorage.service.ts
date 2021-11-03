@@ -43,7 +43,8 @@ export class AuthStorageService {
     }
 
     public logout(): void {
-        localStorage.clear();
+        localStorage.removeItem('token');
+        localStorage.removeItem('username');
         this.router.navigate(['login']);
     }
 
