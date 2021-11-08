@@ -94,11 +94,12 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
     this.waitService.setWait(true);   
     this.host = false;
     this.subPool$ = this.poolService.getPoolDetail(this.idPool).subscribe((res) => {
-        this.pool =  PoolDetailMapper.transformToClient(res.data);
-        this.host = true;
-  
-        this.ws.init(this.pool.vmId);
-        this.waitService.setWait(false);   
+        if (res.data){
+          this.pool =  PoolDetailMapper.transformToClient(res.data);
+          this.host = true;
+          this.ws.init(this.pool.vmId);
+        }   
+        this.waitService.setWait(false);
       })
   }
 

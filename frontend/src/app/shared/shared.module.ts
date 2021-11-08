@@ -1,12 +1,10 @@
 import { CommonModule } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
 import { NgModule } from '@angular/core';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatSelectModule } from '@angular/material/select';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
-import { environment } from 'environments/environment';
 
 import { AppRoutingModule } from '../app-routing.module';
 import { AddSelectComponent } from './components/add-select/add-select';
@@ -80,9 +78,5 @@ const FORMS_DINAMIC = [
 })
 
 export class SharedModule {
-  constructor(private http: HttpClient) {
-    if (!environment.production) {
-      this.http.get('global/init.js').subscribe();
-    }
-  }
+
 }
