@@ -149,3 +149,19 @@ class TestResolveVm:
 
         executed = await execute_scheme(pool_schema, qu, context=fixt_auth_context)
         snapshot.assert_match(executed)
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures("fixt_db", "fixt_user_admin", "fixt_vm")
+class TestFilterVm:
+    async def test_get_vm_by_verbose_name(self):
+        pool_id = await Pool.select("id").gino.scalar()
+        pool = await Pool.get(pool_id)
+        vms = await Pool.get_vms(pool, limit=None, offset=0, verbose_name="test_2")
+        vm_names = [vm.verbose_name for vm in vms]
+        assert "test_2" in vm_names
+
+        # Проверка отсутствия ВМ с заданным verbose_name.
+        vms = await Pool.get_vms(pool, limit=None, offset=0, verbose_name="vm_name")
+        vm_names = [vm.verbose_name for vm in vms]
+        assert len(vm_names) == 0

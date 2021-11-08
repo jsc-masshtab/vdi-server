@@ -16,6 +16,7 @@ pipeline {
         VEIL_DATAPOOL_ID = "9868f5b7-2616-4fa3-ba54-ced42e3e5ab7"
         ASTRA_TEMPLATE_ID = "b31ee8d8-c60f-4c4b-a96b-58bd5fec2d16"
         VM_NAME = "veil-broker-va-${VERSION}"
+        VM_USERNAME = "user"
         TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjozMywidXNlcm5hbWUiOiJhcGkiLCJleHAiOjE5NTA0MjMzMzcsInNzbyI6ZmFsc2UsIm9yaWdfaWF0IjoxNjM1OTI3MzM3fQ.u8QmqBzIk2XPy0yWzzqIkTxZN03iK4cf3J1UwUG5ZXk"
     }
 
