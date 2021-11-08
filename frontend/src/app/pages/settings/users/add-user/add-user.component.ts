@@ -20,7 +20,7 @@ export class AddUserComponent implements OnInit {
 
   private initForm(): void {
     this.form = this.fb.group({
-      username: ['', [Validators.required, Validators.pattern(/^[a-zA-Z0-9-.+]{3,128}$/)]],
+      username: ['', [Validators.required, Validators.pattern(/^[a-zA-Z0-9-.+]{1,128}$/)]],
       password: ['', [Validators.required, Validators.pattern(/^.+$/)]],
       email: ['', [Validators.pattern(/^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/)]],
       first_name: ['', [Validators.pattern(/^[a-zA-Zа-яА-ЯёЁ-]{1,32}$/)]],

@@ -31,7 +31,7 @@ class GroupValidator(MutationValidation):
         if 0 < value_len <= 128:
             return value
         if value_len > 128:
-            raise ValidationError(_local_("verbose name must me <= 128 characters."))
+            raise ValidationError(_local_("verbose name must be <= 128 characters."))
         raise ValidationError(_local_("verbose_name is empty."))
 
     @staticmethod

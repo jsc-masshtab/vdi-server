@@ -33,14 +33,19 @@ class UserValidator(MutationValidation):
     async def validate_username(obj_dict, value):
         if not value:
             raise AssertError(_local_("username can`t be empty."))
-        user_name_re = re.compile("^[a-zA-Z][a-zA-Z0-9.-_+]{3,128}$")
-        template_name = re.match(user_name_re, value.strip())
+        value_len = len(value)
+        if 0 < value_len <= 128:
+            return value
+        if value_len > 128:
+            raise ValidationError(_local_("username must be <= 128 characters."))
+        user_name_re = re.compile("^[a-zA-Z][a-zA-Z0-9.-_+]$")
+        template_name = re.match(user_name_re, value)
         if template_name:
             obj_dict["username"] = value
             return value
         raise AssertError(
             _local_(
-                "username must contain >= 1 chars (letters, digits, _, +), begin from letter and can't contain any spaces."
+                "username must contain letters, digits, _, +, begin from letter and can't contain any spaces."
             )
         )
 
