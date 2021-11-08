@@ -15,15 +15,16 @@ export class LogSettingComponent implements OnInit {
 
   item: any;
 
-  collection_period: object[] = [{
-    title: 'Тип архивации',
-    property: 'by_count',
-    type: {
-      typeDepend: 'boolean',
-      propertyDepend: ['По количеству записей', 'По периоду']
-    },
-    edit: 'changeByCount'
-  },
+  collection_period: object[] = [
+  // {
+  //   title: 'Тип архивации',
+  //   property: 'by_count',
+  //   type: {
+  //     typeDepend: 'boolean',
+  //     propertyDepend: ['По количеству записей', 'По периоду']
+  //   },
+  //   edit: 'changeByCount'
+  // },
   {
     title: 'Период архивации',
     property: 'period',
@@ -37,27 +38,27 @@ export class LogSettingComponent implements OnInit {
     edit: 'changeDirPath'
   }];
 
-  collection_count: object[] = [{
-    title: 'Тип архивации',
-    property: 'by_count',
-    type: {
-      typeDepend: 'boolean',
-      propertyDepend: ['По количеству записей', 'По периоду']
-    },
-    edit: 'changeByCount'
-  },
-  {
-    title: 'Количество записей',
-    property: 'count',
-    type: 'string',
-    edit: 'changeCount'
-  },
-  {
-    title: 'Директория архивации',
-    property: 'dir_path',
-    type: 'string',
-    edit: 'changeDirPath'
-  }];
+  // collection_count: object[] = [{
+  //   title: 'Тип архивации',
+  //   property: 'by_count',
+  //   type: {
+  //     typeDepend: 'boolean',
+  //     propertyDepend: ['По количеству записей', 'По периоду']
+  //   },
+  //   edit: 'changeByCount'
+  // },
+  // {
+  //   title: 'Количество записей',
+  //   property: 'count',
+  //   type: 'string',
+  //   edit: 'changeCount'
+  // },
+  // {
+  //   title: 'Директория архивации',
+  //   property: 'dir_path',
+  //   type: 'string',
+  //   edit: 'changeDirPath'
+  // }];
 
   constructor(
     private service: LogSettingService,

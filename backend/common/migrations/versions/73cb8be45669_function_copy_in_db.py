@@ -17,6 +17,8 @@ depends_on = None
 
 
 def upgrade():
+    op.execute("UPDATE journal_settings SET by_count = false WHERE by_count = true")
+
     msg_str = _local_("Add new journal archive.")
     name_str = _local_("Archive name:")
     path_str = _local_("path:")
@@ -48,7 +50,7 @@ def upgrade():
                                               part := format('event_%s', index);
                                               full_path := format('%s%s.csv', path, part);
                                               select format('COPY (SELECT * from event LIMIT %s OFFSET (%s - %s))
-                                                            TO ''%s'' With HEADER CSV', count, index, count, full_path) into sql;
+                                                            TO ''%s'' DELIMITER '','' CSV HEADER', count, index, count, full_path) into sql;
                                               EXECUTE sql;
                                               select format('INSERT INTO entity (id, entity_type, entity_uuid) VALUES
                                                             (''%s'', ''SECURITY'', NULL)', entity_id) into sql;
