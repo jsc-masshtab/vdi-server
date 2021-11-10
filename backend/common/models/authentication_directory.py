@@ -579,7 +579,7 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
             raise ValidationError(_local_("No authentication directory controllers."))
 
         account_name, domain_name = extract_domain_from_username(username)
-        if domain_name == authentication_directory.dc_str:
+        if domain_name == authentication_directory.dc_str or not domain_name:
             user, created = await cls._get_user(account_name)
         dc_str = cls.convert_dc_str(authentication_directory.dc_str)
         # Добавлено 31.05.2021
