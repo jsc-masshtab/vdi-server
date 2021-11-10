@@ -4,7 +4,8 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
 import {faBars,
    faChartBar,
-   faCheckSquare, faCog, faCommentDots, faDesktop, faPauseCircle, faPlay, faPlayCircle, faSignOutAlt, faSpinner, faStopCircle, faSyncAlt, faTimesCircle, faTv, faUndo, faUserCircle} from '@fortawesome/free-solid-svg-icons';
+   faCheckSquare,
+   faCog, faCommentDots, faDesktop, faExclamationTriangle, faPauseCircle, faPlay, faPlayCircle, faSignOutAlt, faSpinner, faStopCircle, faSyncAlt, faTimesCircle, faTv, faUndo, faUserCircle} from '@fortawesome/free-solid-svg-icons';
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
@@ -46,6 +47,25 @@ import { CoreModule } from './core/core.module';
 })
 export class AppModule {
   constructor() {
-    library.add(faCommentDots, faPlay, faUserCircle, faSignOutAlt, faCog, faDesktop, faSyncAlt, faTv, faChartBar, faTimesCircle, faSpinner, faBars, faCheckSquare, faTimesCircle, faPlayCircle, faPauseCircle, faStopCircle, faUndo )
+    library.add(
+      faCommentDots,
+      faPlay, 
+      faUserCircle, 
+      faSignOutAlt, 
+      faCog, 
+      faDesktop, 
+      faSyncAlt, 
+      faTv, 
+      faChartBar, 
+      faTimesCircle, 
+      faSpinner, 
+      faBars, 
+      faCheckSquare, 
+      faTimesCircle, 
+      faPlayCircle, 
+      faPauseCircle, 
+      faStopCircle, 
+      faUndo, 
+      faExclamationTriangle )
   }
  }
