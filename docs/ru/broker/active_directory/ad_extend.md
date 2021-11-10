@@ -88,7 +88,7 @@
     **ПЕРСОНА**, классом **ПОЛЬЗОВАТЕЛЬ**, не имеющие статус **ЗАБЛОКИРОВАН** и состоящие в выбранной группе.
 
 !!! info "Фильтры, используемые при построении списка групп MS AD"
-    `(&(objectCategory=GROUP)(groupType=-2147483646)(!(isCriticalSystemObject=TRUE))`
+    `(&(objectCategory=GROUP)(!(isCriticalSystemObject=TRUE))`
 
 !!! info "Фильтры, используемые при построении списка групп Free IPA"
     `(&(objectclass=posixAccount)(objectclass=person)(!(nsaccountlock=TRUE))`
