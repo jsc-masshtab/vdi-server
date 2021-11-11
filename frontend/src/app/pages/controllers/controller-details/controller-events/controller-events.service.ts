@@ -23,7 +23,7 @@ export class ControllerEventsService {
           $offset: Int,
           $controller: UUID,
           $event_type: Int,
-          $ordering: String
+          $ordering: ShortString
         ){
           controller(id_:$controller) {
             id

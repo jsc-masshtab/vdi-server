@@ -1,8 +1,7 @@
 import { trigger, style, animate, transition } from '@angular/animations';
-import { Component, OnInit, OnDestroy } from '@angular/core';
-import { Validators } from '@angular/forms';
-import { FormBuilder, FormGroup } from '@angular/forms';
-import { MatDialogRef } from '@angular/material/dialog';
+import { Component, OnInit, OnDestroy, Inject } from '@angular/core';
+import { FormBuilder, FormGroup, FormControl, Validators } from '@angular/forms';
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { Subscription } from 'rxjs';
 import { map } from 'rxjs/operators';
 
@@ -31,7 +30,7 @@ import { AddPoolService } from './add-pool.service';
 export class PoolAddComponent implements OnInit, OnDestroy {
 
   sub: Subscription;
-
+  public poolSettings;
   public checkValid: boolean = false;
   public error: boolean = false;
 
@@ -47,16 +46,27 @@ export class PoolAddComponent implements OnInit, OnDestroy {
   public guestPool: FormGroup;
   public rdsPool: FormGroup;
 
+  public warming_vm: FormControl = new FormControl(false);
+  public warming_all: boolean = true;
+
   public auth_dirs: any[] = []
 
   constructor(
     private addPoolService: AddPoolService,
     private dialogRef: MatDialogRef<PoolAddComponent>,
     private fb: FormBuilder,
-    private waitService: WaitService) { }
+    private waitService: WaitService,
+    @Inject(MAT_DIALOG_DATA) poolSettings?: any
+    ) { 
+      this.poolSettings = poolSettings;
+    }
 
   ngOnInit() {
-    this.getAllAuthenticationDirectory()
+    if (this.poolSettings){      
+      this.initFormsForCopy();
+    }else{
+      this.getAllAuthenticationDirectory();
+    }
   }
 
   private totalSizeValidator() {
@@ -80,8 +90,8 @@ export class PoolAddComponent implements OnInit, OnDestroy {
     })
   }
 
-  initForms() {
 
+  initForms() {
     this.sharedData = this.fb.group({
       verbose_name: ['', [Validators.required, Validators.pattern(/^[а-яА-ЯёЁa-zA-Z0-9.\-]*$/)]],
       connection_types: [[], Validators.required],
@@ -99,6 +109,7 @@ export class PoolAddComponent implements OnInit, OnDestroy {
     });
 
     this.dynamicPool = this.fb.group({
+      data_pool_id: ['', Validators.required],
       template_id: ['', Validators.required],
       vm_name_template: ['', [Validators.required, Validators.pattern(/^([a-zA-Z]+[a-zA-Z0-9-]*){0,63}$/)]],
       ...this.auth_dirs.length ? { ad_ou: [''] } : {},
@@ -106,12 +117,15 @@ export class PoolAddComponent implements OnInit, OnDestroy {
       reserve_size: [1, [Validators.required, Validators.max(200), Validators.min(1)]],
       initial_size: [1, [Validators.required, Validators.max(200), Validators.min(1)]],
       total_size: [1, [Validators.required, Validators.max(10000), Validators.min(1)]],
-
       create_thin_clones: true,
-      ...this.auth_dirs.length ? { prepare_vms: true } : {},
+      enable_vms_remote_access: true,
+      start_vms: true,
+      set_vms_hostnames: true,
+      ...this.auth_dirs.length ? { include_vms_in_ad: true } : {},
     }, { validators: this.totalSizeValidator() });
 
     this.guestPool = this.fb.group({
+      data_pool_id: ['', Validators.required],
       template_id: ['', Validators.required],
       vm_name_template: ['', [Validators.required, Validators.pattern(/^([a-zA-Z]+[a-zA-Z0-9-]*){0,63}$/)]],
       ...this.auth_dirs.length ? { ad_ou: [''] } : {},
@@ -119,13 +133,94 @@ export class PoolAddComponent implements OnInit, OnDestroy {
       reserve_size: [1, [Validators.required, Validators.max(200), Validators.min(1)]],
       initial_size: [1, [Validators.required, Validators.max(200), Validators.min(1)]],
       total_size: [1, [Validators.required, Validators.max(10000), Validators.min(1)]],
-
+      vm_disconnect_action_timeout: [60, [Validators.required, Validators.min(1)]],
       create_thin_clones: true,
       is_guest: true,
-      ...this.auth_dirs.length ? { prepare_vms: true } : {},
+      enable_vms_remote_access: true,
+      start_vms: true,
+      set_vms_hostnames: true,
+      ...this.auth_dirs.length ? { include_vms_in_ad: true } : {},
     }, { validators: this.totalSizeValidator() });
 
     this.toStep('type');
+  }
+
+  public initFormsForCopy(): void {
+    const {
+        ad_ou,
+        connection_types,
+        controller,
+        create_thin_clones, 
+        datapool_id, 
+        enable_vms_remote_access, 
+        include_vms_in_ad, 
+        increase_step, 
+        initial_size,
+        is_guest,
+        reserve_size,
+        resource_pool_id,
+        set_vms_hostnames,
+        start_vms,
+        template_id,
+        total_size,
+        vm_disconnect_action_timeout,
+        vm_name_template
+      } = this.poolSettings;
+
+    this.sharedData = this.fb.group({
+      verbose_name: [ '' , [Validators.required, Validators.pattern(/^[а-яА-ЯёЁa-zA-Z0-9.\-]*$/)]],
+      connection_types: [connection_types, Validators.required],
+      controller_id: [controller, Validators.required],
+      resource_pool_id: [resource_pool_id, Validators.required]
+    });
+
+    this.staticPool = this.fb.group({
+      vms: [[], Validators.required]
+    });
+
+    this.rdsPool = this.fb.group({
+      rds_vm: [[], Validators.required]
+    });
+
+    let formObject =   {
+      data_pool_id: [datapool_id, Validators.required],
+      template_id: [template_id, Validators.required],
+      vm_name_template: [vm_name_template, [Validators.required, Validators.pattern(/^([a-zA-Z]+[a-zA-Z0-9-]*){0,63}$/)]],
+      increase_step: [increase_step, [Validators.required, Validators.max(100), Validators.min(1)]],
+      reserve_size: [reserve_size, [Validators.required, Validators.max(200), Validators.min(1)]],
+      initial_size: [initial_size, [Validators.required, Validators.max(200), Validators.min(1)]],
+      total_size: [total_size, [Validators.required, Validators.max(10000), Validators.min(1)]],
+      ad_ou,
+      enable_vms_remote_access,
+      start_vms,
+      set_vms_hostnames,
+      create_thin_clones,
+      include_vms_in_ad,
+    }
+
+    this.dynamicPool = this.fb.group({
+      ...formObject
+    }, { validators: this.totalSizeValidator() });
+
+    this.guestPool = this.fb.group({
+      ...formObject,
+      is_guest,
+      vm_disconnect_action_timeout
+    }, { validators: this.totalSizeValidator() });
+
+    if (this.poolSettings.pool_type === 'GUEST'){
+      this.type = 'guest';
+    }else if (this.poolSettings.pool_type === 'AUTOMATED'){
+      this.warming_vm.setValue(this.isAnyVmWarmingFieldChecked());
+      this.type = 'dynamic';
+    }
+    this.toStep('static');
+  }
+  
+  public isAnyVmWarmingFieldChecked(): boolean {
+    const {enable_vms_remote_access, start_vms, set_vms_hostnames} = this.poolSettings;
+    const checkboxes = [enable_vms_remote_access, start_vms, set_vms_hostnames];
+    return checkboxes.some( checkbox => checkbox === true); 
   }
 
   getData(type, data: any = {}) {
@@ -134,6 +229,7 @@ export class PoolAddComponent implements OnInit, OnDestroy {
 
     this.addPoolService.getData(type, data).valueChanges.pipe(map(pools => pools.data.controller[type])).subscribe((res) => {
       this.data[type] = res;
+      
       if (this.data.templates.length !== 0) {
         this.dynamicPool.get('template_id').setValue(this.data['templates'][0]['id']);
         this.guestPool.get('template_id').setValue(this.data['templates'][0]['id']);
@@ -143,9 +239,10 @@ export class PoolAddComponent implements OnInit, OnDestroy {
 
   resetData() {
     this.data = {
-      connection_types: this.type === 'rds' ? ['RDP', 'NATIVE_RDP'] : ['RDP', 'NATIVE_RDP', 'SPICE', 'SPICE_DIRECT'],
+      connection_types: this.type === 'rds' ? ['RDP', 'NATIVE_RDP'] : ['RDP', 'NATIVE_RDP', 'SPICE', 'SPICE_DIRECT', 'X2GO'],
       controllers: [],
       resource_pools: [],
+      data_pools: [],
       vms: [],
       templates: []
     };
@@ -159,15 +256,21 @@ export class PoolAddComponent implements OnInit, OnDestroy {
     this.staticPool.get('vms').setValue([])
   }
 
+  someComplete() {
+    return (this.dynamicPool.get('enable_vms_remote_access').value ||
+    this.dynamicPool.get('start_vms').value ||
+    this.dynamicPool.get('set_vms_hostnames').value ||
+    (this.auth_dirs.length ? this.dynamicPool.get('include_vms_in_ad').value : false)) && !this.warming_all;
+  }
+
   public toStep(step: string) {
     this.last = this.step;
-    this.step = step;
 
     /* Обработка каждого шага */
 
     switch (step) {
       case 'type': {
-
+        this.step = step;
         /* Установка начальных значений */
         this.resetData();
 
@@ -182,6 +285,7 @@ export class PoolAddComponent implements OnInit, OnDestroy {
                    break;
 
       case 'static': {
+        this.step = step;
         this.resetData();
 
         /* Выбор первого типа */
@@ -193,17 +297,23 @@ export class PoolAddComponent implements OnInit, OnDestroy {
         /* Запрос на контроллеры */
 
         this.addPoolService.getData('controllers').valueChanges.pipe(map(data => data.data['controllers'])).subscribe((res) => {
+          
           this.data['controllers'] = res;
-
+          
           if (!this.sharedData.get('controller_id').value) {
             this.sharedData.get('controller_id').setValue(this.data['controllers'][0]['id']);
+          } else {
+            this.sharedData.get('controller_id').setValue(this.sharedData.get('controller_id').value)
           }
         });
 
         /* Подписка на изменение полей формы для отправки запросов на сервер */
-
+        
         this.sharedData.controls['controller_id'].valueChanges.subscribe((value) => {
-          this.sharedData.controls['resource_pool_id'].reset(); // Очистка поля под текущим
+          
+          if (!this.poolSettings){
+            this.sharedData.controls['resource_pool_id'].reset(); // Очистка поля под текущим
+          }
 
           if (value) {
             this.getData('resource_pools', { id_: value });
@@ -219,18 +329,59 @@ export class PoolAddComponent implements OnInit, OnDestroy {
               resource_pool_id: this.sharedData.get('resource_pool_id').value
             });
           }
+        });
 
+        this.sharedData.controls['resource_pool_id'].valueChanges.subscribe((value) => {
+        
+          this.dynamicPool.controls['data_pool_id'].reset(); // Очистка поля под текущим
+          this.guestPool.controls['data_pool_id'].reset(); // Очистка поля под текущим
+
+          if (value) {
+            this.getData('data_pools', {
+              id_: this.sharedData.get('controller_id').value,
+              resource_pool_id: value
+            });
+          } // запрос данных для выборки в очищенном поле
+        });
+     
+        if (this.poolSettings && this.poolSettings.resource_pool_id) {
+          this.getData('data_pools', {
+            id_: this.sharedData.get('controller_id').value,
+            resource_pool_id: this.poolSettings.resource_pool_id
+          });
+        } 
+
+        if (this.poolSettings && this.poolSettings.datapool_id) {
+         this.getData('templates', {
+              id_: this.sharedData.get('controller_id').value,
+              resource_pool_id: this.sharedData.get('resource_pool_id').value,
+              data_pool_id: this.poolSettings.datapool_id
+            });
+        } 
+        this.dynamicPool.controls['data_pool_id'].valueChanges.subscribe((value) => {
           this.dynamicPool.controls['template_id'].reset();
 
+          if (value) {
+            this.getData('templates', {
+              id_: this.sharedData.get('controller_id').value,
+              resource_pool_id: this.sharedData.get('resource_pool_id').value,
+              data_pool_id: value
+            });
+          }
+        });
+
+        this.guestPool.controls['data_pool_id'].valueChanges.subscribe((value) => {
           this.guestPool.controls['template_id'].reset();
 
           if (value) {
             this.getData('templates', {
               id_: this.sharedData.get('controller_id').value,
-              resource_pool_id: this.sharedData.get('resource_pool_id').value
+              resource_pool_id: this.sharedData.get('resource_pool_id').value,
+              data_pool_id: value
             });
           }
         });
+        
       }              break;
 
       case 'check_static': {
@@ -242,12 +393,10 @@ export class PoolAddComponent implements OnInit, OnDestroy {
 
         if (!this.sharedData.valid) {
           this.checkValid = true;
-          this.toStep('static');
         } else {
           if (this.type === 'static') {
             if (!this.staticPool.valid) {
               this.checkValid = true;
-              this.toStep('static');
             } else {
               this.toStep('done');
             }
@@ -264,11 +413,9 @@ export class PoolAddComponent implements OnInit, OnDestroy {
       case 'check_rds': {
         if (!this.sharedData.valid) {
           this.checkValid = true;
-          this.toStep('static');
         } else {
           if (!this.rdsPool.valid) {
             this.checkValid = true;
-            this.toStep('static');
           } else {
             this.toStep('done');
           }
@@ -276,44 +423,108 @@ export class PoolAddComponent implements OnInit, OnDestroy {
       }                 break;
 
       case 'dynamic': {
-        this.dynamicPool.get('increase_step').setValue(1);
-        this.dynamicPool.get('initial_size').setValue(1);
-        this.dynamicPool.get('total_size').setValue(1);
-        this.dynamicPool.get('reserve_size').setValue(1);
-        this.dynamicPool.get('create_thin_clones').setValue(true);
-        if (this.auth_dirs.length) { this.dynamicPool.get('prepare_vms').setValue(true); }
+        this.step = step;
+        if (!this.poolSettings){
+          this.dynamicPool.get('increase_step').setValue(1);
+          this.dynamicPool.get('initial_size').setValue(1);
+          this.dynamicPool.get('total_size').setValue(1);
+          this.dynamicPool.get('reserve_size').setValue(1);
+          this.dynamicPool.get('create_thin_clones').setValue(true);
+          this.dynamicPool.get('enable_vms_remote_access').setValue(true);
+          this.dynamicPool.get('start_vms').setValue(true);
+          this.dynamicPool.get('set_vms_hostnames').setValue(true);
+          this.warming_vm.setValue(true);
+          if (this.auth_dirs.length) { this.dynamicPool.get('include_vms_in_ad').setValue(true); }
+        }  
+        this.warming_vm.valueChanges.subscribe((value) => {
+        
+          if (value) {
+            this.warming_all = true;
+            this.dynamicPool.get('enable_vms_remote_access').setValue(true);
+            this.dynamicPool.get('start_vms').setValue(true);
+            this.dynamicPool.get('set_vms_hostnames').setValue(true);
+            if (this.auth_dirs.length) { this.dynamicPool.get('include_vms_in_ad').setValue(true); }
+          } else {
+            this.warming_all = false;
+            this.dynamicPool.get('enable_vms_remote_access').setValue(false);
+            this.dynamicPool.get('start_vms').setValue(false);
+            this.dynamicPool.get('set_vms_hostnames').setValue(false);
+            if (this.auth_dirs.length) { this.dynamicPool.get('include_vms_in_ad').setValue(false); }
+          }
+        });
+
+        this.dynamicPool.get('enable_vms_remote_access').valueChanges.subscribe((value) => {
+          if (value) {
+          } else {
+            this.dynamicPool.get('start_vms').setValue(false);
+            this.dynamicPool.get('set_vms_hostnames').setValue(false);
+            if (this.auth_dirs.length) { this.dynamicPool.get('include_vms_in_ad').setValue(false); }
+          }
+        });
+
+        this.dynamicPool.get('start_vms').valueChanges.subscribe((value) => {
+          if (value) {
+            this.dynamicPool.get('enable_vms_remote_access').setValue(true);
+          } else {
+            this.dynamicPool.get('set_vms_hostnames').setValue(false);
+            if (this.auth_dirs.length) { this.dynamicPool.get('include_vms_in_ad').setValue(false); }
+          }
+        });
+
+        this.dynamicPool.get('set_vms_hostnames').valueChanges.subscribe((value) => {
+          if (value) {
+            this.dynamicPool.get('enable_vms_remote_access').setValue(true);
+            this.dynamicPool.get('start_vms').setValue(true);
+          } else {
+            if (this.auth_dirs.length) { this.dynamicPool.get('include_vms_in_ad').setValue(false); }
+          }
+        });
+
+        if (this.auth_dirs.length && !this.poolSettings) {
+          this.dynamicPool.get('include_vms_in_ad').valueChanges.subscribe((value) => {
+            if (value) {
+              this.dynamicPool.get('enable_vms_remote_access').setValue(true);
+              this.dynamicPool.get('start_vms').setValue(true);
+              this.dynamicPool.get('set_vms_hostnames').setValue(true);
+            }
+          });
+        }
       }               break;
 
       case 'check_dynamic': {
         if (!this.dynamicPool.valid) {
           this.checkValid = true;
-          this.toStep('dynamic');
         } else {
           this.toStep('done');
         }
       }                     break;
 
       case 'guest': {
-        this.guestPool.get('increase_step').setValue(1);
-        this.guestPool.get('initial_size').setValue(1);
-        this.guestPool.get('total_size').setValue(1);
-        this.guestPool.get('reserve_size').setValue(1);
-        this.guestPool.get('create_thin_clones').setValue(true);
-        this.guestPool.get('is_guest').setValue(true);
-        if (this.auth_dirs.length) { this.guestPool.get('prepare_vms').setValue(true); }
+        this.step = step;
+        if (!this.poolSettings){
+          this.guestPool.get('increase_step').setValue(1);
+          this.guestPool.get('initial_size').setValue(1);
+          this.guestPool.get('total_size').setValue(1);
+          this.guestPool.get('reserve_size').setValue(1);
+          this.guestPool.get('vm_disconnect_action_timeout').setValue(60);
+          this.guestPool.get('create_thin_clones').setValue(true);
+          this.guestPool.get('is_guest').setValue(true);
+          this.guestPool.get('enable_vms_remote_access').setValue(true);
+          this.guestPool.get('start_vms').setValue(true);
+        }
+
       }             break;
 
       case 'check_guest': {
         if (!this.guestPool.valid) {
           this.checkValid = true;
-          this.toStep('guest');
         } else {
           this.toStep('done');
         }
       }                   break;
 
       case 'done': {
-
+        this.step = step;
         /* сборка данных для отправки */
 
         let data: any = { ...this.sharedData.value };

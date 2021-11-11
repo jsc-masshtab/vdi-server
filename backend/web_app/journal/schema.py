@@ -10,6 +10,7 @@ from sqlalchemy import and_, desc, text
 from veil_api_client import VeilRestPaginator
 
 from common.database import db
+from common.graphene_utils import ShortString
 from common.languages import _local_
 from common.log.journal import system_logger
 from common.models.auth import Entity
@@ -47,40 +48,40 @@ def build_filters(
 class EntityType(graphene.ObjectType):
     id = graphene.UUID()
     entity_uuid = graphene.UUID()
-    entity_type = graphene.String()
+    entity_type = graphene.Field(ShortString)
 
 
 class EventType(graphene.ObjectType):
     id = graphene.UUID()
     event_type = graphene.Int()
-    message = graphene.String()
-    description = graphene.String()
+    message = graphene.Field(ShortString)
+    description = graphene.Field(graphene.String)
     created = graphene.DateTime()
-    user = graphene.String()
+    user = graphene.Field(ShortString)
     read_by = graphene.List(UserType)
     entity = graphene.List(EntityType)
-    entity_types = graphene.List(graphene.String)
+    entity_types = graphene.List(ShortString)
     entity_id = graphene.UUID()
 
 
 class VeilEventType(VeilResourceType):
     id = graphene.UUID()
     event_type = graphene.Int()
-    message = graphene.String()
-    description = graphene.String()
+    message = graphene.Field(ShortString)
+    description = graphene.Field(graphene.String)
     created = graphene.DateTime()
-    user = graphene.String()
+    user = graphene.Field(ShortString)
 
 
 class JournalSettingsType(graphene.ObjectType):
     id = graphene.UUID()
-    interval = graphene.String()
-    period = graphene.String()
-    form = graphene.String()
+    interval = graphene.Field(ShortString)
+    period = graphene.Field(ShortString)
+    form = graphene.Field(ShortString)
     duration = graphene.Int()
     by_count = graphene.Boolean()
     count = graphene.Int()
-    dir_path = graphene.String()
+    dir_path = graphene.Field(ShortString)
     create_date = graphene.DateTime()
 
 
@@ -89,9 +90,9 @@ class EventQuery(graphene.ObjectType):
         event_type=graphene.Int(),
         start_date=graphene.DateTime(),
         end_date=graphene.DateTime(),
-        user=graphene.String(),
+        user=ShortString(),
         read_by=graphene.UUID(),
-        entity_type=graphene.String(),
+        entity_type=ShortString(),
         entity=graphene.UUID(),
     )
 
@@ -102,28 +103,28 @@ class EventQuery(graphene.ObjectType):
         event_type=graphene.Int(),
         start_date=graphene.DateTime(),
         end_date=graphene.DateTime(),
-        user=graphene.String(),
+        user=ShortString(),
         read_by=graphene.UUID(),
         entity=graphene.UUID(),
-        entity_type=graphene.String(),
-        ordering=graphene.String(),
+        entity_type=ShortString(),
+        ordering=ShortString(),
     )
 
     event = graphene.Field(lambda: EventType, id=graphene.UUID())
 
     entity_types = graphene.List(
-        graphene.String,
+        ShortString,
         event_type=graphene.Int(),
         start_date=graphene.DateTime(),
         end_date=graphene.DateTime(),
-        user=graphene.String(),
+        user=ShortString(),
         read_by=graphene.UUID(),
-        entity_type=graphene.String(),
+        entity_type=ShortString(),
     )
 
     users = graphene.List(
         lambda: UserType,
-        username=graphene.String(),
+        username=ShortString(),
         id=graphene.UUID()
     )
 
@@ -131,7 +132,7 @@ class EventQuery(graphene.ObjectType):
                                      controller=graphene.UUID())
     veil_events = graphene.List(
         lambda: VeilEventType,
-        ordering=graphene.String(),
+        ordering=ShortString(),
         event_type=graphene.Int(),
         controller=graphene.UUID(),
         limit=graphene.Int(default_value=100),
@@ -392,19 +393,6 @@ class UnmarkEventsReadByMutation(graphene.Mutation):
         return UnmarkEventsReadByMutation(ok=True)
 
 
-# class RemoveAllEventsMutation(graphene.Mutation):
-#     class Arguments:
-#         ok = graphene.Boolean()
-#
-#     ok = graphene.Boolean()
-#
-#     @administrator_required
-#     async def mutate(self, _info, **kwargs):
-#         await Event.delete.gino.status()
-#         await system_logger.info(_('Journal is clear.'), entity=self.entity)
-#         return RemoveAllEventsMutation(ok=True)
-
-
 class EventExportMutation(graphene.Mutation):
     class Arguments:
         start = graphene.DateTime(
@@ -413,7 +401,7 @@ class EventExportMutation(graphene.Mutation):
         finish = graphene.DateTime(
             description="Дата окончания периода для экспорта журнала"
         )
-        journal_path = graphene.String(
+        journal_path = ShortString(
             description="Адрес директории для экспорта журнала"
         )
 
@@ -431,8 +419,8 @@ class EventExportMutation(graphene.Mutation):
 
 class ChangeJournalSettingsMutation(graphene.Mutation):
     class Arguments:
-        dir_path = graphene.String(description="Адрес директории для архивации журнала")
-        period = graphene.String(description="Период для архивации")
+        dir_path = ShortString(description="Адрес директории для архивации журнала")
+        period = ShortString(description="Период для архивации")
         by_count = graphene.Boolean(description="Принцип архивации")
         count = graphene.Int(description="Количество записей для архивации")
 

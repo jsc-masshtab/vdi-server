@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import re
 from collections import OrderedDict
 from datetime import datetime, timezone
 from enum import Enum
@@ -7,12 +8,27 @@ from dateutil.tz import tzlocal
 
 import graphene
 
+from common.graphene_utils import ShortString
 from common.languages import _local_
 from common.log.journal import system_logger
 from common.models.settings import Settings
 from common.utils import create_subprocess
 from common.veil.veil_decorators import administrator_required
 from common.veil.veil_errors import SilentError, SimpleError
+
+
+# Dictionary of services.{Service name: human friendly service name}.
+app_services = OrderedDict([
+    # external services
+    ("apache2.service", _local_("Apache server.")),
+    ("postgresql.service", _local_("Database.")),
+    ("postgresql@9.6-main.service", _local_("Database.")),
+    ("redis-server.service", "Redis."),
+    # app services
+    ("vdi-monitor_worker.service", _local_("Monitor worker.")),
+    ("vdi-pool_worker.service", _local_("Task worker.")),
+    ("vdi-web.service", _local_("Web application.")),
+])
 
 
 class ServiceAction(Enum):
@@ -27,10 +43,10 @@ ServiceActionGraphene = graphene.Enum.from_enum(ServiceAction)
 
 
 class SettingsType(graphene.ObjectType):
-    LANGUAGE = graphene.String()
+    LANGUAGE = graphene.Field(ShortString)
     DEBUG = graphene.Boolean()
     VEIL_CACHE_TTL = graphene.Int()
-    VEIL_CACHE_SERVER = graphene.String()
+    VEIL_CACHE_SERVER = graphene.Field(ShortString)
     VEIL_CACHE_PORT = graphene.Int()
     VEIL_REQUEST_TIMEOUT = graphene.Int()
     VEIL_CONNECTION_TIMEOUT = graphene.Int()
@@ -47,31 +63,31 @@ class SettingsType(graphene.ObjectType):
 
 
 class SmtpSettingsType(graphene.ObjectType):
-    hostname = graphene.String()
+    hostname = graphene.Field(ShortString)
     port = graphene.Int()
     TLS = graphene.Boolean()
     SSL = graphene.Boolean()
-    password = graphene.String()
-    user = graphene.String()
-    from_address = graphene.String()
+    password = graphene.Field(ShortString)
+    user = graphene.Field(ShortString)
+    from_address = graphene.Field(ShortString)
     level = graphene.Int()
 
 
 class ServiceGrapheneType(graphene.ObjectType):
-    service_name = graphene.String()
-    verbose_name = graphene.String()
-    status = graphene.String()
+    service_name = graphene.Field(ShortString)
+    verbose_name = graphene.Field(ShortString)
+    status = graphene.Field(ShortString)
 
 
 class NetworkGrapheneType(graphene.ObjectType):
-    name = graphene.String()
-    ipv4 = graphene.String()
+    name = graphene.Field(ShortString)
+    ipv4 = graphene.Field(ShortString)
 
 
 class SysInfoGrapheneType(graphene.ObjectType):
     networks_list = graphene.List(NetworkGrapheneType)
     local_time = graphene.DateTime()
-    time_zone = graphene.String()
+    time_zone = graphene.Field(ShortString)
 
 
 class SettingsQuery(graphene.ObjectType):
@@ -126,9 +142,13 @@ class SettingsQuery(graphene.ObjectType):
 
         # Form response
         service_graphene_type_list = []
-        app_services = SettingsQuery._get_app_services_dict()
 
         for service_name, verbose_name in app_services.items():
+            # Пропускаем postgresql.service так как этот сервис в завершенном состоянии на астре
+            # и его статус неинтересен пользователю
+            if service_name == "postgresql.service":
+                continue
+
             service_status = current_services.get(service_name, "stopped")
             service_graphene_type = ServiceGrapheneType(
                 service_name=service_name,
@@ -186,32 +206,13 @@ class SettingsQuery(graphene.ObjectType):
 
         return sys_info_graphene_type
 
-    @staticmethod
-    def _get_app_services_dict():
-        """Get dictionary of services.
-
-        {Service name: human friendly service name}.
-        """
-        app_services = OrderedDict([
-            # external services
-            ("apache2.service", _local_("Apache server.")),
-            ("postgresql.service", _local_("Database.")),
-            ("redis-server.service", "Redis."),
-            # app services
-            ("vdi-monitor_worker.service", _local_("Monitor worker.")),
-            ("vdi-pool_worker.service", _local_("Task worker.")),
-            ("vdi-web.service", _local_("Web application.")),
-        ])
-
-        return app_services
-
 
 class ChangeSettingsMutation(graphene.Mutation):
     class Arguments:
-        LANGUAGE = graphene.String(description="Язык сообщений журнала")
+        LANGUAGE = ShortString(description="Язык сообщений журнала")
         DEBUG = graphene.Boolean()
         VEIL_CACHE_TTL = graphene.Int()
-        VEIL_CACHE_SERVER = graphene.String()
+        VEIL_CACHE_SERVER = ShortString()
         VEIL_CACHE_PORT = graphene.Int()
         VEIL_REQUEST_TIMEOUT = graphene.Int()
         VEIL_CONNECTION_TIMEOUT = graphene.Int()
@@ -236,13 +237,13 @@ class ChangeSettingsMutation(graphene.Mutation):
 
 class ChangeSmtpSettingsMutation(graphene.Mutation):
     class Arguments:
-        hostname = graphene.String()
+        hostname = ShortString()
         port = graphene.Int()
         TLS = graphene.Boolean()
         SSL = graphene.Boolean()
-        password = graphene.String()
-        user = graphene.String()
-        from_address = graphene.String()
+        password = ShortString()
+        user = ShortString()
+        from_address = ShortString()
         level = graphene.Int()
 
     ok = graphene.Boolean()
@@ -255,20 +256,42 @@ class ChangeSmtpSettingsMutation(graphene.Mutation):
 
 class DoServiceAction(graphene.Mutation):
     class Arguments:
-        sudo_password = graphene.String()
-        service_name = graphene.String()
+        sudo_password = ShortString()
+        service_name = ShortString()
         service_action = ServiceActionGraphene()
         check_errors = graphene.Boolean()
 
     ok = graphene.Boolean()
-    service_status = graphene.String()
+    service_status = ShortString()
 
     @administrator_required
     async def mutate(self, _info, sudo_password, service_name, service_action,
                      check_errors=True, creator="system"):
+
+        # Проверка  для защиты от иньекции команд c помощью проблелов и спец символов
+        # service_action валидируется на уровне  graphql
+        pass_validated = re.match("^[a-zA-Z0-9~@#$&_^*%?.+:;=!]*$", sudo_password)
+        if not pass_validated:
+            raise SimpleError(
+                _local_("Password {} contains invalid characters.").format(sudo_password),
+                user=creator
+            )
+
+        if service_name not in app_services.keys():
+            raise SimpleError(
+                _local_("Invalid service name {}.").format(service_name),
+                user=creator
+            )
+
         # Do action
-        cmd = "echo {} | sudo -S timeout 50s systemctl {} {}".format(
-            sudo_password, service_action, service_name)
+        # Особый случай для postgresql@9.6-main.service. Он находится под управлением postgresql.service и
+        # именно с последним мы и выполняем действие
+        if service_name == "postgresql@9.6-main.service":
+            parent_service_name = "postgresql.service"
+        else:
+            parent_service_name = service_name
+        cmd = "echo '{}' | sudo -S timeout 50s systemctl {} {}".format(
+            sudo_password, service_action, parent_service_name)
 
         return_code, stdout, stderr = await create_subprocess(cmd)
 

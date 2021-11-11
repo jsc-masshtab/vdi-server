@@ -23,8 +23,6 @@ import { StatusIconPipe } from './pipes/statusIcon.pipe';
 import { TaskTypePipe } from './pipes/taskType.pipe';
 import { TranslatePipe } from './pipes/translate.pipe';
 
-
-
 const COMPONENTS = [
   TabsComponent,
   TabComponent,
@@ -52,7 +50,6 @@ const FORMS_DINAMIC = [
   YesNoFormComponent
 ];
 
-
 @NgModule({
   declarations: [
     ...DIRECTIVES,
@@ -64,7 +61,9 @@ const FORMS_DINAMIC = [
     ...DIRECTIVES,
     ...COMPONENTS,
     ...PIPES,
-    ...FORMS_DINAMIC
+    ...FORMS_DINAMIC,
+    MatSelectModule,
+    MatCheckboxModule
   ],
   imports: [
     CommonModule,
@@ -78,11 +77,6 @@ const FORMS_DINAMIC = [
   ]
 })
 
-
 export class SharedModule {
-
-  constructor() {}
-
-
 
 }

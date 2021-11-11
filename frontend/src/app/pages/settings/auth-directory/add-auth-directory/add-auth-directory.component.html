@@ -17,13 +17,13 @@
     </label>
 
     <label class="field">
-      <p class="field-name">Домен</p>
+      <p class="field-name">NetBIOS имя домена</p>
       <input type="text" placeholder="..." formControlName="domain_name">
       <ng-container *ngIf="form.hasError('required', 'domain_name') && checkValid"><ng-container *ngTemplateOutlet="errorTemp"></ng-container></ng-container>
     </label>
 
     <label class="field">
-      <p class="field-name">Класс объекта домена (dc)</p>
+      <p class="field-name">Полное имя домена</p>
       <input type="text" placeholder="..." formControlName="dc_str">
       <ng-container *ngIf="form.hasError('required', 'dc_str') && checkValid"><ng-container *ngTemplateOutlet="errorTemp"></ng-container></ng-container>
     </label>
@@ -40,7 +40,7 @@
 
       <mat-form-field>
         <mat-label>Выберите тип службы</mat-label>
-        
+
         <mat-select formControlName="directory_type">
           <mat-option [value]="'ActiveDirectory'">
             ActiveDirectory
@@ -48,6 +48,10 @@
 
           <mat-option [value]="'FreeIPA'">
             FreeIPA
+          </mat-option>
+
+          <mat-option [value]="'OpenLDAP'">
+            OpenLDAP
           </mat-option>
         </mat-select>
       </mat-form-field>

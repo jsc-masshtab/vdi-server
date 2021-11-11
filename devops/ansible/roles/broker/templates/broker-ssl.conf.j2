@@ -1,0 +1,47 @@
+<IfModule mod_ssl.c>
+    <VirtualHost *:443>
+        # SSL
+        SSLEngine on
+        SSLProxyEngine on
+        SSLProxyCheckPeerCN off
+
+        SSLCertificateFile /opt/veil-vdi/app/common/veil_ssl/veil_default.crt
+        SSLCertificateKeyFile /opt/veil-vdi/app/common/veil_ssl/veil_default.key
+
+        # enable HTTP/2, if available
+        Protocols h2 http/1.1
+        # HTTP Strict Transport Security (mod_headers is required) (63072000 seconds)
+        Header always set Strict-Transport-Security "max-age=63072000"
+
+        # ServerName
+        # ServerAlias
+        # ServerAdmin
+
+        # Static
+        DocumentRoot /opt/veil-vdi/www
+
+        <Directory /opt/veil-vdi/www>
+            Options Indexes FollowSymLinks MultiViews
+            AllowOverride All
+            Order allow,deny
+            allow from all
+            LimitRequestBody 1048576
+            AddDefaultCharset UTF-8
+        </Directory>
+
+        Alias "/docs" "/opt/veil-vdi/docs"
+        Alias "/thin-client" "/opt/veil-vdi/thin-client"
+
+        # ProxyPass to tornado
+        RewriteEngine On
+        RewriteCond %{HTTP:Upgrade} =websocket [NC]
+        RewriteRule /api/(.*)       wss://localhost:8888/$1 [P,L]
+        RewriteCond %{HTTP:Upgrade} !=websocket [NC]
+        RewriteRule /api/(.*)       https://localhost:8888/$1 [P,L]
+        ProxyPassReverse /api       https://localhost:8888
+
+        # Logs
+        CustomLog ${APACHE_LOG_DIR}/vdi.access.log combined
+        ErrorLog ${APACHE_LOG_DIR}/vdi.error.log
+    </VirtualHost>
+</IfModule>

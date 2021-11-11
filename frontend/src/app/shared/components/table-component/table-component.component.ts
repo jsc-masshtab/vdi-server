@@ -1,6 +1,5 @@
 import { Component, Input, Output, EventEmitter, OnInit, HostBinding, OnChanges } from '@angular/core';
-// @ts-ignore: Unreachable code error
-import * as moment from 'moment';
+
 
 
 interface ICollection {
@@ -43,12 +42,9 @@ export class TableComponentComponent implements OnInit, OnChanges {
   public titleSort: string;
   public orderingSort: string;
 
-  public moment: any;
-
   constructor() { }
 
-  ngOnInit() {
-    this.moment = moment;    
+  public ngOnInit(): void {
   }
 
   ngOnChanges() {
@@ -57,6 +53,10 @@ export class TableComponentComponent implements OnInit, OnChanges {
         this.exist_keys = Object.keys(this.data[0]);
       }
     }
+  }
+
+  checkLength(array) {
+    return array ? [...array].length : 0
   }
 
   public clickRow(item: object) {

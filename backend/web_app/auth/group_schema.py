@@ -2,6 +2,7 @@
 import graphene
 
 from common.database import db
+from common.graphene_utils import ShortString
 from common.languages import _local_
 from common.models.auth import Group, User
 from common.models.user_tk_permission import TkPermission
@@ -30,7 +31,7 @@ class GroupValidator(MutationValidation):
         if 0 < value_len <= 128:
             return value
         if value_len > 128:
-            raise ValidationError(_local_("verbose name must me <= 128 characters."))
+            raise ValidationError(_local_("verbose name must be <= 128 characters."))
         raise ValidationError(_local_("verbose_name is empty."))
 
     @staticmethod
@@ -52,14 +53,14 @@ class GroupValidator(MutationValidation):
     async def validate_description(obj_dict, value):
         if len(value) > 255:
             raise ValidationError(
-                _local_("Last name length must be <= 255 characters."))
+                _local_("Description length must be <= 255 characters."))
         return value
 
 
 class GroupType(graphene.ObjectType):
     id = graphene.UUID(required=True)
-    verbose_name = graphene.String()
-    description = graphene.String()
+    verbose_name = graphene.Field(ShortString)
+    description = graphene.Field(ShortString)
     date_created = graphene.DateTime()
     date_updated = graphene.DateTime()
 
@@ -132,8 +133,8 @@ class GroupQuery(graphene.ObjectType):
         GroupType,
         limit=graphene.Int(default_value=100),
         offset=graphene.Int(default_value=0),
-        verbose_name=graphene.String(),
-        ordering=graphene.String(),
+        verbose_name=ShortString(),
+        ordering=ShortString(),
     )
     group = graphene.Field(GroupType, id=graphene.UUID())
 
@@ -157,8 +158,8 @@ class GroupQuery(graphene.ObjectType):
 
 class CreateGroupMutation(graphene.Mutation, GroupValidator):
     class Arguments:
-        verbose_name = graphene.String(required=True)
-        description = graphene.String(required=False)
+        verbose_name = ShortString(required=True)
+        description = ShortString(required=False)
 
     group = graphene.Field(GroupType)
     ok = graphene.Boolean(default_value=False)
@@ -183,8 +184,8 @@ class CreateGroupMutation(graphene.Mutation, GroupValidator):
 class UpdateGroupMutation(graphene.Mutation, GroupValidator):
     class Arguments:
         id = graphene.UUID(required=True)
-        verbose_name = graphene.String(required=False)
-        description = graphene.String(required=False)
+        verbose_name = ShortString(required=False)
+        description = ShortString(required=False)
 
     group = graphene.Field(GroupType)
     ok = graphene.Boolean(default_value=False)

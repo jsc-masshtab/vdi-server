@@ -1,0 +1,23 @@
+<header class="main-header">
+  <div class="logo" routerLink="./pools">
+    <img src="../assets/favicon.png" width="20" height="20">
+    <span [style.fontSize]="'18px'">VeiL VDI</span>
+  </div>
+
+  <div style="width: auto; display: flex; height: 100%">
+  <div class="header-tools">
+      <a href="https://veil.mashtab.org/vdi-docs/" target="_blank">
+        <span>Документация</span>
+      </a>
+  </div>
+  <tc-header-user></tc-header-user>
+  </div>
+</header>
+<section class="all-main">
+  <tc-main-menu></tc-main-menu>
+
+  <main>
+    <tc-wait></tc-wait>
+    <router-outlet></router-outlet>
+  </main>
+</section>

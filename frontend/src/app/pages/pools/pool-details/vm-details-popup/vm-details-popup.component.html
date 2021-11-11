@@ -69,14 +69,23 @@
       <fa-icon [icon]="['fas','wrench']" size="xs"></fa-icon>
       <span class="name">Преобразовать в шаблон</span>
     </button>
+
+    <div class="toggle" title="ВМ в статусе 'зарезервировано' не будут выдаваться пользователям">
+      <label class="switch">
+        <input type="checkbox" (click)="toggleReserve($event)" [checked]="data?.vm?.status == 'RESERVED'">
+        <span class="slider"></span>
+        <span class="slider-name" *ngIf="data?.vm?.status != 'RESERVED'">Зарезервировать ВМ</span>
+        <span class="slider-name" *ngIf="data?.vm?.status == 'RESERVED'">ВМ зарезервирована</span>
+      </label>
+    </div>
   </div>
 
-  <div class="details-row details-static">
+  <div class="details-row">
 
     <ul class="details-menu">
       <li (click)="routeTo('info')" [class.active]="menuActive === 'info'" title="Информация"> <fa-icon [icon]="['fas','chart-bar']"></fa-icon><span class="name">Информация</span></li>
-      <!-- <li *ngIf="data?.vm?.spice_connection" (click)="routeTo('spice')" [class.active]="menuActive === 'spice'" title="Spice"> <fa-icon [icon]="['fas','terminal']"></fa-icon><span class="name">SPICE-консоль</span></li>
-      <li *ngIf="data?.vm?.vnc_connection" (click)="routeTo('vnc')" [class.active]="menuActive === 'vnc'" title="Spice"> <fa-icon [icon]="['fas','terminal']"></fa-icon><span class="name">VNC-консоль</span></li> -->
+      <li *ngIf="data?.vm?.spice_connection" (click)="routeTo('spice')" [class.active]="menuActive === 'spice'" title="Spice"> <fa-icon [icon]="['fas','terminal']"></fa-icon><span class="name">SPICE-консоль</span></li>
+      <li *ngIf="data?.vm?.vnc_connection" (click)="routeTo('vnc')" [class.active]="menuActive === 'vnc'" title="Spice"> <fa-icon [icon]="['fas','terminal']"></fa-icon><span class="name">VNC-консоль</span></li>
       <li *ngIf="data?.typePool != 'guest'" (click)="routeTo('backups')" [class.active]="menuActive === 'backups'" title="Резервные копии"> <fa-icon [icon]="['fas','clone']"></fa-icon><span class="name">Резервные копии</span></li>
       <li (click)="routeTo('events')" [class.active]="menuActive === 'events'" title="События"> <fa-icon [icon]="['fas','comment']"></fa-icon><span class="name">События</span></li>
     </ul>
@@ -108,7 +117,7 @@
         </ng-container>
 
         <ng-container *ngIf="menuActive === 'spice' && show">
-          <spice-widget [domain]="spice"></spice-widget>
+          <iframe *ngIf="spice" [src]="spice" width="100%" height="100%"></iframe>
         </ng-container>
 
         <ng-container  *ngIf="menuActive === 'vnc' && show">

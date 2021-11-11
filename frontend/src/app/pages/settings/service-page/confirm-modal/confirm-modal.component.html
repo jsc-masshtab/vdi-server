@@ -1,22 +1,24 @@
-
-<div class="form">
+<form class="form" [formGroup]="confirmForm" (ngSubmit)="onSubmit()">
   <div class="form-header">
-    <p>Подтвердите действие</p>
+    <p>Подтвердите действие {{data.actionType}} на сервисе {{data.serviceName}}</p>
     <button (click)="close()"  class="form-close"><fa-icon [icon]="['fas','times-circle']" size="s"></fa-icon></button>
   </div>
+
   <div class="form-fields">
     <label class="field">
-      <p class="field-name">Пароль</p>
-      <input matInput type="password"  (change)="onChange($event.target.value)" required>
+      <p class="field-name">Sudo password</p>
+     
+      <input formControlName="password" matInput type="password" [focusMe]="true" required>
+        <div *ngIf="confirmForm.hasError('required', 'password') && checkValid" class="error">Поле обязательно для заполнения</div>        
     </label>
   </div>
   <div class="form-actions">
-    <button (click)="close()"  type="button" class="form-btn" >
-      <span class="action-name">Отмена</span>
-    </button>
-    <button type="button" class="form-btn" (click)="confirm()">
-      <span class="action-name">Подтвердить</span>
+    <button type="button" class="form-btn" type="submit" >
+      <span class="action-name"  >Подтвердить</span>
     </button>
   </div>
-</div>
+</form>
 
+<ng-template #errorTemp>
+  <div class="error">Поле обязательно для заполения</div>
+</ng-template>

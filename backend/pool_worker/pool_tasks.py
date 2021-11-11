@@ -7,13 +7,20 @@ from aiohttp import client_exceptions
 
 from common.languages import _local_
 from common.log.journal import system_logger
+from common.models.auth import Entity
 from common.models.authentication_directory import AuthenticationDirectory
 from common.models.pool import AutomatedPool, Pool
-from common.models.task import Task, TaskStatus
+from common.models.task import PoolTaskType, Task, TaskStatus
 from common.models.vm import Vm
 from common.utils import cancel_async_task
 from common.veil.veil_errors import PoolCreationError, VmCreationError
 from common.veil.veil_gino import EntityType, Status
+
+from pool_worker.pool_locks import pool_locks
+
+# Добавление задачи:
+# 1) В файле common/models/task.py в конец enum PoolTaskType добавить новое имя (MY_TASK например)
+# 2) В файле pool_worker/poll_tasks.py наследовать от AbstractTask и в методе do_task реализуем задачу MyTask.
 
 
 class AbstractTask(ABC):
@@ -22,12 +29,14 @@ class AbstractTask(ABC):
     task_list = (
         list()
     )  # Список, в котором держим объекты выполняемым в данный момент таскок
+    task_type = None
 
     def __init__(self):
 
         self.task_model = None
         self._coroutine = None
         self._task_priority = 1
+        self._associated_entity_name = ""
 
     @staticmethod
     def get_task_list_shallow_copy():
@@ -44,6 +53,10 @@ class AbstractTask(ABC):
             )
             await cancel_async_task(self._coroutine, wait_for_result)
             self._coroutine = None
+
+    @abstractmethod
+    async def get_user_friendly_text(self):
+        return ""
 
     @abstractmethod
     async def do_task(self):
@@ -69,33 +82,33 @@ class AbstractTask(ABC):
             return
 
         await self.task_model.update(priority=self._task_priority).apply()
+        user_friendly_text = await self.get_user_friendly_text()
 
         # set task status
-        await self.task_model.set_status(TaskStatus.IN_PROGRESS)
-        friendly_task_name = await self.task_model.form_user_friendly_text()
+        await self.task_model.set_status(TaskStatus.IN_PROGRESS, user_friendly_text)
         await system_logger.info(
-            _local_("Task '{}' started.").format(friendly_task_name))
+            _local_("Task '{}' started.").format(user_friendly_text))
 
         # Добавить себя в список выполняющихся задач
         AbstractTask.task_list.append(self)
 
         try:
             await self.do_task()
-            await self.task_model.set_status(TaskStatus.FINISHED)
+            await self.task_model.set_status(TaskStatus.FINISHED, user_friendly_text)
             await system_logger.info(
-                _local_("Task '{}' finished successfully.").format(friendly_task_name)
+                _local_("Task '{}' finished successfully.").format(user_friendly_text)
             )
 
         except asyncio.CancelledError:
-            await self.task_model.set_status(TaskStatus.CANCELLED)
+            await self.task_model.set_status(TaskStatus.CANCELLED, user_friendly_text)
             await system_logger.warning(
-                _local_("Task '{}' cancelled.").format(friendly_task_name)
+                _local_("Task '{}' cancelled.").format(user_friendly_text)
             )
 
             await self.do_on_cancel()
 
         except Exception as ex:
-            message = _local_("Task '{}' failed.").format(friendly_task_name)
+            message = _local_("Task '{}' failed.").format(user_friendly_text)
 
             await self.task_model.set_status(TaskStatus.FAILED, message + " " + str(ex))
 
@@ -126,13 +139,42 @@ class AbstractTask(ABC):
                 tasks_related_to_cur_pool.append(task)
         return tasks_related_to_cur_pool
 
+    async def _get_associated_entity_name(self):
+        # Запоминаем имя так как его не будет после удаления пула, например.
+        if self._associated_entity_name == "" and self.task_model:
+            # В зависимости от типа сущности узнаем verbose_name
+            # get entity_type
+            entity = await Entity.query.where(
+                Entity.entity_uuid == self.task_model.entity_id
+            ).gino.first()
+            if entity:
+                if entity.entity_type == EntityType.POOL:
+                    from common.models.pool import Pool
+
+                    pool = await Pool.get(self.task_model.entity_id)
+                    self._associated_entity_name = pool.verbose_name if pool else ""
+
+                elif entity.entity_type == EntityType.VM:
+                    from common.models.vm import Vm
+
+                    vm = await Vm.get(self.task_model.entity_id)
+                    self._associated_entity_name = vm.verbose_name if vm else ""
+
+        return self._associated_entity_name
+
 
 class InitPoolTask(AbstractTask):
-    def __init__(self, pool_locks):
+
+    task_type = PoolTaskType.POOL_CREATE
+
+    def __init__(self):
         super().__init__()
 
-        self._pool_locks = pool_locks
         self._task_priority = 2
+
+    async def get_user_friendly_text(self):
+        entity_name = await self._get_associated_entity_name()
+        return _local_("Creation of pool {}.").format(entity_name)
 
     async def do_task(self):
 
@@ -140,15 +182,8 @@ class InitPoolTask(AbstractTask):
         if not automated_pool:
             raise RuntimeError("InitPoolTask: AutomatedPool doesnt exist")
 
-        # Создать локи (Над пулом единовременно может работать только одна таска.)
-        self._pool_locks.add_new_pool_data(
-            str(automated_pool.id), str(automated_pool.template_id)
-        )
-
-        pool_lock = self._pool_locks.get_pool_lock(str(automated_pool.id))
-        template_lock = self._pool_locks.get_template_lock(
-            str(automated_pool.template_id)
-        )
+        pool_lock = pool_locks.get_pool_lock(str(automated_pool.id))
+        template_lock = pool_locks.get_template_lock(str(automated_pool.template_id))
 
         async with pool_lock:
             async with template_lock:
@@ -175,7 +210,7 @@ class InitPoolTask(AbstractTask):
 
             # Подготавливаем машины. Находимся на этом отступе так как нам нужен лок пула но не нужен лок шаблона
             try:
-                if automated_pool.prepare_vms:
+                if automated_pool.enable_vms_remote_access or automated_pool.start_vms or automated_pool.set_vms_hostnames or automated_pool.include_vms_in_ad:
                     results_future = await automated_pool.prepare_initial_vms()
                     # Если есть отмененные корутины, то считаем, что инициализация пула отменена
                     for response in results_future:
@@ -198,10 +233,12 @@ class InitPoolTask(AbstractTask):
 
 
 class ExpandPoolTask(AbstractTask):
-    def __init__(self, pool_locks, ignore_reserve_size=False, wait_for_lock=True):
+
+    task_type = PoolTaskType.POOL_EXPAND
+
+    def __init__(self, ignore_reserve_size=False, wait_for_lock=True):
         super().__init__()
 
-        self._pool_locks = pool_locks
         self.ignore_reserve_size = (
             ignore_reserve_size
         )  # расширение не смотря на достаточный резерв
@@ -210,16 +247,18 @@ class ExpandPoolTask(AbstractTask):
         )  # Если true ждем освобождения локов. Если false, то бросаем исключение, если
         # локи заняты
 
+    async def get_user_friendly_text(self):
+        entity_name = await self._get_associated_entity_name()
+        return _local_("Expanding of pool {}.").format(entity_name)
+
     async def do_task(self):
 
         automated_pool = await AutomatedPool.get(self.task_model.entity_id)
         if not automated_pool:
             raise RuntimeError("ExpandPoolTask: AutomatedPool doesnt exist")
 
-        pool_lock = self._pool_locks.get_pool_lock(str(automated_pool.id))
-        template_lock = self._pool_locks.get_template_lock(
-            str(automated_pool.template_id)
-        )
+        pool_lock = pool_locks.get_pool_lock(str(automated_pool.id))
+        template_lock = pool_locks.get_template_lock(str(automated_pool.template_id))
 
         # Проверяем залочены ли локи. Если залочены, то бросаем исключение.
         # Экспериментально сделано опциональным (self.wait_for_lock)
@@ -267,11 +306,11 @@ class ExpandPoolTask(AbstractTask):
                 active_directory_object = await AuthenticationDirectory.query.where(
                     AuthenticationDirectory.status == Status.ACTIVE
                 ).gino.first()
-                if vm_list and automated_pool.prepare_vms:
+                if vm_list and (automated_pool.enable_vms_remote_access or automated_pool.start_vms or automated_pool.set_vms_hostnames or automated_pool.include_vms_in_ad):
                     await asyncio.gather(
                         *[
                             vm_object.prepare_with_timeout(
-                                active_directory_object, automated_pool.ad_ou
+                                active_directory_object, automated_pool.ad_ou, automated_pool
                             )
                             for vm_object in vm_list
                         ],
@@ -286,15 +325,21 @@ class ExpandPoolTask(AbstractTask):
 
 
 class RecreationGuestVmTask(AbstractTask):
-    def __init__(self, pool_locks, vm_id=None, ignore_reserve_size=True,
+
+    task_type = PoolTaskType.VM_GUEST_RECREATION
+
+    def __init__(self, vm_id=None,
                  wait_for_lock=True):
         super().__init__()
 
-        self._pool_locks = pool_locks
         self.vm_id = vm_id
         self.wait_for_lock = (
             wait_for_lock
         )  # Если true-ждем освобождения локов. Если false, то исключение-локи заняты
+
+    async def get_user_friendly_text(self):
+        entity_name = await self._get_associated_entity_name()
+        return _local_("Automatic recreation of VM {} in the guest pool.").format(entity_name)
 
     async def do_task(self):
         vm = await Vm.get(self.task_model.entity_id)
@@ -302,10 +347,8 @@ class RecreationGuestVmTask(AbstractTask):
         if not automated_pool and not automated_pool.is_guest:
             raise RuntimeError("RecreationGuestVmTask: GuestPool doesnt exist")
 
-        pool_lock = self._pool_locks.get_pool_lock(str(automated_pool.id))
-        template_lock = self._pool_locks.get_template_lock(
-            str(automated_pool.template_id)
-        )
+        pool_lock = pool_locks.get_pool_lock(str(automated_pool.id))
+        template_lock = pool_locks.get_template_lock(str(automated_pool.template_id))
 
         # Если залочены локи, то вызывается исключение.
         if not self.wait_for_lock and (pool_lock.locked() or template_lock.locked()):
@@ -317,7 +360,7 @@ class RecreationGuestVmTask(AbstractTask):
 
         async with pool_lock:
             async with template_lock:
-                # Проверяем, что максимальное значение ВМ в пуле не достигнуто
+
                 pool = await Pool.get(automated_pool.id)
 
                 # Удаление и добавление 1 ВМ.
@@ -338,11 +381,11 @@ class RecreationGuestVmTask(AbstractTask):
                 active_directory_object = await AuthenticationDirectory.query.where(
                     AuthenticationDirectory.status == Status.ACTIVE
                 ).gino.first()
-                if vm_list and automated_pool.prepare_vms:
+                if vm_list and (automated_pool.enable_vms_remote_access or automated_pool.start_vms or automated_pool.set_vms_hostnames or automated_pool.include_vms_in_ad):
                     await asyncio.gather(
                         *[
                             vm_object.prepare_with_timeout(
-                                active_directory_object, automated_pool.ad_ou
+                                active_directory_object, automated_pool.ad_ou, automated_pool
                             )
                             for vm_object in vm_list
                         ],
@@ -357,11 +400,17 @@ class RecreationGuestVmTask(AbstractTask):
 
 
 class DecreasePoolTask(AbstractTask):
-    def __init__(self, pool_locks, new_total_size):
+
+    task_type = PoolTaskType.POOL_DECREASE
+
+    def __init__(self, new_total_size):
         super().__init__()
 
-        self._pool_locks = pool_locks
         self._new_total_size = new_total_size
+
+    async def get_user_friendly_text(self):
+        entity_name = await self._get_associated_entity_name()
+        return _local_("Decreasing of pool {}.").format(entity_name)
 
     async def do_task(self):
 
@@ -369,7 +418,7 @@ class DecreasePoolTask(AbstractTask):
         if not automated_pool:
             raise RuntimeError("AutomatedPool doesnt exist")
 
-        pool_lock = self._pool_locks.get_pool_lock(str(automated_pool.id))
+        pool_lock = pool_locks.get_pool_lock(str(automated_pool.id))
         if pool_lock.locked():
             raise RuntimeError("Another task works on this pool")
 
@@ -386,12 +435,18 @@ class DecreasePoolTask(AbstractTask):
 
 
 class DeletePoolTask(AbstractTask):
-    def __init__(self, pool_locks, full_deletion):
+
+    task_type = PoolTaskType.POOL_DELETE
+
+    def __init__(self, full_deletion=True):
         super().__init__()
 
         self.full_deletion = full_deletion
-        self._pool_locks = pool_locks
         self._task_priority = 3
+
+    async def get_user_friendly_text(self):
+        entity_name = await self._get_associated_entity_name()
+        return _local_("Deleting of pool {}.").format(entity_name)
 
     async def do_task(self):
 
@@ -400,7 +455,7 @@ class DeletePoolTask(AbstractTask):
         if not automated_pool:
             raise RuntimeError("DeletePoolTask: AutomatedPool doesnt exist")
 
-        pool_lock = self._pool_locks.get_pool_lock(str(automated_pool.id))
+        pool_lock = pool_locks.get_pool_lock(str(automated_pool.id))
 
         # Нужно остановить таски связанные с пулом
         tasks_related_to_cur_pool = self._get_related_progressing_tasks()
@@ -419,7 +474,7 @@ class DeletePoolTask(AbstractTask):
 
             # убираем из памяти локи, если пул успешно удалился
             if is_deleted:
-                await self._pool_locks.remove_pool_data(
+                await pool_locks.remove_pool_data(
                     str(automated_pool.id), str(template_id)
                 )
 
@@ -430,6 +485,8 @@ class PrepareVmTask(AbstractTask):
     При удалении ВМ желательно учесть что эта задача может быть в процессе выполнения и сначала отменить ее.
     """
 
+    task_type = PoolTaskType.VM_PREPARE
+
     def __init__(self, full_preparation=True):
         super().__init__()
 
@@ -437,6 +494,10 @@ class PrepareVmTask(AbstractTask):
             full_preparation
         )  # полная подготовка. Используется для машин динамического пула
         # В случае неполной подготовки только включаем удаленный доступ (для машин статик пула)
+
+    async def get_user_friendly_text(self):
+        entity_name = await self._get_associated_entity_name()
+        return _local_("Preparation of vm {}.").format(entity_name)
 
     async def do_task(self):
         # Проверить выполняется ли уже задача подготовки этой вм. Запускать еще одну нет смысла и даже вредно.
@@ -467,7 +528,7 @@ class PrepareVmTask(AbstractTask):
             ).gino.first()
             ad_ou = auto_pool.ad_ou
 
-        await vm.prepare_with_timeout(active_directory_object, ad_ou)
+            await vm.prepare_with_timeout(active_directory_object, ad_ou, auto_pool)
 
     async def _do_light_preparation(self, vm):
         """Only remote access."""
@@ -510,11 +571,18 @@ class PrepareVmTask(AbstractTask):
 
 
 class BackupVmsTask(AbstractTask):
+
+    task_type = PoolTaskType.VMS_BACKUP
+
     def __init__(self, entity_type, creator):
         super().__init__()
 
         self._entity_type = entity_type
         self._creator = creator
+
+    async def get_user_friendly_text(self):
+        entity_name = await self._get_associated_entity_name()
+        return _local_("Backup of {}.").format(entity_name)
 
     async def do_task(self):
 
@@ -536,19 +604,24 @@ class BackupVmsTask(AbstractTask):
 class RemoveVmsTask(AbstractTask):
     """Реализация задачи удаления ВМ из пула."""
 
-    def __init__(self, pool_locks, vm_ids, creator):
+    task_type = PoolTaskType.VMS_REMOVE
+
+    def __init__(self, vm_ids, creator):
         super().__init__()
 
-        self._pool_locks = pool_locks  # для сихранизации задач над динамическим пулом
         self._vm_ids = vm_ids
         self._creator = creator
+
+    async def get_user_friendly_text(self):
+        entity_name = await self._get_associated_entity_name()
+        return _local_("Removal of VMs from pool {}.").format(entity_name)
 
     async def do_task(self):
         pool = await Pool.get(self.task_model.entity_id)
         pool_type = pool.pool_type
 
         if pool_type == Pool.PoolTypes.AUTOMATED or pool_type == Pool.PoolTypes.GUEST:
-            pool_lock = self._pool_locks.get_pool_lock(str(pool.id))
+            pool_lock = pool_locks.get_pool_lock(str(pool.id))
             async with pool_lock:
                 await self.remove_vms(pool, remove_vms_on_controller=True)
         elif pool_type == Pool.PoolTypes.STATIC:

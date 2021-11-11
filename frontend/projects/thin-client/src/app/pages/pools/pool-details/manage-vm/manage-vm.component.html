@@ -1,0 +1,19 @@
+<div class="details-control-panel">
+  <ng-content select="[slot=refreshButton]" ></ng-content>  
+  <button  class="btn-control" (click)="onClickAction('start')" title="Запуск">
+    <fa-icon [icon]="['fas','play-circle']"></fa-icon>
+  </button>
+
+  <button  class="btn-control" (click)="onClickAction('suspend')" title="Приостановить">
+    <fa-icon [icon]="['fas','pause-circle']"></fa-icon>
+  </button>
+
+  <button  class="btn-control" (click)="onClickAction('shutdown')" title="Выключить">
+    <fa-icon [icon]="['fas','stop-circle']"></fa-icon>
+  </button>
+
+  <button  class="btn-control" (click)="onClickAction('reboot')" title="Перезагрузить">
+    <fa-icon [icon]="['fas','undo']"></fa-icon>
+  </button>
+
+</div>

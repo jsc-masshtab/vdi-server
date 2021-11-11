@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import asyncio
+import inspect
 import json
 import sys
 
@@ -11,39 +12,25 @@ from common.database import db
 from common.languages import _local_
 from common.log.journal import system_logger
 from common.models.pool import Pool
-from common.models.task import PoolTaskType, Task, TaskStatus
+from common.models.task import Task, TaskStatus
 from common.models.vm import Vm
 from common.settings import POOL_TASK_QUEUE, POOL_WORKER_CMD_QUEUE, REDIS_TIMEOUT
 from common.veil.veil_gino import EntityType
 from common.veil.veil_redis import PoolWorkerCmd, redis_blpop
 
-from pool_worker.pool_locks import PoolLocks
-from pool_worker.pool_tasks import (
-    AbstractTask,
-    BackupVmsTask,
-    DecreasePoolTask,
-    DeletePoolTask,
-    ExpandPoolTask,
-    InitPoolTask,
-    PrepareVmTask,
-    RecreationGuestVmTask,
-    RemoveVmsTask
-)
+from pool_worker.pool_tasks import AbstractTask
+from pool_worker.pool_tasks import *  # noqa
 
 
 class PoolTaskManager:
     """Реализует управление задачами."""
 
     def __init__(self):
-        self.pool_locks = PoolLocks()  # примитивы для синхронизации задач над пулами. В данный момент
-        # применимо только к динамическим (гостевым) пулам
+        pass
 
     async def start(self):
         """Действия при старте менеджера."""
         await system_logger.debug("Pool worker: start loop now")
-
-        # init locks
-        await self.pool_locks.fill_start_data()
 
         # resume tasks
         if "-do-not-resume-tasks" not in sys.argv:
@@ -178,7 +165,7 @@ class PoolTaskManager:
         # Resume tasks
         for task in tasks_to_launch:
             (task_id, task_type) = task
-            task_data_dict = {"task_id": task_id, "task_type": task_type.name}
+            task_data_dict = {"task_id": task_id, "task_type": task_type}
             try:
                 await self.launch_task(task_data_dict)
             except Exception as ex:
@@ -190,64 +177,25 @@ class PoolTaskManager:
         # print('launch_task ', task_data_dict, flush=True)
         # get task data
         task_id = task_data_dict["task_id"]
-        pool_task = task_data_dict["task_type"]
+        task_type = task_data_dict["task_type"]
 
-        # task execution
-        if pool_task == PoolTaskType.POOL_CREATE.name:
-            task = InitPoolTask(self.pool_locks)
-            task.execute_in_async_task(task_id)
-
-        elif pool_task == PoolTaskType.POOL_EXPAND.name:
-            try:
-                ignore_reserve_size = task_data_dict["ignore_reserve_size"]
-            except KeyError:
-                ignore_reserve_size = False
-            task = ExpandPoolTask(
-                self.pool_locks, ignore_reserve_size=ignore_reserve_size
+        # Find task class
+        try:
+            task_class = next(
+                task_class
+                for task_class in AbstractTask.__subclasses__()
+                if getattr(task_class, "task_type").name == task_type
             )
-            task.execute_in_async_task(task_id)
+        except StopIteration:
+            raise RuntimeError("Task class not found. Wrong task type")
 
-        elif pool_task == PoolTaskType.POOL_DECREASE.name:
-            try:
-                new_total_size = task_data_dict["new_total_size"]
-            except KeyError:
-                return
-            task = DecreasePoolTask(self.pool_locks, new_total_size)
-            task.execute_in_async_task(task_id)
-
-        elif pool_task == PoolTaskType.POOL_DELETE.name:
-            try:
-                full = task_data_dict["deletion_full"]
-            except KeyError:
-                full = True
-            task = DeletePoolTask(self.pool_locks, full)
-            task.execute_in_async_task(task_id)
-
-        elif pool_task == PoolTaskType.VM_PREPARE.name:
-            try:
-                full = task_data_dict["full"]
-            except KeyError:
-                full = True
-            task = PrepareVmTask(full)
-            task.execute_in_async_task(task_id)
-
-        elif pool_task == PoolTaskType.VMS_BACKUP.name:
-            task = BackupVmsTask(entity_type=task_data_dict["entity_type"],
-                                 creator=task_data_dict["creator"])
-            task.execute_in_async_task(task_id)
-
-        elif pool_task == PoolTaskType.VMS_REMOVE.name:
-            task = RemoveVmsTask(pool_locks=self.pool_locks,
-                                 vm_ids=task_data_dict["vm_ids"],
-                                 creator=task_data_dict["creator"])
-            task.execute_in_async_task(task_id)
-
-        elif pool_task == PoolTaskType.VM_GUEST_RECREATION.name:
-            task = RecreationGuestVmTask(
-                self.pool_locks,
-                vm_id=task_data_dict["vm_id"]
-            )
-            task.execute_in_async_task(task_id)
+        # Get args of __init__
+        task_init_args = inspect.signature(task_class.__init__).parameters.keys()
+        # Form dict of allowed args
+        task_init_args_dict = {k: v for (k, v) in task_data_dict.items() if k in task_init_args}
+        # Create task and execute
+        task = task_class(**task_init_args_dict)
+        task.execute_in_async_task(task_id)
 
     async def cancel_tasks(self, task_ids, cancel_all=False):
         """Cancel_tasks in list or all tasks."""

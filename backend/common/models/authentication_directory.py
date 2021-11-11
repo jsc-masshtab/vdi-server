@@ -7,6 +7,7 @@ from typing import Optional, Tuple
 from asyncpg.exceptions import UniqueViolationError
 
 import ldap
+from ldap.controls.libldap import SimplePagedResultsControl as LdapPageCtrl
 
 from sqlalchemy import Enum as AlchemyEnum, Index
 from sqlalchemy.dialects.postgresql import JSONB, UUID
@@ -19,7 +20,8 @@ from common.models.auth import Group as GroupModel, User as UserModel
 from common.settings import (LDAP_LOGIN_PATTERN,
                              LDAP_NETWORK_TIMEOUT,
                              LDAP_OPT_REFERRALS,
-                             LDAP_TIMEOUT)
+                             LDAP_TIMEOUT,
+                             OPENLDAP_LOGIN_PATTERN)
 from common.veil.auth.auth_dir_utils import (
     extract_domain_from_username,
     get_ad_user_ou,
@@ -39,6 +41,12 @@ from common.veil.veil_gino import (
     VeilModel,
 )
 
+PAGE_SIZE = 999
+
+
+# На время работы search_ext_s, result3 текщий процесс не будет отвечать на запросы.
+# По-хорошему нужен асинхронный аналог модуля для работы с ldap. Но так как добавление AD -
+# это очень редкая операция, то мб и так сойдет.
 
 class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
     """Модель служб каталогов для авторизации пользователей в системе.
@@ -137,7 +145,10 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
         """Логин с доменом."""
         if self.directory_type == AuthenticationDirectory.DirectoryTypes.FreeIPA:
             return LDAP_LOGIN_PATTERN.format(
-                username=self.service_username, dc=self.dc_str)
+                username=self.service_username, dc=self.convert_dc_str(self.dc_str))
+        elif self.directory_type == AuthenticationDirectory.DirectoryTypes.OpenLDAP:
+            return OPENLDAP_LOGIN_PATTERN.format(
+                username=self.service_username, dc=self.convert_dc_str(self.dc_str))
         return (
             "\\".join([self.domain_name, self.service_username])
             if self.service_username and self.domain_name
@@ -180,11 +191,6 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
         # Шифруем пароль
         if service_password and isinstance(service_password, str):
             service_password = encrypt(service_password)
-        dc_str = (
-            cls.convert_dc_str(dc_str)
-            if dc_str and isinstance(dc_str, str)
-            else "dc={}".format(domain_name)
-        )
 
         auth_dir_dict = {
             "verbose_name": verbose_name,
@@ -228,9 +234,7 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
         if kwargs and isinstance(kwargs, dict):
             if kwargs.get("service_password"):
                 kwargs["service_password"] = encrypt(kwargs["service_password"])
-            if kwargs.get("dc_str"):
-                kwargs["dc_str"] = cls.convert_dc_str(kwargs["dc_str"])
-            # Переводим имя домена в верхний регистр
+            # Переводим NetBIOS имя домена в верхний регистр
             domain_name = kwargs.get("domain_name")
             if domain_name and isinstance(domain_name, str):
                 kwargs["domain_name"] = domain_name.upper()
@@ -365,31 +369,71 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
 
     # Authentication Directory synchronization methods
 
-    def _get_ad_user_attributes(
-        self, account_name: str, ldap_server: "ldap.ldapobject.SimpleLDAPObject"
+    async def sync_openldap_users(self, ou):
+        if self.directory_type == AuthenticationDirectory.DirectoryTypes.OpenLDAP:
+            ldap_server = ldap.initialize(self.directory_url)
+            dc_str = self.convert_dc_str(self.dc_str)
+            openldap_users = ldap_server.search_s("ou={},{}".format(ou, dc_str), ldap.SCOPE_SUBTREE)
+            sync_members = list()
+            for user in openldap_users:
+                if user[1].get("ou"):
+                    continue
+                info = dict()
+                info["first_name"] = user[1].get("givenName")[0].decode("UTF-8") if user[1].get("givenName") else user[1].get("givenName")
+                info["username"] = user[1].get("cn")[0].decode("UTF-8") if user[1].get("cn") else user[1].get("cn")
+                info["last_name"] = user[1].get("sn")[0].decode("UTF-8") if user[1].get("sn") else user[1].get("sn")
+                info["email"] = user[1].get("mail")[0].decode("UTF-8") if user[1].get("mail") else user[1].get("mail")
+                sync_members.append(info)
+            # group = await GroupModel.soft_create(verbose_name="OpenLDAP", creator="system")
+            await self.sync_users(sync_members)
+            # new_users = await self.sync_users(sync_members)
+            # await group.add_users(user_id_list=new_users, creator="system")
+            return True
+        raise SilentError("Not OpenLDAP directory.")
+
+    async def get_ad_user_attributes(
+        self, ldap_server: "ldap.ldapobject.SimpleLDAPObject", account_name: str, domain_name: str
     ) -> Tuple[Optional[str], dict]:
         """Получение информации о текущем пользователе из службы каталогов.
 
         :param account_name: имя пользовательской учетной записи
+        :param domain_name: имя домена для авторизующегося пользователя
         :param ldap_server: объект сервера службы каталогов
         :return: атрибуты пользователя службы каталогов
         """
-        # Расширено 31.05.2021
-        # формируем запрос для AD
-        if self.directory_type == self.DirectoryTypes.FreeIPA:
-            base = LDAP_LOGIN_PATTERN.format(username=account_name, dc=self.dc_str)
-            user_info_filter = "(objectClass=person)"
-        else:
-            base = self.dc_str
-            user_info_filter = "(&(objectClass=user)(sAMAccountName={}))".format(
-                account_name
-            )
-        # получаем данные пользователя из AD
-        user_info, user_groups = ldap_server.search_s(
-            base, ldap.SCOPE_SUBTREE, user_info_filter, ["memberOf"]
-        )[0]
+        # # Расширено 31.05.2021
+        # # формируем запрос для AD
+        # dc_str = self.convert_dc_str(self.dc_str)
+        # if self.directory_type == self.DirectoryTypes.FreeIPA:
+        #     base = LDAP_LOGIN_PATTERN.format(username=account_name, dc=dc_str)
+        #     user_info_filter = "(objectClass=person)"
+        # else:
+        #     base = dc_str
+        #     user_info_filter = "(&(objectClass=user)(sAMAccountName={}))".format(
+        #         account_name
+        #     )
+        # # получаем данные пользователя из AD
+        # req_ctrl = LdapPageCtrl(criticality=True, size=PAGE_SIZE, cookie="")
+        # user_info, user_groups = ldap_server.search_ext_s(
+        #     base=base, scope=ldap.SCOPE_SUBTREE, filterstr=user_info_filter,
+        #     attrlist=["memberOf"], serverctrls=[req_ctrl]
+        # )[0]
 
-        return user_info, user_groups
+        # Расширено 10.11.2021 (взято из ECP)
+        base = self.convert_dc_str(domain_name)
+        if (self.directory_type == AuthenticationDirectory.DirectoryTypes.FreeIPA) or (
+            self.directory_type == AuthenticationDirectory.DirectoryTypes.OpenLDAP):  # noqa E125
+            user_info_filter = "(uid={})".format(account_name)
+        else:
+            user_info_filter = "(&(objectClass=user)(sAMAccountName={}))".format(account_name)
+        user_data = ldap_server.search_s(base=base,
+                                         scope=ldap.SCOPE_SUBTREE,
+                                         filterstr=user_info_filter,
+                                         attrlist=["memberOf"])
+        if user_data and isinstance(user_data, list):
+            user_info, user_groups = user_data[0]
+            return user_info, user_groups
+        return "", {}
 
     @classmethod
     async def _get_user(cls, username: str):
@@ -399,42 +443,61 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
         Авторизация этого пользователя возможна только по LDAP.
 
         :param username: имя пользователя
-        :param kwargs: дополнительные именованные аргументы
         :return: объект пользователя, флаг создания пользователя
         """
         if not isinstance(username, str):
             raise ValidationError(_local_("Username must be a string."))
 
-        username = username.lower()
+        # username = username.lower()
         user = await UserModel.get_object(
             extra_field_name="username",
             extra_field_value=username,
             include_inactive=True,
         )
         if not user:
-            user = await UserModel.soft_create(username, creator="system")
-            created = True
+            # user = await UserModel.soft_create(username, by_ad=True, local_password=False, creator="system")
+            # created = True
+            users_list = await UserModel.get_object(
+                extra_field_name="username",
+                extra_field_value=username,
+                include_inactive=True,
+                similar=True
+            )
+            users = ", ".join([user.username for user in users_list]) if users_list else _local_("something other.")
+            raise SilentError(_local_("Username {} is incorrect. Maybe you mean {}.").format(username, users))
         else:
-            await user.update(is_active=True).apply()
+            # await user.update(is_active=True).apply()
+            if not user.is_active:
+                raise SilentError(_local_("User {} is deactivate.").format(username))
             created = False
         return user, created
 
+    @staticmethod
+    async def init_ldap(ad, directory_url: str = None):
+        ldap.set_option(ldap.OPT_X_TLS_REQUIRE_CERT, ldap.OPT_X_TLS_NEVER)
+        ldap_connection = ldap.initialize(directory_url or ad.directory_url)
+        ldap_connection.set_option(ldap.OPT_REFERRALS, 0)
+        ldap_connection.set_option(ldap.OPT_NETWORK_TIMEOUT, LDAP_TIMEOUT)
+        if ad.directory_type == AuthenticationDirectory.DirectoryTypes.ActiveDirectory and not directory_url:
+            ldap_connection.simple_bind_s(ad.connection_username, ad.password)
+        return ldap_connection
+
     async def assign_veil_roles(
         self,
-        ldap_server: "ldap.ldapobject.SimpleLDAPObject",
         user: "UserModel",
         account_name: str,
+        user_info: str,
+        user_groups: dict
     ) -> bool:
         """
         Метод назначения пользователю системной группы на основе атрибутов его учетной записи в службе каталогов.
 
-        :param ldap_server: объект сервера службы каталогов
         :param user: объект пользователя
         :param account_name: имя пользовательской учетной записи
+        :param user_info: dn пользователя ldap
+        :param user_groups: информация о группах пользователя
         :return: результат назначения системной группы пользователю службы каталогов
         """
-        user_info, user_groups = self._get_ad_user_attributes(account_name, ldap_server)
-
         mappings = await self.mappings
         await system_logger.debug(_local_("Mappings: {}.").format(mappings))
 
@@ -505,7 +568,7 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
             if not authentication_directory:
                 raise ValidationError(
                     _local_("No authentication directory controllers."))
-            domain_name = authentication_directory.domain_name
+            domain_name = authentication_directory.dc_str
         return domain_name
 
     @classmethod
@@ -518,25 +581,41 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
             raise ValidationError(_local_("No authentication directory controllers."))
 
         account_name, domain_name = extract_domain_from_username(username)
-        user, created = await cls._get_user(account_name)
+        if domain_name == authentication_directory.dc_str or not domain_name:
+            user, created = await cls._get_user(account_name)
+        dc_str = cls.convert_dc_str(authentication_directory.dc_str)
         # Добавлено 31.05.2021
         if authentication_directory.directory_type == AuthenticationDirectory.DirectoryTypes.FreeIPA:
             username = LDAP_LOGIN_PATTERN.format(
-                username=username, dc=authentication_directory.dc_str)
+                username=username, dc=dc_str)
+            if not domain_name:
+                domain_name = dc_str
         elif authentication_directory.directory_type == AuthenticationDirectory.DirectoryTypes.ActiveDirectory:
             if not domain_name:
-                domain_name = authentication_directory.domain_name
-                username = "\\".join([domain_name, account_name])
+                domain_name = authentication_directory.dc_str
+                username = "@".join([account_name, domain_name])
+                # domain_name = authentication_directory.domain_name
+                # username = "\\".join([domain_name, account_name])
         try:
-            ldap.set_option(ldap.OPT_X_TLS_REQUIRE_CERT, ldap.OPT_X_TLS_NEVER)
-            ldap_server = ldap.initialize(authentication_directory.directory_url)
-            ldap_server.set_option(ldap.OPT_REFERRALS, 0)
-            ldap_server.set_option(ldap.OPT_NETWORK_TIMEOUT, LDAP_TIMEOUT)
-            ldap_server.simple_bind_s(username, password)
-
-            await authentication_directory.assign_veil_roles(
-                ldap_server, user, account_name
+            ldap_server = await cls.init_ldap(authentication_directory)
+            user_dn, user_groups = await authentication_directory.get_ad_user_attributes(ldap_server,
+                                                                                         account_name,
+                                                                                         domain_name)
+            if authentication_directory.directory_type == AuthenticationDirectory.DirectoryTypes.ActiveDirectory:
+                ldap_server.simple_bind_s(username, password)
+            else:
+                if not user_dn:
+                    raise ValidationError(_local_("Invalid credentials."))
+                ldap_server.simple_bind_s(user_dn, password)
+            user = await UserModel.get_object(
+                extra_field_name="username",
+                extra_field_value=account_name,
+                include_inactive=True,
             )
+            await authentication_directory.assign_veil_roles(
+                user, account_name, user_dn, user_groups
+            )
+            created = False
             success = True
         except ldap.INVALID_CREDENTIALS as ldap_error:
             # Если пользователь не проходит ауф в службе с предоставленными
@@ -551,9 +630,47 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
             # то возвращаем ошибку о недоступности сервера
             success = False
             raise ValidationError(_local_("Server down (ldap)."))
+        except ldap.REFERRAL as e:
+            ref_url, referral_dn = await cls._get_ldap_referral_dn(e)
+            if not referral_dn:
+                raise ValidationError(_local_(
+                    "The LDAP server provides an alternate address to which an LDAP request can be processed, but the attempt was unsuccessful."))
+            try:
+                ldap_server = await cls.init_ldap(authentication_directory, ref_url)
+                ldap_server.simple_bind_s(username, password)
+                user_dn, user_groups = await authentication_directory.get_ad_user_attributes(ldap_server,
+                                                                                             account_name,
+                                                                                             domain_name)
+                user = await UserModel.get_object(
+                    extra_field_name="username",
+                    extra_field_value=username,
+                    include_inactive=True,
+                )
+                if not user:
+                    user = await UserModel.soft_create(username, by_ad=True, local_password=False, creator="system")
+                    created = True
+                await authentication_directory.assign_veil_roles(
+                    user, account_name, user_dn, user_groups
+                )
+                success = True
+                return username
+            except ldap.INVALID_CREDENTIALS as ldap_error:
+                # Если пользователь не проходит ауф в службе с предоставленными
+                # данными, то ауф в системе считается неуспешной и создается событие
+                # о провале.
+                success = False
+                raise ValidationError(
+                    _local_("Invalid credentials (ldap): {}.").format(ldap_error)
+                )
+            except ldap.SERVER_DOWN:
+                # Если нет связи с сервером службы каталогов,
+                # то возвращаем ошибку о недоступности сервера
+                success = False
+                raise ValidationError(_local_("Server down (ldap)."))
         except Exception as E:
             success = False
             await system_logger.debug(E)
+            raise ValidationError("LDAP Error: {}".format(str(E)))
         finally:
             try:
                 if not success and created:
@@ -561,6 +678,31 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
             except:  # noqa
                 pass
         return account_name
+
+    @staticmethod
+    async def _get_ldap_referral_dn(referral_exception) -> tuple:
+        """Заготовка для обработки referral ссылок."""
+        if not referral_exception.args[0] or not referral_exception.args[0].get("info"):
+            await system_logger.debug("LDAP referral missing 'info' block.")
+            return None, None
+        referral_info = referral_exception.args[0]["info"]
+        if not referral_info.startswith("Referral:\n"):
+            await system_logger.debug("LDAP referral missing 'Referral' header.")
+            return None, None
+        referral_uri = referral_info[len("Referral:\n"):]
+        if not referral_uri.startswith("ldap"):
+            await system_logger.debug("LDAP referral URI does not start with 'ldap'.")
+            return None, None
+        if referral_uri.startswith("ldap://"):
+            ldap_protocol = "ldap://"
+        else:
+            ldap_protocol = "ldaps://"
+        if referral_uri.startswith("{}/".format(ldap_protocol)):
+            referral_dn = referral_uri[len("{}/".format(ldap_protocol)):]
+            ref_url = ".".join([dc[len("dc="):] for dc in referral_dn.split(",") if "dc=" in dc])
+        else:
+            ref_url, referral_dn = referral_uri[len(ldap_protocol):].split("/")
+        return "{}{}".format(ldap_protocol, ref_url), referral_dn
 
     async def get_connection(self):
         """Соединение с AuthenticationDirectory для дальнейшей работы."""
@@ -595,31 +737,34 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
                 await self.update(status=Status.ACTIVE).apply()
         return ldap_connection
 
-    @property
-    async def assigned_ad_groups(self):
+    async def assigned_ad_groups(self, group_name=""):
         """Список групп у которых не пустое поле GroupModel.ad_guid."""
-        query = GroupModel.query.where(GroupModel.ad_guid.isnot(None))
+        query = GroupModel.query.order_by("verbose_name").where(GroupModel.ad_guid.isnot(None))
+        if group_name:
+            query = query.where(GroupModel.verbose_name.ilike("%{}%".format(group_name)))
         return await query.gino.all()
 
-    async def build_group_filter(self):
+    async def build_group_filter(self, group_name=""):
         """Строим фильтр для поиска групп в Authentication Directory."""
         # Список групп у которых есть признак синхронизации
-        assigned_groups = await self.assigned_ad_groups
+        assigned_groups = await self.assigned_ad_groups()
 
         # Фильтр для поиска групп
         if self.directory_type == self.DirectoryTypes.ActiveDirectory:
-            system_groups = "(groupType=-2147483646)(!(isCriticalSystemObject=TRUE))"
+            system_groups = "(!(isCriticalSystemObject=TRUE))"
             base_filter = "(&(objectCategory=GROUP){}".format(system_groups)
             groups_filter = [
                 "(!(objectGUID={}))".format(pack_guid(group.ad_guid))
                 for group in assigned_groups
             ]
+            groups_filter.append("(Name={}*)".format(group_name))  # wildcard * не хочет работать впереди
         elif self.directory_type == self.DirectoryTypes.FreeIPA:
             base_filter = "(&(objectclass=ipausergroup)(!(nsaccountlock=TRUE))"
             groups_filter = [
                 "(!(ipaUniqueID={}))".format(group.ad_guid)
                 for group in assigned_groups
             ]
+            groups_filter.append("(cn={}*)".format(group_name))  # В случае IPA wildcard не работает с обеих сторон
         else:
             raise NotImplementedError(
                 "{} not implemented yet.".format(self.directory_type))
@@ -697,24 +842,28 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
                         break
         return groups
 
-    async def get_possible_ad_groups(self) -> list:
+    async def get_possible_ad_groups(self, group_name="") -> list:
         """Список групп за вычетом уже синхронизированных."""
         connection = await self.get_connection()
-        if not connection:
+        if not connection or self.directory_type == AuthenticationDirectory.DirectoryTypes.OpenLDAP:
             return list()
         try:
-            groups_filter = await self.build_group_filter()
-            ldap_groups = connection.search_s(self.dc_str, ldap.SCOPE_SUBTREE,
-                                              groups_filter)
+            req_ctrl = LdapPageCtrl(criticality=True, size=PAGE_SIZE, cookie="")
+            groups_filter = await self.build_group_filter(group_name)
+            dc_str = self.convert_dc_str(self.dc_str)
+            ldap_groups = connection.search_ext_s(base=dc_str, scope=ldap.SCOPE_SUBTREE,
+                                                  filterstr=groups_filter, serverctrls=[req_ctrl])
+
             groups_list = self.extract_groups(ldap_groups)
         except ldap.LDAPError as err_msg:
             # На случай ошибочности запроса к AD
             msg = _local_(
                 "Fail to connect to Authentication Directory. Check service information."
             )
-            await system_logger.error(msg, entity=self.entity, description=err_msg)
+            await system_logger.error(msg, entity=self.entity, description=str(err_msg))
             await self.update(status=Status.FAILED).apply()
             groups_list = list()
+
         connection.unbind_s()
         return groups_list
 
@@ -843,22 +992,44 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
         connection = await self.get_connection()
         if not connection:
             return list()
+        users_list = list()
         try:
+            # Делаем серию запросов, чтобы извлечь всех пользователей группы
             users_filter = self.build_group_user_filter(group_cn)
-            ldap_response = connection.search_s(self.dc_str, ldap.SCOPE_SUBTREE,
-                                                users_filter)
+            req_ctrl = LdapPageCtrl(criticality=True, size=PAGE_SIZE, cookie="")
+            first_loop = True
+            final_ldap_response = []
+
+            while first_loop or req_ctrl.cookie:
+                first_loop = False
+                dc_str = self.convert_dc_str(self.dc_str)
+                # async data request
+                msgid = connection.search_ext(
+                    base=dc_str, scope=ldap.SCOPE_SUBTREE,
+                    filterstr=users_filter, serverctrls=[req_ctrl]
+                )
+
+                # block and wait for response
+                result_type, ldap_response, msgid, serverctrls = connection.result3(msgid)
+                final_ldap_response.extend(ldap_response)
+
+                # Get cookie
+                req_ctrl.cookie = None
+                page_ctrls = [c for c in serverctrls if c.controlType == LdapPageCtrl.controlType]
+                if page_ctrls:
+                    req_ctrl.cookie = page_ctrls[0].cookie
+
             # Разбираем ответ от Authentication Directory
             if self.directory_type == self.DirectoryTypes.ActiveDirectory:
-                users_list = self.extract_ms_ad_group_members(ldap_response)
+                users_list = self.extract_ms_ad_group_members(final_ldap_response)
             elif self.directory_type == self.DirectoryTypes.FreeIPA:
-                users_list = self.extract_free_ipa_group_members(ldap_response)
-        except ldap.LDAPError:
+                users_list = self.extract_free_ipa_group_members(final_ldap_response)
+        except ldap.LDAPError as err_msg:
             msg = _local_(
                 "Fail to connect to Authentication Directory. Check service information."
             )
-            await system_logger.error(msg, entity=self.entity)
+            await system_logger.error(msg, entity=self.entity, description=str(err_msg))
             await self.update(status=Status.FAILED).apply()
-            users_list = list()
         connection.unbind_s()
         return users_list
 

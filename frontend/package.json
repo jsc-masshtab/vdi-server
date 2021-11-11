@@ -4,6 +4,7 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve --watch=true",
+    "thin-client": "ng serve --watch=true --project=thin-client --port=4201",
     "build": "ng build",
     "test": "ng test",
     "lint": "ng lint",
@@ -39,7 +40,6 @@
     "graphql": "^14.1.1",
     "graphql-tag": "^2.10.1",
     "graphql-typescript": "^0.3.0",
-    "moment": "^2.24.0",
     "rxjs": "~6.6.6",
     "tslib": "^2.3.0",
     "zone.js": "~0.10.2"

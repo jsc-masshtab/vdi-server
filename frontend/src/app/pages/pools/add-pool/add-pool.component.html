@@ -162,6 +162,22 @@
 
   <ng-container *ngIf="step == 'dynamic'">
     <div class="form-fields" [formGroup]="dynamicPool" *ngIf="type === 'dynamic'">
+      <label class="field">
+        <mat-form-field>
+          <mat-label *ngIf="data.data_pools?.length">Выберите Пул данных</mat-label>
+          <mat-label *ngIf="!data.data_pools?.length">- нет пулов данных -</mat-label>
+
+          <mat-select formControlName="data_pool_id">
+            <mat-option *ngFor="let data_pool of data.data_pools" [value]="data_pool.id">
+              {{data_pool.verbose_name}}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <ng-container *ngIf="sharedData.hasError('required', 'data_pool_id') && checkValid">
+          <ng-container *ngTemplateOutlet="errorTemp"></ng-container>
+        </ng-container>
+      </label>
 
       <label class="field">
         <mat-form-field>
@@ -274,9 +290,29 @@
         <p class="description">Создать тонкие клоны</p>
       </label>
 
-      <label class="field-inline" [@animForm] *ngIf="auth_dirs.length">
-        <mat-checkbox [color]="'warn'" formControlName="prepare_vms"></mat-checkbox>
-        <p class="description">Подготавливать ВМ</p>
+      <label class="field-inline">
+        <mat-checkbox [color]="'warn'" [indeterminate]="someComplete()" [formControl]="warming_vm"></mat-checkbox>
+        <p class="description">Подготовка ВМ:</p>
+      </label>
+
+      <label class="field-inline field-shift" *ngIf="warming_vm.value" [@animForm]>
+        <mat-checkbox [color]="'warn'" formControlName="enable_vms_remote_access"></mat-checkbox>
+        <p class="description">Включать удаленный доступ на ВМ</p>
+      </label>
+
+      <label class="field-inline field-shift" *ngIf="warming_vm.value" [@animForm]>
+        <mat-checkbox [color]="'warn'" formControlName="start_vms"></mat-checkbox>
+        <p class="description">Включать ВМ</p>
+      </label>
+
+      <label class="field-inline field-shift" *ngIf="warming_vm.value" [@animForm]>
+        <mat-checkbox [color]="'warn'" formControlName="set_vms_hostnames"></mat-checkbox>
+        <p class="description">Задавать hostname ВМ</p>
+      </label>
+
+      <label class="field-inline field-shift" [@animForm] *ngIf="auth_dirs.length && warming_vm.value">
+        <mat-checkbox [color]="'warn'" formControlName="include_vms_in_ad"></mat-checkbox>
+        <p class="description">Вводить ВМ в домен (только для Windows)</p>
       </label>
     </div>
 
@@ -293,6 +329,22 @@
 
   <ng-container *ngIf="step == 'guest'">
     <div class="form-fields" [formGroup]="guestPool" *ngIf="type === 'guest'">
+      <label class="field">
+        <mat-form-field>
+          <mat-label *ngIf="data.data_pools?.length">Выберите Пул данных</mat-label>
+          <mat-label *ngIf="!data.data_pools?.length">- нет пулов данных -</mat-label>
+
+          <mat-select formControlName="data_pool_id">
+            <mat-option *ngFor="let data_pool of data.data_pools" [value]="data_pool.id">
+              {{data_pool.verbose_name}}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <ng-container *ngIf="sharedData.hasError('required', 'data_pool_id') && checkValid">
+          <ng-container *ngTemplateOutlet="errorTemp"></ng-container>
+        </ng-container>
+      </label>
 
       <label class="field">
         <mat-form-field>
@@ -320,17 +372,6 @@
         </ng-container>
 
         <div class="error" [@animForm]="error" *ngIf="guestPool.hasError('pattern', 'vm_name_template')">Имя шаблона не должно превышать 63 символа и может состоять из букв латинского алфавита, цифр и -.</div>
-      </label>
-
-      <label class="field" *ngIf="auth_dirs.length">
-        <p class="field-name">Наименование организационной единицы для добавления ВМ в AD</p>
-        <input type="text" formControlName="ad_ou">
-
-        <ng-container *ngIf="guestPool.hasError('required', 'ad_ou') && checkValid">
-          <ng-container *ngTemplateOutlet="errorTemp"></ng-container>
-        </ng-container>
-
-        <div class="error" [@animForm]="error" *ngIf="guestPool.hasError('pattern', 'ad_ou')">Имя содержит недопустимые символы</div>
       </label>
 
       <label class="field">
@@ -397,6 +438,20 @@
             Пороговое количество свободных ВМ не может быть больше максимального количества ВМ</div>
         </ng-container>
 
+      </label>
+
+      <label class="field">
+        <p class="field-name">Время жизни ВМ после потери связи (сек)</p>
+        <input type="number" placeholder="рекомендуемое - 60 сек" formControlName="vm_disconnect_action_timeout" min="1">
+
+        <ng-container *ngIf="guestPool.hasError('required', 'vm_disconnect_action_timeout') && checkValid">
+          <ng-container *ngTemplateOutlet="errorTemp"></ng-container>
+        </ng-container>
+
+        <ng-container *ngIf="guestPool.get('vm_disconnect_action_timeout').touched && guestPool.get('vm_disconnect_action_timeout').dirty">
+          <div class="error" [@animForm]="error" *ngIf="guestPool.hasError('min', 'vm_disconnect_action_timeout')">
+            Время жизни ВМ должно быть больше 1 секунды (рекомендуемое - 60 сек)</div>
+        </ng-container>
       </label>
     </div>
 

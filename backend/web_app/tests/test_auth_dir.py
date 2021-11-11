@@ -88,7 +88,7 @@ class TestAuthenticationDirectoryCreate:
         test_password = "Bazalt1!"
         query = """mutation {createAuthDir(
                       domain_name: "BAZALT"
-                      dc_str: "dc=bazalt,dc=team"
+                      dc_str: "bazalt.team"
                       verbose_name: "test"
                       directory_url: "ldap://192.168.14.167"
                       connection_type: LDAP
@@ -114,7 +114,7 @@ class TestAuthenticationDirectoryCreate:
         test_password = "bad"
         query = """mutation {createAuthDir(
                              domain_name: "BAZALT"
-                             dc_str: "dc=bazalt,dc=team"
+                             dc_str: "bazalt.team"
                              verbose_name: "test"
                              directory_url: "ldap://192.168.14.167"
                              connection_type: LDAP
@@ -141,7 +141,7 @@ class TestAuthenticationDirectoryCreate:
         """При создании с неправильным паролем статус должен быть FAILED."""
         query = """mutation {createAuthDir(
                               domain_name: "BAZALT"
-                              dc_str: "dc=bazalt,dc=team"
+                              dc_str: "bazalt.team"
                               verbose_name: "test"
                               directory_url: "ldap://127.0.0.1"
                               connection_type: LDAP
@@ -516,7 +516,7 @@ class TestAuthenticationDirectoryUtils:
         await group.delete()
 
     async def test_auth_dir_sync_new_only_group(
-        self, snapshot, fixt_auth_context, fixt_auth_dir_with_pass, fixt_local_group
+        self, fixt_auth_context, fixt_auth_dir_with_pass, fixt_local_group
     ):  # noqa
         """Должна создаться новая группа без пользователей."""
         query = """mutation{syncAuthDirGroupUsers(

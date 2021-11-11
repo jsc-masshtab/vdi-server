@@ -22,7 +22,7 @@
 
         <ng-container *ngIf="field.type === 'checkbox'">
           <label class="field-inline">
-            <mat-checkbox [color]="'warn'" [checked]="field.fieldValue" (change)="changeCheck($event,field.fieldName)"></mat-checkbox>
+            <mat-checkbox [color]="'warn'" [formControlName]="field.fieldName"  (change)="changeCheck(field)"></mat-checkbox>
             <p class="description">{{field.description}}</p>
           </label>
         </ng-container>

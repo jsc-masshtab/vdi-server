@@ -25,7 +25,11 @@ export interface IFinishPoolView {
     initial_size: number;
     vm_name_template: string; // auto
     create_thin_clones: boolean;// stat
-    prepare_vms: boolean;
+    enable_vms_remote_access: boolean;
+    vm_disconnect_action_timeout: number;
+    start_vms: boolean;
+    set_vms_hostnames: boolean;
+    include_vms_in_ad: boolean;
     ad_ou: string; // auto
     increase_step: number;// autos
 }
@@ -44,7 +48,11 @@ export interface IFinishPoolForm {
         increase_step: number; // auto
         reserve_size: number;
     }
+    vm_disconnect_action_timeout: number;
     create_thin_clones: boolean;// stat
-    prepare_vms: boolean;
+    enable_vms_remote_access: boolean;
+    start_vms: boolean;
+    set_vms_hostnames: boolean;
+    include_vms_in_ad: boolean;
     ad_ou: string; // auto
 }

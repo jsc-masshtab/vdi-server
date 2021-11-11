@@ -1,0 +1,28 @@
+<div class="linear-gradient">
+	<p class="login-title">
+		Virtual Desktop Infrastructure <b>VeiL</b>
+	</p>
+
+	<form [formGroup]="loginForm"  class="form">
+		<div class="form-message">
+			<p>Авторизация пользователя </p>
+			<p [style.font-size]="'10px'" [style.margin-top]="'10px'">(Заполните данные формы)</p>
+		</div>
+
+		<div class="form-fields">
+			<label class="field">
+				<p class="field-name">Логин</p>
+				<input type="text" placeholder="Введите имя пользователя" formControlName="username">
+			</label>
+
+			<label class="field">
+				<p class="field-name">Пароль</p>
+				<input type="password" placeholder="Введите пароль" formControlName="password">
+			</label>
+		</div>
+
+		<div class="form-actions">
+			<button type="submit" (click)="send()" class="form-btn">Войти</button>
+		</div>
+	</form>
+</div>

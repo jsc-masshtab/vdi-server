@@ -36,6 +36,20 @@ export class AddPoolService {
             `;
         }
 
+        if (type === 'data_pools') {
+            query = `query
+                controllers($id_: UUID, $resource_pool_id: UUID) {
+                    controller(id_: $id_) {
+                        id
+                        data_pools(resource_pool_id: $resource_pool_id) {
+                            id
+                            verbose_name
+                        }
+                    }
+                }
+            `;
+        }
+
         if (type === 'vms') {
             query = `query
                 controllers($id_: UUID, $resource_pool_id: UUID) {
@@ -52,10 +66,11 @@ export class AddPoolService {
 
         if (type === 'templates') {
             query = `query
-                controllers($id_: UUID, $resource_pool_id: UUID) {
+                controllers($id_: UUID, $resource_pool_id: UUID, $data_pool_id: UUID) {
                     controller(id_: $id_) {
                         id
-                        templates(resource_pool_id: $resource_pool_id) {
+                        templates(resource_pool_id: $resource_pool_id,
+                                  data_pool_id: $data_pool_id) {
                             id
                             verbose_name
                         }
@@ -94,7 +109,7 @@ export class AddPoolService {
                 $rds_vm: VmInput!
                 $controller_id: UUID!
                 $resource_pool_id: UUID!
-                $verbose_name: String!
+                $verbose_name: ShortString!
             ) {
                 addRdsPool(
                     connection_types: $connection_types
@@ -124,7 +139,7 @@ export class AddPoolService {
                 $vms: [VmInput!]!
                 $controller_id: UUID!
                 $resource_pool_id: UUID!
-                $verbose_name: String!
+                $verbose_name: ShortString!
             ) {
                 addStaticPool(
                     connection_types: $connection_types
@@ -153,23 +168,28 @@ export class AddPoolService {
                 $connection_types: [PoolConnectionTypes!]
                 $controller_id: UUID!
                 $resource_pool_id: UUID!
-                $verbose_name: String!
+                $data_pool_id: UUID!
+                $verbose_name: ShortString!
                 $template_id: UUID!
 
-                $vm_name_template: String!
+                $vm_name_template: ShortString!
 
                 $increase_step: Int
                 $reserve_size: Int
                 $total_size: Int
                 $initial_size: Int
                 $create_thin_clones: Boolean
-                $prepare_vms: Boolean
-                $ad_ou: String
+                $enable_vms_remote_access: Boolean
+                $start_vms: Boolean
+                $set_vms_hostnames: Boolean
+                $include_vms_in_ad: Boolean
+                $ad_ou: ShortString
             ) {
                 addDynamicPool(
                     connection_types: $connection_types
                     controller_id: $controller_id
                     resource_pool_id: $resource_pool_id
+                    datapool_id: $data_pool_id
                     verbose_name: $verbose_name
                     template_id: $template_id
 
@@ -180,7 +200,10 @@ export class AddPoolService {
                     total_size: $total_size
                     initial_size: $initial_size
                     create_thin_clones: $create_thin_clones
-                    prepare_vms: $prepare_vms
+                    enable_vms_remote_access: $enable_vms_remote_access
+                    start_vms: $start_vms
+                    set_vms_hostnames: $set_vms_hostnames
+                    include_vms_in_ad: $include_vms_in_ad
                     ad_ou: $ad_ou
                 ) {
                     ok
@@ -203,21 +226,23 @@ export class AddPoolService {
                 $connection_types: [PoolConnectionTypes!]
                 $controller_id: UUID!
                 $resource_pool_id: UUID!
-                $verbose_name: String!
+                $data_pool_id: UUID!
+                $verbose_name: ShortString!
                 $template_id: UUID!
 
-                $vm_name_template: String!
+                $vm_name_template: ShortString!
 
                 $increase_step: Int
                 $reserve_size: Int
                 $total_size: Int
                 $initial_size: Int
-                $ad_ou: String
+                $vm_disconnect_action_timeout: Int
             ) {
                 addDynamicPool(
                     connection_types: $connection_types
                     controller_id: $controller_id
                     resource_pool_id: $resource_pool_id
+                    datapool_id: $data_pool_id
                     verbose_name: $verbose_name
                     template_id: $template_id
 
@@ -227,9 +252,12 @@ export class AddPoolService {
                     reserve_size: $reserve_size
                     total_size: $total_size
                     initial_size: $initial_size
+                    vm_disconnect_action_timeout: $vm_disconnect_action_timeout
                     create_thin_clones: true
-                    prepare_vms: true
-                    ad_ou: $ad_ou
+                    enable_vms_remote_access: true
+                    start_vms: true
+                    set_vms_hostnames: false
+                    include_vms_in_ad: false
                     is_guest: true
                 ) {
                     ok

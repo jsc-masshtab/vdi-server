@@ -28,6 +28,7 @@ export class AuthenticationDirectoryDetailsComponent implements OnInit, OnDestro
 
   testing: boolean = false;
   tested: boolean = false;
+  synced: boolean = false;
   connected: boolean = false;
   public menuActive: string = 'info';
   public host: boolean = false;
@@ -44,7 +45,7 @@ export class AuthenticationDirectoryDetailsComponent implements OnInit, OnDestro
       }
     },
     {
-      title: 'Имя домена',
+      title: 'NetBIOS имя домена',
       property: 'domain_name',
       type: 'string',
       edit: 'openEditForm',
@@ -54,7 +55,7 @@ export class AuthenticationDirectoryDetailsComponent implements OnInit, OnDestro
       }
     },
     {
-      title: 'Класс объекта домена (dc)',
+      title: 'Полное имя домена',
       property: 'dc_str',
       type: 'string',
       edit: 'openEditForm',
@@ -72,6 +73,11 @@ export class AuthenticationDirectoryDetailsComponent implements OnInit, OnDestro
         tag: 'input',
         type: 'text'
       }
+    },
+    {
+      title: 'Тип службы',
+      property: 'directory_type',
+      type: 'string'
     },
     {
       title: 'Описание',
@@ -158,7 +164,7 @@ export class AuthenticationDirectoryDetailsComponent implements OnInit, OnDestro
   }
 
   public openEditForm(options): void {
-    let gqlType: string = 'String';
+    let gqlType: string = 'ShortString';
 
     if (options.form.gqlType) {
       gqlType = options.form.gqlType;
@@ -219,6 +225,25 @@ export class AuthenticationDirectoryDetailsComponent implements OnInit, OnDestro
       }, () => {
           this.testing = false;
           this.tested = false;
+      });
+  }
+
+  public syncOpenLDAPUsers(): void {
+    this.synced = false;
+    this.service.syncOpenLDAPUsers({
+        id: this.id,
+      })
+      .subscribe((data) => {
+        setTimeout(() => {
+          this.synced = true;
+          this.connected = data.syncOpenLDAPUsers.ok;
+        }, 1000);
+
+        setTimeout(() => {
+          this.synced = false;
+        }, 5000);
+      }, () => {
+          this.synced = false;
       });
   }
 

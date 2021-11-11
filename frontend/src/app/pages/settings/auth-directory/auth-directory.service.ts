@@ -59,29 +59,36 @@ export class AuthenticationDirectoryService {
         });
     }
 
-    public getAuthenticationDirectoryGroups(id: string): QueryRef<any, any> {
-        return this.service.watchQuery({
-            query: gql` query auth_dirs($id:UUID) {
+    public getAuthenticationDirectoryGroups(id: string, group_name: string = ''): QueryRef<any, any> {
+      return this.service.watchQuery({
+        query: gql` query auth_dirs($id:UUID, $group_name:ShortString) {
                             auth_dir(id: $id) {
                                 id
-                                possible_ad_groups {
+                                possible_ad_groups(group_name: $group_name) {
                                     ad_guid
                                     verbose_name
                                     ad_search_cn
                                 }
+                                assigned_ad_groups(group_name: $group_name) {
+                                    id
+                                    ad_search_cn
+                                    ad_guid
+                                    verbose_name
+                                }
                             }
                         }
                     `,
-            variables: {
-                method: 'GET',
-                id: `${id}`
-            }
-        });
+        variables: {
+          method: 'GET',
+          id: `${id}`,
+          group_name: `${group_name}`
+        }
+      });
     }
 
     // public getAuthenticationDirectoryGroupsMember(auth_dir_id: string, group_cn): QueryRef<any, any> {
     //     return this.service.watchQuery({
-    //         query: gql` query auth_dirs($auth_dir_id: UUID, $group_cn: String!) {
+    //         query: gql` query auth_dirs($auth_dir_id: UUID, $group_cn: ShortString!) {
     //                         group_members(auth_dir_id: $auth_dir_id, group_cn: $group_cn) {
     //                             email
     //                             last_name
@@ -100,7 +107,7 @@ export class AuthenticationDirectoryService {
 
     public getAllAuthenticationDirectory(): QueryRef<any, any> {
         return this.service.watchQuery({
-            query: gql` query auth_dirs($ordering:String) {
+            query: gql` query auth_dirs($ordering:ShortString) {
                             auth_dirs(ordering: $ordering) {
                                 id,
                                 domain_name,
@@ -127,14 +134,14 @@ export class AuthenticationDirectoryService {
         return this.service.mutate<any>({
             mutation: gql`
                         mutation auth_dirs(
-                            $domain_name: String!,
-                            $dc_str: String!,
-                            $verbose_name: String!,
-                            $directory_url: String!,
+                            $domain_name: ShortString!,
+                            $dc_str: ShortString!,
+                            $verbose_name: ShortString!,
+                            $directory_url: ShortString!,
                             $directory_type: DirectoryTypes,
-                            $description: String,
-                            $service_username: String,
-                            $service_password: String
+                            $description: ShortString,
+                            $service_username: ShortString,
+                            $service_password: ShortString
                         ){
                             createAuthDir(
                                 domain_name :$domain_name,
@@ -194,6 +201,22 @@ export class AuthenticationDirectoryService {
         }).pipe(map(data => data.data));
     }
 
+    public syncOpenLDAPUsers(props) {
+        return this.service.mutate<any>({
+            mutation: gql`
+                mutation auth_dirs($id: UUID!) {
+                    syncOpenLDAPUsers(auth_dir_id: $id, ou: "people") {
+                        ok
+                    }
+                }
+            `,
+            variables: {
+                method: 'POST',
+                ...props
+            }
+        }).pipe(map(data => data.data));
+    }
+
     public deleteAuthDir(props) {
         return this.service.mutate<any>({
             mutation: gql`
@@ -228,9 +251,9 @@ export class AuthenticationDirectoryService {
     public addAuthDirMapping(props, id: string) {
         return this.service.mutate<any>({
             mutation: gql`
-                mutation auth_dirs($id: UUID!, $description: String,$verbose_name: String!,
+                mutation auth_dirs($id: UUID!, $description: ShortString,$verbose_name: ShortString!,
                                 $value_type: ValueTypes, $groups: [UUID!]!,
-                                $values: [String!]!, $priority: Int) {
+                                $values: [ShortString!]!, $priority: Int) {
                     addAuthDirMapping(id: $id, description: $description,verbose_name: $verbose_name,
                         value_type: $value_type, groups: $groups, values: $values, priority: $priority) {
                         ok
@@ -248,9 +271,9 @@ export class AuthenticationDirectoryService {
     public updateMapping(props, id: string, mapping_id: string) {
       return this.service.mutate<any>({
           mutation: gql`
-              mutation auth_dirs($id: UUID!, $description: String,$verbose_name: String!,
+              mutation auth_dirs($id: UUID!, $description: ShortString,$verbose_name: ShortString!,
                               $value_type: ValueTypes, $groups: [UUID!]!,
-                              $values: [String!]!, $priority: Int, $mapping_id: UUID!) {
+                              $values: [ShortString!]!, $priority: Int, $mapping_id: UUID!) {
                     editAuthDirMapping(id: $id, description: $description,verbose_name: $verbose_name,
                       value_type: $value_type, groups: $groups, values: $values, priority: $priority,
                       mapping_id: $mapping_id) {
@@ -288,10 +311,10 @@ export class AuthenticationDirectoryService {
         return this.service.mutate<any>({
             mutation: gql`
                 mutation auth_dirs(
-                    $group_ad_cn: String!,
+                    $group_ad_cn: ShortString!,
                     $auth_dir_id: UUID!,
                     $group_ad_guid: UUID!,
-                    $group_verbose_name: String!){
+                    $group_verbose_name: ShortString!){
 
                     syncAuthDirGroupUsers(
                         auth_dir_id: $auth_dir_id,

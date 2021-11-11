@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 import re
+from operator import itemgetter
 
 import graphene
 from graphene import Enum as GrapheneEnum
 
 from common.database import db
+from common.graphene_utils import ShortString
 from common.languages import _local_
 from common.models.auth import Group
 from common.models.authentication_directory import AuthenticationDirectory, Mapping
@@ -94,16 +96,16 @@ class MappingGroupType(graphene.ObjectType):
     """
 
     id = graphene.UUID(required=True)
-    verbose_name = graphene.String()
-    description = graphene.String()
+    verbose_name = graphene.Field(ShortString)
+    description = graphene.Field(ShortString)
 
 
 class MappingType(graphene.ObjectType):
     id = graphene.UUID()
-    verbose_name = graphene.String()
-    description = graphene.String()
+    verbose_name = graphene.Field(ShortString)
+    description = graphene.Field(ShortString)
     value_type = MappingTypesGraphene()
-    values = graphene.List(graphene.String)
+    values = graphene.List(ShortString)
     priority = graphene.Int()
     status = StatusGraphene()
 
@@ -125,8 +127,8 @@ class MappingType(graphene.ObjectType):
 
 class AuthenticationDirectoryGroupType(graphene.ObjectType):
     ad_guid = graphene.UUID()
-    verbose_name = graphene.String()
-    ad_search_cn = graphene.String()
+    verbose_name = graphene.Field(ShortString)
+    ad_search_cn = graphene.Field(ShortString)
     id = graphene.UUID()
 
 
@@ -134,25 +136,25 @@ class AuthenticationDirectorySyncGroupType(graphene.InputObjectType):
     """Тип для мутации синхронизации групп/пользователей из Authentication Directory."""
 
     group_ad_guid = graphene.UUID(required=True)
-    group_verbose_name = graphene.String(required=True)
-    group_ad_cn = graphene.String(required=True)
+    group_verbose_name = ShortString(required=True)
+    group_ad_cn = ShortString(required=True)
 
 
 class AuthenticationDirectoryType(graphene.ObjectType):
     """Служба каталогов."""
 
     id = graphene.UUID(description="Внутренний идентификатор")
-    verbose_name = graphene.String(description="Имя")
-    directory_url = graphene.String(description="Адрес службы каталогов")
+    verbose_name = ShortString(description="Имя")
+    directory_url = ShortString(description="Адрес службы каталогов")
     connection_type = ConnectionTypesGraphene(description="Тип подключения")
-    description = graphene.String(description="Описание")
+    description = ShortString(description="Описание")
     directory_type = DirectoryTypesGraphene(description="Тип службы каталогов")
-    domain_name = graphene.String(description="Имя контроллера доменов")
-    dc_str = graphene.String(description="Класс объекта домена")
-    service_username = graphene.String(
+    domain_name = ShortString(description="Имя контроллера доменов")
+    dc_str = ShortString(description="Класс объекта домена")
+    service_username = ShortString(
         description="Пользователь имеющий права для управления AD"
     )
-    service_password = graphene.String(
+    service_password = ShortString(
         description="Пароль пользователя имеющего права для управления AD"
     )
     status = StatusGraphene(description="Статус")
@@ -163,8 +165,8 @@ class AuthenticationDirectoryType(graphene.ObjectType):
         offset=graphene.Int(default_value=0),
     )
 
-    assigned_ad_groups = graphene.List(AuthenticationDirectoryGroupType)
-    possible_ad_groups = graphene.List(AuthenticationDirectoryGroupType)
+    assigned_ad_groups = graphene.List(AuthenticationDirectoryGroupType, group_name=ShortString(default_value=""))
+    possible_ad_groups = graphene.List(AuthenticationDirectoryGroupType, group_name=ShortString(default_value=""))
 
     async def resolve_service_password(self, _info):
         """Will showed dummy value for not displayed field."""
@@ -174,17 +176,18 @@ class AuthenticationDirectoryType(graphene.ObjectType):
         auth_dir = await AuthenticationDirectory.get(self.id)
         return await auth_dir.mappings_paginator(limit=limit, offset=offset)
 
-    async def resolve_assigned_ad_groups(self, _info):
+    async def resolve_assigned_ad_groups(self, _info, group_name):
         """Группы созданные при предыдущих синхронизациях."""
         auth_dir = await AuthenticationDirectory.get(self.id)
-        return await auth_dir.assigned_ad_groups
+        return await auth_dir.assigned_ad_groups(group_name)
 
-    async def resolve_possible_ad_groups(self, _info):
+    async def resolve_possible_ad_groups(self, _info, group_name):
         """Получить список доступных групп из AuthenticationDirectory."""
         auth_dir = await AuthenticationDirectory.get(self.id)
-        groups = await auth_dir.get_possible_ad_groups()
-        if groups:
-            return groups
+        groups = await auth_dir.get_possible_ad_groups(group_name=group_name)
+        sorted_groups = sorted(groups, key=itemgetter("verbose_name"))
+        if sorted_groups:
+            return sorted_groups
         return list()
 
 
@@ -193,7 +196,7 @@ class AuthenticationDirectoryQuery(graphene.ObjectType):
         AuthenticationDirectoryType,
         limit=graphene.Int(default_value=100),
         offset=graphene.Int(default_value=0),
-        ordering=graphene.String(),
+        ordering=ShortString(),
     )
     auth_dir = graphene.Field(AuthenticationDirectoryType, id=graphene.UUID())
 
@@ -227,23 +230,15 @@ class CreateAuthenticationDirectoryMutation(
     graphene.Mutation, AuthenticationDirectoryValidator
 ):
     class Arguments:
-        verbose_name = graphene.String(required=True, description="Имя")
-        description = graphene.String(description="Описание")
-        directory_url = graphene.String(
-            required=True, description="Адрес службы каталогов"
-        )
+        verbose_name = ShortString(required=True, description="Имя")
+        description = ShortString(description="Описание")
+        directory_url = ShortString(required=True, description="Адрес службы каталогов")
         connection_type = ConnectionTypesGraphene(description="Тип подключения")
         directory_type = DirectoryTypesGraphene(description="Тип службы каталогов")
-        domain_name = graphene.String(
-            required=True, description="Имя контроллера доменов"
-        )
-        dc_str = graphene.String(required=True, description="Класс объекта домена")
-        service_username = graphene.String(
-            description="пользователь имеющий права для управления AD"
-        )
-        service_password = graphene.String(
-            description="пароль пользователя имеющего права для управления AD"
-        )
+        domain_name = ShortString(required=True, description="NetBIOS — имя домена")
+        dc_str = ShortString(required=True, description="FQDN — полное имя домена")
+        service_username = ShortString(description="пользователь имеющий права для управления AD")
+        service_password = ShortString(description="пароль пользователя имеющего права для управления AD")
 
     auth_dir = graphene.Field(lambda: AuthenticationDirectoryType)
     ok = graphene.Boolean(default_value=False)
@@ -301,19 +296,15 @@ class UpdateAuthenticationDirectoryMutation(
 ):
     class Arguments:
         id = graphene.UUID(required=True, description="Внутренний идентификатор")
-        verbose_name = graphene.String(description="Имя")
-        directory_url = graphene.String(description="Адрес службы каталогов")
+        verbose_name = ShortString(description="Имя")
+        directory_url = ShortString(description="Адрес службы каталогов")
         connection_type = ConnectionTypesGraphene(description="Тип подключения")
-        description = graphene.String(description="Описание")
+        description = ShortString(description="Описание")
         directory_type = DirectoryTypesGraphene(description="Тип службы каталогов")
-        domain_name = graphene.String(description="Имя контроллера доменов")
-        dc_str = graphene.String(description="Класс объекта домена")
-        service_username = graphene.String(
-            description="Пользователь имеющий права для управления AD"
-        )
-        service_password = graphene.String(
-            description="Пароль пользователя имеющего права для управления AD"
-        )
+        domain_name = ShortString(description="NetBIOS — имя домена")
+        dc_str = ShortString(description="FQDN — полное имя домена")
+        service_username = ShortString(description="Пользователь имеющий права для управления AD")
+        service_password = ShortString(description="Пароль пользователя имеющего права для управления AD")
 
     auth_dir = graphene.Field(lambda: AuthenticationDirectoryType)
     ok = graphene.Boolean(default_value=False)
@@ -345,15 +336,15 @@ class AddAuthDirMappingMutation(graphene.Mutation, AuthenticationDirectoryValida
         id = graphene.UUID(
             required=True, description="Внутренний идентификатор службы каталогов"
         )
-        verbose_name = graphene.String(required=True)
+        verbose_name = ShortString(required=True)
         groups = graphene.NonNull(graphene.List(graphene.NonNull(graphene.UUID)))
-        values = graphene.NonNull(graphene.List(graphene.NonNull(graphene.String)))
+        values = graphene.NonNull(graphene.List(graphene.NonNull(ShortString)))
         # Это именно список, потому что на ECP сейчас передается список строк.
         # В БД именно JSON, потому что на ECP - JSON.
 
         value_type = MappingTypesGraphene(default_value=Mapping.ValueTypes.USER.value)
         priority = graphene.Int(default_value=0)
-        description = graphene.String()
+        description = ShortString()
 
     auth_dir = graphene.Field(AuthenticationDirectoryType)
     ok = graphene.Boolean(default_value=False)
@@ -400,12 +391,12 @@ class EditAuthDirMappingMutation(graphene.Mutation, AuthenticationDirectoryValid
         id = graphene.UUID(required=True)
         mapping_id = graphene.UUID(required=True)
 
-        verbose_name = graphene.String()
+        verbose_name = ShortString()
         groups = graphene.List(graphene.UUID)
-        values = graphene.List(graphene.String)
+        values = graphene.List(ShortString)
         value_type = MappingTypesGraphene()
         priority = graphene.Int()
-        description = graphene.String()
+        description = ShortString()
 
     auth_dir = graphene.Field(AuthenticationDirectoryType)
     ok = graphene.Boolean(default_value=False)
@@ -466,6 +457,22 @@ class SyncExistingAuthenticationDirectoryGroupUsers(graphene.Mutation):
         return SyncAuthenticationDirectoryGroupUsers(ok=True)
 
 
+class SyncAuthenticationDirectoryOpenLDAPUsers(graphene.Mutation):
+    class Arguments:
+        auth_dir_id = graphene.UUID(required=True)
+        ou = graphene.String(required=True)
+
+    ok = graphene.Boolean()
+
+    @security_administrator_required
+    async def mutate(self, _info, auth_dir_id, ou, **kwargs):
+        auth_dir = await AuthenticationDirectory.get(auth_dir_id)
+        if not auth_dir:
+            raise SilentError(_local_("No such Authentication Directory."))
+        ok = await auth_dir.sync_openldap_users(ou=ou)
+        return SyncAuthenticationDirectoryOpenLDAPUsers(ok=ok)
+
+
 class AuthenticationDirectoryMutations(graphene.ObjectType):
     createAuthDir = CreateAuthenticationDirectoryMutation.Field()
     updateAuthDir = UpdateAuthenticationDirectoryMutation.Field()
@@ -476,6 +483,7 @@ class AuthenticationDirectoryMutations(graphene.ObjectType):
     editAuthDirMapping = EditAuthDirMappingMutation.Field()
     syncAuthDirGroupUsers = SyncAuthenticationDirectoryGroupUsers.Field()
     syncExistAuthDirGroupUsers = SyncExistingAuthenticationDirectoryGroupUsers.Field()
+    syncOpenLDAPUsers = SyncAuthenticationDirectoryOpenLDAPUsers.Field()
 
 
 auth_dir_schema = graphene.Schema(

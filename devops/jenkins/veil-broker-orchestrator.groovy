@@ -32,14 +32,15 @@ pipeline {
     }
 
     parameters {
-        string(      name: 'BRANCH',               defaultValue: 'dev',              description: 'branch')
-        choice(      name: 'REPO',                 choices: ['test', 'prod-30', 'prod-31'],     description: 'repo for uploading')
-        string(      name: 'VERSION',              defaultValue: '3.1.0',            description: 'base version')
-        string(      name: 'AGENT',                defaultValue: 'master',           description: 'jenkins build agent')
-        booleanParam(name: 'BACKEND',              defaultValue: false,              description: 'veil-broker-backend')
-        booleanParam(name: 'FRONTEND',             defaultValue: false,              description: 'veil-broker-frontend')
-        booleanParam(name: 'DOCS',                 defaultValue: false,              description: 'veil-broker-docs')
-        booleanParam(name: 'ISO',                  defaultValue: false,              description: 'veil-broker-iso')
+        string(      name: 'BRANCH',               defaultValue: 'dev',                     description: 'branch')
+        choice(      name: 'REPO',                 choices: ['test', 'prod-30', 'prod-31'], description: 'repo for uploading')
+        string(      name: 'VERSION',              defaultValue: '3.1.1',                   description: 'base version')
+        string(      name: 'AGENT',                defaultValue: 'master',                  description: 'jenkins build agent')
+        booleanParam(name: 'BACKEND',              defaultValue: false,                     description: 'veil-broker-backend')
+        booleanParam(name: 'FRONTEND',             defaultValue: false,                     description: 'veil-broker-frontend')
+        booleanParam(name: 'DOCS',                 defaultValue: false,                     description: 'veil-broker-docs')
+        booleanParam(name: 'THINCLIENT',           defaultValue: false,                     description: 'veil-connect-web')
+        booleanParam(name: 'ISO',                  defaultValue: false,                     description: 'veil-broker-iso')
     }
 
     stages {
@@ -89,6 +90,19 @@ pipeline {
                     }
                     steps {
                         build job: 'vdi-docs', parameters: [string(name: 'BRANCH', value: "${BRANCH}"), string(name: 'REPO', value: "${REPO}"), string(name: 'VERSION', value: "${VERSION}")]
+                    }
+                }
+
+                stage ('veil-connect-web') {
+                    when {
+                        anyOf {
+                            changeset "frontend/projects/thin-client/**"
+                            changeset "devops/deb/veil-connect-web/**"
+                            expression { params.THINCLIENT == true }
+                        }
+                    }
+                    steps {
+                        build job: 'vdi-thin-client-web', parameters: [string(name: 'BRANCH', value: "${BRANCH}"), string(name: 'REPO', value: "${REPO}"), string(name: 'VERSION', value: "${VERSION}")]
                     }
                 }
             }

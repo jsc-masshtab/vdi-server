@@ -7,10 +7,10 @@ from tornado import gen
 
 from common.settings import VEIL_WS_MAX_TIME_TO_WAIT, PAM_AUTH
 from web_app.pool.schema import pool_schema
-from web_app.tests.utils import execute_scheme
+from web_app.tests.utils import execute_scheme, ExecError
 from common.models.pool import Pool
 from common.models.task import TaskStatus, Task
-
+from common.veil.veil_gino import Status
 from common.veil.veil_redis import wait_for_task_result
 
 from common.models.vm import Vm
@@ -95,7 +95,16 @@ async def test_update_automated_pool(
             reserve_size: 1,
             total_size: 4,
             increase_step: 2,
-            keep_vms_on: true){
+            keep_vms_on: true,
+            vm_action_upon_user_disconnect: SHUTDOWN,
+            vm_disconnect_action_timeout: 55,
+            vm_name_template: "vdi-test",
+            ad_ou: "",
+            create_thin_clones: true,
+            enable_vms_remote_access: true,
+            start_vms: true,
+            set_vms_hostnames: false,
+            include_vms_in_ad: false){
             ok
         }
     }""" % (
@@ -104,6 +113,24 @@ async def test_update_automated_pool(
     )
     executed = await execute_scheme(pool_schema, qu, context=fixt_auth_context)
     assert executed["updateDynamicPool"]["ok"]
+
+    # Check
+    qu = """
+    {
+        pool(pool_id: "%s") {
+            status
+            reserve_size
+            total_size
+            increase_step
+            keep_vms_on
+            pool_type
+            vm_disconnect_action_timeout
+            vm_action_upon_user_disconnect
+        }
+    }
+    """ % pool_id
+    executed = await execute_scheme(pool_schema, qu, context=fixt_auth_context)
+    snapshot.assert_match(executed)
 
     # decrease total_size (Это особый случай и запустит задачу в воркере)
     qu = (
@@ -194,6 +221,32 @@ class PoolTestCase(VdiHttpTestCase):
             self.assertEqual(2, vms_amount)  # Тут ожидаем, что уже 2
 
 
+@pytest.mark.asyncio
+async def test_copy_automated_pool(
+    fixt_launch_workers,
+    fixt_db,
+    fixt_create_automated_pool,  # noqa
+    fixt_auth_context,
+):  # noqa
+    """Create automated pool, update this pool, remove this pool"""
+
+    # check that pool was successfully created'
+    assert fixt_create_automated_pool["is_pool_successfully_created"]
+
+    pool_id = fixt_create_automated_pool["id"]
+
+    qu = """
+    mutation {
+        copyDynamicPool(
+            pool_id: "%s"){
+            pool_settings
+        }
+    }""" % (
+        pool_id,
+    )
+    executed = await execute_scheme(pool_schema, qu, context=fixt_auth_context)
+    assert executed["copyDynamicPool"]["pool_settings"]
+
 # ----------------------------------------------
 
 
@@ -217,24 +270,32 @@ async def test_create_static_pool(
     assert is_vm_successfully_prepared
 
     # get pool info
-    qu = (
-        """{
-      pool(pool_id: "%s") {
-        pool_type
-          vms{
-            verbose_name
-        }
-      }
-    }"""
-        % pool_id
-    )
-    executed = await execute_scheme(pool_schema, qu, context=fixt_auth_context)  # noqa
-    assert len(executed["pool"]["vms"]) == 1
+    ordering_list = [
+        "verbose_name",
+        "user",
+        "status",
+        "qemu_state",
+        "parent_name",
+    ]
+    for ordering in ordering_list:
+        qu = (
+            """{
+          pool(pool_id: "%s") {
+            pool_type
+              vms (ordering: "%s"){
+                verbose_name
+            }
+          }
+        }"""
+            % (pool_id, ordering)
+        )
+        executed = await execute_scheme(pool_schema, qu, context=fixt_auth_context)  # noqa
+        assert len(executed["pool"]["vms"]) == 1
 
 
 @pytest.mark.asyncio
 async def test_update_static_pool(
-    fixt_launch_workers, fixt_db, fixt_create_static_pool, fixt_auth_context  # noqa
+    snapshot, fixt_launch_workers, fixt_db, fixt_create_static_pool, fixt_auth_context  # noqa
 ):  # noqa
     """Create static pool, update this pool, remove this pool"""
     pool_id = fixt_create_static_pool["id"]
@@ -242,7 +303,11 @@ async def test_update_static_pool(
     new_pool_name = "test-pool-{}".format(str(uuid.uuid4())[:7])
     qu = """
     mutation {
-        updateStaticPool(pool_id: "%s", verbose_name: "%s", keep_vms_on: true){
+        updateStaticPool(
+            pool_id: "%s",
+            verbose_name: "%s",
+            keep_vms_on: true,
+            vm_disconnect_action_timeout: 55){
          ok
     }
     }""" % (
@@ -251,6 +316,21 @@ async def test_update_static_pool(
     )
     executed = await execute_scheme(pool_schema, qu, context=fixt_auth_context)
     assert executed["updateStaticPool"]["ok"]
+
+    # Check
+    qu = """
+    {
+        pool(pool_id: "%s") {
+            status
+            keep_vms_on
+            pool_type
+            vm_disconnect_action_timeout
+            vm_action_upon_user_disconnect
+        }
+    }
+    """ % pool_id
+    executed = await execute_scheme(pool_schema, qu, context=fixt_auth_context)
+    snapshot.assert_match(executed)
 
 
 @pytest.mark.asyncio
@@ -270,9 +350,13 @@ async def test_remove_and_add_vm_in_static_pool(
         """{
       pool(pool_id: "%s") {
         pool_type
-          vms{
-            id
-            verbose_name
+        users_count
+        users(ordering: "id") {
+                    id
+        }
+        vms {
+          id
+          verbose_name
         }
       }
     }"""
@@ -319,6 +403,66 @@ async def test_remove_and_add_vm_in_static_pool(
     )
     executed = await execute_scheme(pool_schema, qu, context=fixt_auth_context)
     assert executed["addVmsToStaticPool"]["ok"]
+
+
+@pytest.mark.asyncio
+async def test_clear_pool_errors(
+    fixt_launch_workers,
+    fixt_db,
+    fixt_controller,  # noqa
+    fixt_create_static_pool,
+    fixt_auth_context,
+):  # noqa
+    """Create automated pool, make request to check data,
+    remove a vm from this pool, add the removed vm back to this pool, remove this pool"""
+    pool_id = fixt_create_static_pool["id"]
+    pool = await Pool.get(pool_id)
+    await pool.update(status=Status.FAILED).apply()
+    query = (
+        """mutation{
+                    clearPool(pool_id: "%s")
+                        {
+                          ok
+                        }
+                    }"""
+        % pool_id
+    )
+    executed = await execute_scheme(pool_schema, query, context=fixt_auth_context)
+    assert executed["clearPool"]["ok"]
+
+    await pool.update(status=Status.SERVICE).apply()
+    query = (
+        """mutation{
+                    clearPool(pool_id: "%s")
+                        {
+                          ok
+                        }
+                    }"""
+        % pool_id
+    )
+    try:
+        await execute_scheme(pool_schema, query, context=fixt_auth_context)
+    except ExecError as E:
+        assert "находится в сервисном режиме." in str(E)
+    else:
+        raise AssertionError
+
+    await pool.update(status=Status.ACTIVE).apply()
+    query = (
+        """mutation{
+                    clearPool(pool_id: "%s")
+                        {
+                          ok
+                        }
+                    }"""
+        % pool_id
+    )
+    try:
+        await execute_scheme(pool_schema, query, context=fixt_auth_context)
+    except ExecError as E:
+        assert "уже активирован." in str(E)
+    else:
+        raise AssertionError
 
 
 @pytest.mark.asyncio
@@ -425,10 +569,19 @@ async def test_pools_ordering(
                     verbose_name
                     pool_type
                     resource_pool_id
+                    resource_pool {
+                      verbose_name
+                    }
+                    datapool {
+                      verbose_name
+                    }
                     template_id
+                    template {
+                      verbose_name
+                    }
                     initial_size
                     os_type
-                    assigned_groups {
+                    assigned_groups(ordering: "verbose_name") {
                       id
                       verbose_name
                     }
@@ -436,8 +589,33 @@ async def test_pools_ordering(
                       id
                       verbose_name
                     }
+                    users_count(entitled: false)
+                    users(entitled: false) {
+                      id
+                    }
                     assigned_connection_types
                     possible_connection_types
+                    vm_amount
+                    vms {
+                      verbose_name
+                      assigned_users {
+                        id
+                      }
+                      assigned_users_count
+                      count
+                      events {
+                        message
+                      }
+                      backups {
+                        filename
+                      }
+                      # spice_connection {
+                      #   connection_url
+                      # }
+                      # vnc_connection {
+                      #   connection_url
+                      # }
+                    }
                  }
                 }
             """

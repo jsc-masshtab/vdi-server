@@ -94,11 +94,51 @@ class TestGroupSchema:
         else:
             raise AssertionError
 
+    async def test_group_create_empty_name(self, snapshot, fixt_auth_context):  # noqa
+        query = """mutation{createGroup(verbose_name: ""){
+                          group{
+                            verbose_name,
+                            assigned_users{
+                              email
+                            }
+                          },
+                          ok
+                        }}"""
+
+        # Ожидаем исключение
+        try:
+            await execute_scheme(group_schema, query, context=fixt_auth_context)
+        except ExecError as E:
+            assert "имя пустое." in str(E)
+        else:
+            raise AssertionError
+
+    async def test_group_create_long_name(self, snapshot, fixt_auth_context):  # noqa
+        name = "test" * 33
+        query = """mutation{createGroup(verbose_name: "%s"){
+                          group{
+                            verbose_name,
+                            assigned_users{
+                              email
+                            }
+                          },
+                          ok
+                        }}""" % name
+
+        # Ожидаем исключение
+        try:
+            await execute_scheme(group_schema, query, context=fixt_auth_context)
+        except ExecError as E:
+            assert "имя должно быть <= 128 символов." in str(E)
+        else:
+            raise AssertionError
+
     async def test_group_edit(self, snapshot, fixt_auth_context):  # noqa
 
         query = """mutation {
                       updateGroup(id: "10913d5d-ba7a-4049-88c5-769267a6cbe4",
-                        verbose_name: "test group updated") {
+                        verbose_name: "test group updated",
+                        description: "test") {
                         group {
                           verbose_name
                           assigned_users {

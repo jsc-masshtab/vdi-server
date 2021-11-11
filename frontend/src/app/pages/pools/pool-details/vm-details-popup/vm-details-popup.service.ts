@@ -12,7 +12,7 @@ export class VmDetailsPopupService {
   public convertToTemplate(vm_id: string, data) {
     return this.service.mutate<any>({
       mutation: gql`
-        mutation pools($verbose_name: String!, $vm_id: UUID!,$controller_id: UUID!) {
+        mutation pools($verbose_name: ShortString!, $vm_id: UUID!,$controller_id: UUID!) {
             convertToTemplate(verbose_name: $verbose_name, vm_id: $vm_id, controller_id: $controller_id){
             ok
           }

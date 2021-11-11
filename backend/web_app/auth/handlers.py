@@ -3,6 +3,7 @@ from abc import ABC
 
 from common.languages import _local_
 from common.log.journal import system_logger
+from common.models.active_tk_connection import ActiveTkConnection
 from common.models.auth import User
 from common.models.authentication_directory import AuthenticationDirectory
 from common.settings import EXTERNAL_AUTH, LOCAL_AUTH, PAM_AUTH
@@ -65,6 +66,12 @@ class AuthHandler(BaseHttpHandler, ABC):
             await User.check_2fa(username, two_factor_code)
 
             access_token = encode_jwt(account_name, domain=domain_name)
+
+            if self.client_type == "thin-client":
+                thin_client_limit_exceeded = await ActiveTkConnection.thin_client_limit_exceeded()
+                if thin_client_limit_exceeded:
+                    raise RuntimeError(_local_("Thin client limit exceeded."))
+
             await User.login(
                 username=account_name,
                 token=access_token.get("access_token"),
@@ -73,29 +80,37 @@ class AuthHandler(BaseHttpHandler, ABC):
                 client_type=self.client_type,
             )
             response = {"data": access_token}
+
+        except RuntimeError as auth_error:
+            await self._create_error_msg_and_log(auth_error)
+            response = {"errors": [{"message": str(auth_error)}]}
+            self.set_status(403)
         except AssertionError as auth_error:
-            error_description = "IP: {}\n{}".format(self.remote_ip, auth_error)
-            entity = {"entity_type": EntityType.SECURITY, "entity_uuid": None}
-            error_message = _local_("Authentication failed for user: {}.").format(
-                self.args.get("username", "unknown")
-            )
-            await system_logger.warning(
-                message=error_message, entity=entity, description=error_description
-            )
+            error_message = await self._create_error_msg_and_log(auth_error)
             response = {"errors": [{"message": error_message}]}
             self.set_status(200)
         except SilentError as auth_error:
-            error_description = "IP: {}\n{}".format(self.remote_ip, auth_error)
+            error_description = "IP: {}\n{}".format(self.remote_ip, str(auth_error))
             entity = {"entity_type": EntityType.SECURITY, "entity_uuid": None}
-            error_message = _local_("One-time password error for user: {}.").format(
-                self.args.get("username", "unknown")
-            )
             await system_logger.warning(
-                message=error_message, entity=entity, description=error_description
+                message=_local_("Authentication failed for user: {}.").format(self.args.get("username", "unknown")),
+                entity=entity, description=error_description
             )
-            response = {"errors": [{"message": error_message}]}
+            response = {"errors": [{"message": str(auth_error)}]}
             self.set_status(200)
         return await self.log_finish(response)
+
+    async def _create_error_msg_and_log(self, auth_error):
+        error_description = "IP: {}\n{}".format(self.remote_ip, str(auth_error))
+        entity = {"entity_type": EntityType.SECURITY, "entity_uuid": None}
+        error_message = _local_("Authentication failed for user: {}.").format(
+            self.args.get("username", "unknown")
+        )
+        await system_logger.warning(
+            message=error_message, entity=entity, description=error_description
+        )
+
+        return error_message
 
 
 class LogoutHandler(BaseHttpHandler, ABC):
@@ -110,7 +125,7 @@ class LogoutHandler(BaseHttpHandler, ABC):
 class VersionHandler(BaseHttpHandler, ABC):
     async def get(self):
         info_dict = {
-            "version": "3.1.1",
+            "version": "3.1.2",
             "year": "2019-2021",
             "url": "https://mashtab.org",
             "copyright": "© mashtab.org",

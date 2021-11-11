@@ -1,0 +1,22 @@
+<div class="messenger-container">
+    <div class="messenger">
+      <div #messenger class="messenger-messages">
+
+        <div class="messenger-message" *ngFor="let message of messages" [class.message-justify]="message.self">
+          <div class="message-content">
+            <span class="message-sender">{{ message.sender }}:</span>
+            <span>{{ message.text }}</span>
+            <span class="message-time">{{ message.time }}</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="messenger-controls">
+        <textarea [formControl]="message" (keydown)="keyEvent($event)" [focusMe]="true"></textarea>
+        <button type="button" (click)="sendMessage()">
+          <span>Отправить</span> 
+          <small>(Ctrl + Enter)</small>
+        </button>
+      </div>
+    </div>
+  </div>

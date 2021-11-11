@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 import asyncio
 import json
-import time
+import weakref
 from enum import Enum
 from functools import wraps
 
 from yaaredis import StrictRedis
-from yaaredis.exceptions import RedisError
+from yaaredis.exceptions import ConnectionError, RedisError
 
 import common.settings as settings
 from common.languages import _local_
@@ -31,44 +31,166 @@ class ThinClientCmd(Enum):
     DISCONNECT = "DISCONNECT"
 
 
+class VeilRedisSubscriber:
+    """Подписчик на события, получаемые клиентом редиса."""
+
+    def __init__(self, channels, client):
+        self.channels = channels
+        self._weak_ref_to_client = weakref.ref(client)  # держим ссылку для авто отписки в __exit__
+        self._msg_queue = asyncio.Queue(maxsize=1000)
+
+        client.add_subscriber(subscriber=self)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, traceback):
+        client = self._weak_ref_to_client()
+        if client is not None:
+            client.remove_subscriber(subscriber=self)
+
+    def put_msg(self, redis_message):
+        self._msg_queue.put_nowait(redis_message)
+
+    async def get_msg(self):
+        msg = await self._msg_queue.get()
+        return msg
+
+
+class VeilRedisClient(StrictRedis):
+    """Клиент редиса."""
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+        self.redis_receiving_messages_cor = None
+        self._subscribers = []  # list of VeilRedisSubscribers
+
+    def create_subscriber(self, channels):
+        subscriber = VeilRedisSubscriber(channels=channels, client=self)
+        return subscriber
+
+    def add_subscriber(self, subscriber):
+        self._subscribers.append(subscriber)
+
+    def remove_subscriber(self, subscriber):
+        self._subscribers.remove(subscriber)
+
+    def send_message_to_subscribers(self, channel, redis_message):
+        """Сообщения передаются в очереди подписчиков в текущем процессе."""
+        for subscriber in self._subscribers:
+            if channel in subscriber.channels:
+                try:
+                    subscriber.put_msg(redis_message)
+                except asyncio.QueueFull:
+                    pass
+
+
 # глобальный обьект клиента редис
 A_REDIS_CLIENT = None
 
 
 def redis_init():
     global A_REDIS_CLIENT
-    A_REDIS_CLIENT = StrictRedis(host=settings.REDIS_HOST, port=settings.REDIS_PORT,
-                                 db=settings.REDIS_DB, password=settings.REDIS_PASSWORD)
+    A_REDIS_CLIENT = VeilRedisClient(host=settings.REDIS_HOST, port=settings.REDIS_PORT,
+                                     db=settings.REDIS_DB, password=settings.REDIS_PASSWORD,
+                                     max_connections=settings.REDIS_MAX_CLIENT_CONN)
+
+    loop = asyncio.get_event_loop()
+    A_REDIS_CLIENT.redis_receiving_messages_cor = loop.create_task(redis_receiving_messages())
 
 
-def redis_deinit():
+async def redis_deinit():
     global A_REDIS_CLIENT
+    if A_REDIS_CLIENT.redis_receiving_messages_cor:
+        A_REDIS_CLIENT.redis_receiving_messages_cor.cancel()
+        A_REDIS_CLIENT.redis_receiving_messages_cor = None
     del A_REDIS_CLIENT  # В доке не нашел описания способа релиза ресурсов. Судя по всему это происходит автоматом
     # во время разрушения объекта.
+
+
+def redis_get_subscriber(channels):
+    return A_REDIS_CLIENT.create_subscriber(channels)
 
 
 def redis_get_pubsub():
     return A_REDIS_CLIENT.pubsub()
 
 
+async def redis_receiving_messages():
+    """Получение сообщений от редиса.
+
+    Получаем сообщния в одном месте в текущем процессе и затем раздаем их желающим
+    в очереди. Сделано так для того, чтобы не приходилось подключаться к редису для каждого тонкого клиета.
+    (Множество подключений - это во-первых многократный дубляж запрашиваемой информации, во-вторых
+    вероятность превысить лимит максимального числа открытых файлов)
+    """
+    pubsub = redis_get_pubsub()
+    await pubsub.subscribe(settings.INTERNAL_EVENTS_CHANNEL,
+                           settings.WS_MONITOR_CHANNEL_OUT,
+                           settings.REDIS_TEXT_MSG_CHANNEL,
+                           settings.REDIS_THIN_CLIENT_CMD_CHANNEL)
+
+    while True:
+        try:
+            redis_message = await redis_block_get_message(pubsub)
+            channel = redis_message.get("channel").decode()
+            if channel is None:
+                continue
+
+            A_REDIS_CLIENT.send_message_to_subscribers(channel, redis_message)
+        except asyncio.CancelledError:
+            pubsub.reset()
+            break
+        except Exception as e:
+            from common.log.journal import system_logger
+            await system_logger.error(
+                message="Unexpected error in redis message receiving",
+                description=str(e),
+            )
+
+
+async def redis_breconnect(connection):
+    """Try to reconnect to redis server."""
+    while True:
+        try:
+            await connection.connect()
+            break
+        except ConnectionError:
+            # Таймаут чтобы не спамить попытки реконнекта
+            await asyncio.sleep(settings.REDIS_RECONNECT_TIMEOUT)
+
+
 async def redis_block_get_message(pubsub):
     while True:
-        message = await pubsub.get_message()
-        if message:
-            return message
-        await asyncio.sleep(settings.REDIS_ASYNC_TIMEOUT)
+        try:
+            message = await pubsub.get_message()
+            if message:
+                return message
+            await asyncio.sleep(settings.REDIS_ASYNC_TIMEOUT)
+        except ConnectionError:
+            await redis_breconnect(pubsub.connection)
 
 
 async def redis_blpop(redis_list_name):
     while True:
-        data = await A_REDIS_CLIENT.lpop(redis_list_name)
-        if data:
-            return data
-        await asyncio.sleep(settings.REDIS_ASYNC_TIMEOUT)
+        try:
+            data = await A_REDIS_CLIENT.lpop(redis_list_name)
+            if data:
+                return data
+            await asyncio.sleep(settings.REDIS_ASYNC_TIMEOUT)
+        except ConnectionError:
+            # При отсутствии соединения реконнект происходит под капотом в lpop
+            # Поэтому идем к следующей итерации после таймаута
+            await asyncio.sleep(settings.REDIS_RECONNECT_TIMEOUT)
 
 
 async def redis_flushall():
     await A_REDIS_CLIENT.flushdb()
+
+
+def redis_get_lock(name, timeout, blocking_timeout):
+    return A_REDIS_CLIENT.lock(name=name, timeout=timeout, blocking_timeout=blocking_timeout)
 
 
 def redis_error_handle(func):
@@ -83,7 +205,7 @@ def redis_error_handle(func):
         except RedisError as error:
             from common.log.journal import system_logger
 
-            system_logger._debug("Redis error ", str(error))
+            system_logger._debug("Redis error {}".format(str(error)))
         return response
 
     return wrapped_function
@@ -112,48 +234,24 @@ async def read_license_dict(dict_name):
     return read_dict
 
 
-async def a_redis_wait_for_message(redis_channel, predicate, timeout):
-    """Asynchronously wait for message until timeout reached.
+async def redis_wait_for_message(redis_channel, predicate):
+    """Asynchronously wait for message.
 
-    :param predicate:  condition to find required message. Signature: def fun(redis_message) -> bool
-    :param timeout: time to wait. seconds
-    :return bool: return true if awaited message received. Return false if timeuot expired and
-     awaited message is not received
+    :param predicate: condition to find required message. Signature: def fun(redis_message) -> bool
+    :return message: return message when awaited message received.
+     Ожидание потенциально бесконечно.
     """
-    p = redis_get_pubsub()
-    await p.subscribe(redis_channel)
+    with redis_get_subscriber([redis_channel]) as subscriber:
 
-    try:
-        start_time = time.time()  # sec from epoch
         while True:
             # try to receive message
-            redis_message = await p.get_message()
-            # if redis_message:
-            #    print('redis_message ', redis_message)
+            redis_message = await subscriber.get_msg()
             if (
                 redis_message
-                and redis_message["type"] == "message"  # noqa: W503
+                and redis_message.get("type") == "message"  # noqa: W503
                 and predicate(redis_message)  # noqa: W503
             ):
-                return True
-
-            # stop if time expired
-            cur_time = time.time()
-            if (cur_time - start_time) >= timeout:
-                return False
-
-            await asyncio.sleep(settings.REDIS_ASYNC_TIMEOUT)
-
-    except asyncio.CancelledError:  # Проброс необходим, чтобы корутина могла отмениться
-        raise
-    except Exception as ex:  # noqa
-        from common.log.journal import system_logger
-
-        await system_logger.error(
-            message=_local_("Redis waiting exception."), description=str(ex)
-        )
-
-    return False
+                return redis_message
 
 
 async def a_redis_wait_for_task_completion(task_id):
@@ -164,45 +262,43 @@ async def a_redis_wait_for_task_completion(task_id):
     """
     from common.models.task import TaskStatus
 
-    p = redis_get_pubsub()
-    await p.subscribe(settings.INTERNAL_EVENTS_CHANNEL)
+    with redis_get_subscriber([settings.INTERNAL_EVENTS_CHANNEL]) as subscriber:
+        try:
+            while True:
+                # try to receive message
+                redis_message = await subscriber.get_msg()
+                if redis_message and redis_message["type"] == "message":
 
-    try:
-        while True:
-            # try to receive message
-            redis_message = await p.get_message()
-            if redis_message and redis_message["type"] == "message":
+                    redis_message_data = redis_message["data"].decode()
+                    redis_data_dict = json.loads(redis_message_data)
 
-                redis_message_data = redis_message["data"].decode()
-                redis_data_dict = json.loads(redis_message_data)
+                    if (
+                        redis_data_dict["resource"] == VDI_TASKS_SUBSCRIPTION
+                        and redis_data_dict["event"] == "UPDATED"  # noqa: W503
+                        and redis_data_dict["id"] == str(task_id)  # noqa: W503
+                        and (  # noqa: W503
+                            redis_data_dict["status"] == TaskStatus.CANCELLED.name
+                            or redis_data_dict["status"]  # noqa: W503
+                            == TaskStatus.FAILED.name  # noqa: W503
+                            or redis_data_dict["status"]  # noqa: W503
+                            == TaskStatus.FINISHED.name  # noqa: W503
+                        )
+                    ):
 
-                if (
-                    redis_data_dict["resource"] == VDI_TASKS_SUBSCRIPTION
-                    and redis_data_dict["event"] == "UPDATED"  # noqa: W503
-                    and redis_data_dict["id"] == str(task_id)  # noqa: W503
-                    and (  # noqa: W503
-                        redis_data_dict["status"] == TaskStatus.CANCELLED.name
-                        or redis_data_dict["status"]  # noqa: W503
-                        == TaskStatus.FAILED.name  # noqa: W503
-                        or redis_data_dict["status"]  # noqa: W503
-                        == TaskStatus.FINISHED.name  # noqa: W503
-                    )
-                ):
+                        return redis_data_dict["status"]
 
-                    return redis_data_dict["status"]
+        except asyncio.TimeoutError:
+            raise
+        except asyncio.CancelledError:
+            raise
+        except Exception as ex:  # noqa
+            from common.log.journal import system_logger
 
-            await asyncio.sleep(settings.REDIS_ASYNC_TIMEOUT)
+            await system_logger.error(
+                message=_local_("Redis task waiting exception."), description=str(ex)
+            )
 
-    except asyncio.TimeoutError:
-        raise
-    except asyncio.CancelledError:
-        raise
-    except Exception as ex:  # noqa
-        from common.log.journal import system_logger
-
-        await system_logger.error(
-            message=_local_("Redis task waiting exception."), description=str(ex)
-        )
+        return None
 
 
 async def wait_for_task_result(task_id, wait_timeout):
@@ -220,7 +316,7 @@ async def request_to_execute_pool_task(entity_id, task_type, **additional_data):
     """Send request to task worker to execute a task. Return task id."""
     from common.models.task import Task
 
-    task = await Task.soft_create(entity_id=entity_id, task_type=task_type)
+    task = await Task.soft_create(entity_id=entity_id, task_type=task_type.name)
     task_id = str(task.id)
     data = {"task_id": task_id, "task_type": task_type.name, **additional_data}
     await A_REDIS_CLIENT.rpush(settings.POOL_TASK_QUEUE, json.dumps(data))
@@ -239,7 +335,7 @@ async def execute_delete_pool_task(
 
     # send command to pool worker
     task_id = await request_to_execute_pool_task(
-        pool_id, PoolTaskType.POOL_DELETE, deletion_full=full
+        pool_id, PoolTaskType.POOL_DELETE, full_deletion=full
     )
 
     # wait for result
@@ -316,19 +412,20 @@ async def publish_to_redis(channel, message):
         await A_REDIS_CLIENT.publish(channel, message)
     except RedisError as error:
         from common.log.journal import system_logger
-        system_logger._debug("Redis error ", str(error))
+        system_logger._debug("Redis error {}".format(str(error)))
 
 
 async def publish_data_in_internal_channel(resource_type: str, event_type: str,
-                                           model, additional_model_to_json_data=None):
+                                           model, additional_data: dict = None, description: str = None):
     """Publish db model data in redis channel INTERNAL_EVENTS_CHANNEL."""
     msg_dict = dict(
         resource=resource_type,
         msg_type=WsMessageType.DATA.value,
         event=event_type,
+        description=description
     )
 
     msg_dict.update(gino_model_to_json_serializable_dict(model))
-    if additional_model_to_json_data:
-        msg_dict.update(additional_model_to_json_data)
+    if additional_data:
+        msg_dict.update(additional_data)
     await publish_to_redis(settings.INTERNAL_EVENTS_CHANNEL, json.dumps(msg_dict))

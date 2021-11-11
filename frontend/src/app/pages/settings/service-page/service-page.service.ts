@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { Apollo, QueryRef } from 'apollo-angular';
 import gql from 'graphql-tag';
 
-import { IServiceUpdateParams } from './service-page.component';
+import { modalData } from './service-page.component';
 import { IMutationResponse, IQueryResponse } from './service-page.mapper';
 
 @Injectable({
@@ -29,10 +29,10 @@ export class ServicePageService {
     });
   }
 
-  public updateService(data: IServiceUpdateParams) {
+  public updateService(data: modalData) {
     return this.apollo.mutate<IMutationResponse>({
       mutation: gql`
-        mutation settings($password: String, $serviceName:String, $actionType: ServiceAction) {
+        mutation settings($password: ShortString, $serviceName: ShortString, $actionType: ServiceAction) {
         doServiceAction(sudo_password:$password, service_name: $serviceName, service_action: $actionType){
            ok,
            service_status

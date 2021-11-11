@@ -5,9 +5,8 @@ import { Subscription } from 'rxjs';
 import { map } from 'rxjs/operators';
 
 import { WaitService } from '@core/components/wait/wait.service';
-
 import { DetailsMove } from '@shared/classes/details-move';
-import { WebsocketService } from '@shared/classes/websock.service';
+import { WebsocketService } from '@core/services/websock.service';
 import { IParams } from '@shared/types';
 
 import { AddControllerComponent } from '../add-controller/add-controller.component';

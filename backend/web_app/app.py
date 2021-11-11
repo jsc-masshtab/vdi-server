@@ -36,6 +36,7 @@ from web_app.controller.resource_schema import resources_schema
 from web_app.controller.schema import controller_schema
 from web_app.front_ws_api.urls import ws_event_monitoring_urls
 from web_app.journal.schema import event_schema
+from web_app.journal.urls import journal_api_urls
 from web_app.pool.schema import pool_schema
 from web_app.settings.schema import settings_schema
 from web_app.task.schema import task_schema
@@ -85,6 +86,7 @@ handlers += auth_api_urls
 handlers += thin_client_api_urls
 handlers += ws_event_monitoring_urls
 handlers += license_api_urls
+handlers += journal_api_urls
 
 
 def make_app():
@@ -122,7 +124,7 @@ def exit_handler(sig, frame):  # noqa
         await stop_veil_client()
         await system_logger.info(_local_("VDI broker stopped."))
         await stop_gino()
-        redis_deinit()
+        await redis_deinit()
         io_loop.stop()
 
     io_loop.add_callback_from_signal(shutdown)

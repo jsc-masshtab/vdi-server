@@ -20,7 +20,6 @@ interface Backup {
   };
 }
 
-
 @Component({
   selector: 'vdi-details-popup',
   templateUrl: './vm-details-popup.component.html'
@@ -34,6 +33,7 @@ export class VmDetalsPopupComponent implements OnInit {
   public testing: boolean = false;
   public tested: boolean = false;
   public connected: boolean = false;
+  
   public collectionIntoVmAutomated: any[] = [
     {
       title: 'Название',
@@ -722,7 +722,7 @@ export class VmDetalsPopupComponent implements OnInit {
       this.waitService.setWait(true)
 
       this.service.getVnc(this.data.idPool, this.data.vmActive, this.data.controller_id).valueChanges.subscribe((res) => {
-        const vnc = res.data.pool.vm.vnc_connection
+        const vnc: any = res.data.pool.vm.vnc_connection
         const prot = window.location.protocol;
 
         let port = 80;
@@ -747,8 +747,9 @@ export class VmDetalsPopupComponent implements OnInit {
       this.waitService.setWait(true)
 
       this.service.getSpice(this.data.idPool, this.data.vmActive, this.data.controller_id).valueChanges.subscribe((res) => {
-        const spice = res.data.pool.vm
-        this.spice = spice;
+        const spice: any = res.data.pool.vm.spice_connection
+
+        this.spice = this.sanitizer.bypassSecurityTrustResourceUrl(spice.connection_url);
 
         this.show = true;
         this.waitService.setWait(false)
@@ -913,7 +914,7 @@ export class VmDetalsPopupComponent implements OnInit {
   }
 
   public prepareVM() {
-    if (this.data.typePool === 'automated') {
+    if (this.data.typePool === 'automated' || this.data.typePool === 'guest') {
       this.dialog.open(YesNoFormComponent, {
         disableClose: true,
         width: '500px',
@@ -996,5 +997,66 @@ export class VmDetalsPopupComponent implements OnInit {
         pool: this.data
       }
     });
+  }
+
+  public toggleReserve(e) {
+
+    e.preventDefault();
+
+    if (this.data.vm.status === 'RESERVED') {
+      this.activateVm();
+    } else {
+      this.reserveVm();
+    }
+  }
+
+  public reserveVm() {
+    this.dialog.open(YesNoFormComponent, {
+      disableClose: true,
+      width: '500px',
+      data: {
+        form: {
+          header: 'Подтверждение действия',
+          question: `Перевести ВМ ${this.data.vm.verbose_name} в статус "зарезервировано"?`,
+          button: 'Выполнить'
+        },
+        request: {
+          service: this.service,
+          action: 'reserveVm',
+          body: {
+            vm_id: this.data.vm.id,
+            reserve: true,
+          }
+        }
+      }
+    }).afterClosed().subscribe(() => {
+      this.service.getPool(this.data.idPool, this.data.typePool).refetch();
+      this.service.getVm(this.data.idPool, this.data.vm.id, this.data.controller_id).refetch();
+    })
+  }
+
+  public activateVm() {
+    this.dialog.open(YesNoFormComponent, {
+      disableClose: true,
+      width: '500px',
+      data: {
+        form: {
+          header: 'Подтверждение действия',
+          question: `Активировать ВМ ${this.data.vm.verbose_name}?`,
+          button: 'Выполнить'
+        },
+        request: {
+          service: this.service,
+          action: 'reserveVm',
+          body: {
+            vm_id: this.data.vm.id,
+            reserve: false,
+          }
+        }
+      }
+    }).afterClosed().subscribe(() => {
+      this.service.getPool(this.data.idPool, this.data.typePool).refetch();
+      this.service.getVm(this.data.idPool, this.data.vm.id, this.data.controller_id).refetch();
+    })
   }
 }

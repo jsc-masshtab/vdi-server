@@ -22,7 +22,7 @@
               "zen-observable",
               "qrcode"
             ],
-            "aot": true,
+            "aot": false,
             "outputPath": "dist/frontend",
             "index": "src/index.html",
             "main": "src/main.ts",
@@ -30,7 +30,8 @@
             "tsConfig": "src/tsconfig.app.json",
             "assets": [
               "src/assets",
-              "src/novnc"
+              "src/novnc",
+              "src/spice-html5"
             ],
             "styles": [
               "src/reset.scss",
@@ -143,6 +144,135 @@
             "exclude": [
               "**/node_modules/**"
             ]
+          }
+        }
+      }
+    },
+    "thin-client": {
+      "projectType": "application",
+      "schematics": {
+        "@schematics/angular:component": {
+          "style": "scss"
+        }
+      },
+      "root": "projects/thin-client",
+      "sourceRoot": "projects/thin-client/src",
+      "prefix": "tc",
+      "architect": {
+        "build": {
+          "builder": "@angular-devkit/build-angular:browser",
+          "options": {
+            "allowedCommonJsDependencies": [
+              "graphql-tag",
+              "zen-observable",
+              "qrcode"
+            ],
+            "outputPath": "dist/thin-client",
+            "index": "projects/thin-client/src/index.html",
+            "main": "projects/thin-client/src/main.ts",
+            "polyfills": "projects/thin-client/src/polyfills.ts",
+            "tsConfig": "projects/thin-client/tsconfig.app.json",
+            "aot": false,
+            "assets": [
+              "projects/thin-client/src/assets",
+              "projects/thin-client/src/novnc",
+              "projects/thin-client/src/spice-html5"
+              ],  
+            "styles": [
+              "src/reset.scss",
+              "src/styles.scss"
+            ],
+            "scripts": []
+          },
+          "configurations": {
+            "production": {
+              "fileReplacements": [
+                {
+                  "replace": "projects/thin-client/src/environments/environment.ts",
+                  "with": "projects/thin-client/src/environments/environment.prod.ts"
+                }
+              ],
+              "optimization": true,
+              "outputHashing": "all",
+              "sourceMap": false,
+              "extractCss": true,
+              "namedChunks": false,
+              "aot":true,
+              "extractLicenses": true,
+              "vendorChunk": false,
+              "buildOptimizer": true,
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "2mb",
+                  "maximumError": "5mb"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "6kb"
+                }
+              ]
+            }
+          }
+        },
+        "serve": {
+          "builder": "@angular-devkit/build-angular:dev-server",
+          "options": {
+            "browserTarget": "thin-client:build",
+            "proxyConfig": "src/proxy.conf.json"
+          },
+          "configurations": {
+            "production": {
+              "browserTarget": "thin-client:build:production"
+            }
+          }
+        },
+        "extract-i18n": {
+          "builder": "@angular-devkit/build-angular:extract-i18n",
+          "options": {
+            "browserTarget": "thin-client:build"
+          }
+        },
+        "test": {
+          "builder": "@angular-devkit/build-angular:karma",
+          "options": {
+            "main": "projects/thin-client/src/test.ts",
+            "polyfills": "projects/thin-client/src/polyfills.ts",
+            "tsConfig": "projects/thin-client/tsconfig.spec.json",
+            "karmaConfig": "projects/thin-client/karma.conf.js",
+            "assets": [
+              "projects/thin-client/src/favicon.ico",
+              "projects/thin-client/src/assets"
+            ],
+            "styles": [
+              "projects/thin-client/src/styles.scss"
+            ],
+            "scripts": []
+          }
+        },
+        "lint": {
+          "builder": "@angular-devkit/build-angular:tslint",
+          "options": {
+            "tsConfig": [
+              "projects/thin-client/tsconfig.app.json",
+              "projects/thin-client/tsconfig.spec.json",
+              "projects/thin-client/e2e/tsconfig.json"
+            ],
+            "exclude": [
+              "**/node_modules/**"
+            ]
+          }
+        },
+        "e2e": {
+          "builder": "@angular-devkit/build-angular:protractor",
+          "options": {
+            "protractorConfig": "projects/thin-client/e2e/protractor.conf.js",
+            "devServerTarget": "thin-client:serve"
+          },
+          "configurations": {
+            "production": {
+              "devServerTarget": "thin-client:serve:production"
+            }
           }
         }
       }

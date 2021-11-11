@@ -17,7 +17,7 @@ export class ResourcePoolsService {
 
     public getAllResourcePools(filter?): QueryRef<any, any> {
 
-        let query: string = `query resources($ordering:String) {
+        let query: string = `query resources($ordering:ShortString) {
             resource_pools(ordering: $ordering) {
                 id
                 verbose_name
@@ -34,7 +34,7 @@ export class ResourcePoolsService {
         }`
 
         if (filter) {
-            query = `query controllers($controller_id:UUID, $cluster_id: UUID, $ordering:String) {
+            query = `query controllers($controller_id:UUID, $cluster_id: UUID, $ordering:ShortString) {
                 controller(id_:$controller_id) {
                     id
                     resource_pools(cluster_id: $cluster_id, ordering: $ordering) {

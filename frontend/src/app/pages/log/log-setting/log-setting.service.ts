@@ -18,7 +18,7 @@ export class LogSettingService {
 
   public getSettings(): QueryRef<any, any> {
     return this.service.watchQuery({
-      query: gql` 
+      query: gql`
         query events {
           journal_settings {
             period
@@ -39,9 +39,9 @@ export class LogSettingService {
       mutation: gql`
         mutation events(
           $count: Int,
-          $period: String,
+          $period: ShortString,
           $by_count: Boolean,
-          $dir_path: String){
+          $dir_path: ShortString){
           changeJournalSettings(
             count: $count,
             period: $period,

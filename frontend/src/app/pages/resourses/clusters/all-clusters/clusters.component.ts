@@ -4,12 +4,9 @@ import { Subscription } from 'rxjs';
 import { map } from 'rxjs/operators';
 
 import { WaitService } from '@core/components/wait/wait.service';
-
+import { WebsocketService } from '@app/core/services/websock.service';
 import { DetailsMove } from '@shared/classes/details-move';
-import { WebsocketService } from '@shared/classes/websock.service';
 import { IParams } from '@shared/types';
-
-
 import { ClustersService } from './clusters.service';
 
 @Component({

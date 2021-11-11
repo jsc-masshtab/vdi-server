@@ -1,6 +1,7 @@
 import asyncio
 from datetime import datetime, timedelta, timezone
 
+from common.log.journal import system_logger
 from common.models.active_tk_connection import ActiveTkConnection
 from common.settings import WS_PING_TIMEOUT
 
@@ -27,14 +28,22 @@ class ThinClientConnMonitor:
         disconnect_time_delta = timedelta(seconds=WS_PING_TIMEOUT)
 
         while True:
-            cur_time = datetime.now(timezone.utc)
+            try:
+                cur_time = datetime.now(timezone.utc)
 
-            tk_connections_to_deactivate = await ActiveTkConnection.query.where(
-                ((cur_time - ActiveTkConnection.data_received) > disconnect_time_delta) &  # noqa: W504
-                (ActiveTkConnection.disconnected == None)  # noqa: E711
-            ).gino.all()
+                tk_connections_to_deactivate = await ActiveTkConnection.query.where(
+                    ((cur_time - ActiveTkConnection.data_received) > disconnect_time_delta) &  # noqa: W504
+                    (ActiveTkConnection.disconnected == None)  # noqa: E711
+                ).gino.all()
 
-            for tk_conn in tk_connections_to_deactivate:
-                await tk_conn.deactivate()
+                for tk_conn in tk_connections_to_deactivate:
+                    await tk_conn.deactivate(dead_connection_detected=True)
 
-            await asyncio.sleep(WS_PING_TIMEOUT)
+                await asyncio.sleep(WS_PING_TIMEOUT)
+
+            except asyncio.CancelledError:
+                break
+            except Exception as ex:
+                await system_logger.debug(
+                    message="check_thin_client_connections error.", description=str(ex)
+                )

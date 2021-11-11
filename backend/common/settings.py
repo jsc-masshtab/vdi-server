@@ -66,7 +66,7 @@ JWT_ALGORITHM = "HS256"
 # Websocket settings
 # -----------------------------
 WS_PING_INTERVAL = 10
-WS_PING_TIMEOUT = 60
+WS_PING_TIMEOUT = 35
 
 # ECP Veil settings
 # -----------------------------
@@ -83,6 +83,8 @@ VEIL_VM_REMOVE_TIMEOUT = 1200.0
 VEIL_MAX_URL_LEN = 6000
 VEIL_MAX_IDS_LEN = 3780
 VEIL_MAX_VM_CREATE_ATTEMPTS = 10
+VEIL_DEFAULT_VM_DISCONNECT_ACTION_TIMEOUT = 60  # Время, через которое над ВМ выполнится действие
+# после дисконнекта пользователя, сек
 
 # Cache settings
 # -----------------------------
@@ -103,6 +105,7 @@ LDAP_TIMEOUT = 15
 LDAP_NETWORK_TIMEOUT = 10
 LDAP_OPT_REFERRALS = 0
 LDAP_LOGIN_PATTERN = "uid={username},cn=users,cn=accounts,{dc}"
+OPENLDAP_LOGIN_PATTERN = "uid={username},ou=people,{dc}"
 
 # File system paths
 # -----------------------------
@@ -122,6 +125,7 @@ REDIS_PORT = 6379
 REDIS_DB = 0
 REDIS_PASSWORD = "4NZ7GpHn4IlshPhb"
 REDIS_TIMEOUT = 5
+REDIS_MAX_CLIENT_CONN = 200
 REDIS_THIN_CLIENT_CMD_CHANNEL = (
     "TC_CMD_CHANNEL"
 )  # канал для комманд обработчикам ws тонких клиентов.
@@ -131,6 +135,7 @@ REDIS_TEXT_MSG_CHANNEL = (
 )  # Канал для обмена текстовыми сообщениями между админом и
 # пользователями ТК
 REDIS_ASYNC_TIMEOUT = 0.01
+REDIS_RECONNECT_TIMEOUT = 5
 
 POOL_TASK_QUEUE = "POOL_TASK_QUEUE"  # Очередь задач воркера
 POOL_WORKER_CMD_QUEUE = (

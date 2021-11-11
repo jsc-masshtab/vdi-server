@@ -34,6 +34,7 @@ import { UserDetailsComponent } from '../settings/users/user-details/user-detail
 import { ThinClientDetailsComponent } from '../thin-clients/thin-client-details/thin-client-details.component';
 import { ThinClientsComponent } from '../thin-clients/thin-clients.component';
 import { DashboardComponent } from './dashboard.component';
+import { SmtpComponent } from '../settings/smtp/smtp.component';
 
 
 const routes: Routes = [
@@ -119,6 +120,10 @@ const routes: Routes = [
       {
         path: 'settings/services',
         component: ServicePageComponent
+      },
+      {
+        path: 'settings/smtp',
+        component: SmtpComponent
       },
       {
         path: 'log/events',

@@ -22,6 +22,12 @@ export class AuthStorageService {
             return false;
         }
     }
+    public getLdapCheckbox(): boolean {
+        return localStorage.getItem('ldap') === 'true';
+    }
+    public setLdap(ldap: string): void {
+            localStorage.setItem('ldap', ldap)
+    }
 
     public saveInStorage(token: {access_token: string, expires_on: string, username: string}): void {
         if (token.access_token) {
@@ -37,7 +43,8 @@ export class AuthStorageService {
     }
 
     public logout(): void {
-        localStorage.clear();
+        localStorage.removeItem('token');
+        localStorage.removeItem('username');
         this.router.navigate(['login']);
     }
 

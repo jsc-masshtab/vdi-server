@@ -35,7 +35,8 @@ async def test_add_update_remove_controller(
         updateController(
             id_: "%s",
             verbose_name: "NEW_NAME",
-            description: "controller for development and testing") {
+            description: "controller for development and testing",
+            token: "jwt eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjoxLCJ1c2VybmFtZSI6ImFkbWluIiwiZXhwIjoxOTEyOTM3NjExLCJzc28iOmZhbHNlLCJvcmlnX2lhdCI6MTU5ODQ0MTYxMX0.OSRio0EoWA8ZDtvzl3YlaBmdfbI0DQz1RiGAIMCgoX0") {
             controller {
                 id
                 verbose_name
@@ -82,7 +83,7 @@ async def test_resolve_controllers(
 ):  # noqa
     qu = """
             {
-              controllers {
+              controllers(status: ACTIVE) {
                 verbose_name
                 description
                 address
@@ -112,7 +113,6 @@ async def test_resolve_controller(
                 status
                 version
                 token
-                # Новые поля
                 pools {
                   verbose_name
                   status
@@ -139,6 +139,10 @@ async def test_resolve_controller(
                   memory_count
                   management_ip
                 }
+                resource_pools {
+                  id
+                  verbose_name
+                }
                 data_pools {
                   id
                   verbose_name
@@ -161,6 +165,10 @@ async def test_resolve_controller(
                   id
                   verbose_name
                 }
+                veil_events_count
+                veil_events {
+                  id
+                }
              }
             }"""
         % controller_id
@@ -176,9 +184,28 @@ async def test_service_controller_mode(
     fixt_db, fixt_controller, fixt_auth_context
 ):  # noqa
     controller = await Controller.get(fixt_controller["controller_id"])
+    qu = (
+        """
+        mutation {
+            serviceController(id_: "%s") {
+                ok
+            }
+        }
+        """
+        % controller.id
+    )
+    executed = await execute_scheme(controller_schema, qu, context=fixt_auth_context)
+    assert executed["serviceController"]["ok"]
 
-    await controller.service()
-    assert controller.status == Status.SERVICE
-
-    await controller.activate()
+    qu = (
+        """
+        mutation {
+            activateController(id_: "%s") {
+                ok
+            }
+        }
+        """
+        % controller.id
+    )
+    await execute_scheme(controller_schema, qu, context=fixt_auth_context)
     assert controller.status == Status.ACTIVE

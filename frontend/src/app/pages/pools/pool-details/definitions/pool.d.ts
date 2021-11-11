@@ -10,6 +10,7 @@ export interface IPool extends ISettingsAutoPool, ISettingsStaticPool  {
     verbose_name: string;
   };
   users: {
+    id: string;
     username: string;
   };
 
@@ -22,9 +23,13 @@ export interface IPool extends ISettingsAutoPool, ISettingsStaticPool  {
   };
 
   create_thin_clones: boolean;
-  prepare_vms: boolean;
+  enable_vms_remote_access: boolean;
+  start_vms: boolean;
+  set_vms_hostnames: boolean;
+  include_vms_in_ad: boolean;
   keep_vms_on: boolean;
   status: string;
+  vm_action_upon_user_disconnect: string;
 }
 
 export interface IPoolVms  {
@@ -32,6 +37,7 @@ export interface IPoolVms  {
   verbose_name: string;
   status: string;
   user: {
+    id: string;
     username: string;
   },
   template: {
@@ -50,6 +56,7 @@ interface ISettingsAutoPool {
   increase_step: number;
   reserve_size: number;
   total_size: number;
+  vm_disconnect_action_timeout: number;
   vm_name_template: string;
   ad_ou: string;
 }

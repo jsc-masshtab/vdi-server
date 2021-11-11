@@ -1,0 +1,28 @@
+<div class="form" [formGroup]="vmActionForm">
+  <div class="form-header">
+    <h1>Действие над ВМ</h1>
+    <button [mat-dialog-close]="true" class="form-close"><fa-icon [icon]="['fas','times-circle']"></fa-icon></button>
+  </div>
+  <div class="form-fields">
+    <label class="field">
+      <mat-form-field>
+        <mat-label>Тип действия</mat-label>
+        <mat-select formControlName="action" >
+          <mat-option *ngFor="let action of actions" [value]="action.value">{{action.description}}</mat-option>
+        </mat-select>
+      </mat-form-field>
+    </label>
+    <label class="field" *ngIf="showTimeoutInput" >
+      <p class="field-name">Таймаут</p>
+      <input type="number" formControlName="timeout" min="0">
+    </label>
+  </div>
+
+  <div class="form-actions">
+    <button class="form-btn" (click)="send()">
+      <fa-icon [icon]="['fas','plus-circle']" size="xs"></fa-icon>
+      <span class="action-name">Добавить</span>
+    </button>
+  </div>
+
+</div>

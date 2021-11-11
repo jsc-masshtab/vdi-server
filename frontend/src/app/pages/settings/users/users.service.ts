@@ -20,8 +20,8 @@ export class UsersService  {
                 query users(
                     $limit: Int,
                     $offset: Int,
-                    $username: String,
-                    $ordering:String,
+                    $username: ShortString,
+                    $ordering: ShortString,
                     $is_superuser: Boolean,
                     $is_active: Boolean
                 ){
@@ -105,11 +105,11 @@ export class UsersService  {
         return this.service.mutate<any>({
             mutation: gql`
                 mutation users(
-                    $username: String!,
-                    $password: String!,
-                    $email: String!,
-                    $last_name: String!,
-                    $first_name: String!,
+                    $username: ShortString!,
+                    $password: ShortString!,
+                    $email: ShortString!,
+                    $last_name: ShortString!,
+                    $first_name: ShortString!,
                     $groups: [GroupInput!]!,
                     $is_superuser: Boolean
                 ){
@@ -301,8 +301,8 @@ export class UsersService  {
        return  this.service.watchQuery({
             query:  gql`
                 query groups(
-                    $ordering: String,
-                    $verbose_name: String
+                    $ordering: ShortString,
+                    $verbose_name: ShortString
                 ){
                     groups(
                         verbose_name: $verbose_name,

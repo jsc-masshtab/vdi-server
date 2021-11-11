@@ -58,7 +58,7 @@ def get_test_pool_name():
 async def fixt_redis_client():
     redis_init()
     await yield_()
-    redis_deinit()
+    await redis_deinit()
 
 
 @pytest.fixture
@@ -141,6 +141,7 @@ async def fixt_create_automated_pool(fixt_controller):
                         verbose_name: "%s",
                         controller_id: "%s",
                         resource_pool_id: "%s",
+                        datapool_id: "%s",
                         template_id: "%s",
                         initial_size: 1,
                         reserve_size: 1,
@@ -163,6 +164,7 @@ async def fixt_create_automated_pool(fixt_controller):
         get_test_pool_name(),
         resources["controller_id"],
         resources["resource_pool_id"],
+        resources["datapool_id"],
         resources["template_id"],
     )
     context = await get_auth_context()
@@ -449,6 +451,7 @@ def fixt_user_admin(request, event_loop):
     user_name = "test_user_admin"
     user_id = "10913d5d-ba7a-4049-88c5-769267a6cbe3"
     user_password = "veil"
+    email = "vdi.mashtab@yandex.ru"
     creator = "vdiadmin"
 
     async def setup():
@@ -456,6 +459,7 @@ def fixt_user_admin(request, event_loop):
             username=user_name,
             id=user_id,
             password=user_password,
+            email=email,
             is_superuser=True,
             creator=creator,
         )
@@ -665,6 +669,48 @@ def fixt_auth_dir_with_pass_bad(request, event_loop):
             ).gino.status()
             # опасное место
             await User.delete.where(User.username == "ad120").gino.status()
+
+        event_loop.run_until_complete(a_teardown())
+
+    request.addfinalizer(teardown)
+    return True
+
+
+@pytest.fixture
+def fixt_auth_dir_with_sync_users(request, event_loop):
+    id = "10913d5d-ba7a-4049-88c5-769267a6cbe4"
+    verbose_name = "test_auth_dir"
+    directory_url = "ldap://192.168.14.167"
+    domain_name = "BAZALT"
+    dc_str = "bazalt.local"
+    encoded_service_password = "Bazalt1!"
+
+    async def setup():
+        auth_dir = await AuthenticationDirectory.soft_create(
+            id=id,
+            verbose_name=verbose_name,
+            directory_url=directory_url,
+            domain_name=domain_name,
+            service_password=encoded_service_password,
+            service_username="ad120",
+            dc_str=dc_str,
+            creator="system",
+        )
+        data = {"group_ad_guid": "ec0efca9-5878-4ab4-bb8f-149af659e115",
+                "group_verbose_name": "veil-ad-users",
+                "group_ad_cn": "CN=veil-ad-users,CN=Users,DC=bazalt,DC=local"}
+        await auth_dir.synchronize(data)
+
+    event_loop.run_until_complete(setup())
+
+    def teardown():
+        async def a_teardown():
+            await AuthenticationDirectory.delete.where(
+                AuthenticationDirectory.id == id
+            ).gino.status()
+            # опасное место
+            await User.delete.where(User.username.ilike("ad%")).gino.status()
+            await Group.delete.where(Group.verbose_name == "veil-ad-users").gino.status()
 
         event_loop.run_until_complete(a_teardown())
 

@@ -1,0 +1,22 @@
+<div class="details-popup">
+    <div class="details-header">
+      <div class="title"><fa-icon [icon]="['fas','desktop']" size="s" ></fa-icon><span class="name">Виртуальная машина <span>{{name}}</span></span></div>
+        <div class="btns-part">
+          <button [mat-dialog-close]="true" class="btn-close-popup"><fa-icon [icon]="['fas','times-circle']"></fa-icon></button>
+        </div>
+    </div>
+  
+    <app-manage-vm  (manageVM)="manageVM($event)" >
+      <tc-button-refresh (clickRefresh)="refresh()" slot="refreshButton"></tc-button-refresh>
+    </app-manage-vm>
+    <div class="details-row">
+      <div class="details-slide">
+        <div class="details-slide-into">
+          <ng-container *ngIf="url" >
+            <iframe  [src]="url" width="100%" height="100%"></iframe>
+          </ng-container>
+        </div>
+      </div>
+    </div>
+  </div>
+  

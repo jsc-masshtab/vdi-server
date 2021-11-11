@@ -32,11 +32,12 @@ export interface INetwork{
 export class SystemMapper {
 
     public serverModelToClientModel(apiModel: ApiModel): SystemData {
-        const appModel =  new SystemData();     
-        appModel.timezone = apiModel.time_zone;
-    
-        appModel.localTime = apiModel.local_time;
-        appModel.networksList = apiModel.networks_list.map( item => ({name: item.name, ip: item.ipv4}))
-        return appModel; 
+        const { time_zone, local_time, networks_list} = apiModel;  
+        
+        return {
+          timezone: time_zone,
+          localTime: local_time,
+          networksList: networks_list.map( item => ({name: item.name, ip: item.ipv4}))
+        } 
     }
 }

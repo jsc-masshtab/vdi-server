@@ -7,6 +7,7 @@ from graphene import Enum as GrapheneEnum
 from sqlalchemy import and_
 
 from common.database import db
+from common.graphene_utils import ShortString
 from common.languages import _local_
 from common.models.auth import User
 from common.models.user_tk_permission import TkPermission
@@ -32,14 +33,19 @@ class UserValidator(MutationValidation):
     async def validate_username(obj_dict, value):
         if not value:
             raise AssertError(_local_("username can`t be empty."))
-        user_name_re = re.compile("^[a-zA-Z][a-zA-Z0-9.-_+]{3,128}$")
-        template_name = re.match(user_name_re, value.strip())
+        value_len = len(value)
+        if 0 < value_len <= 128:
+            return value
+        if value_len > 128:
+            raise ValidationError(_local_("username must be <= 128 characters."))
+        user_name_re = re.compile("^[a-zA-Z][a-zA-Z0-9.-_+]$")
+        template_name = re.match(user_name_re, value)
         if template_name:
             obj_dict["username"] = value
             return value
         raise AssertError(
             _local_(
-                "username must contain >= 3 chars (letters, digits, _, -, +), begin from letter and can't contain any spaces."
+                "username must contain letters, digits, _, +, begin from letter and can't contain any spaces."
             )
         )
 
@@ -97,8 +103,8 @@ class UserGroupType(graphene.ObjectType):
     """
 
     id = graphene.UUID(required=True)
-    verbose_name = graphene.String()
-    description = graphene.String()
+    verbose_name = graphene.Field(ShortString)
+    description = graphene.Field(ShortString)
 
     @staticmethod
     def instance_to_type(model_instance):
@@ -113,16 +119,16 @@ class GroupInput(graphene.InputObjectType):
     """Инпут ввода групп для пользователя."""
 
     id = graphene.UUID()
-    verbose_name = graphene.String()
+    verbose_name = graphene.Field(ShortString)
 
 
 class UserType(graphene.ObjectType):
     id = graphene.UUID()
-    username = graphene.String()
-    password = graphene.String()
-    email = graphene.String()
-    last_name = graphene.String()
-    first_name = graphene.String()
+    username = graphene.Field(ShortString)
+    password = graphene.Field(ShortString)
+    email = graphene.Field(ShortString)
+    last_name = graphene.Field(ShortString)
+    first_name = graphene.Field(ShortString)
 
     date_joined = graphene.DateTime()
     date_updated = graphene.DateTime()
@@ -132,7 +138,7 @@ class UserType(graphene.ObjectType):
     is_active = graphene.Boolean()
 
     two_factor = graphene.Boolean()
-    secret = graphene.String()
+    secret = graphene.Field(ShortString)
 
     by_ad = graphene.Boolean()
     local_password = graphene.Boolean()
@@ -217,12 +223,12 @@ class UserQuery(graphene.ObjectType):
         lambda: UserType,
         limit=graphene.Int(default_value=100),
         offset=graphene.Int(default_value=0),
-        username=graphene.String(),
+        username=ShortString(),
         is_superuser=graphene.Boolean(),
         is_active=graphene.Boolean(),
-        ordering=graphene.String(),
+        ordering=ShortString(),
     )
-    user = graphene.Field(UserType, id=graphene.UUID(), username=graphene.String())
+    user = graphene.Field(UserType, id=graphene.UUID(), username=ShortString())
 
     count = graphene.Int(is_superuser=graphene.Boolean(), is_active=graphene.Boolean())
 
@@ -299,11 +305,11 @@ class UserQuery(graphene.ObjectType):
 
 class CreateUserMutation(graphene.Mutation, UserValidator):
     class Arguments:
-        username = graphene.String(required=True)
-        password = graphene.String(required=True)
-        email = graphene.String(required=False)
-        last_name = graphene.String(required=False)
-        first_name = graphene.String(required=False)
+        username = ShortString(required=True)
+        password = ShortString(required=True)
+        email = ShortString(required=False)
+        last_name = ShortString(required=False)
+        first_name = ShortString(required=False)
         groups = graphene.NonNull(graphene.List(GroupInput))
         is_superuser = graphene.Boolean(default_value=False)
 
@@ -325,9 +331,9 @@ class CreateUserMutation(graphene.Mutation, UserValidator):
 class UpdateUserMutation(graphene.Mutation, UserValidator):
     class Arguments:
         id = graphene.UUID(required=True)
-        email = graphene.String()
-        last_name = graphene.String()
-        first_name = graphene.String()
+        email = ShortString()
+        last_name = ShortString()
+        first_name = ShortString()
         is_superuser = graphene.Boolean()
         two_factor = graphene.Boolean()
 
@@ -345,7 +351,7 @@ class UpdateUserMutation(graphene.Mutation, UserValidator):
 class ChangeUserPasswordMutation(graphene.Mutation, UserValidator):
     class Arguments:
         id = graphene.UUID(required=True)
-        password = graphene.String(required=True)
+        password = ShortString(required=True)
 
     ok = graphene.Boolean()
 
@@ -435,8 +441,8 @@ class GenerateUserQrcodeMutation(graphene.Mutation):
     class Arguments:
         id = graphene.UUID(required=True)
 
-    qr_uri = graphene.String()
-    secret = graphene.String()
+    qr_uri = ShortString()
+    secret = ShortString()
 
     @classmethod
     @security_administrator_required

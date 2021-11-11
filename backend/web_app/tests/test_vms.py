@@ -73,7 +73,8 @@ class TestVmPermissionsSchema:
 
         # Открепляем VM от всех пользователей.
         query = """mutation{
-                         freeVmFromUser(vm_id: "10913d5d-ba7a-4049-88c5-769267a6cbe4"){ok}}"""
+                         freeVmFromUser(vm_id: "10913d5d-ba7a-4049-88c5-769267a6cbe4", 
+                                        username: "test_user"){ok}}"""
 
         executed = await execute_scheme(
             pool_schema, query, context=fixt_auth_context
@@ -83,6 +84,10 @@ class TestVmPermissionsSchema:
         # Проверяем, исходное количество пользователей на фикстурной VM
         current_user = await self.get_test_vm_username()
         assert current_user is None
+
+        # Проверяем, количество свободных ВМ в пуле
+        count_vm = await pool_obj.get_vm_amount(only_free=True)
+        assert count_vm == 2
 
 
 @pytest.mark.asyncio
@@ -96,57 +101,67 @@ class TestVmStatus:
 
         qu = (
             """mutation{
-                assignVmToUser(vm_id: "%s", username: "vdiadmin") {ok}}"""
+                reserveVm(vm_id: "%s", reserve: true) {ok}}"""
             % vm.id
         )
 
-        executed = await execute_scheme(
-            pool_schema, qu, context=fixt_auth_context
-        )  # noqa
-        # snapshot.assert_match(executed)
+        executed = await execute_scheme(pool_schema, qu, context=fixt_auth_context)
+        assert executed["reserveVm"]["ok"]
 
-        qu = """{pools {vms {status
-                            user {username}}
+        qu = """{pools {vms {status}
                  }}"""
-        executed = await execute_scheme(
-            pool_schema, qu, context=fixt_auth_context
-        )  # noqa
+        executed = await execute_scheme(pool_schema, qu, context=fixt_auth_context)
         snapshot.assert_match(executed)
 
         qu = (
             """mutation{
-                freeVmFromUser(vm_id: "%s") {ok}}"""
+                reserveVm(vm_id: "%s", reserve: false) {ok}}"""
             % vm.id
         )
 
-        executed = await execute_scheme(
-            pool_schema, qu, context=fixt_auth_context
-        )  # noqa
-        # snapshot.assert_match(executed)
+        executed = await execute_scheme(pool_schema, qu, context=fixt_auth_context)
+        assert executed["reserveVm"]["ok"]
 
-        qu = """{pools {vms {status
-                            user {username}}
+        qu = """{pools {vms {status}
                          }}"""
-        executed = await execute_scheme(
-            pool_schema, qu, context=fixt_auth_context
-        )  # noqa
+        executed = await execute_scheme(pool_schema, qu, context=fixt_auth_context)
         snapshot.assert_match(executed)
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures("fixt_db", "fixt_user_admin", "fixt_create_static_pool")
+class TestResolveVm:
+    async def test_vm_info(self, snapshot, fixt_auth_context):  # noqa
+        pool_id = await Pool.select("id").gino.scalar()
+        pool = await Pool.get(pool_id)
+
+        vm = await Vm.query.where(pool_id == pool_id).gino.first()
 
         qu = (
-            """mutation{
-                assignVmToUser(vm_id: "%s", username: "vdiadmin") {ok}}"""
-            % vm.id
+            """{pools{
+                    vm (vm_id: "%s", controller_id: "%s") {
+                       verbose_name
+                    }
+                } 
+               }"""
+            % (vm.id, pool.controller)
         )
 
-        executed = await execute_scheme(
-            pool_schema, qu, context=fixt_auth_context
-        )  # noqa
-        # snapshot.assert_match(executed)
-
-        qu = """{pools {vms {status
-                            user {username}}
-                         }}"""
-        executed = await execute_scheme(
-            pool_schema, qu, context=fixt_auth_context
-        )  # noqa
+        executed = await execute_scheme(pool_schema, qu, context=fixt_auth_context)
         snapshot.assert_match(executed)
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures("fixt_db", "fixt_user_admin", "fixt_vm")
+class TestFilterVm:
+    async def test_get_vm_by_verbose_name(self):
+        pool_id = await Pool.select("id").gino.scalar()
+        pool = await Pool.get(pool_id)
+        vms = await Pool.get_vms(pool, limit=None, offset=0, verbose_name="test_2")
+        vm_names = [vm.verbose_name for vm in vms]
+        assert "test_2" in vm_names
+
+        # Проверка отсутствия ВМ с заданным verbose_name.
+        vms = await Pool.get_vms(pool, limit=None, offset=0, verbose_name="vm_name")
+        vm_names = [vm.verbose_name for vm in vms]
+        assert len(vm_names) == 0
