@@ -647,7 +647,7 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
 
         # Фильтр для поиска групп
         if self.directory_type == self.DirectoryTypes.ActiveDirectory:
-            system_groups = "(groupType=-2147483646)(!(isCriticalSystemObject=TRUE))"
+            system_groups = "(!(isCriticalSystemObject=TRUE))"
             base_filter = "(&(objectCategory=GROUP){}".format(system_groups)
             groups_filter = [
                 "(!(objectGUID={}))".format(pack_guid(group.ad_guid))

@@ -154,8 +154,24 @@ snapshots['TestAuthenticationDirectoryQuery.test_auth_dir_get_possible_ad_groups
                 'verbose_name': '131'
             },
             {
+                'ad_guid': 'd61e64b2-449f-4fd8-89fa-5ee29edde9c7',
+                'verbose_name': 'DnsAdmins'
+            },
+            {
                 'ad_guid': '7ed075e1-770d-486d-9518-c689daf4878a',
                 'verbose_name': 'DnsUpdateProxy'
+            },
+            {
+                'ad_guid': '16905200-78dc-4811-8833-c80a217fb9d3',
+                'verbose_name': 'SSO_Admins'
+            },
+            {
+                'ad_guid': '39b76197-d575-4200-949f-c19af052f82d',
+                'verbose_name': 'TestGroupLocal'
+            },
+            {
+                'ad_guid': 'ba9a745b-fdf8-471e-85d6-a7ed0d6fd30c',
+                'verbose_name': 'TestGroupUniversal'
             },
             {
                 'ad_guid': '992e4139-f98f-464c-af70-42e53b0c49ff',
@@ -174,8 +190,16 @@ snapshots['TestAuthenticationDirectoryQuery.test_auth_dir_get_possible_ad_groups
                 'verbose_name': 'veil-ad-users'
             },
             {
+                'ad_guid': '94461754-e8ea-4fbc-9716-f9f8e97e2d82',
+                'verbose_name': 'Администраторы DHCP'
+            },
+            {
                 'ad_guid': '166054a6-b8ce-4d01-b025-11b7faef033c',
                 'verbose_name': 'Администраторы безопасности'
+            },
+            {
+                'ad_guid': '83aed0e4-3a2a-45db-91ed-6484371a27cc',
+                'verbose_name': 'Пользователи DHCP'
             }
         ],
         'status': 'ACTIVE'
