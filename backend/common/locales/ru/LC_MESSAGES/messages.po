@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-11-08 13:24+0300\n"
+"POT-Creation-Date: 2021-11-11 12:39+0300\n"
 "PO-Revision-Date: 2020-07-30 11:25+0300\n"
 "Last-Translator: Emil <emil@emil-pc>\n"
 "Language-Team: Russian\n"
@@ -295,7 +295,7 @@ msgid "Mapping for auth directory {} is updated."
 msgstr "Сопоставление для службы каталогов {} обновлено."
 
 #: ../common/models/authentication_directory.py:353
-#: ../common/models/authentication_directory.py:625
+#: ../common/models/authentication_directory.py:725
 msgid "Authentication directory server {} is down."
 msgstr "Сервер службы каталогов {} не работает."
 
@@ -303,78 +303,88 @@ msgstr "Сервер службы каталогов {} не работает."
 msgid "Authentication directory server {} is connected."
 msgstr "Сервер службы каталогов {} подключен."
 
-#: ../common/models/authentication_directory.py:435
+#: ../common/models/authentication_directory.py:449
 msgid "Username must be a string."
 msgstr "Имя пользователя должно быть строкой."
 
-#: ../common/models/authentication_directory.py:452
+#: ../common/models/authentication_directory.py:466
 msgid "something other."
 msgstr "что-то другое."
 
-#: ../common/models/authentication_directory.py:453
+#: ../common/models/authentication_directory.py:467
 msgid "Username {} is incorrect. Maybe you mean {}."
 msgstr "Имя пользователя {} неверное. Может быть вы имели в виду {}."
 
-#: ../common/models/authentication_directory.py:476
+#: ../common/models/authentication_directory.py:471
+msgid "User {} is deactivate."
+msgstr "Пользователь {} деактивирован."
+
+#: ../common/models/authentication_directory.py:502
 msgid "Mappings: {}."
 msgstr "Сопоставления: {}."
 
-#: ../common/models/authentication_directory.py:500
+#: ../common/models/authentication_directory.py:526
 msgid "escaped values: {}."
 msgstr "скрытые значения: {}."
 
-#: ../common/models/authentication_directory.py:502
+#: ../common/models/authentication_directory.py:528
 msgid "role mapping value type: {}."
 msgstr "тип значений отображения роли: {}."
 
-#: ../common/models/authentication_directory.py:515
+#: ../common/models/authentication_directory.py:541
 msgid "User VeiL groups: {}."
 msgstr "Группы пользователей VeiL: {}."
 
-#: ../common/models/authentication_directory.py:523
+#: ../common/models/authentication_directory.py:549
 msgid "Attaching user {} to group: {}."
 msgstr "Прикрепление пользователя {} к группе {}."
 
-#: ../common/models/authentication_directory.py:544
-#: ../common/models/authentication_directory.py:555
+#: ../common/models/authentication_directory.py:570
+#: ../common/models/authentication_directory.py:581
 msgid "No authentication directory controllers."
 msgstr "Нет контроллеров служб каталогов."
 
-#: ../common/models/authentication_directory.py:585
+#: ../common/models/authentication_directory.py:622
+#: ../common/models/authentication_directory.py:659
 msgid "Invalid credentials (ldap): {}."
 msgstr "Неверные учетные данные (ldap): {}."
 
-#: ../common/models/authentication_directory.py:591
+#: ../common/models/authentication_directory.py:628
+#: ../common/models/authentication_directory.py:665
 msgid "Server down (ldap)."
 msgstr "Сервер не отвечает (ldap)."
 
-#: ../common/models/authentication_directory.py:609
+#: ../common/models/authentication_directory.py:633
+msgid "The LDAP server provides an alternate address to which an LDAP request can be processed, but the attempt was unsuccessful."
+msgstr "Сервер LDAP предоставляет альтернативный адрес, по которому может быть обработан запрос LDAP, но попытка было неудачной."
+
+#: ../common/models/authentication_directory.py:709
 msgid "LDAP username and password can`t be empty."
 msgstr "Имя пользователя и пароль LDAP не могут быть пустыми."
 
-#: ../common/models/authentication_directory.py:618
+#: ../common/models/authentication_directory.py:718
 msgid "Authentication directory server {} has bad auth info."
 msgstr "Не удалось подключиться к серверу службы каталогов {}."
 
-#: ../common/models/authentication_directory.py:757
-#: ../common/models/authentication_directory.py:925
+#: ../common/models/authentication_directory.py:857
+#: ../common/models/authentication_directory.py:1025
 msgid "Fail to connect to Authentication Directory. Check service information."
 msgstr "Ошибка подключения к службе каталогов."
 
-#: ../common/models/authentication_directory.py:983
+#: ../common/models/authentication_directory.py:1083
 msgid "{} new users synced from Authentication Directory."
 msgstr "{} новых пользователей синхронизировано из службы каталогов."
 
-#: ../common/models/authentication_directory.py:994
+#: ../common/models/authentication_directory.py:1094
 #: ../web_app/auth/group_schema.py:228
 msgid "No such Group."
 msgstr "Отсутствует такая группа."
 
-#: ../common/models/authentication_directory.py:998
+#: ../common/models/authentication_directory.py:1098
 msgid "Group {} is not synchronized by AD."
 msgstr "Группа {} не синхронизирована со службой каталогов."
 
-#: ../common/models/authentication_directory.py:1005
+#: ../common/models/authentication_directory.py:1105
 msgid "There is no users to sync."
 msgstr "В группе не найдены пользователи для синхронизации."
 
@@ -1667,101 +1677,101 @@ msgstr "Запрошено отключение тонкого клиента."
 msgid "User {} does not exist."
 msgstr "Не существует пользователя {}."
 
-#~ msgid "username {} must contain >= 3 chars (letters, digits, _, -, +), begin from letter and can't contain any spaces."
-#~ msgstr "имя пользователя {} должно быть >= 3 символов (буквы, цифры, _, -, +), начинаться с буквы и не содержать пробелов."
-
-#~ msgid "Redis waiting exception."
-#~ msgstr "Ошибка Redis."
-
-#~ msgid "User {} password setting error."
-#~ msgstr "Ошибка задания пароля пользователя {}."
-
-#~ msgid "Another task works on pool {} before creating new blank VM."
-#~ msgstr "Другая задача выполняется над пулом {} перед созданием новой пустой ВМ."
-
-#~ msgid "Expansion of guest pool {} requested."
-#~ msgstr "Запрошено расширение гостевого пула {}."
-
-#~ msgid "Active directory object has no service username or password. Including skipped."
-#~ msgstr "У службы каталогов не указаны имя пользователя и пароль. Пропускаем."
-
-#~ msgid "VM {} active directory group including error."
-#~ msgstr "Ошибка ввода ВМ {} в группу AD."
-
-#~ msgid "VM {} AD group including successful."
-#~ msgstr "ВМ {} успешно заведена в контейнер/группу AD."
-
-#~ msgid "Demo version."
-#~ msgstr "Демонстрационная версия."
-
-#~ msgid "Update Pool values for AutomatedPool {}."
-#~ msgstr "Обновление значений пула для автоматического пула {}."
-
-#~ msgid "Failed to create automated pool {}."
-#~ msgstr "Ошибка создания автоматического пула {}."
-
-#~ msgid "Failed to update automated pool {}. Name must be unique."
-#~ msgstr "Ошибка редактирования автоматического пула {}. Имя должно быть уникальным."
-
-#~ msgid "ECP VeiL controller {} error."
-#~ msgstr "Ошибка контроллера ECP VeiL {}."
-
-#~ msgid "Critical controller error."
-#~ msgstr "Критическая ошибка контроллера."
-
-#~ msgid "Role {} has been set to pool {}."
-#~ msgstr "Роль {} добавлена в пул {}."
-
-#~ msgid "Pool already has role."
-#~ msgstr "Пул уже имеет роль."
-
-#~ msgid "Roles: {} was deleted to pool {}."
-#~ msgstr "Роли: {} удалены в пуле {}."
-
-#~ msgid "Controller can`t create VM. Unknown node."
-#~ msgstr "Контроллер не может создать ВМ. Неизвестный узел."
-
-#~ msgid "Unknown node {}."
-#~ msgstr "Неизвестный узел {}."
-
-#~ msgid "Attempts to create VM {} have been exhausted."
-#~ msgstr "Превышен лимит попыток создания ВМ {}."
-
-#~ msgid "  Duration: {}."
-#~ msgstr "  Продолжительность: {}."
-
-#~ msgid "User {} created with role {}."
-#~ msgstr "Пользователь {} создан с ролью {}."
-
-#~ msgid "Something went wrong. Interrupt while."
-#~ msgstr "Что-то пошло не так. Прерываем while."
-
-#~ msgid "Controller has not free space for creating new VM."
-#~ msgstr "На контроллере отсутствует место для создания новой виртуальной машины."
-
-#~ msgid "Pool {} has been deactivated."
-#~ msgstr "Пул {} деактивирован."
-
-#~ msgid "Can`t connect to {}."
-#~ msgstr "Не удается подключиться к {}."
-
-#~ msgid "StaticPool: Create VMs."
-#~ msgstr "Статический пул: создание виртуальных машин."
-
-#~ msgid "StaticPool: Create StaticPool."
-#~ msgstr "Статический пул: создание статического пула."
-
-#~ msgid "StaticPool: Create Pool."
-#~ msgstr "Статический пул: создание пула."
-
-#~ msgid "2fa auth error for user: {}."
-#~ msgstr "Ошибка двухфакторной аутентификации для пользователя: {}."
-
-#~ msgid "User {} do not have a secret code for 2fa auth. Please generate this in settings of user."
-#~ msgstr "У пользователя {} нет секретного кода для двухфакторной аутентификации. Пожалуйста, сгенерируйте это в настройках пользователя."
+#~ msgid "Group {} is removed for user {}."
+#~ msgstr "Группа {} удалена у пользователя {}."
 
 #~ msgid "One-time password error for user: {}."
 #~ msgstr "Ошибка одноразового пароля для пользователя: {}."
 
-#~ msgid "Group {} is removed for user {}."
-#~ msgstr "Группа {} удалена у пользователя {}."
+#~ msgid "User {} do not have a secret code for 2fa auth. Please generate this in settings of user."
+#~ msgstr "У пользователя {} нет секретного кода для двухфакторной аутентификации. Пожалуйста, сгенерируйте это в настройках пользователя."
+
+#~ msgid "2fa auth error for user: {}."
+#~ msgstr "Ошибка двухфакторной аутентификации для пользователя: {}."
+
+#~ msgid "StaticPool: Create Pool."
+#~ msgstr "Статический пул: создание пула."
+
+#~ msgid "StaticPool: Create StaticPool."
+#~ msgstr "Статический пул: создание статического пула."
+
+#~ msgid "StaticPool: Create VMs."
+#~ msgstr "Статический пул: создание виртуальных машин."
+
+#~ msgid "Can`t connect to {}."
+#~ msgstr "Не удается подключиться к {}."
+
+#~ msgid "Pool {} has been deactivated."
+#~ msgstr "Пул {} деактивирован."
+
+#~ msgid "Controller has not free space for creating new VM."
+#~ msgstr "На контроллере отсутствует место для создания новой виртуальной машины."
+
+#~ msgid "Something went wrong. Interrupt while."
+#~ msgstr "Что-то пошло не так. Прерываем while."
+
+#~ msgid "User {} created with role {}."
+#~ msgstr "Пользователь {} создан с ролью {}."
+
+#~ msgid "  Duration: {}."
+#~ msgstr "  Продолжительность: {}."
+
+#~ msgid "Attempts to create VM {} have been exhausted."
+#~ msgstr "Превышен лимит попыток создания ВМ {}."
+
+#~ msgid "Unknown node {}."
+#~ msgstr "Неизвестный узел {}."
+
+#~ msgid "Controller can`t create VM. Unknown node."
+#~ msgstr "Контроллер не может создать ВМ. Неизвестный узел."
+
+#~ msgid "Roles: {} was deleted to pool {}."
+#~ msgstr "Роли: {} удалены в пуле {}."
+
+#~ msgid "Pool already has role."
+#~ msgstr "Пул уже имеет роль."
+
+#~ msgid "Role {} has been set to pool {}."
+#~ msgstr "Роль {} добавлена в пул {}."
+
+#~ msgid "Critical controller error."
+#~ msgstr "Критическая ошибка контроллера."
+
+#~ msgid "ECP VeiL controller {} error."
+#~ msgstr "Ошибка контроллера ECP VeiL {}."
+
+#~ msgid "Failed to update automated pool {}. Name must be unique."
+#~ msgstr "Ошибка редактирования автоматического пула {}. Имя должно быть уникальным."
+
+#~ msgid "Failed to create automated pool {}."
+#~ msgstr "Ошибка создания автоматического пула {}."
+
+#~ msgid "Update Pool values for AutomatedPool {}."
+#~ msgstr "Обновление значений пула для автоматического пула {}."
+
+#~ msgid "Demo version."
+#~ msgstr "Демонстрационная версия."
+
+#~ msgid "VM {} AD group including successful."
+#~ msgstr "ВМ {} успешно заведена в контейнер/группу AD."
+
+#~ msgid "VM {} active directory group including error."
+#~ msgstr "Ошибка ввода ВМ {} в группу AD."
+
+#~ msgid "Active directory object has no service username or password. Including skipped."
+#~ msgstr "У службы каталогов не указаны имя пользователя и пароль. Пропускаем."
+
+#~ msgid "Expansion of guest pool {} requested."
+#~ msgstr "Запрошено расширение гостевого пула {}."
+
+#~ msgid "Another task works on pool {} before creating new blank VM."
+#~ msgstr "Другая задача выполняется над пулом {} перед созданием новой пустой ВМ."
+
+#~ msgid "User {} password setting error."
+#~ msgstr "Ошибка задания пароля пользователя {}."
+
+#~ msgid "Redis waiting exception."
+#~ msgstr "Ошибка Redis."
+
+#~ msgid "username {} must contain >= 3 chars (letters, digits, _, -, +), begin from letter and can't contain any spaces."
+#~ msgstr "имя пользователя {} должно быть >= 3 символов (буквы, цифры, _, -, +), начинаться с буквы и не содержать пробелов."
