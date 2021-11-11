@@ -1,9 +1,9 @@
 ---
 
-- name: reload postgresql
+- name: restart postgresql
   service:
     name: postgresql
-    state: reloaded
+    state: restarted
 
 - name: apt update
   apt:

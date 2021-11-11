@@ -55,6 +55,26 @@
   environment:
     PYTHONPATH: "/opt/veil-vdi/app"
 
+- name: Broker | Remove superuser permissions on local
+  postgresql_user:
+    name: "{{ broker_db_user }}"
+    role_attr_flags: LOGIN,NOSUPERUSER
+  no_log: true
+  become: true
+  become_user: postgres
+  when: not with_pgcluster|bool
+
+- name: Broker | Remove superuser permissions on pgcluster
+  postgresql_user:
+    name: "{{ broker_db_user }}"
+    role_attr_flags: LOGIN,NOSUPERUSER
+  no_log: true
+  become: true
+  become_user: postgres
+  delegate_to: "{{ item }}"
+  with_items: "{{ groups.master[0] }}"
+  when: with_pgcluster|bool
+
 # apache2 tasks
 - import_tasks: apache2.yml
 
