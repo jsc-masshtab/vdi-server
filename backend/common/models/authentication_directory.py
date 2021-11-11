@@ -588,6 +588,8 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
         if authentication_directory.directory_type == AuthenticationDirectory.DirectoryTypes.FreeIPA:
             username = LDAP_LOGIN_PATTERN.format(
                 username=username, dc=dc_str)
+            if not domain_name:
+                domain_name = dc_str
         elif authentication_directory.directory_type == AuthenticationDirectory.DirectoryTypes.ActiveDirectory:
             if not domain_name:
                 domain_name = authentication_directory.dc_str
@@ -602,6 +604,8 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
             if authentication_directory.directory_type == AuthenticationDirectory.DirectoryTypes.ActiveDirectory:
                 ldap_server.simple_bind_s(username, password)
             else:
+                if not user_dn:
+                    raise ValidationError(_local_("Invalid credentials."))
                 ldap_server.simple_bind_s(user_dn, password)
             user = await UserModel.get_object(
                 extra_field_name="username",
@@ -760,7 +764,7 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
                 "(!(ipaUniqueID={}))".format(group.ad_guid)
                 for group in assigned_groups
             ]
-            groups_filter.append("(cn=*{}*)".format(group_name))  # В случае IPA  wildcard работает с обеих сторон
+            groups_filter.append("(cn={}*)".format(group_name))  # В случае IPA wildcard не работает с обеих сторон
         else:
             raise NotImplementedError(
                 "{} not implemented yet.".format(self.directory_type))
