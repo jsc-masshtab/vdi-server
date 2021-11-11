@@ -110,7 +110,8 @@ def upgrade():
                               END IF;
                             END;
                             $BODY$
-                            LANGUAGE plpgsql;""".format(
+                            LANGUAGE plpgsql
+                            SECURITY DEFINER;""".format(
             message=msg_str, name_str=name_str, path_str=path_str
         )
     )
