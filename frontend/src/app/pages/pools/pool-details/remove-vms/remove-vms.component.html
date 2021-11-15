@@ -1,4 +1,4 @@
-<div class="form">
+<div class="form" [formGroup]="form" >
 
   <div class="form-header">
     <h1>Удаление вм из пула {{ data?.namePool }}</h1>
@@ -10,17 +10,34 @@
       <mat-form-field>
         <mat-label *ngIf="data?.vms?.length">Выберите ВМ для удаления</mat-label>
         <mat-label *ngIf="!data?.vms?.length">- нет виртуальных машин -</mat-label>
-        <mat-select (selectionChange)="selectVm($event)" multiple="true">
+        <mat-select  formControlName="vmsInput" multiple="true">
+          <mat-option *ngIf="data.vms?.length" disabled="disabled" class="mat-filter-option">
+            <button type="button" class="mat-form-btn" (click)="selectAllVms()">
+              Выбрать все
+            </button>
+
+            <button type="button" class="mat-form-btn" (click)="deselectAllVms()">
+              Очистить выбор
+            </button>
+          </mat-option>
           <mat-option *ngFor="let vm of data?.vms" [value]="vm?.id">
             {{vm.verbose_name}}
           </mat-option>
         </mat-select>
       </mat-form-field>
+      <ng-container *ngIf="form.hasError('required', 'vmsInput') && checkValid">
+        <ng-container *ngTemplateOutlet="errorTemp"></ng-container>
+      </ng-container>
     </label>
   </div>
 
   <div class="form-actions">
-    <button (click)="send()" class="form-btn"><fa-icon [icon]="['fas','trash-alt']" size="xs"></fa-icon><span class="action-name">Удалить</span></button>
+    <button  type="submit" (click)="send()" class="form-btn"><fa-icon [icon]="['fas','trash-alt']" size="xs"></fa-icon><span class="action-name">Удалить</span></button>
   </div>
 
 </div>
+
+
+<ng-template #errorTemp>
+  <div class="error" [@animForm]="error">Поле обязательно для заполения</div>
+</ng-template>
