@@ -8,7 +8,7 @@
         </div>
     </div>
     <div class="details-control-panel">
-        <button (click)="getCluster()" class="btn-refresh" title="Обновить"><fa-icon [icon]="['fas','sync-alt']"></fa-icon></button>
+        <vdi-button-refresh (clickRefresh)="getCluster()" ></vdi-button-refresh>
     </div>
 
     <div class="details-row">

@@ -56,10 +56,10 @@ export class ThinClientStatisticComponent implements OnInit, OnDestroy {
 
   public refresh(): void {
     this.service.params.spin = true;
-    this.getStatictic();
+    this.getStatistics();
   }
 
-  public getStatictic() {
+  public getStatistics() {
     if (this.sub) {
       this.sub.unsubscribe();
     }
@@ -78,12 +78,12 @@ export class ThinClientStatisticComponent implements OnInit, OnDestroy {
   public sortList(param: IParams): void {
     this.service.params.spin = param.spin;
     this.service.params.nameSort = param.nameSort;
-    this.getStatictic();
+    this.getStatistics();
   }
 
   public toPage(message: any): void {
     this.offset = message.offset;
-    this.getStatictic();
+    this.getStatistics();
   }
 
   ngOnDestroy() {

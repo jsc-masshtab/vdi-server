@@ -7,7 +7,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 
 import { AppRoutingModule } from '../../app-routing.module';
-import { SharedModule } from '../../shared/shared.module';
+import { SharedModule } from '@shared/shared.module';
 import { ClustersModule } from '../resourses/clusters/clusters.module';
 import { DatapoolsModule } from '../resourses/datapools/datapools.module';
 import { NodesModule } from '../resourses/nodes/nodes.module';
