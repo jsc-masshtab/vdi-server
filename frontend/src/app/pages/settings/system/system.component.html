@@ -4,9 +4,8 @@
     <fa-icon [icon]="['fas','sliders-h']"></fa-icon>
       <span class="crumb-name">Система</span>
   </div>
-  <button (click)="getSystemInfo()" class="btn-refresh" title="Обновить">
-    <fa-icon [icon]="['fas','sync-alt']"></fa-icon>
-  </button>
+  <vdi-button-refresh (clickRefresh)="getSystemInfo()" ></vdi-button-refresh>
+
   <div class="control-btns">
   
   </div>

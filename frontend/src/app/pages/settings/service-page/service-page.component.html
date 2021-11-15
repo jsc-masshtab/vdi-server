@@ -4,10 +4,8 @@
     <span class="crumb-name">Сервисы</span>
   </div>
 
-  <button class="btn-refresh" (click)="refresh()" title="Обновить">
-    <fa-icon [icon]="['fas','sync-alt']"></fa-icon>
-  </button>
-  
+  <vdi-button-refresh (clickRefresh)="refresh()" ></vdi-button-refresh>
+
 </div>
 
 <div class="components-info" #view>

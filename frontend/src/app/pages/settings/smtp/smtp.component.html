@@ -4,9 +4,8 @@
     <fa-icon [icon]="['fas','envelope']"></fa-icon>
       <span class="crumb-name">Настройки SMTP сервера</span>
   </div>
-  <button (click)="getSmtpSettings()" class="btn-refresh" title="Обновить">
-    <fa-icon [icon]="['fas','sync-alt']"></fa-icon>
-  </button>
+  <vdi-button-refresh (clickRefresh)="getSmtpSettings()" ></vdi-button-refresh>
+
   <div class="control-btns">
     <button type="button" (click)="openModal()">
       <fa-icon [icon]="['fas','plus-circle']"></fa-icon>

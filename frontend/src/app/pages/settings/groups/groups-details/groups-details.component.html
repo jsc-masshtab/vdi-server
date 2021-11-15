@@ -15,9 +15,7 @@
   </div>
 
   <div class="details-control-panel">
-    <button (click)="getGroup()" class="btn-refresh" title="Обновить">
-      <fa-icon [icon]="['fas','sync-alt']"></fa-icon>
-    </button>
+    <vdi-button-refresh (clickRefresh)="getGroup()" ></vdi-button-refresh>
 
     <button (click)="removeGroup()" *ngIf="menuActive === 'info'" title="Удалить группу" class="btn-control">
       <fa-icon [icon]="['fas','trash-alt']" size="xs"></fa-icon>

@@ -4,9 +4,7 @@
         <span class="crumb-name">Группы</span>
     </div>
 
-    <button (click)="getAllGroups()" class="btn-refresh" title="Обновить">
-        <fa-icon [icon]="['fas','sync-alt']"></fa-icon>
-    </button>
+    <vdi-button-refresh (clickRefresh)="getAllGroups()" ></vdi-button-refresh>
 
     <div class="control-btns">
         <button type="button" (click)="addGroup()">
