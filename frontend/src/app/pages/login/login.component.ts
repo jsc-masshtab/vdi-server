@@ -72,7 +72,7 @@ export class LoginComponent implements OnInit {
   }
 
   public send() {
-  
+
     this.loginService.auth(this.loginForm.value).subscribe((res: { data: { access_token: string, expires_on: string, username: string }} & { errors: [] } ) => {
       if (res && res.data) {
         this.authStorageService.saveInStorage(res.data);

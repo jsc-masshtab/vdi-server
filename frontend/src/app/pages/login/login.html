@@ -30,10 +30,10 @@
 			</label>
 
 			<label class="field" *ngIf="useCode.value">
-				
+
 				<input type="text" placeholder="Введите 6-значный код" formControlName="code">
 			</label>
-			
+
 			<label [class.ldap-disabled]="ldapDomain===''">
 				<div class="checkbox-bg">
 					<input id="ldap" type="checkbox" formControlName="ldap" >
