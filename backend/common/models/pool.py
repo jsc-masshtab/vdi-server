@@ -838,7 +838,7 @@ class Pool(VeilModel):
         return await pool.full_delete(creator)
 
     @classmethod
-    async def activate(cls, pool_id):
+    async def activate(cls, pool_id, creator="system"):
         pool = await Pool.get(pool_id)
         await pool.set_status(Status.ACTIVE)
         entity = {"entity_type": EntityType.POOL, "entity_uuid": pool_id}
@@ -850,7 +850,7 @@ class Pool(VeilModel):
                 await vm.update(status=Status.ACTIVE).apply()
         await system_logger.info(
             _local_("Pool {} has been activated.").format(pool.verbose_name),
-            entity=entity
+            entity=entity, user=creator
         )
         return True
 
@@ -1243,7 +1243,7 @@ class Pool(VeilModel):
             )
         return entity_response.success
 
-    async def tag_add_entities(self, tag: str, vm_objects: list):
+    async def tag_add_entities(self, tag: str, vm_objects: list, creator: str = "system"):
         """Attach 1 tag to many entities."""
         pool_tag = await self.get_tag(tag)
         ent_list = [
@@ -1257,7 +1257,7 @@ class Pool(VeilModel):
                     _local_("Tag {} added to VM {}.").format(
                         pool_tag.verbose_name, vm.verbose_name
                     ),
-                    user="system",
+                    user=creator,
                     entity=vm.entity,
                 )
         return entity_response.success

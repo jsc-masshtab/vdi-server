@@ -114,7 +114,7 @@ class CancelTaskMutation(graphene.Mutation):
     ok = graphene.Boolean()
 
     @administrator_required
-    async def mutate(self, _info, task, **kwargs):
+    async def mutate(self, _info, task, creator, **kwargs):
 
         # Check if task exists and has status IN_PROGRESS
         progressing_task_id = await Task.query.where(
@@ -145,7 +145,7 @@ class CancelTaskAssocWithContMutation(graphene.Mutation):
     ok = graphene.Boolean()
 
     @administrator_required
-    async def mutate(self, _info, controller, **kwargs):
+    async def mutate(self, _info, controller, creator, **kwargs):
         await send_cmd_to_cancel_tasks_associated_with_controller(controller)
         return CancelTaskAssocWithContMutation(ok=True)
 

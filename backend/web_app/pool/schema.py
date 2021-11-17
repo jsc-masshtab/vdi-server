@@ -797,7 +797,7 @@ class ClearPoolMutation(graphene.Mutation):
     async def mutate(self, info, pool_id, creator):
         pool = await Pool.get(pool_id)
         if (pool.status != Status.ACTIVE) and (pool.status != Status.SERVICE):
-            await pool.activate(pool.id)
+            await pool.activate(pool.id, creator=creator)
             await system_logger.info(
                 _local_("Pool {} has been restored.").format(pool.verbose_name),
                 user=creator
@@ -898,7 +898,7 @@ class CreateStaticPoolMutation(graphene.Mutation, PoolValidator, ControllerFetch
         # Запустить задачи подготовки машин
         for vm_data in vms:
             await request_to_execute_pool_task(
-                vm_data.id, PoolTaskType.VM_PREPARE, full=False
+                vm_data.id, PoolTaskType.VM_PREPARE, full=False, creator=creator
             )
 
         return {
@@ -996,7 +996,7 @@ class AddVmsToStaticPoolMutation(graphene.Mutation):
 
             # Запустить задачи подготовки машин
             await request_to_execute_pool_task(
-                vm.id, PoolTaskType.VM_PREPARE, full=False
+                vm.id, PoolTaskType.VM_PREPARE, full=False, creator=creator
             )
 
         # Разом прикрепляем теги
@@ -1119,7 +1119,7 @@ class ExpandPoolMutation(graphene.Mutation, PoolValidator):
                 _local_("Another task works on pool {}.").format(pool_name))
 
         task_id = await request_to_execute_pool_task(
-            pool_id, PoolTaskType.POOL_EXPAND, ignore_reserve_size=True
+            pool_id, PoolTaskType.POOL_EXPAND, ignore_reserve_size=True, creator=creator
         )
 
         verbose_name = await autopool.verbose_name
@@ -1250,7 +1250,7 @@ class CreateAutomatedPoolMutation(graphene.Mutation, PoolValidator, ControllerFe
 
         # send command to start pool init task
         await request_to_execute_pool_task(
-            str(automated_pool.id), PoolTaskType.POOL_CREATE
+            str(automated_pool.id), PoolTaskType.POOL_CREATE, creator=creator
         )
 
         # pool creation task successfully started
@@ -1302,6 +1302,7 @@ class UpdateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
                     kwargs["pool_id"],
                     PoolTaskType.POOL_DECREASE,
                     new_total_size=new_total_size,
+                    creator=creator
                 )
                 status = await wait_for_task_result(task_id, wait_timeout=3)
 
@@ -1434,9 +1435,7 @@ class PoolUserDropPermissionsMutation(graphene.Mutation):
     pool = graphene.Field(PoolType)
 
     @administrator_required
-    async def mutate(
-        self, _info, pool_id, users, free_assigned_vms=True, creator="system"
-    ):
+    async def mutate(self, _info, pool_id, users, creator, free_assigned_vms=True):
         pool = await Pool.get(pool_id)
         if not pool:
             return PoolUserDropPermissionsMutation(ok=False)
@@ -1506,7 +1505,7 @@ class AssignVmToUser(graphene.Mutation):
     vm = graphene.Field(VmType)
 
     @administrator_required
-    async def mutate(self, _info, vm_id, username=None, users=None, creator="system"):
+    async def mutate(self, _info, vm_id, creator, username=None, users=None):
 
         # Ранее назначение происходило по имени пользователя, далее был добавлено user_id.
         # Использовать либо username, либо user_id.
@@ -1563,7 +1562,7 @@ class FreeVmFromUser(graphene.Mutation):
     ok = graphene.Boolean()
 
     @administrator_required
-    async def mutate(self, _info, vm_id, username=None, users=None, creator="system"):
+    async def mutate(self, _info, vm_id, creator, username=None, users=None):
         vm = await Vm.get(vm_id)
         if vm:
             if username:
@@ -1585,7 +1584,7 @@ class ReserveVm(graphene.Mutation):
     ok = graphene.Boolean()
 
     @administrator_required
-    async def mutate(self, _info, vm_id, reserve=True, creator="system"):
+    async def mutate(self, _info, vm_id, creator, reserve=True):
         vm = await Vm.get(vm_id)
         if vm:
             await vm.reserve(creator=creator, reserve=reserve)
@@ -1600,7 +1599,7 @@ class PrepareVm(graphene.Mutation):
     ok = graphene.Boolean()
 
     @administrator_required
-    async def mutate(self, _info, vm_id, **kwargs):
+    async def mutate(self, _info, vm_id, creator, **kwargs):
 
         # Проверить есть ли в таблице task таски выполняющиеся над этой вм. Если есть то сообщить фронту
         # что подготовка вм уже идет
@@ -1613,7 +1612,7 @@ class PrepareVm(graphene.Mutation):
                 _local_("Another task works on VM {}.").format(vm.verbose_name))
 
         await Entity.create(entity_uuid=vm_id, entity_type=EntityType.VM)
-        await request_to_execute_pool_task(vm_id, PoolTaskType.VM_PREPARE)
+        await request_to_execute_pool_task(vm_id, PoolTaskType.VM_PREPARE, creator=creator)
         return PrepareVm(ok=True)
 
 

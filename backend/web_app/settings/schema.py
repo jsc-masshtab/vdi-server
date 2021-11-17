@@ -230,8 +230,8 @@ class ChangeSettingsMutation(graphene.Mutation):
     ok = graphene.Boolean()
 
     @administrator_required
-    async def mutate(self, _info, **kwargs):
-        ok = await Settings.change_settings(**kwargs)
+    async def mutate(self, _info, creator, **kwargs):
+        ok = await Settings.change_settings(creator=creator, **kwargs)
         return ChangeSettingsMutation(ok=ok)
 
 
@@ -249,8 +249,8 @@ class ChangeSmtpSettingsMutation(graphene.Mutation):
     ok = graphene.Boolean()
 
     @administrator_required
-    async def mutate(self, _info, **kwargs):
-        ok = await Settings.change_smtp_settings(**kwargs)
+    async def mutate(self, _info, creator, **kwargs):
+        ok = await Settings.change_smtp_settings(creator=creator, **kwargs)
         return ChangeSmtpSettingsMutation(ok=ok)
 
 
@@ -265,8 +265,8 @@ class DoServiceAction(graphene.Mutation):
     service_status = ShortString()
 
     @administrator_required
-    async def mutate(self, _info, sudo_password, service_name, service_action,
-                     check_errors=True, creator="system"):
+    async def mutate(self, _info, creator, sudo_password, service_name, service_action,
+                     check_errors=True):
 
         # Проверка  для защиты от иньекции команд c помощью проблелов и спец символов
         # service_action валидируется на уровне  graphql
