@@ -34,15 +34,20 @@
 				<input type="text" placeholder="Введите 6-значный код" formControlName="code">
 			</label>
 
-			<label [class.ldap-disabled]="ldapDomain===''">
+			<label class="ldap-field">
 				<div class="checkbox-bg">
 					<input id="ldap" type="checkbox" formControlName="ldap" >
-					<label class="toggle-btn ldap-toggle-btn" for="ldap"><span></span></label>
+					<label class="toggle-btn ldap-toggle-btn" for="ldap"></label>
 					<label for="ldap" class="checkbox-bg-text">LDAP</label>
 				</div>
+				<label class="field" *ngIf="ldapToggleStatus && (settings$ | async)?.ldap as ldap" >
+					<input type="text" [value]="ldap" disabled>
+				</label>
+				
+
 			</label>
 		</div>
-
+		
 		<div class="form-actions">
 			<button type="submit" (click)="send()" class="form-btn">Войти</button>
 		</div>
