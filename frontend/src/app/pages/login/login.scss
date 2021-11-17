@@ -83,25 +83,6 @@
             box-shadow :inset 0px 0px 1px 0px rgba(0,0,0,0.9);
             z-index: 2;
         }
-
-        // & span::after,
-        // & span::before {
-        //     position: absolute;
-        //     content: "";
-        //     width: 10px;
-        //     height: 2px;
-        //     background: #FFF;
-        //     top: 22px;
-        //     right: 5px;
-        // }
-
-        // & span::before {
-        //     transform: rotate(45deg);
-        // }
-
-        // & span::after {
-        //     transform: rotate(-45deg);
-        // }
     }
 
     .checkbox-bg-text {
@@ -150,5 +131,16 @@
                 cursor:  default !important;
             }
         }
+    }
+}
+
+.ldap-field {
+    display: flex;
+    align-items: center;
+    div {
+        width: 45%;
+    }
+    span {
+        color: rgba(0,0,0,.25);
     }
 }
