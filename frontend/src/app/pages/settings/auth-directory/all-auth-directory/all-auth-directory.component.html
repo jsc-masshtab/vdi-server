@@ -4,10 +4,7 @@
         <span class="crumb-name">Службы каталогов</span>
     </div>
 
-    <button (click)="getAllAuthenticationDirectory()" class="btn-refresh" title="Обновить">
-        <fa-icon [icon]="['fas','sync-alt']"></fa-icon>
-    </button>
-
+    <vdi-button-refresh (clickRefresh)="getAllAuthenticationDirectory()" ></vdi-button-refresh>
     <div class="control-btns">
         <button type="button" (click)="addUser()">
             <fa-icon [icon]="['fas','plus-circle']"></fa-icon>

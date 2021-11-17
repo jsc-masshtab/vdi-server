@@ -42,6 +42,8 @@ class PoolTaskManager:
         # listening for commands
         loop.create_task(self.listen_for_commands())
 
+        loop.create_task(self.sanitize_tasks())
+
     async def listen_for_work(self):
 
         # main loop. Await for work
@@ -116,6 +118,46 @@ class PoolTaskManager:
                     "listen_for_commands exception:" + str(ex), entity=entity
                 )
 
+    async def sanitize_tasks(self):
+        """Проверяем, присутствуют ли в бд задачи в статусе IN_PROGRESS, которые по факту не выполняются в воркере.
+
+        По логике приложения таких ситуаций быть не может, если не была использована опция -do-not-resume-tasks.
+        Но так как подобная ситуауция серьезно нарушит работу приложения, то реализуем эту предосторожность.
+        """
+        while True:
+            try:
+                await asyncio.sleep(60)
+
+                # Задачи в бд
+                tasks_in_progress_in_db = \
+                    await Task.select("id").where(Task.status == TaskStatus.IN_PROGRESS).gino.all()
+                tasks_in_progress_in_db = [task_id for (task_id,) in tasks_in_progress_in_db]
+
+                # Задачи, которые по факту выполняются
+                real_tasks_in_progress = [task_object.task_model.id
+                                          for task_object in AbstractTask.get_task_list_shallow_copy()
+                                          if task_object.task_model]
+
+                # Задачи в бд, которым нет реального соответствия среди выполняемых задач
+                tasks_to_remove_from_db = [task_id
+                                           for task_id in tasks_in_progress_in_db
+                                           if task_id not in real_tasks_in_progress]
+
+                # Удаляем их
+                if tasks_to_remove_from_db:
+                    await Task.delete.where(Task.id.in_(tasks_to_remove_from_db)).gino.status()
+                    await system_logger.warning(
+                        message="Wild tasks detected and removed.",
+                        description=str(tasks_to_remove_from_db)
+                    )
+
+            except asyncio.CancelledError:
+                raise
+            except Exception as ex:
+                await system_logger.error(
+                    message="Error in sanitize_tasks.", description=str(ex)
+                )
+
     async def resume_tasks(self, controller_id=None, remove_unresumable_tasks=False):
         """Анализируем таблицу тасок в бд.
 
@@ -174,28 +216,36 @@ class PoolTaskManager:
                 )
 
     async def launch_task(self, task_data_dict):
-        # print('launch_task ', task_data_dict, flush=True)
+
         # get task data
         task_id = task_data_dict["task_id"]
         task_type = task_data_dict["task_type"]
 
-        # Find task class
         try:
-            task_class = next(
-                task_class
-                for task_class in AbstractTask.__subclasses__()
-                if getattr(task_class, "task_type").name == task_type
-            )
-        except StopIteration:
-            raise RuntimeError("Task class not found. Wrong task type")
+            # Find task class
+            try:
+                task_class = next(
+                    task_class
+                    for task_class in AbstractTask.__subclasses__()
+                    if getattr(task_class, "task_type").name == task_type
+                )
+            except StopIteration:
+                raise RuntimeError("Task class not found. Wrong task type")
 
-        # Get args of __init__
-        task_init_args = inspect.signature(task_class.__init__).parameters.keys()
-        # Form dict of allowed args
-        task_init_args_dict = {k: v for (k, v) in task_data_dict.items() if k in task_init_args}
-        # Create task and execute
-        task = task_class(**task_init_args_dict)
-        task.execute_in_async_task(task_id)
+            # Get args of __init__
+            task_init_args = inspect.signature(task_class.__init__).parameters.keys()
+            # Form dict of allowed args
+            task_init_args_dict = {k: v for (k, v) in task_data_dict.items() if k in task_init_args}
+            # Create task and execute
+            task = task_class(**task_init_args_dict)
+            task.execute_in_async_task(task_id)
+        except Exception:
+            # Задача должна быть либо возобновлена, либо зафейлена.
+            # В бд не должны остаться невозобновленные задачи в статусе IN_PROGRESS
+            task_model = await Task.get(task_id)
+            if task_model:
+                await task_model.set_status(TaskStatus.FAILED, _local_("Task failed to start."))
+            raise
 
     async def cancel_tasks(self, task_ids, cancel_all=False):
         """Cancel_tasks in list or all tasks."""

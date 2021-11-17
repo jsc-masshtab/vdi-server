@@ -137,7 +137,7 @@ class ActiveTkConnection(db.Model, AbstractSortableStatusModel):
                           data_received=func.now()).apply()
 
         # front ws notification
-        additional_data = dict(prev_vm_id=str(prev_vm_id))
+        additional_data = dict(prev_vm_id=str(prev_vm_id)) if prev_vm_id else None
         await publish_data_in_internal_channel(THIN_CLIENTS_SUBSCRIPTION, "UPDATED", self, additional_data,
                                                description=TkConnectionEvent.VM_DATA_CHANGED.name)
         # log

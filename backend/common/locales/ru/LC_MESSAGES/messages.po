@@ -1450,7 +1450,7 @@ msgid "Can not expand pool {} because it reached its total_size."
 msgstr "Не удается расширить пул {} т.к. достигнут максимальный размер."
 
 #: ../web_app/pool/schema.py:1119
-msgid "Another task works on pool {}."
+msgid "Another task works on pool {}: {}."
 msgstr "Другая задача выполняется над пулом {}."
 
 #: ../web_app/pool/schema.py:1126
