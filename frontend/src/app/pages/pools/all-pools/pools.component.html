@@ -4,10 +4,7 @@
         <span class="crumb-name">Пулы рабочих столов</span>
     </div>
 
-    <button (click)="refresh()" class="btn-refresh" title="Обновить">
-        <fa-icon [icon]="['fas','sync-alt']"></fa-icon>
-    </button>
-
+    <vdi-button-refresh (clickRefresh)="refresh()" ></vdi-button-refresh>
     <div class="control-btns">
         <button type="button" *ngIf="controllers?.length" (click)="openCreatePool()" >
             <fa-icon [icon]="['fas','plus-circle']"></fa-icon>

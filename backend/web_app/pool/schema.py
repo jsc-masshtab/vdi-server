@@ -1114,9 +1114,13 @@ class ExpandPoolMutation(graphene.Mutation, PoolValidator):
         tasks = await Task.get_tasks_associated_with_entity(
             pool_id, TaskStatus.IN_PROGRESS
         )
+
         if tasks:
+            tasks_types = ["{} id {}".format(task.task_type, str(task.id)) for task in tasks]
+            tasks_info = "; ".join(tasks_types)
             raise SilentError(
-                _local_("Another task works on pool {}.").format(pool_name))
+                _local_("Another task works on pool {}: {}.").format(pool_name, tasks_info)
+            )
 
         task_id = await request_to_execute_pool_task(
             pool_id, PoolTaskType.POOL_EXPAND, ignore_reserve_size=True

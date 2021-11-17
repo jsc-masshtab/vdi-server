@@ -4,9 +4,7 @@
         <span class="crumb-name">Контроллеры</span>
     </div>
 
-    <button (click)="getAllControllers()" class="btn-refresh" title="Обновить">
-        <fa-icon [icon]="['fas','sync-alt']"></fa-icon>
-    </button>
+    <vdi-button-refresh (clickRefresh)="getAllControllers()" ></vdi-button-refresh>
 
     <div class="control-btns">
         <button type="button" (click)="addController()">

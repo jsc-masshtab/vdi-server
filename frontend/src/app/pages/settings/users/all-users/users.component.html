@@ -4,9 +4,7 @@
         <span class="crumb-name">Пользователи</span>
     </div>
 
-    <button (click)="getAllUsers()" class="btn-refresh" title="Обновить">
-        <fa-icon [icon]="['fas','sync-alt']"></fa-icon>
-    </button>
+    <vdi-button-refresh (clickRefresh)="getAllUsers()" ></vdi-button-refresh>
 
     <div class="control-btns">
         <button type="button" (click)="addUser()">

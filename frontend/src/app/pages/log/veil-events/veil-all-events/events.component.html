@@ -4,10 +4,7 @@
         <span class="crumb-name">События ECP VeiL</span>
     </div>
 
-    <button (click)="refresh()" class="btn-refresh" title="Обновить">
-        <fa-icon [icon]="['fas','sync-alt']"></fa-icon>
-    </button>
-
+    <vdi-button-refresh (clickRefresh)="refresh()" ></vdi-button-refresh>
     <mat-form-field class="events-field">
         <mat-label>Тип событий</mat-label>
 

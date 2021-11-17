@@ -16,10 +16,7 @@
   </div>
 
   <div class="details-control-panel">
-    <button (click)="getUser()" class="btn-refresh" title="Обновить">
-      <fa-icon [icon]="['fas','sync-alt']"></fa-icon>
-    </button>
-
+    <vdi-button-refresh (clickRefresh)="getUser()" ></vdi-button-refresh>
     <ng-container *ngIf="menuActive === 'info'">
       <button *ngIf="entity?.is_active" (click)="deactivateUser()" title="Деактивация пользователя" class="btn-control">
         <!-- <fa-icon [icon]="['fas','trash-alt']" size="xs"></fa-icon> -->
