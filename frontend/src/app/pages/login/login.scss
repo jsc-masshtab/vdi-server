@@ -10,6 +10,15 @@
 	overflow: auto;
 }
 
+.wrapper {
+    border: 1px solid #efecec;
+    border-radius: 4px;
+    width: 100%;
+    margin: 5px 0;
+    background-color: #fff;
+    
+}
+
 .login-title {
 	padding: 5px;
     font-size: 13px;
@@ -19,11 +28,25 @@
     top: 30px;
 }
 
+.login-field {
+    display: flex;
+    align-items: baseline;
+    margin: 0;
+    padding: 2px 3px;
+     p{
+         width: 65%;
+         padding: 0 6px;
+     }
+}
 .form {
 	width: 400px;
 	border: 1px solid #3f606b;
     border-radius: 0;
     box-shadow: 0px 0px 0px 2px white;
+    
+    .form-fields {
+        padding: 2px 3px;
+    }
 }
 
 .form-message {
@@ -83,25 +106,6 @@
             box-shadow :inset 0px 0px 1px 0px rgba(0,0,0,0.9);
             z-index: 2;
         }
-
-        // & span::after,
-        // & span::before {
-        //     position: absolute;
-        //     content: "";
-        //     width: 10px;
-        //     height: 2px;
-        //     background: #FFF;
-        //     top: 22px;
-        //     right: 5px;
-        // }
-
-        // & span::before {
-        //     transform: rotate(45deg);
-        // }
-
-        // & span::after {
-        //     transform: rotate(-45deg);
-        // }
     }
 
     .checkbox-bg-text {
@@ -151,4 +155,21 @@
             }
         }
     }
+}
+
+.ldap-field {
+    display: flex;
+    align-items: center;
+    padding: 5px 8px;
+    div {
+        width: 60%;    }
+    span {
+        width: 100%;
+        color: rgba(0,0,0,.25);
+    }
+}
+
+.code {
+    margin: 10px 5px;
+    padding: 2px 3px;
 }
