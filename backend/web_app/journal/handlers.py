@@ -17,7 +17,7 @@ class GetStatisticsReport(BaseHttpHandler):
 
         # Generate report
         cmd = "timeout 50s perl " \
-              "/usr/local/awstats/wwwroot/cgi-bin/awstats.pl " \
+              "/usr/lib/cgi-bin/awstats.pl " \
               "-config=vdi -update -output -staticlinks -month={} -year={}".format(month, year)
         _, stdout, stderr = await create_subprocess(cmd)
 
