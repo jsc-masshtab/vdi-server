@@ -36,6 +36,13 @@ export class AuthStorageService {
         }
     }
 
+    public setLdap(ldap: string): void {
+        localStorage.setItem('ldap', ldap)
+    }
+    
+    public getLdapCheckbox(): boolean {
+        return localStorage.getItem('ldap') === 'true';
+    }
     public logout(): void {
         localStorage.clear();
         this.router.navigate(['login']);
