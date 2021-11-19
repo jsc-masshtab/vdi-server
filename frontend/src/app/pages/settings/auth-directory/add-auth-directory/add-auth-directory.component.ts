@@ -24,6 +24,7 @@ export class AddAuthenticationDirectoryComponent implements OnDestroy {
       domain_name: ['', Validators.required],
       dc_str: ['', Validators.required],
       verbose_name: ['', Validators.required],
+      connection_type: ['ldap'],
       directory_url: ['', [Validators.required, Validators.pattern(/^ldap[s]?:\/\/[a-zA-Z0-9.-_+ ]+$/)]],
       directory_type: 'ActiveDirectory',
       description: '',
@@ -33,7 +34,7 @@ export class AddAuthenticationDirectoryComponent implements OnDestroy {
 
     this.sub = this.form.get('directory_url').valueChanges.subscribe((directory_url) => {
       if (!String(directory_url).match(/^ldap[s]?:\/\//)) {
-        this.form.get('directory_url').setValue(`ldap://${directory_url}`)
+        this.form.get('directory_url').setValue(`${this.form.get('connection_type').value}://${directory_url}`)
       }
     })
   }
