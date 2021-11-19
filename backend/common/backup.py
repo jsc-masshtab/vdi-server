@@ -1,16 +1,9 @@
 # -*- coding: utf-8 -*-
-
-from common.settings import DB_HOST, DB_NAME, DB_PASS, DB_PORT, DB_USER
-
 import subprocess
 import shlex
 
-
-# print("DB_HOST:", DB_HOST)
-# print("DB_NAME:", DB_NAME)
-# print("DB_PASS:", DB_PASS)
-# print("DB_PORT:", DB_PORT)
-# print("DB_USER:", DB_USER, "\n")
+from common.settings import DB_HOST, DB_NAME, DB_PASS, DB_PORT, DB_USER
+from common.veil.veil_graphene import VeilResourceType
 
 
 class Backup:
@@ -19,7 +12,8 @@ class Backup:
         self.docker_prefix = "docker exec vdi-postgres "
         self.is_docker = True
 
-    def create_backup(self, db_user="postgres", db_host="localhost", db_port="5432", backup_filename="/home/cluster.sql"):
+    def create_backup(self, db_user="postgres", db_host="localhost",
+                      db_port="5432", backup_filename="/home/cluster.sql"):
         """
         Создает бекап БД с помощью 'pg_dumpall'.
         Команада создаст бекап на сервере vdi-postgres, который в докере, в директории /home
@@ -36,7 +30,7 @@ class Backup:
         if int(process.returncode) != 0:
             print("Command failed. Return code: {}".format(process.returncode))
 
-    def terminate_db_sessions(self, db_name="vdi", db_user="postgres"):
+    def terminate_sessions(self, db_name="vdi", db_user="postgres"):
         """Отключает все активные соединения у БД."""
         forbid_connections = \
             """psql -c "UPDATE pg_database SET datallowconn = 'false' WHERE datname = '{name}';" -U {user}"""
@@ -62,6 +56,7 @@ class Backup:
         if self.is_docker:
             restore_db = self.docker_prefix + restore_db
 
+        self.terminate_sessions()
         result_restore_db = subprocess.run(shlex.split(restore_db))
         print("result_restore_db returncode=", result_restore_db.returncode)
 
@@ -72,7 +67,7 @@ class Backup:
         if self.is_docker:
             drop = self.docker_prefix + drop
 
-        self.terminate_db_sessions()
+        self.terminate_sessions()
         result_drop = subprocess.run(shlex.split(drop), stdout=subprocess.DEVNULL)
         print("result_drop returncode=", result_drop.returncode)
 
@@ -81,6 +76,6 @@ class Backup:
 
 
 backup = Backup()
-# backup.terminate_db_sessions()
+# backup.terminate_sessions()
 # backup.restore_postgres_db(backup_file="/home/cluster_base_config.sql")
 # backup.create_backup()
