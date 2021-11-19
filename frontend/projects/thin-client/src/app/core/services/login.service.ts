@@ -2,9 +2,15 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { environment } from 'environments/environment';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 
 
 import { AuthStorageService } from './authStorage.service';
+
+export interface ISettings {
+  language: string
+  ldap: string
+}
 
 @Injectable({
   providedIn: 'root'
@@ -30,5 +36,11 @@ export class LoginService {
                                      .set('Client-Type', 'angular-web');
 
       return this.http.post(url, {}, { headers });
+  }
+
+  public getSettings(): Observable<ISettings> {
+    console.log('run');
+    
+    return this.http.get<ISettings>('/api/settings/').pipe(map((res: any) => res.data));
   }
 }
