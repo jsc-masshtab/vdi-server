@@ -29,6 +29,27 @@
     </label>
 
     <label class="field">
+      <p class="field-name">Тип подключения</p>
+
+      <mat-form-field>
+        <mat-label>Выберите тип подключения</mat-label>
+
+        <mat-select formControlName="connection_type">
+          <mat-option [value]="'ldap'">
+            ldap
+          </mat-option>
+
+          <mat-option [value]="'ldaps'">
+            ldaps
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <ng-container *ngIf="form.hasError('required', 'type') && checkValid"><ng-container *ngTemplateOutlet="errorTemp"></ng-container></ng-container>
+      <div class="error" *ngIf="form.hasError('pattern', 'type') && checkValid">Поле введено некорректно</div>
+    </label>
+
+    <label class="field">
       <p class="field-name">URL</p>
       <input type="text" placeholder="..." formControlName="directory_url">
       <ng-container *ngIf="form.hasError('required', 'directory_url') && checkValid"><ng-container *ngTemplateOutlet="errorTemp"></ng-container></ng-container>
