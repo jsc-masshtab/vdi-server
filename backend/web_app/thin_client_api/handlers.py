@@ -18,10 +18,11 @@ from yaaredis.exceptions import LockError as RedisLockError
 
 from common.languages import _local_
 from common.log.journal import system_logger
-from common.models.active_tk_connection import ActiveTkConnection
+from common.models.active_tk_connection import ActiveTkConnection, TkConnectionEvent
 from common.models.auth import User
 from common.models.pool import AutomatedPool, Pool as PoolM, RdsPool
 from common.models.task import PoolTaskType, Task, TaskStatus
+from common.models.vm import Vm
 from common.settings import (
     INTERNAL_EVENTS_CHANNEL,
     REDIS_TEXT_MSG_CHANNEL,
@@ -511,15 +512,31 @@ class ThinClientWsHandler(BaseWsHandler):
                 event_type = recv_data_dict["event"]
                 tk_conn = await ActiveTkConnection.get(self.conn_id)
                 if tk_conn:
-                    if event_type == "vm_changed":  # юзер подключился/отключился от машины
+                    if event_type == TkConnectionEvent.VM_CHANGED.value:  # юзер подключился/отключился от машины
                         conn_type = recv_data_dict.get("connection_type")
                         is_conn_secure = recv_data_dict.get("is_connection_secure")
                         await tk_conn.update_vm_data(recv_data_dict["vm_id"], conn_type, is_conn_secure)
 
-                    elif event_type == "user_gui":  # юзер нажал кнопку/кликнул
+                    elif event_type == TkConnectionEvent.VM_CONNECTION_ERROR.value:
+                        conn_error_code = recv_data_dict.get("conn_error_code")
+                        conn_error_str = recv_data_dict.get("conn_error_str")
+
+                        user = await User.get(self.user_id)
+                        vm_id = recv_data_dict.get("vm_id")
+                        vm = await Vm.get(vm_id)
+
+                        if user and vm:
+                            await system_logger.info(
+                                _local_("User {} failed to connect to VM {}.").format(user.username, vm.verbose_name),
+                                user=user.username,
+                                description=_local_("Error code: {}. Error message: {}.").format(
+                                    conn_error_code, conn_error_str)
+                            )
+
+                    elif event_type == TkConnectionEvent.USER_GUI.value:  # юзер нажал кнопку/кликнул
                         await tk_conn.update_last_interaction()
 
-                    elif event_type == "network_stats":
+                    elif event_type == TkConnectionEvent.NETWORK_STATS.value:
                         await tk_conn.update_network_stats(**recv_data_dict)
 
         except (KeyError, ValueError, TypeError, JSONDecodeError) as ex:
