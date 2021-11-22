@@ -183,15 +183,15 @@ class AuthLdapTestCase(VdiHttpTestCase):
             error_message = response_dict["errors"][0]["message"]
             self.assertIn("Ошибка авторизации", error_message)
 
-    @pytest.mark.usefixtures("fixt_db", "fixt_auth_dir_for_referral_with_pass", "fixt_user")
-    @gen_test
-    def test_ldap_referral_auth_ok(self):
-        body = '{"username": "spb01@spb.lan", "password": "Bazalt1!", "ldap": true}'
-        response_dict = yield self.get_response(body=body)
-        self.check_external_auth(response_dict)
-        if EXTERNAL_AUTH:
-            access_token = response_dict["data"]["access_token"]
-            self.assertTrue(access_token)
+    # @pytest.mark.usefixtures("fixt_db", "fixt_auth_dir_for_referral_with_pass", "fixt_user")
+    # @gen_test
+    # def test_ldap_referral_auth_ok(self):
+    #     body = '{"username": "spb01@spb.lan", "password": "Bazalt1!", "ldap": true}'
+    #     response_dict = yield self.get_response(body=body)
+    #     self.check_external_auth(response_dict)
+    #     if EXTERNAL_AUTH:
+    #         access_token = response_dict["data"]["access_token"]
+    #         self.assertTrue(access_token)
 
     @pytest.mark.usefixtures(
         "fixt_db", "fixt_auth_dir_with_sync_users", "fixt_group", "fixt_mapping", "fixt_group_role"
