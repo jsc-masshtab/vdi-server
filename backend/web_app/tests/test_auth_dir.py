@@ -14,6 +14,7 @@ from web_app.tests.fixtures import (
     fixt_auth_dir,  # noqa
     fixt_auth_dir_with_pass,  # noqa
     fixt_auth_dir_with_pass_bad,  # noqa
+    fixt_openldap_with_pass,  # noqa
     fixt_mapping,
     fixt_ipa_with_pass,  # noqa
 )  # noqa
@@ -260,6 +261,20 @@ class TestAuthenticationDirectoryQuery:
                     assigned_ad_groups{ad_guid,verbose_name},
                     possible_ad_groups{ad_guid,verbose_name},
                     status}}"""
+        executed = await execute_scheme(
+            auth_dir_schema, query, context=fixt_auth_context
+        )
+        snapshot.assert_match(executed)
+
+    async def test_auth_dir_get_possible_ipa_ad_groups(
+        self, snapshot, fixt_auth_context, fixt_ipa_with_pass
+    ):  # noqa
+        """Проверяем что работает поиск по id и просмотр доступных для назначения групп."""
+        query = """{auth_dir(id: "10923d5d-ba7a-4049-88c5-769267a6cbe5")
+                        {id,
+                         assigned_ad_groups{ad_guid,verbose_name}
+                         possible_ad_groups{ad_guid,verbose_name}
+                         status}}"""
         executed = await execute_scheme(
             auth_dir_schema, query, context=fixt_auth_context
         )
@@ -596,3 +611,19 @@ class TestAuthenticationDirectoryUtils:
         # Чистим
         await User.delete.where(User.username != "vdiadmin").gino.status()
         await group.delete()
+
+    async def test_auth_dir_sync_possible_openldap_users(
+        self, snapshot, fixt_auth_context, fixt_openldap_with_pass
+    ):  # noqa
+        """Проверяем что работает поиск по id и просмотр доступных для назначения групп."""
+        query = """mutation{syncOpenLDAPUsers(
+                                   auth_dir_id: "10923d5d-ba7a-4049-88c5-769267a6cbe7",
+                                   ou: "users")
+                                   {ok}
+                }"""
+        executed = await execute_scheme(
+            auth_dir_schema, query, context=fixt_auth_context
+        )
+        snapshot.assert_match(executed)
+        # Чистим
+        await User.delete.where(User.username != "vdiadmin").gino.status()
