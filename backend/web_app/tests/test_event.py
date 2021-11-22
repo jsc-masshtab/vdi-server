@@ -82,7 +82,7 @@ async def test_event_creator(snapshot, fixt_db, fixt_auth_context):  # noqa
 
     try:
         query = """{
-                  events(limit: 5, offset: 0, event_type: 0, start_date: "%sZ", end_date: "%sZ", user: "test_admin", ordering: "user") {
+                  events(limit: 5, offset: 0, event_type: 0, start_date: "%sZ", end_date: "%sZ", user: "test_admin") {
                     event_type
                     message,
                     description,
@@ -105,6 +105,50 @@ async def test_event_creator(snapshot, fixt_db, fixt_auth_context):  # noqa
             extra_field_value="test",
         )
         await group.delete()
+
+
+@pytest.mark.asyncio
+async def test_event(snapshot, fixt_db, fixt_auth_context):  # noqa
+    event_id = await Event.select("id").gino.first()
+    query = """{
+                  event(id: "%s") {
+                    id
+                    event_type
+                    message,
+                    description,
+                    user
+                  }
+                }""" % str(event_id[0])
+
+    executed = await execute_scheme(event_schema, query, context=fixt_auth_context)
+    assert executed["event"]["id"] == str(event_id[0])
+
+
+@pytest.mark.asyncio
+async def test_events_ordering(snapshot, fixt_db, fixt_auth_context):  # noqa
+    fst = datetime.now() - timedelta(minutes=181)
+    lst = fst + timedelta(minutes=182)
+
+    ordering_list = [
+        "user",
+        "created"
+    ]
+    for ordering in ordering_list:
+        query = """{
+                      events(limit: 5, offset: 0, event_type: 0, start_date: "%sZ", end_date: "%sZ", user: "test_admin", ordering: "%s") {
+                        event_type
+                        message,
+                        description,
+                        user
+                      }
+                    }""" % (
+            fst.replace(microsecond=0).isoformat(),
+            lst.replace(microsecond=0).isoformat(),
+            ordering
+        )
+
+        executed = await execute_scheme(event_schema, query, context=fixt_auth_context)
+        snapshot.assert_match(executed)
 
 
 # @pytest.mark.asyncio

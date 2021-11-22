@@ -217,6 +217,49 @@ snapshots['TestAuthenticationDirectoryQuery.test_auth_dir_get_possible_ad_groups
     }
 }
 
+snapshots['TestAuthenticationDirectoryQuery.test_auth_dir_get_possible_ipa_ad_groups 1'] = {
+    'auth_dir': {
+        'assigned_ad_groups': [
+        ],
+        'id': '10923d5d-ba7a-4049-88c5-769267a6cbe5',
+        'possible_ad_groups': [
+            {
+                'ad_guid': 'b19e2d7e-653e-11eb-ac14-02fff06b60b5',
+                'verbose_name': 'administrator'
+            },
+            {
+                'ad_guid': '66d03094-652a-11eb-ba09-02fff06b60b5',
+                'verbose_name': 'admins'
+            },
+            {
+                'ad_guid': '66eb5144-652a-11eb-b641-02fff06b60b5',
+                'verbose_name': 'editors'
+            },
+            {
+                'ad_guid': '66e4c554-652a-11eb-aee9-02fff06b60b5',
+                'verbose_name': 'ipausers'
+            },
+            {
+                'ad_guid': 'e9e3dcfe-652c-11eb-a73d-02fff06b60b5',
+                'verbose_name': 'read_only'
+            },
+            {
+                'ad_guid': 'dd284a5e-652c-11eb-9bc0-02fff06b60b5',
+                'verbose_name': 'security_administrator'
+            },
+            {
+                'ad_guid': 'f53f87e4-652a-11eb-9f6f-02fff06b60b5',
+                'verbose_name': 'trust admins'
+            },
+            {
+                'ad_guid': '5a0f5868-652e-11eb-bc98-02fff06b60b5',
+                'verbose_name': 'vm_operator'
+            }
+        ],
+        'status': 'ACTIVE'
+    }
+}
+
 snapshots['TestAuthenticationDirectoryQuery.test_auth_dirs_list 1'] = {
     'auth_dirs': [
         {
@@ -238,6 +281,12 @@ snapshots['TestAuthenticationDirectoryUtils.test_auth_dir_check 1'] = {
 
 snapshots['TestAuthenticationDirectoryUtils.test_auth_dir_sync_group_and_users 1'] = {
     'syncAuthDirGroupUsers': {
+        'ok': True
+    }
+}
+
+snapshots['TestAuthenticationDirectoryUtils.test_auth_dir_sync_possible_openldap_users 1'] = {
+    'syncOpenLDAPUsers': {
         'ok': True
     }
 }
