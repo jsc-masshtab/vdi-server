@@ -201,6 +201,7 @@ class JournalSettings(db.Model):
     @classmethod
     async def change_journal_settings(
         cls,
+        creator: str = "system",
         dir_path: str = None,
         period: str = None,
         by_count: bool = None,
@@ -249,5 +250,5 @@ class JournalSettings(db.Model):
             _local_("Journal settings changed."),
             description=settings,
             entity=entity,
-            user=kwargs["creator"],
+            user=creator,
         )

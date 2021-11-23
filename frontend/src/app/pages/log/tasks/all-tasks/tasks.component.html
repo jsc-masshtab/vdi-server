@@ -5,10 +5,7 @@
         <span class="crumb-name">Задачи</span>
     </div>
 
-    <button (click)="refresh()" class="btn-refresh" title="Обновить">
-        <fa-icon [icon]="['fas','sync-alt']"></fa-icon>
-    </button>
-
+    <vdi-button-refresh (clickRefresh)="refresh()" ></vdi-button-refresh>
     <mat-form-field class="tasks-field">
         <mat-label>Состояние выполнения</mat-label>
         <mat-select [formControl]="status">

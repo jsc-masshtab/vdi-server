@@ -84,15 +84,16 @@ class AbstractTask(ABC):
         await self.task_model.update(priority=self._task_priority).apply()
         user_friendly_text = await self.get_user_friendly_text()
 
-        # set task status
-        await self.task_model.set_status(TaskStatus.IN_PROGRESS, user_friendly_text)
-        await system_logger.info(
-            _local_("Task '{}' started.").format(user_friendly_text))
-
-        # Добавить себя в список выполняющихся задач
-        AbstractTask.task_list.append(self)
-
         try:
+            # Добавить себя в список выполняющихся задач
+            AbstractTask.task_list.append(self)
+
+            # set task status
+            await self.task_model.set_status(TaskStatus.IN_PROGRESS, user_friendly_text)
+
+            await system_logger.info(
+                _local_("Task '{}' started.").format(user_friendly_text))
+
             await self.do_task()
             await self.task_model.set_status(TaskStatus.FINISHED, user_friendly_text)
             await system_logger.info(

@@ -8,7 +8,7 @@
         </div>
     </div>
     <div class="details-control-panel">
-        <button (click)="getDatapool()" class="btn-refresh" title="Обновить"><fa-icon [icon]="['fas','sync-alt']"></fa-icon></button>
+        <vdi-button-refresh (clickRefresh)="getDatapool()" ></vdi-button-refresh>
     </div>
 
     <div class="details-row">

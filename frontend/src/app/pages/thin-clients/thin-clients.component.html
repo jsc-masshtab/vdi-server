@@ -4,10 +4,8 @@
     <span class="crumb-name">Сессии тонких клентов</span>
   </div>
 
-  <button (click)="getAll()" class="btn-refresh" title="Обновить">
-    <fa-icon [icon]="['fas','sync-alt']"></fa-icon>
-  </button>
-  
+  <vdi-button-refresh (clickRefresh)="getAll()" ></vdi-button-refresh>
+
   <mat-checkbox class="events-checkbox" [color]="'primary'" [formControl]="disconnected">
     Завершенные
   </mat-checkbox>

@@ -602,6 +602,42 @@ def fixt_auth_dir_with_pass(request, event_loop):
 
 
 @pytest.fixture
+def fixt_auth_dir_for_referral_with_pass(request, event_loop):
+    id = "10913d5d-ba7a-4049-88c5-769267a6cbe8"
+    verbose_name = "test_msk_auth_dir"
+    directory_url = "ldap://192.168.14.251"
+    domain_name = "MSK"
+    dc_str = "msk.lan"
+    encoded_service_password = "Bazalt1!"
+
+    async def setup():
+        await AuthenticationDirectory.soft_create(
+            id=id,
+            verbose_name=verbose_name,
+            directory_url=directory_url,
+            domain_name=domain_name,
+            service_password=encoded_service_password,
+            service_username="Администратор",
+            dc_str=dc_str,
+            creator="system",
+        )
+
+    event_loop.run_until_complete(setup())
+
+    def teardown():
+        async def a_teardown():
+            await AuthenticationDirectory.delete.where(
+                AuthenticationDirectory.id == id
+            ).gino.status()
+            await User.delete.where(User.username == "spb01@spb.lan").gino.status()
+
+        event_loop.run_until_complete(a_teardown())
+
+    request.addfinalizer(teardown)
+    return True
+
+
+@pytest.fixture
 def fixt_ipa_with_pass(request, event_loop):
     id = "10923d5d-ba7a-4049-88c5-769267a6cbe5"
     verbose_name = "test_ipa"
@@ -632,6 +668,44 @@ def fixt_ipa_with_pass(request, event_loop):
             ).gino.status()
             # опасное место
             await User.delete.where(User.username == "admin").gino.status()
+
+        event_loop.run_until_complete(a_teardown())
+
+    request.addfinalizer(teardown)
+    return True
+
+
+@pytest.fixture
+def fixt_openldap_with_pass(request, event_loop):
+    id = "10923d5d-ba7a-4049-88c5-769267a6cbe7"
+    verbose_name = "test_openldap"
+    directory_url = "ldap://192.168.14.79"
+    domain_name = "BAZALT"
+    dc_str = "bazalt.team"
+    encoded_service_password = "Bazalt1!"
+
+    async def setup():
+        await AuthenticationDirectory.soft_create(
+            id=id,
+            verbose_name=verbose_name,
+            directory_url=directory_url,
+            directory_type='OpenLDAP',
+            domain_name=domain_name,
+            service_password=encoded_service_password,
+            service_username="ad120",
+            dc_str=dc_str,
+            creator="system",
+        )
+
+    event_loop.run_until_complete(setup())
+
+    def teardown():
+        async def a_teardown():
+            await AuthenticationDirectory.delete.where(
+                AuthenticationDirectory.id == id
+            ).gino.status()
+            # опасное место
+            await User.delete.where(User.username == "ad120").gino.status()
 
         event_loop.run_until_complete(a_teardown())
 

@@ -4,10 +4,7 @@
         <span class="crumb-name">Виртуальные машины</span>
     </div>
 
-    <button (click)="getAllVms()" class="btn-refresh" title="Обновить">
-        <fa-icon [icon]="['fas','sync-alt']"></fa-icon>
-    </button>
-
+    <vdi-button-refresh (clickRefresh)="getAllVms()" ></vdi-button-refresh>
     <div class="control-btns-end">
         <button *ngIf="pageRollup" class="bars-btn" (click)="toggleShow()">
             <fa-icon [icon]="['fas','bars']"></fa-icon>

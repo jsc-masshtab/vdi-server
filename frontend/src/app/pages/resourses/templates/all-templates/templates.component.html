@@ -4,10 +4,7 @@
         <span class="crumb-name">Шаблоны ВМ</span>
     </div>
 
-    <button (click)="getTemplates()" class="btn-refresh" title="Обновить">
-        <fa-icon [icon]="['fas','sync-alt']"></fa-icon>
-    </button>
-
+    <vdi-button-refresh (clickRefresh)="getTemplates()" ></vdi-button-refresh>
     <div class="control-btns-end">
         <button *ngIf="pageRollup" class="bars-btn" (click)="toggleShow()">
             <fa-icon [icon]="['fas','bars']"></fa-icon>

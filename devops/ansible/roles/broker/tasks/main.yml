@@ -61,6 +61,9 @@
 # redis-server tasks
 - import_tasks: redis-server.yml
 
+# awstats tasks
+- import_tasks: awstats.yml
+
 - name: Broker | Start broker services
   service:
     name: "{{ item }}"

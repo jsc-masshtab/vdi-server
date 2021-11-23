@@ -507,14 +507,14 @@ class AddControllerMutation(graphene.Mutation, ControllerValidator):
 
     @classmethod
     @administrator_required
-    async def mutate(cls, root, info, **kwargs):
+    async def mutate(cls, root, info, creator, **kwargs):
         # Валидируем аргументы
         await cls.validate(**kwargs)
         if not cls.__TOKEN_PREFIX.match(kwargs["token"]):
             kwargs["token"] = " ".join(["jwt", kwargs["token"]])
         # Формат токена дополнительно валидируется в veil api client
         try:
-            controller = await Controller.soft_create(**kwargs)
+            controller = await Controller.soft_create(creator=creator, **kwargs)
         except TimeoutError:
             raise SimpleError(_local_("Connection to ECP has been failed."))
         else:

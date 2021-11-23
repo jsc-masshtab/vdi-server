@@ -13,7 +13,6 @@ import { PoolsService } from './pools.service';
 import { RemoteComponent } from './pool-details/remote-component/remote-component';
 import { ManageVmComponent } from './pool-details/manage-vm/manage-vm.component';
 import { SharedModule } from '@app/shared/shared.module';
-import { ButtonRefreshComponent } from '../../components/button-refresh/button-refresh.component';
 import { YesNoFormModule } from '../../components/yes-no-form/yes-no-form.module';
 import { MessengerComponent } from './pool-details/messenger/messenger.component';
 
@@ -24,7 +23,6 @@ import { MessengerComponent } from './pool-details/messenger/messenger.component
     PoolDetailsComponent,
     RemoteComponent,
     ManageVmComponent,
-    ButtonRefreshComponent,
     MessengerComponent,
     ],
   imports: [

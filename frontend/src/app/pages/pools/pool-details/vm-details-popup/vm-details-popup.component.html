@@ -7,9 +7,7 @@
   </div>
 
   <div class="details-control-panel">
-    <button (click)="refresh()" class="btn-refresh" title="Обновить">
-      <fa-icon [icon]="['fas','sync-alt']"></fa-icon>
-    </button>
+    <vdi-button-refresh (clickRefresh)="refresh()" ></vdi-button-refresh>
 
     <button *ngIf="data?.typePool !== 'rds'" (click)="addUser()" title="Назначить пользователя" class="btn-control"><fa-icon [icon]="['fas','plus-circle']"></fa-icon><fa-icon [icon]="['fas','user']"></fa-icon></button>
     <button *ngIf="data?.username" (click)="removeUser()" title="Освободить от пользователя" class="btn-control"><fa-icon [icon]="['fas','trash-alt']"></fa-icon><fa-icon [icon]="['fas','user']"></fa-icon></button>
