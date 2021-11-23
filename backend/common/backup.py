@@ -2,53 +2,76 @@
 import shlex
 import subprocess
 
+from common.languages import _local_
+from common.veil.veil_errors import SilentError, SimpleError
+
 
 class Backup:
-
     def __init__(self):
         self.docker_prefix = "docker exec vdi-postgres "
         self.is_docker = True
 
     def create_backup(self, db_user="postgres", db_host="localhost",
-                      db_port="5432", backup_filename="/home/cluster.sql"):
+                      db_port="5432", backup_filename="/home/cluster.sql", creator="system"):
         """Создает бекап БД с помощью 'pg_dumpall'."""
-        command_template = "pg_dumpall -U {user} -h {host} -p {port} --clean --if-exists --file={filename}"
-        backup_command = command_template.format(user=db_user, host=db_host, port=db_port, filename=backup_filename)
+        command_template = "pg_dumpall -U {} -h {} -p {} --clean --if-exists --file={}"
+        backup_command = command_template.format(db_user, db_host, db_port, backup_filename)
 
         if self.is_docker:
             backup_command = self.docker_prefix + backup_command
 
         result_backup = subprocess.run(shlex.split(backup_command))
-        if int(result_backup.returncode) != 0:
-            raise Exception("Backup DB failed. Return code: {}".format(result_backup.returncode))
-        return int(result_backup.returncode)
 
-    def terminate_sessions(self, db_name="vdi", db_user="postgres"):
+        if result_backup.returncode != 0:
+            raise SimpleError(
+                _local_("Backup DB failed."),
+                description="Return code: {}".format(result_backup.returncode),
+                user=creator
+            )
+
+        if result_backup.stderr:
+            raise SimpleError(
+                _local_("Error occurred during creating DB backup. {}.").format(result_backup.stderr),
+                user=creator
+            )
+
+        return result_backup.returncode
+
+    def terminate_sessions(self, db_name="vdi", db_user="postgres", creator="system"):
         """Отключает все активные соединения у БД."""
         forbid_connections = \
-            """psql -c "UPDATE pg_database SET datallowconn = 'false' WHERE datname = '{name}';" -U {user}"""
-        forbid_connections = forbid_connections.format(name=db_name, user=db_user)
+            """psql -c "UPDATE pg_database SET datallowconn = 'false' WHERE datname = '{}';" -U {}"""
+        forbid_connections = forbid_connections.format(db_name, db_user)
 
         terminate_connections = \
-            """psql -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '{name}';" -U {user}"""
-        terminate_connections = terminate_connections.format(name=db_name, user=db_user)
+            """psql -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '{}';" -U {}"""
+        terminate_connections = terminate_connections.format(db_name, db_user)
 
         if self.is_docker:
             forbid_connections = self.docker_prefix + forbid_connections
             terminate_connections = self.docker_prefix + terminate_connections
 
         result_forbid_connections = subprocess.run(shlex.split(forbid_connections), stdout=subprocess.DEVNULL)
-        if int(result_forbid_connections.returncode) != 0:
-            raise Exception("Forbid connections failed. Return code: {}".format(result_forbid_connections.returncode))
+
+        if result_forbid_connections.returncode != 0:
+            raise SilentError(
+                _local_("Forbid connections failed.")
+            )
 
         result_terminate_sessions = subprocess.run(shlex.split(terminate_connections), stdout=subprocess.DEVNULL)
-        if int(result_terminate_sessions.returncode) != 0:
-            raise Exception("Terminate sessions failed. Return code: {}".format(result_terminate_sessions.returncode))
-        return int(result_terminate_sessions.returncode)
 
-    def restore_postgres_db(self, db_user="postgres", backup_file="/home/cluster.sql"):
-        """Восстанавливает БД из бекапа."""
-        restore_db = "psql -U {user} -f {backup_file} postgres".format(user=db_user, backup_file=backup_file)
+        if result_terminate_sessions.returncode != 0:
+            raise SimpleError(
+                _local_("Terminate sessions failed."),
+                description="Return code: {}".format(result_terminate_sessions.returncode),
+                user=creator
+            )
+
+        return result_terminate_sessions.returncode
+
+    def restore_db(self, db_user="postgres", backup_file="/home/cluster.sql", creator="system"):
+        """Восстанавливает БД из бекапа с помощью 'psql'."""
+        restore_db = "psql -U {} -f {} postgres".format(db_user, backup_file)
 
         if self.is_docker:
             restore_db = self.docker_prefix + restore_db
@@ -56,11 +79,23 @@ class Backup:
         self.terminate_sessions()
 
         result_restore_db = subprocess.run(shlex.split(restore_db), stdout=subprocess.DEVNULL)
-        if int(result_restore_db.returncode) != 0:
-            raise Exception("Restore BD failed. Return code: {}".format(result_restore_db.returncode))
-        return int(result_restore_db.returncode)
 
-    def drop_db(self, db_name):
+        if result_restore_db.returncode != 0:
+            raise SimpleError(
+                _local_("Restore BD failed."),
+                description="Return code: {}".format(result_restore_db.returncode),
+                user=creator
+            )
+
+        if result_restore_db.stderr:
+            raise SimpleError(
+                _local_("Error occurred during restoring DB. {}.").format(result_restore_db.stderr),
+                user=creator
+            )
+
+        return result_restore_db.returncode
+
+    def drop_db(self, db_name, creator="system"):
         """Удаляет БД."""
         drop = """psql -c "DROP DATABASE {};" -U postgres""".format(db_name)
 
@@ -68,11 +103,17 @@ class Backup:
             drop = self.docker_prefix + drop
 
         self.terminate_sessions()
+
         result_drop = subprocess.run(shlex.split(drop), stdout=subprocess.DEVNULL)
-        print("result_drop returncode=", result_drop.returncode)
-        if int(result_drop.returncode) != 0:
-            raise Exception("Drop DB failed. Return code: {}".format(result_drop.returncode))
-        return int(result_drop.returncode)
+
+        if result_drop.returncode != 0:
+            raise SimpleError(
+                _local_("Drop DB failed."),
+                description="Return code: {}".format(result_drop.returncode),
+                user=creator
+            )
+
+        return result_drop.returncode
 
     def check_backup(self):
         pass
