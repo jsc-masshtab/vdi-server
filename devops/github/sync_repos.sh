@@ -10,10 +10,10 @@
 # Для доступ к github используется токен - https://github.com/settings/tokens
 
 MASHTAB_USER="d.proskurin"
-MASHTAB_PASS="..."
+#MASHTAB_PASS="..."
 
 GITHUB_USER="masshtab"
-GITHUB_PASS="..."
+#GITHUB_PASS="..."
 
 #veil-connect
 cd /tmp
