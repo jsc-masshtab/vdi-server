@@ -8,21 +8,15 @@ from common.veil.veil_errors import SilentError, SimpleError
 
 
 class Backup:
-    def __init__(self):
-        self.docker_prefix = "docker exec vdi-postgres "
-        self.is_docker = True
-
-    def create_backup(self, db_user="postgres", db_host="localhost", db_port="5432",
+    @classmethod
+    def create_backup(cls, db_user="postgres", db_host="localhost", db_port="5432",
                       backup_dir="/home/", backup_name="cluster.sql", creator="system"):
         """Создает бекап БД с помощью 'pg_dumpall'."""
-        backup_file = self.generate_name_with_timestamp(backup_name)
+        backup_file = cls.generate_name_with_timestamp(backup_name)
         backup_file = backup_dir + backup_file
 
         command_pattern = "pg_dumpall -U {} -h {} -p {} --clean --if-exists --file={}"
         backup_command = command_pattern.format(db_user, db_host, db_port, backup_file)
-
-        if self.is_docker:
-            backup_command = self.docker_prefix + backup_command
 
         result_backup = subprocess.run(shlex.split(backup_command))
 
@@ -41,7 +35,8 @@ class Backup:
 
         return result_backup.returncode
 
-    def terminate_sessions(self, db_name="vdi", db_user="postgres", creator="system"):
+    @staticmethod
+    def terminate_sessions(db_name="vdi", db_user="postgres", creator="system"):
         """Отключает все активные соединения у БД."""
         forbid_connections = \
             """psql -c "UPDATE pg_database SET datallowconn = 'false' WHERE datname = '{}';" -U {}"""
@@ -50,10 +45,6 @@ class Backup:
         terminate_connections = \
             """psql -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '{}';" -U {}"""
         terminate_connections = terminate_connections.format(db_name, db_user)
-
-        if self.is_docker:
-            forbid_connections = self.docker_prefix + forbid_connections
-            terminate_connections = self.docker_prefix + terminate_connections
 
         result_forbid_connections = subprocess.run(shlex.split(forbid_connections), stdout=subprocess.DEVNULL)
 
@@ -73,16 +64,14 @@ class Backup:
 
         return result_terminate_sessions.returncode
 
-    def restore_db(self, db_user="postgres", backup_dir="/home/",
+    @classmethod
+    def restore_db(cls, db_user="postgres", backup_dir="/home/",
                    backup_file="cluster.sql", creator="system"):
         """Восстанавливает БД из бекапа с помощью 'psql'."""
         backup_file = backup_dir + backup_file
         restore_db = "psql -U {} -f {} postgres".format(db_user, backup_file)
 
-        if self.is_docker:
-            restore_db = self.docker_prefix + restore_db
-
-        self.terminate_sessions()
+        cls.terminate_sessions()
 
         result_restore_db = subprocess.run(shlex.split(restore_db), stdout=subprocess.DEVNULL)
 
@@ -101,14 +90,12 @@ class Backup:
 
         return result_restore_db.returncode
 
-    def drop_db(self, db_name, creator="system"):
+    @classmethod
+    def drop_db(cls, db_name, creator="system"):
         """Удаляет БД."""
         drop = """psql -c "DROP DATABASE {};" -U postgres""".format(db_name)
 
-        if self.is_docker:
-            drop = self.docker_prefix + drop
-
-        self.terminate_sessions()
+        cls.terminate_sessions()
 
         result_drop = subprocess.run(shlex.split(drop), stdout=subprocess.DEVNULL)
 
