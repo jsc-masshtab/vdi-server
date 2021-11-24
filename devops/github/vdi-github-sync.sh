@@ -9,7 +9,7 @@
 
 # Для доступ к github используется токен - https://github.com/settings/tokens
 
-#MASHTAB_USER="vdi-deploy"
+#MASHTAB_USER="vdi_deploy"
 #MASHTAB_PASS="..."
 
 #GITHUB_USER="masshtab"

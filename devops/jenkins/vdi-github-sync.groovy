@@ -77,9 +77,13 @@ pipeline {
         stage ('sync repos') {
 
             steps {
-                sh script: '''
+                sh script: """
+                    export MASHTAB_USER=${env.MASHTAB_USER}
+                    export MASHTAB_PASS=${env.MASHTAB_PASS}
+                    export GITHUB_USER=${env.GITHUB_USER}
+                    export GITHUB_PASS=${env.GITHUB_PASS}
                     bash devops/github/vdi-github-sync.sh
-                '''
+                """
             }
         }
     }
