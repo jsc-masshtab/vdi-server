@@ -94,6 +94,7 @@ class ControllerPoolType(graphene.ObjectType):
     users_amount = graphene.Int()
     pool_type = graphene.Field(ShortString)
     keep_vms_on = graphene.Boolean()
+    free_vm_from_user = graphene.Boolean()
 
 
 class VeilEventType(VeilResourceType):

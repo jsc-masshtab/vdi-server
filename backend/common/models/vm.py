@@ -890,6 +890,7 @@ class Vm(VeilModel):
                         increase_step=automated_pool.increase_step,
                         vm_name_template=automated_pool.vm_name_template,
                         keep_vms_on=pool.keep_vms_on,
+                        free_vm_from_user=pool.free_vm_from_user,
                         vm_action_upon_user_disconnect=pool.vm_action_upon_user_disconnect,
                         vm_disconnect_action_timeout=pool.vm_disconnect_action_timeout,
                         create_thin_clones=automated_pool.create_thin_clones,

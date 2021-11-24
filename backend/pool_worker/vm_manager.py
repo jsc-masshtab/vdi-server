@@ -167,6 +167,11 @@ class VmManager:
             # Пока длится таймаут у пользователя есть шанс переподлючиться к машине
             await asyncio.sleep(max(pool.vm_disconnect_action_timeout, 0))  # pool parameter for timeout
 
+            # Открепляем пользователя от ВМ, если опция включена
+            if pool.free_vm_from_user and pool_type != Pool.PoolTypes.GUEST:
+                if user_id:
+                    await vm.remove_users(creator="system", users_list=user_id)
+
             # Делаем действие в зависимости от типа пула и типа действия при дисконнекте
             if action == VmActionUponUserDisconnect.RECREATE:
                 # Проверяем что пул типа guest. RECREATE доступно только для гостевого пула

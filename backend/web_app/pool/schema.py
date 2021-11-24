@@ -517,6 +517,7 @@ class PoolType(graphene.ObjectType):
     possible_groups = graphene.List(PoolGroupType)
 
     keep_vms_on = graphene.Boolean()
+    free_vm_from_user = graphene.Boolean()
     create_thin_clones = graphene.Boolean()
     enable_vms_remote_access = graphene.Boolean()
     start_vms = graphene.Boolean()
@@ -704,6 +705,7 @@ def pool_obj_to_type(pool_obj: Pool) -> PoolType:
         "vm_name_template": pool_obj.vm_name_template,
         "os_type": pool_obj.os_type,
         "keep_vms_on": pool_obj.keep_vms_on,
+        "free_vm_from_user": pool_obj.free_vm_from_user,
         "ad_ou": pool_obj.ad_ou,
         "create_thin_clones": pool_obj.create_thin_clones,
         "enable_vms_remote_access": pool_obj.enable_vms_remote_access,
@@ -1012,6 +1014,7 @@ class UpdateStaticPoolMutation(graphene.Mutation, PoolValidator):
         pool_id = graphene.UUID(required=True)
         verbose_name = ShortString()
         keep_vms_on = graphene.Boolean()
+        free_vm_from_user = graphene.Boolean()
         connection_types = graphene.List(graphene.NonNull(ConnectionTypesGraphene))
         vm_action_upon_user_disconnect = VmActionUponUserDisconnectGraphene()
         vm_disconnect_action_timeout = graphene.Int()
@@ -1030,6 +1033,7 @@ class UpdateStaticPoolMutation(graphene.Mutation, PoolValidator):
                 kwargs["pool_id"],
                 kwargs.get("verbose_name"),
                 kwargs.get("keep_vms_on"),
+                kwargs.get("free_vm_from_user"),
                 kwargs.get("connection_types"),
                 creator,
                 kwargs.get("vm_action_upon_user_disconnect"),
@@ -1273,6 +1277,7 @@ class UpdateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
         increase_step = graphene.Int()
         vm_name_template = ShortString()
         keep_vms_on = graphene.Boolean()
+        free_vm_from_user = graphene.Boolean()
         vm_action_upon_user_disconnect = VmActionUponUserDisconnectGraphene()
         vm_disconnect_action_timeout = graphene.Int()
         create_thin_clones = graphene.Boolean()
@@ -1340,6 +1345,7 @@ class UpdateAutomatedPoolMutation(graphene.Mutation, PoolValidator):
                     increase_step=kwargs.get("increase_step"),
                     vm_name_template=vm_name_template,
                     keep_vms_on=kwargs.get("keep_vms_on"),
+                    free_vm_from_user=kwargs.get("free_vm_from_user"),
                     vm_action_upon_user_disconnect=kwargs.get("vm_action_upon_user_disconnect"),
                     vm_disconnect_action_timeout=kwargs.get("vm_disconnect_action_timeout"),
                     create_thin_clones=kwargs.get("create_thin_clones"),
