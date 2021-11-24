@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import shlex
 import subprocess
+from datetime import datetime
 
 from common.languages import _local_
 from common.veil.veil_errors import SilentError, SimpleError
@@ -11,11 +12,14 @@ class Backup:
         self.docker_prefix = "docker exec vdi-postgres "
         self.is_docker = True
 
-    def create_backup(self, db_user="postgres", db_host="localhost",
-                      db_port="5432", backup_filename="/home/cluster.sql", creator="system"):
+    def create_backup(self, db_user="postgres", db_host="localhost", db_port="5432",
+                      backup_dir="/home/", backup_name="cluster.sql", creator="system"):
         """Создает бекап БД с помощью 'pg_dumpall'."""
-        command_template = "pg_dumpall -U {} -h {} -p {} --clean --if-exists --file={}"
-        backup_command = command_template.format(db_user, db_host, db_port, backup_filename)
+        backup_file = self.generate_name_with_timestamp(backup_name)
+        backup_file = backup_dir + backup_file
+
+        command_pattern = "pg_dumpall -U {} -h {} -p {} --clean --if-exists --file={}"
+        backup_command = command_pattern.format(db_user, db_host, db_port, backup_file)
 
         if self.is_docker:
             backup_command = self.docker_prefix + backup_command
@@ -69,8 +73,10 @@ class Backup:
 
         return result_terminate_sessions.returncode
 
-    def restore_db(self, db_user="postgres", backup_file="/home/cluster.sql", creator="system"):
+    def restore_db(self, db_user="postgres", backup_dir="/home/",
+                   backup_file="cluster.sql", creator="system"):
         """Восстанавливает БД из бекапа с помощью 'psql'."""
+        backup_file = backup_dir + backup_file
         restore_db = "psql -U {} -f {} postgres".format(db_user, backup_file)
 
         if self.is_docker:
@@ -115,5 +121,8 @@ class Backup:
 
         return result_drop.returncode
 
-    def check_backup(self):
-        pass
+    @staticmethod
+    def generate_name_with_timestamp(name):
+        now = datetime.now().replace(microsecond=0)
+        name = str(now) + "_" + str(name)
+        return name.replace(" ", "_")
