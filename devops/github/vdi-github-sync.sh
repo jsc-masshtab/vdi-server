@@ -9,10 +9,10 @@
 
 # Для доступ к github используется токен - https://github.com/settings/tokens
 
-MASHTAB_USER="d.proskurin"
+#MASHTAB_USER="vdi-deploy"
 #MASHTAB_PASS="..."
 
-GITHUB_USER="masshtab"
+#GITHUB_USER="masshtab"
 #GITHUB_PASS="..."
 
 #veil-connect
