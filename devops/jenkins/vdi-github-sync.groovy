@@ -49,9 +49,8 @@ pipeline {
     }
 
     parameters {
-        string(      name: 'AGENT',       defaultValue: 'bld-agent',               description: 'jenkins build agent')
         string(      name: 'BRANCH',      defaultValue: 'dev',                     description: 'branch')
-
+        string(      name: 'AGENT',       defaultValue: 'bld-agent',               description: 'jenkins build agent')
     }
 
     stages {
