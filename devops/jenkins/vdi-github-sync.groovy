@@ -1,3 +1,4 @@
+def currentDate = new Date().format('yyyyMMddHHmmss')
 def rocketNotify = true
 
 def notifyBuild(rocketNotify, buildStatus, msg) {
