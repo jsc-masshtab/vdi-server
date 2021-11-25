@@ -49,7 +49,7 @@ pipeline {
 
     parameters {
         string(      name: 'AGENT',       defaultValue: 'bld-agent',               description: 'jenkins build agent')
-        string(      name: 'BRANCH',      defaultValue: 'feature_tg_15226',                     description: 'branch')
+        string(      name: 'BRANCH',      defaultValue: 'dev',                     description: 'branch')
 
     }
 
