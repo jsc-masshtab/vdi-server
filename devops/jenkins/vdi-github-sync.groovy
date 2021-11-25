@@ -1,4 +1,3 @@
-def currentDate = new Date().format('yyyyMMddHHmmss')
 def rocketNotify = true
 
 def notifyBuild(rocketNotify, buildStatus, msg) {
@@ -19,11 +18,6 @@ notifyBuild(rocketNotify, ":bell: STARTED", "Start new build. Version: ${current
 pipeline {
     agent {
         label "${AGENT}"
-    }
-
-    environment {
-        DATE = "${currentDate}"
-        APT_SRV = "192.168.11.118"
     }
 
     post {
