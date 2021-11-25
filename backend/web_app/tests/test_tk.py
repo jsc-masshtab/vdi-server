@@ -10,7 +10,7 @@ from tornado.testing import gen_test
 
 from web_app.tests.utils import VdiHttpTestCase
 
-from common.models.active_tk_connection import ActiveTkConnection
+from common.models.active_tk_connection import ActiveTkConnection, TkConnectionEvent
 from common.models.auth import User
 from common.models.pool import Pool
 from common.models.vm import Vm, VmActionUponUserDisconnect
@@ -73,7 +73,7 @@ class TestWebsockets(VdiHttpTestCase):
             update_data_dict = {
                 "msg_type": WsMessageType.UPDATED.value,
                 "vm_id": vm_id,
-                "event": "vm_changed",
+                "event": TkConnectionEvent.VM_CHANGED.value,
             }
             ws_client.write_message(json.dumps(update_data_dict))
             await asyncio.sleep(1)  # Подождем так как на update ответов не присылается
@@ -122,7 +122,7 @@ class TestWebsockets(VdiHttpTestCase):
             # update (Эмулировать отправку сетевой статистики с ТК)
             update_data_dict = {
                 "msg_type": WsMessageType.UPDATED.value,
-                "event": "network_stats",
+                "event": TkConnectionEvent.NETWORK_STATS.value,
                 "connection_type": Pool.PoolConnectionTypes.RDP.name,
                 "read_speed": 1024,
                 "write_speed": 1024,
@@ -197,7 +197,7 @@ class VmActionWhenUserDisconnectsTestCase(VdiHttpTestCase):
             update_data_dict = {
                 "msg_type": WsMessageType.UPDATED.value,
                 "vm_id": vm_id,
-                "event": "vm_changed",
+                "event": TkConnectionEvent.VM_CHANGED.value,
             }
             tk_ws_client.write_message(json.dumps(update_data_dict))
             await asyncio.sleep(0.5)  # Подождем пока данные дойдут до процесса воркера
@@ -206,7 +206,7 @@ class VmActionWhenUserDisconnectsTestCase(VdiHttpTestCase):
             update_data_dict = {
                 "msg_type": WsMessageType.UPDATED.value,
                 "vm_id": None,
-                "event": "vm_changed",
+                "event": TkConnectionEvent.VM_CHANGED.value,
             }
             tk_ws_client.write_message(json.dumps(update_data_dict))
 

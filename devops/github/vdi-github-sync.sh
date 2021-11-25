@@ -9,11 +9,11 @@
 
 # Для доступ к github используется токен - https://github.com/settings/tokens
 
-MASHTAB_USER="d.proskurin"
-MASHTAB_PASS="..."
+#MASHTAB_USER="vdi-deploy"
+#MASHTAB_PASS="..."
 
-GITHUB_USER="masshtab"
-GITHUB_PASS="..."
+#GITHUB_USER="masshtab"
+#GITHUB_PASS="..."
 
 #veil-connect
 cd /tmp
@@ -38,3 +38,11 @@ git clone http://$MASHTAB_USER:$MASHTAB_PASS@gitlab.bazalt.team/vdi/veil-aio-au.
 cd veil-aio-au
 git remote add github https://github.com/jsc-masshtab/veil-aio-au
 git push -u https://$GITHUB_USER:$GITHUB_PASS@github.com/jsc-masshtab/veil-aio-au master --tags
+
+#vdi-server
+cd /tmp
+rm -rf vdi-server
+git clone http://$MASHTAB_USER:$MASHTAB_PASS@gitlab.bazalt.team/vdi/vdi-server.git
+cd vdi-server
+git remote add github https://github.com/jsc-masshtab/vdi-server
+git push -u https://$GITHUB_USER:$GITHUB_PASS@github.com/jsc-masshtab/vdi-server dev --tags

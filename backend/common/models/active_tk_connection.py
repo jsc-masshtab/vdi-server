@@ -24,8 +24,13 @@ from web_app.auth.license.utils import License
 
 
 class TkConnectionEvent(Enum):
-    VM_DATA_CHANGED = "VM_DATA_CHANGED"
-    CONNECTION_CLOSED = "CONNECTION_CLOSED"
+    """События от ТК."""
+
+    VM_CHANGED = "vm_changed"  # ВМ изменилась (подключение/отключение)
+    VM_CONNECTION_ERROR = "vm_connection_error"  # Не удалось подключиться к ВМ
+    CONNECTION_CLOSED = "connection_closed"  # Соединение с сервером завершилось
+    USER_GUI = "user_gui"  # Юзер нажал кнопку/кликнул
+    NETWORK_STATS = "network_stats"  # Обновление сетевой статистики
 
 
 class ActiveTkConnection(db.Model, AbstractSortableStatusModel):
@@ -139,7 +144,7 @@ class ActiveTkConnection(db.Model, AbstractSortableStatusModel):
         # front ws notification
         additional_data = dict(prev_vm_id=str(prev_vm_id)) if prev_vm_id else None
         await publish_data_in_internal_channel(THIN_CLIENTS_SUBSCRIPTION, "UPDATED", self, additional_data,
-                                               description=TkConnectionEvent.VM_DATA_CHANGED.name)
+                                               description=TkConnectionEvent.VM_CHANGED.name)
         # log
         user = await User.get(self.user_id) if self.user_id else None
         if user:

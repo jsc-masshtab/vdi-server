@@ -242,7 +242,7 @@ class VmManager:
 
                     vm_id_for_action = None  # id машины над которой произвести действие
 
-                    if description == TkConnectionEvent.VM_DATA_CHANGED.name:
+                    if description == TkConnectionEvent.VM_CHANGED.name:
                         prev_vm_id = redis_message_data_dict.get("prev_vm_id")
                         vm_id = redis_message_data_dict.get("vm_id")
 
