@@ -69,9 +69,17 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       property_lv2: 'verbose_name',
     },
     {
-      title: 'Действие над ВМ',
+      title: 'Действия над ВМ после отключения пользователя',
       edit: 'manageVm',
       group: [
+        {
+          title: 'Освобождать ВМ от пользователя',
+          property: 'free_vm_from_user',
+          type: {
+            typeDepend: 'boolean',
+            propertyDepend: ['Да', 'Нет']
+          }
+        },
         {
           title: 'Действие',
           property: 'vm_action_upon_user_disconnect',
@@ -80,9 +88,59 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
         {
           title: 'Таймаут',
           property: 'vm_disconnect_action_timeout',
-          type: 'string'
+          type: 'vm_disconnect_action_timeout'
         }
       ]
+    },
+    {
+      title: 'Всего ВМ',
+      property: 'vms',
+      type: 'array-length'
+    },
+    {
+      title: 'Пользователи',
+      property: 'users',
+      type: 'array-length'
+    },
+    {
+      title: 'Статус',
+      property: 'status',
+      type: 'string'
+    },
+  ];
+
+  public collectionDetailsRds: any[] = [
+    {
+      title: 'Название',
+      property: 'verbose_name',
+      type: 'string',
+      edit: 'changeName'
+    },
+    {
+      title: 'Тип',
+      property: 'pool_type',
+      type: 'pool_type'
+    },
+    {
+      title: 'Тип подключения пула',
+      property: 'assigned_connection_types',
+      type: 'string',
+      edit: 'changeConnectionType'
+    },
+    {
+      title: 'Контроллер',
+      property: 'controller',
+      property_lv2: 'verbose_name'
+    },
+    {
+      title: 'Адрес контроллера',
+      property: 'controller',
+      property_lv2: 'address'
+    },
+    {
+      title: 'Пул ресурсов',
+      property: 'resource_pool',
+      property_lv2: 'verbose_name',
     },
     {
       title: 'Всего ВМ',
@@ -148,9 +206,17 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       edit: 'changeAutomatedPoolKeep_vms_on'
     },
     {
-      title: 'Действие над ВМ',
+      title: 'Действия над ВМ после отключения пользователя',
       edit: 'manageVm',
       group: [
+        {
+          title: 'Освобождать ВМ от пользователя',
+          property: 'free_vm_from_user',
+          type: {
+            typeDepend: 'boolean',
+            propertyDepend: ['Да', 'Нет']
+          }
+        },
         {
           title: 'Действие',
           property: 'vm_action_upon_user_disconnect',
@@ -159,7 +225,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
         {
           title: 'Таймаут',
           property: 'vm_disconnect_action_timeout',
-          type: 'string'
+          type: 'vm_disconnect_action_timeout'
         }
       ]
     },
@@ -1279,6 +1345,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       disableClose: true,
       width: '500px',
       data: {
+        freeVm: this.pool.free_vm_from_user,
         action: this.pool.vm_action_upon_user_disconnect,
         timeout: this.pool.vm_disconnect_action_timeout,
         idPool: this.idPool,

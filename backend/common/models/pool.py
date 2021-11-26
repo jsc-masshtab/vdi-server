@@ -97,6 +97,7 @@ class Pool(VeilModel):
         UUID(), db.ForeignKey("controller.id", ondelete="CASCADE"), nullable=False
     )
     keep_vms_on = db.Column(db.Boolean(), nullable=False, default=False)
+    free_vm_from_user = db.Column(db.Boolean(), nullable=False, default=False)
     connection_types = db.Column(
         ARRAY(AlchemyEnum(PoolConnectionTypes)), nullable=False, index=True
     )
@@ -233,6 +234,7 @@ class Pool(VeilModel):
                 Pool.status,
                 Pool.controller,
                 Pool.keep_vms_on,
+                Pool.free_vm_from_user,
                 Pool.vm_action_upon_user_disconnect,
                 Pool.vm_disconnect_action_timeout,
                 AutomatedPool.template_id,
@@ -291,6 +293,7 @@ class Pool(VeilModel):
                 Pool.status,
                 Pool.controller,
                 Pool.keep_vms_on,
+                Pool.free_vm_from_user,
                 Pool.vm_action_upon_user_disconnect,
                 Pool.vm_disconnect_action_timeout,
                 AutomatedPool.id,
@@ -323,8 +326,9 @@ class Pool(VeilModel):
 
     @staticmethod
     async def soft_update_base_params(
-        id, verbose_name, keep_vms_on, connection_types, creator, vm_action_upon_user_disconnect,
-        vm_disconnect_action_timeout
+        id, verbose_name, keep_vms_on, connection_types, creator, free_vm_from_user=False,
+        vm_action_upon_user_disconnect=VmActionUponUserDisconnect.NONE,
+        vm_disconnect_action_timeout=60
     ):
         old_pool_obj = await Pool.get(id)
         async with db.transaction():
@@ -332,6 +336,7 @@ class Pool(VeilModel):
                 id,
                 verbose_name=verbose_name,
                 keep_vms_on=keep_vms_on,
+                free_vm_from_user=free_vm_from_user,
                 connection_types=connection_types,
                 creator=creator,
                 vm_action_upon_user_disconnect=vm_action_upon_user_disconnect,
@@ -1299,7 +1304,7 @@ class RdsPool(db.Model):
         cls, id, verbose_name, keep_vms_on, connection_types, creator
     ):
         await Pool.soft_update_base_params(id, verbose_name, keep_vms_on,
-                                           connection_types, creator, VmActionUponUserDisconnect.NONE, 0)
+                                           connection_types, creator)
         return True
 
     @classmethod
@@ -1480,11 +1485,12 @@ class StaticPool(db.Model):
 
     @classmethod
     async def soft_update(
-        cls, id, verbose_name, keep_vms_on, connection_types, creator, vm_action_upon_user_disconnect,
-        vm_disconnect_action_timeout
+        cls, id, verbose_name, keep_vms_on, free_vm_from_user, connection_types,
+        creator, vm_action_upon_user_disconnect, vm_disconnect_action_timeout
     ):
         await Pool.soft_update_base_params(id, verbose_name, keep_vms_on, connection_types, creator,
-                                           vm_action_upon_user_disconnect, vm_disconnect_action_timeout)
+                                           free_vm_from_user, vm_action_upon_user_disconnect,
+                                           vm_disconnect_action_timeout)
         return True
 
     async def activate(self):
@@ -1568,6 +1574,12 @@ class AutomatedPool(db.Model):
         pool = await Pool.get(self.id)
         if pool:
             return pool.keep_vms_on
+
+    @property
+    async def free_vm_from_user(self):
+        pool = await Pool.get(self.id)
+        if pool:
+            return pool.free_vm_from_user
 
     # ----- ----- ----- ----- ----- ----- -----
 
@@ -1666,6 +1678,7 @@ class AutomatedPool(db.Model):
         increase_step,
         vm_name_template,
         keep_vms_on: bool,
+        free_vm_from_user: bool,
         vm_action_upon_user_disconnect,
         vm_disconnect_action_timeout,
         create_thin_clones: bool,
@@ -1691,6 +1704,8 @@ class AutomatedPool(db.Model):
                     )
             if isinstance(keep_vms_on, bool):
                 pool_kwargs["keep_vms_on"] = keep_vms_on
+            if isinstance(free_vm_from_user, bool):
+                pool_kwargs["free_vm_from_user"] = free_vm_from_user
             if connection_types:
                 pool_kwargs["connection_types"] = connection_types
             if vm_action_upon_user_disconnect:

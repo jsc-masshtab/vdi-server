@@ -29,47 +29,49 @@ export class VmActionComponent implements OnInit {
               private waitService: WaitService,
               private dialogRef: MatDialogRef<VmActionComponent>,
               private fb: FormBuilder,
-              @Inject(MAT_DIALOG_DATA) public data: {  
+              @Inject(MAT_DIALOG_DATA) public data: {
                 idPool: string | number
                 poolType: string,
+                freeVm: boolean,
                 action: string,
                 timeout: string
               }) {
                 this.data = data;
                }
-  
+
   ngOnInit() {
-    const {action, timeout} = this.data;
-    this.showTimeoutInput = action === 'NONE' ? false : true;
+    const {freeVm, action, timeout} = this.data;
+    // this.showTimeoutInput = action === 'NONE' ? false : true;
 
     this.vmActionForm = this.fb.group({
+      freeVm: [freeVm],
       action: [action],
       timeout: [timeout]
     })
-    this.vmActionForm.get('action').valueChanges.subscribe( (a: string) => {
-      if (a === 'NONE'){
-        this.showTimeoutInput = false;
-        this.vmActionForm.get('timeout').setValue(0)
-      }else{
-        this.showTimeoutInput = true;
-      }
-      
-    })
+    // this.vmActionForm.get('action').valueChanges.subscribe( (a: string) => {
+    //   if (a === 'NONE'){
+    //     this.showTimeoutInput = false;
+    //     this.vmActionForm.get('timeout').setValue(0)
+    //   }else{
+    //     this.showTimeoutInput = true;
+    //   }
+    //
+    // })
 
   }
 
-
   public send(): void {
     const {
-      idPool, 
-      poolType, 
+      idPool,
+      poolType,
     } = this.data;
+    const freeVm = this.vmActionForm.get('freeVm').value;
     const action = this.vmActionForm.get('action').value;
     const timeout = this.vmActionForm.get('timeout').value;
-    
+
     this.waitService.setWait(true);
-    this.poolDetailsService.setVmActions( idPool, poolType, action, timeout).subscribe((res) => {
-      
+    this.poolDetailsService.setVmActions(idPool, poolType, freeVm, action, timeout).subscribe((res) => {
+
       if (res) {
         this.poolDetailsService.getPool( idPool, poolType).refetch();
         this.waitService.setWait(false);
@@ -77,8 +79,5 @@ export class VmActionComponent implements OnInit {
       }
     })
   }
-
-
-
 
 }
