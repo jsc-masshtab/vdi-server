@@ -326,8 +326,9 @@ class Pool(VeilModel):
 
     @staticmethod
     async def soft_update_base_params(
-        id, verbose_name, keep_vms_on, free_vm_from_user, connection_types, creator, vm_action_upon_user_disconnect,
-        vm_disconnect_action_timeout
+        id, verbose_name, keep_vms_on, connection_types, creator, free_vm_from_user=False,
+        vm_action_upon_user_disconnect=VmActionUponUserDisconnect.NONE,
+        vm_disconnect_action_timeout=60
     ):
         old_pool_obj = await Pool.get(id)
         async with db.transaction():
@@ -1303,7 +1304,7 @@ class RdsPool(db.Model):
         cls, id, verbose_name, keep_vms_on, connection_types, creator
     ):
         await Pool.soft_update_base_params(id, verbose_name, keep_vms_on,
-                                           connection_types, creator, VmActionUponUserDisconnect.NONE, 0)
+                                           connection_types, creator)
         return True
 
     @classmethod
@@ -1487,8 +1488,9 @@ class StaticPool(db.Model):
         cls, id, verbose_name, keep_vms_on, free_vm_from_user, connection_types,
         creator, vm_action_upon_user_disconnect, vm_disconnect_action_timeout
     ):
-        await Pool.soft_update_base_params(id, verbose_name, keep_vms_on, free_vm_from_user, connection_types, creator,
-                                           vm_action_upon_user_disconnect, vm_disconnect_action_timeout)
+        await Pool.soft_update_base_params(id, verbose_name, keep_vms_on, connection_types, creator,
+                                           free_vm_from_user, vm_action_upon_user_disconnect,
+                                           vm_disconnect_action_timeout)
         return True
 
     async def activate(self):
