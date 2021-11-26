@@ -11,12 +11,20 @@ class Backup:
     @classmethod
     def create_backup(cls, backup_dir="/var/lib/postgresql/", backup_name="cluster.sql", creator="system"):
         """Создает бекап БД с помощью 'pg_dumpall'."""
-        backup_file = cls.generate_name_with_timestamp(backup_name)
-        backup_file = backup_dir + backup_file
+        try:
+            backup_file = cls.generate_name_with_timestamp(backup_name)
+            backup_file = backup_dir + backup_file
 
-        backup_command = "sudo -u postgres pg_dumpall --clean --if-exists --file={}".format(backup_file)
+            backup_command = "sudo -u postgres pg_dumpall --clean --if-exists --file={}".format(backup_file)
 
-        result_backup = subprocess.run(shlex.split(backup_command))
+            result_backup = subprocess.run(shlex.split(backup_command))
+
+        except Exception as e:
+            raise SimpleError(
+                _local_("Backup DB except failed."),
+                description="Error: {}".format(str(e)),
+                user=creator
+            )
 
         if result_backup.returncode != 0:
             raise SimpleError(
