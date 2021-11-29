@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import re
 from collections import OrderedDict
 from datetime import datetime, timezone
 from enum import Enum
@@ -256,26 +255,17 @@ class ChangeSmtpSettingsMutation(graphene.Mutation):
 
 class DoServiceAction(graphene.Mutation):
     class Arguments:
-        sudo_password = ShortString()
         service_name = ShortString()
         service_action = ServiceActionGraphene()
         check_errors = graphene.Boolean()
+        sudo_password = ShortString()  # legacy. Remove later
 
     ok = graphene.Boolean()
     service_status = ShortString()
 
     @administrator_required
-    async def mutate(self, _info, creator, sudo_password, service_name, service_action,
-                     check_errors=True):
-
-        # Проверка  для защиты от иньекции команд c помощью проблелов и спец символов
-        # service_action валидируется на уровне  graphql
-        pass_validated = re.match("^[a-zA-Z0-9~@#$&_^*%?.+:;=!]*$", sudo_password)
-        if not pass_validated:
-            raise SimpleError(
-                _local_("Password {} contains invalid characters.").format(sudo_password),
-                user=creator
-            )
+    async def mutate(self, _info, creator, service_name, service_action,
+                     check_errors=True, sudo_password=None):
 
         if service_name not in app_services.keys():
             raise SimpleError(
@@ -290,8 +280,7 @@ class DoServiceAction(graphene.Mutation):
             parent_service_name = "postgresql.service"
         else:
             parent_service_name = service_name
-        cmd = "echo '{}' | sudo -S timeout 50s systemctl {} {}".format(
-            sudo_password, service_action, parent_service_name)
+        cmd = "timeout 50s systemctl {} {}".format(service_action, parent_service_name)
 
         return_code, stdout, stderr = await create_subprocess(cmd)
 
