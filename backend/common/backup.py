@@ -4,7 +4,7 @@ import subprocess
 from datetime import datetime
 
 from common.languages import _local_
-from common.veil.veil_errors import SilentError, SimpleError
+from common.veil.veil_errors import SimpleError
 
 
 class Backup:
@@ -46,7 +46,10 @@ class Backup:
             """sudo psql -h {} -p {} -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '{}';" -U {}"""
         terminate_connections = terminate_connections.format(db_host, db_port, db_name, db_user)
 
-        result_forbid_connections = subprocess.run(shlex.split(forbid_connections))
+        result_forbid_connections = subprocess.run(shlex.split(forbid_connections),
+                                                   universal_newlines=True,
+                                                   stdout=subprocess.PIPE,
+                                                   stderr=subprocess.PIPE)
 
         if result_forbid_connections.returncode != 0:
             raise SimpleError(
@@ -58,7 +61,10 @@ class Backup:
                 user=creator
             )
 
-        result_terminate_sessions = subprocess.run(shlex.split(terminate_connections))
+        result_terminate_sessions = subprocess.run(shlex.split(terminate_connections),
+                                                   universal_newlines=True,
+                                                   stdout=subprocess.PIPE,
+                                                   stderr=subprocess.PIPE)
 
         if result_terminate_sessions.returncode != 0:
             raise SimpleError(
