@@ -46,19 +46,27 @@ class Backup:
             """sudo psql -h {} -p {} -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '{}';" -U {}"""
         terminate_connections = terminate_connections.format(db_host, db_port, db_name, db_user)
 
-        result_forbid_connections = subprocess.run(shlex.split(forbid_connections), stdout=subprocess.DEVNULL)
+        result_forbid_connections = subprocess.run(shlex.split(forbid_connections))
 
         if result_forbid_connections.returncode != 0:
-            raise SilentError(
-                _local_("Forbid connections failed.")
+            raise SimpleError(
+                _local_("Forbid connections failed."),
+                description="Return code: {}; strerr: {}; stdout: {}.".format(
+                    result_forbid_connections.returncode,
+                    result_forbid_connections.stderr,
+                    result_forbid_connections.stdout),
+                user=creator
             )
 
-        result_terminate_sessions = subprocess.run(shlex.split(terminate_connections), stdout=subprocess.DEVNULL)
+        result_terminate_sessions = subprocess.run(shlex.split(terminate_connections))
 
         if result_terminate_sessions.returncode != 0:
             raise SimpleError(
                 _local_("Terminate sessions failed."),
-                description="Return code: {}".format(result_terminate_sessions.returncode),
+                description="Return code: {}; strerr: {}; stdout: {}.".format(
+                    result_terminate_sessions.returncode,
+                    result_forbid_connections.stderr,
+                    result_forbid_connections.stdout),
                 user=creator
             )
 
