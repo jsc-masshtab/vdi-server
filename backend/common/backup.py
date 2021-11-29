@@ -18,7 +18,8 @@ class Backup:
         backup_pattern = "echo '' | sudo -S pg_dumpall -h {} -U {} -p {} --clean --if-exists --file {}"
         backup_command = backup_pattern.format(db_host, db_user, db_port, backup_file)
 
-        result_backup = subprocess.run(shlex.split(backup_command),
+        result_backup = subprocess.run(backup_command,
+                                       shell=True,
                                        universal_newlines=True,
                                        stdout=subprocess.PIPE,
                                        stderr=subprocess.PIPE)
@@ -53,7 +54,8 @@ class Backup:
             """echo {} | sudo -S psql -h {} -p {} -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '{}';" -U {}"""
         terminate_connections = terminate_connections.format(sudo_password, db_host, db_port, db_name, db_user)
 
-        result_forbid_connections = subprocess.run(shlex.split(forbid_connections),
+        result_forbid_connections = subprocess.run(forbid_connections,
+                                                   shell=True,
                                                    universal_newlines=True,
                                                    stdout=subprocess.PIPE,
                                                    stderr=subprocess.PIPE)
@@ -68,7 +70,8 @@ class Backup:
                 user=creator
             )
 
-        result_terminate_sessions = subprocess.run(shlex.split(terminate_connections),
+        result_terminate_sessions = subprocess.run(terminate_connections,
+                                                   shell=True,
                                                    universal_newlines=True,
                                                    stdout=subprocess.PIPE,
                                                    stderr=subprocess.PIPE)
@@ -95,7 +98,7 @@ class Backup:
 
         cls.terminate_sessions(sudo_password)
 
-        result_restore_db = subprocess.run(shlex.split(restore_db), stdout=subprocess.DEVNULL)
+        result_restore_db = subprocess.run(restore_db, shell=True, stdout=subprocess.DEVNULL)
 
         if result_restore_db.returncode != 0:
             raise SimpleError(
