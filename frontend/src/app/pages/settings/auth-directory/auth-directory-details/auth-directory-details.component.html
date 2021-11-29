@@ -16,7 +16,7 @@
   </div>
 
   <div class="details-control-panel">
-    <vdi-button-refresh (clickRefresh)="getAllAuthenticationDirectory()" ></vdi-button-refresh>
+    <vdi-button-refresh (clickRefresh)="getAuthenticationDirectory()" ></vdi-button-refresh>
 
     <ng-container *ngIf="menuActive === 'info'">
       <button (click)="remove()" title="Удалить службу каталогов" class="btn-control">
