@@ -280,7 +280,7 @@ class DoServiceAction(graphene.Mutation):
             parent_service_name = "postgresql.service"
         else:
             parent_service_name = service_name
-        cmd = "timeout 50s systemctl {} {}".format(service_action, parent_service_name)
+        cmd = "sudo timeout 50s systemctl {} {}".format(service_action, parent_service_name)
 
         return_code, stdout, stderr = await create_subprocess(cmd)
 
