@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 from abc import ABC
 
-from sso import KerberosAuthMixin
-
 from tornado import escape
 from tornado.web import HTTPError
 
@@ -19,6 +17,8 @@ from common.veil.auth.veil_jwt import (
 from common.veil.veil_errors import AssertError, SilentError, ValidationError
 from common.veil.veil_gino import EntityType
 from common.veil.veil_handlers import BaseHttpHandler
+
+from web_app.auth.sso import KerberosAuthMixin
 
 
 class AuthHandler(BaseHttpHandler, ABC):
