@@ -20,6 +20,23 @@
         # Static
         DocumentRoot /opt/veil-vdi/www
 
+        <Location "/sso">
+                AuthType Kerberos
+                # Имя реалма Керберос - имя домена ЗАГЛАВНЫМИ буквами
+                KrbAuthRealms TEST.TEAM
+
+                # Полное доменное имя сервиса (имя ранее созданной службы HTTP):
+                KrbServiceName HTTP/astravdi.test.team@TEST.TEAM
+
+                # Имя файла, в котором сохранены ключи
+                Krb5Keytab /etc/krb5.keytab
+                KrbMethodNegotiate on
+                KrbMethodK5Passwd off
+                require valid-user
+                KrbSaveCredentials on
+        </Location>
+
+
         <Directory /opt/veil-vdi/www>
             Options Indexes FollowSymLinks MultiViews
             AllowOverride All
