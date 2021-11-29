@@ -655,24 +655,48 @@ class User(AbstractSortableStatusModel, VeilModel):
         if id:
             user_kwargs["id"] = id
 
+        user_role = _local_("Superuser.") if is_superuser else _local_("User.")
+
         try:
-            async with db.transaction():
-                user_obj = await cls.create(**user_kwargs)
-                if PAM_AUTH and not user_obj.by_ad:
-                    pam_result = await user_obj.pam_create_user(
-                        raw_password=password, superuser=is_superuser
-                    )
-                    if not pam_result.success:
-                        # TODO: Добавить pam удаление пользователя на астре
-                        # pam_result.return_code == 969 - ошибка пароля на астре
+            user_obj = await cls.create(**user_kwargs)
+            if PAM_AUTH and not user_obj.by_ad:
+                pam_result = await user_obj.pam_create_user(
+                    raw_password=password, superuser=is_superuser
+                )
+                if not pam_result.success:
+                    # TODO: Добавить pam удаление пользователя на астре
+                    # pam_result.return_code == 969 - ошибка пароля на астре
+                    if pam_result.return_code == 969:
+                        # деактивируем пользователя и сообщаем об ошибке пароля
+                        await user_obj.deactivate(creator)
+                        user_role = _local_("User.")
                         msg = _local_(
-                            "User {} was created in Astra Linux. Please delete him there before trying to create in Broker again.").format(
+                            "You must change password for user {}. Check a reason in description.".format(
+                                username))
+                        await system_logger.warning(
+                            message=msg,
+                            entity=user_obj.entity,
+                            user=creator,
+                            description=str(pam_result),
+                        )
+                    elif (pam_result.return_code == 1) and ("adduser" in pam_result.error_msg):
+                        checked = await User.pam_check_user(username, password)
+                        user_role = _local_("User.")
+                        if not checked:
+                            await user_obj.delete()
+                            raise SilentError(_local_(
+                                "User {} was created in Astra Linux before. Please try to create him with correct password or delete in Astra Linux before trying to create in VeiL VDI again.").format(
+                                username))
+                    else:
+                        msg = _local_(
+                            "User {} was created in Astra Linux before. Please delete him there before trying to create in Broker again.").format(
                             username)
                         await system_logger.warning(
                             message=msg,
-                            entity={"entity_type": EntityType.USER, "entity_uuid": None},
+                            entity=user_obj.entity,
                             user=creator,
                         )
+                        await user_obj.delete()
                         raise PamError(pam_result)
         except (PamError, UniqueViolationError) as err_msg:
             msg = _local_("User {} creation error.").format(username)
@@ -682,9 +706,19 @@ class User(AbstractSortableStatusModel, VeilModel):
                 user=creator,
                 description=str(err_msg),
             )
+            await user_obj.delete()
+            raise AssertionError(msg)
+        except SilentError as err_msg:
+            msg = _local_("Your password is incorrect for user {}. Check description in journal.".format(
+                username))
+            await system_logger.error(
+                message=msg,
+                entity={"entity_type": EntityType.USER, "entity_uuid": None},
+                user=creator,
+                description=str(err_msg),
+            )
             raise AssertionError(msg)
 
-        user_role = _local_("Superuser.") if is_superuser else _local_("User.")
         info_message = _local_("{} {} created.").format(user_role[:-1], username)
         await system_logger.info(info_message, entity=user_obj.entity, user=creator)
 
