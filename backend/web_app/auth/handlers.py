@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from abc import ABC
 
-from gateone.auth.sso import KerberosAuthMixin
+from sso import KerberosAuthMixin
 
 from tornado import escape
 from tornado.web import HTTPError
@@ -148,8 +148,7 @@ class SettingsHandler(BaseHttpHandler, ABC):
         return self.finish(response)
 
 
-class KerberosAuthHandler(BaseHttpHandler, KerberosAuthMixin):
-
+class KerberosAuthHandler(BaseHttpHandler, KerberosAuthMixin, ABC):
     async def get(self):
         auth_header = self.request.headers.get("Authorization")
         if auth_header:
