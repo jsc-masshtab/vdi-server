@@ -18,12 +18,18 @@ class Backup:
         backup_pattern = "sudo pg_dumpall -h {} -U {} -p {} --clean --if-exists --file {}"
         backup_command = backup_pattern.format(db_host, db_user, db_port, backup_file)
 
-        result_backup = subprocess.run(shlex.split(backup_command))
+        result_backup = subprocess.run(shlex.split(backup_command),
+                                       universal_newlines=True,
+                                       stdout=subprocess.PIPE,
+                                       stderr=subprocess.PIPE)
 
         if result_backup.returncode != 0:
             raise SimpleError(
                 _local_("Backup DB failed."),
-                description="Return code: {}".format(result_backup.returncode),
+                description="Return code: {}; strerr: {}; stdout: {}.".format(
+                    result_backup.returncode,
+                    result_backup.stderr,
+                    result_backup.stdout),
                 user=creator
             )
 
