@@ -343,12 +343,13 @@ class CreateBackup(graphene.Mutation):
 class RestoreDB(graphene.Mutation):
     class Arguments:
         backup_file = ShortString()
+        sudo_password = ShortString()
 
     ok = graphene.Boolean()
 
     @administrator_required
-    async def mutate(self, _info, backup_file, creator, **kwargs):
-        return_code = Backup.restore_db(backup_file=backup_file, creator=creator)
+    async def mutate(self, _info, sudo_password, backup_file, creator, **kwargs):
+        return_code = Backup.restore_db(sudo_password=sudo_password, backup_file=backup_file, creator=creator)
         if return_code == 0:
             return RestoreDB(ok=True)
         return RestoreDB(ok=False)

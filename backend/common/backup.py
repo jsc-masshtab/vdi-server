@@ -15,7 +15,7 @@ class Backup:
         backup_file = cls.generate_name_with_timestamp(backup_name)
         backup_file = backup_dir + backup_file
 
-        backup_pattern = "sudo pg_dumpall -h {} -U {} -p {} --clean --if-exists --file {}"
+        backup_pattern = "echo '' | sudo -S pg_dumpall -h {} -U {} -p {} --clean --if-exists --file {}"
         backup_command = backup_pattern.format(db_host, db_user, db_port, backup_file)
 
         result_backup = subprocess.run(shlex.split(backup_command),
@@ -42,15 +42,16 @@ class Backup:
         return result_backup.returncode
 
     @staticmethod
-    def terminate_sessions(db_name="vdi", db_user="postgres", db_host="localhost", db_port="5432", creator="system"):
+    def terminate_sessions(sudo_password, db_name="vdi", db_user="postgres",
+                           db_host="localhost", db_port="5432", creator="system"):
         """Отключает все активные соединения у БД."""
         forbid_connections = \
-            """sudo psql -h {} -p {} -c "UPDATE pg_database SET datallowconn = 'false' WHERE datname = '{}';" -U {}"""
-        forbid_connections = forbid_connections.format(db_host, db_port, db_name, db_user)
+            """echo {} | sudo -S psql -h {} -p {} -c "UPDATE pg_database SET datallowconn = 'false' WHERE datname = '{}';" -U {}"""
+        forbid_connections = forbid_connections.format(sudo_password, db_host, db_port, db_name, db_user)
 
         terminate_connections = \
-            """sudo psql -h {} -p {} -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '{}';" -U {}"""
-        terminate_connections = terminate_connections.format(db_host, db_port, db_name, db_user)
+            """echo {} | sudo -S psql -h {} -p {} -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '{}';" -U {}"""
+        terminate_connections = terminate_connections.format(sudo_password, db_host, db_port, db_name, db_user)
 
         result_forbid_connections = subprocess.run(shlex.split(forbid_connections),
                                                    universal_newlines=True,
@@ -85,13 +86,14 @@ class Backup:
         return result_terminate_sessions.returncode
 
     @classmethod
-    def restore_db(cls, db_user="postgres", db_host="localhost", db_port="5432",
+    def restore_db(cls, sudo_password, db_user="postgres", db_host="localhost", db_port="5432",
                    backup_dir="/home/user/", backup_file="cluster.sql", creator="system"):
         """Восстанавливает БД из бекапа с помощью 'psql'."""
         backup_file = backup_dir + backup_file
-        restore_db = "sudo psql -U {} -h {} -p {} --file {}".format(db_user, db_host, db_port, backup_file)
+        restore_db = "echo {} | sudo -S psql -U {} -h {} -p {} --file {}".format(
+            sudo_password, db_user, db_host, db_port, backup_file)
 
-        cls.terminate_sessions()
+        cls.terminate_sessions(sudo_password)
 
         result_restore_db = subprocess.run(shlex.split(restore_db), stdout=subprocess.DEVNULL)
 
