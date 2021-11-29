@@ -1,6 +1,11 @@
 # -*- coding: utf-8 -*-
 from abc import ABC
 
+from gateone.auth.sso import KerberosAuthMixin
+
+from tornado import escape
+from tornado.web import HTTPError
+
 from common.languages import _local_
 from common.log.journal import system_logger
 from common.models.active_tk_connection import ActiveTkConnection
@@ -141,3 +146,24 @@ class SettingsHandler(BaseHttpHandler, ABC):
                 "ldap": auth_dir.dc_str if auth_dir else ""}
         response = {"data": data}
         return self.finish(response)
+
+
+class KerberosAuthHandler(BaseHttpHandler, KerberosAuthMixin):
+
+    async def get(self):
+        auth_header = self.request.headers.get("Authorization")
+        if auth_header:
+            self.get_authenticated_user(self._on_auth)
+            return
+        self.authenticate_redirect()
+
+    async def _on_auth(self, user):
+        if not user:
+            raise HTTPError(500, "Kerberos auth failed")
+        self.set_secure_cookie("user", escape.json_encode(user))
+        await system_logger.warning("KerberosAuthHandler user: {}".format(user))  # To see what you get
+        next_url = self.get_argument("next", None)  # To redirect properly
+        if next_url:
+            self.redirect(next_url)
+        else:
+            self.redirect("/")

@@ -10,6 +10,7 @@ cffi==1.14.6
 chardet==3.0.4
 contextvars==2.4 ; python_version < '3.7'
 cryptography==2.8
+gateone==1.2.0
 gino-tornado==0.1.0
 gino==1.0.1
 graphene-tornado==2.5.1
