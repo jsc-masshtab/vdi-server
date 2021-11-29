@@ -1,24 +1,16 @@
 import base64
 import os
-import sys
 from abc import abstractmethod
 from typing import Awaitable, Optional
+
+import kerberos
 
 import tornado.escape
 import tornado.httpserver
 import tornado.ioloop
 import tornado.web
 
-# Platform-specific Kerberos requirements
-if sys.platform == "win32":
-    import kerberos_sspi as kerberos
-    import pywintypes
-
-    pywintypes_error = pywintypes.error
-else:
-    import kerberos
-
-    pywintypes_error = OSError
+pywintypes_error = OSError
 
 
 class HeadersAlreadyWrittenException(Exception):
