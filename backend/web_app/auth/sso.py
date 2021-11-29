@@ -1,9 +1,6 @@
-import base64
 import os
 from abc import abstractmethod
 from typing import Awaitable, Optional
-
-import kerberos
 
 import tornado.escape
 import tornado.httpserver
@@ -34,48 +31,7 @@ class KerberosAuthMixin(tornado.web.RequestHandler):
             # environment variable:
             os.environ["KRB5_KTNAME"] = keytab
         auth_header = self.request.headers.get("Authorization", None)
-        if auth_header and auth_header.startswith("Negotiate"):
-            self.auth_negotiate(auth_header, callback)
-        elif auth_header and auth_header.startswith("Basic "):
-            self.auth_basic(auth_header, callback)
-
-    def auth_negotiate(self, auth_header, callback):
-        auth_str = auth_header.split()[1]
-        # Initialize Kerberos Context
-        context = None
-        try:
-            result, context = kerberos.authGSSServerInit(self.settings["sso_service"])
-            if result is not kerberos.AUTH_GSS_COMPLETE:
-                raise tornado.web.HTTPError(500, "Kerberos Init failed")
-            result = kerberos.authGSSServerStep(context, auth_str)
-            if result is kerberos.AUTH_GSS_COMPLETE:
-                gss_string = kerberos.authGSSServerResponse(context)
-                self.set_header("WWW-Authenticate", "Negotiate {}".format(gss_string))
-            else:    # Fall back to Basic auth
-                self.auth_basic(auth_header, callback)
-            # NOTE: The user we get from Negotiate is a full UPN (user@REALM)
-            user = kerberos.authGSSServerUserName(context)
-        except (kerberos.GSSError, pywintypes_error) as e:
-            print("Kerberos Error: {}".format(e))
-            raise tornado.web.HTTPError(500, "Kerberos Init failed")
-        finally:
-            if context:
-                kerberos.authGSSServerClean(context)
-        callback(user)
-
-    def auth_basic(self, auth_header, callback):
-        auth_decoded = base64.b64decode(auth_header[6:]).decode("utf-8")
-        username, password = auth_decoded.split(":", 1)
-        try:
-            kerberos.checkPassword(username, password, self.settings["sso_service"], self.settings["sso_realm"])
-        except Exception as e:    # Basic auth failed
-            if self.settings["debug"]:
-                print(e)    # Very useful for debugging Kerberos errors
-            return self.authenticate_redirect()
-        # NOTE: Basic auth just gives us the username without the @REALM part
-        #       so we have to add it:
-        user = "{}@{}".format(username, self.settings["sso_realm"])
-        callback(user)
+        print(auth_header)
 
     def authenticate_redirect(self):
         # NOTE: I know this isn't technically a redirect but I wanted to make
