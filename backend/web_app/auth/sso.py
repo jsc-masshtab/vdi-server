@@ -43,26 +43,3 @@ class KerberosAuthMixin(tornado.web.RequestHandler):
         self.add_header("WWW-Authenticate", "Basic realm={}".format(self.settings["realm"]))
         self.finish()
         return False
-
-
-class KerberosAuthHandler(KerberosAuthMixin):
-    def get(self):
-        auth_header = self.request.headers.get("Authorization", None)
-        if auth_header:
-            self.get_authenticated_user(self._on_auth)
-            return
-        self.authenticate_redirect()
-
-    def _on_auth(self, user):
-        if not user:
-            raise tornado.web.HTTPError(500, "Kerberos auth failed")
-        self.set_secure_cookie("user", tornado.escape.json_encode(user))
-        print("KerberosAuthHandler user: {}".format(user))   # To see what you get
-        next_url = self.get_argument("next", None)    # To redirect properly
-        if next_url:
-            self.redirect(next_url)
-        else:
-            self.redirect("/")
-
-    def data_received(self, chunk: bytes):
-        super().data_received(chunk)

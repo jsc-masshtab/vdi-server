@@ -148,9 +148,10 @@ class SettingsHandler(BaseHttpHandler, ABC):
         return self.finish(response)
 
 
-class KerberosAuthHandler(BaseHttpHandler, KerberosAuthMixin, ABC):
+class KerberosAuthHandler(KerberosAuthMixin, ABC):
     async def get(self):
         auth_header = self.request.headers.get("Authorization")
+        await system_logger.warning("Kerberos Auth HEADER: {}".format(auth_header))
         if auth_header:
             self.get_authenticated_user(self._on_auth)
             return
@@ -166,3 +167,6 @@ class KerberosAuthHandler(BaseHttpHandler, KerberosAuthMixin, ABC):
             self.redirect(next_url)
         else:
             self.redirect("/")
+
+    async def data_received(self, chunk: bytes):
+        await super().data_received(chunk)
