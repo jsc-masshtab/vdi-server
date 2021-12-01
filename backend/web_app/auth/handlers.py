@@ -151,7 +151,8 @@ class SettingsHandler(BaseHttpHandler, ABC):
 class KerberosAuthHandler(KerberosAuthMixin, ABC):
     async def get(self):
         auth_header = self.request.headers.get("Authorization")
-        await system_logger.warning("Kerberos Auth HEADER: {}".format(auth_header))
+        auth_headers = self.request.headers
+        await system_logger.warning("Kerberos Auth HEADERS", description=str(auth_headers))
         if auth_header:
             self.get_authenticated_user(self._on_auth)
             return

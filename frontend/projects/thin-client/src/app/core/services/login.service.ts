@@ -40,7 +40,7 @@ export class LoginService {
 
   public getSettings(): Observable<ISettings> {
     console.log('run');
-    
-    return this.http.get<ISettings>('/api/settings/').pipe(map((res: any) => res.data));
+
+    return this.http.get<ISettings>('/api/sso/').pipe(map((res: any) => res.data));
   }
 }
