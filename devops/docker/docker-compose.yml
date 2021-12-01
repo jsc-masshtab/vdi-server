@@ -82,7 +82,7 @@ services:
     working_dir: /home/node/app
     volumes:
       - ../../frontend:/home/node/app/frontend
-    command: sh -c "npm start --prefix /home/node/app/frontend/ -- --host=0.0.0.0 --disableHostCheck & npm run thin-client --prefix /home/node/app/frontend/ -- --host=0.0.0.0" --disableHostCheck
+    command: sh -c "npm start --prefix /home/node/app/frontend/ -- --host=0.0.0.0 --disableHostCheck & npm run thin-client --prefix /home/node/app/frontend/ -- --host=0.0.0.0 --disableHostCheck"
     network_mode: "host"
     depends_on:
       - vdi-tornado
