@@ -309,8 +309,8 @@ msgstr "Mapping for auth directory {} is updated."
 
 #: ../common/models/authentication_directory.py:353
 #: ../common/models/authentication_directory.py:729
-msgid "Authentication directory server {} is down."
-msgstr "Authentication directory server {} is down."
+msgid "Failed to connect to authentication directory server {}."
+msgstr "Failed to connect to authentication directory server {}."
 
 #: ../common/models/authentication_directory.py:363
 msgid "Authentication directory server {} is connected."

@@ -309,8 +309,8 @@ msgstr "Сопоставление для службы каталогов {} о�
 
 #: ../common/models/authentication_directory.py:353
 #: ../common/models/authentication_directory.py:729
-msgid "Authentication directory server {} is down."
-msgstr "Сервер службы каталогов {} не работает."
+msgid "Failed to connect to authentication directory server {}."
+msgstr "Не удалось подключиться к серверу службы каталогов LDAP {}."
 
 #: ../common/models/authentication_directory.py:363
 msgid "Authentication directory server {} is connected."
