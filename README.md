@@ -1,7 +1,7 @@
 ### VeiL VDI
 VeiL VDI allows to create user desktops in virtual machines hosted on 
 dedicated servers.
-Connection broker VeiL VDI should install on the trusted OS Astra linux 1.6 SE (for version 3.0 and higher).
+Connection broker VeiL VDI should be installed on the trusted OS Astra linux 1.6 SE (for version 3.0 and higher).
 
 ### Alembic
 ```shell script
