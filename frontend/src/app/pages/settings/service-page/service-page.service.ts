@@ -3,7 +3,31 @@ import { Apollo, QueryRef } from 'apollo-angular';
 import gql from 'graphql-tag';
 
 import { modalData } from './service-page.component';
-import { IMutationResponse, IQueryResponse } from './service-page.mapper';
+
+
+export enum Status {
+  Running = 'running',
+  Stoped = 'stoped',
+  Failed = 'failed',
+  Exited = 'exited'
+}
+
+export interface IMutationResponse {
+  doServiceAction: IMutationServiceInfo
+}
+
+export interface IMutationServiceInfo {
+  ok: boolean,
+  serviceStatus: Status
+}
+export interface IQueryResponse{
+  services: IQueryService[]
+}
+export interface IQueryService {
+  serviceName: string
+  verboseName: string
+  status: Status
+}
 
 @Injectable({
   providedIn: 'root'
@@ -17,8 +41,8 @@ export class ServicePageService {
         query:  gql`
         query settings {
           services{
-              service_name
-              verbose_name
+              serviceName: service_name
+              verboseName: verbose_name
               status
             }
           }
@@ -32,15 +56,14 @@ export class ServicePageService {
   public updateService(data: modalData) {
     return this.apollo.mutate<IMutationResponse>({
       mutation: gql`
-        mutation settings($password: ShortString, $serviceName: ShortString, $actionType: ServiceAction) {
-        doServiceAction(sudo_password:$password, service_name: $serviceName, service_action: $actionType){
+        mutation settings( $serviceName: ShortString, $actionType: ServiceAction) {
+        doServiceAction( service_name: $serviceName, service_action: $actionType){
            ok,
-           service_status
+           serviceStatus:service_status
          }
       }`,
       variables: {
         method: 'POST',
-        password: data.password,
         serviceName: data.serviceName,
         actionType: data.actionType
 

@@ -5,8 +5,7 @@ import { ApolloQueryResult } from 'apollo-client';
 import { WaitService } from '@core/components/wait/wait.service';
 
 import { ConfirmModalComponent } from './confirm-modal/confirm-modal.component';
-import { IQueryApiModel, IQueryResponse, IQueryService, ServicePageMapper } from './service-page.mapper';
-import { ServicePageService } from './service-page.service';
+import { IQueryResponse, IQueryService, ServicePageService } from './service-page.service';
 
 
 export enum ActionType {
@@ -23,7 +22,6 @@ export interface IEventData {
 export type modalData = {
   serviceName: string
   actionType: ActionType
-  password: string
 } 
 @Component({
   selector: 'vdi-service-page',
@@ -46,9 +44,8 @@ export class ServicePageComponent implements OnInit {
   public getAllServices(): void {  
     this.waitService.setWait(true);   
     this.servicePageService.getServicesInfo().valueChanges.subscribe((res: ApolloQueryResult<IQueryResponse>) => {
-      const services = res.data.services;
-      const mapper = new ServicePageMapper();
-      this.services = services.map(((service: IQueryApiModel) => mapper.serverQueryModelToClientModel(service)));
+      this.services = res.data.services;
+      
       this.waitService.setWait(false);      
     });
   }

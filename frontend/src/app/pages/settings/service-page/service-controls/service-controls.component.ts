@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
 
 import { ActionType, IEventData } from '../service-page.component';
-import { IQueryService, Status } from '../service-page.mapper';
+import { IQueryService, Status } from '../service-page.service';
 
 
 @Component({
