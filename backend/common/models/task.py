@@ -59,6 +59,8 @@ class Task(db.Model, AbstractSortableStatusModel):
 
     message = db.Column(db.Unicode(length=256), nullable=True)
 
+    creator = db.Column(db.Unicode(length=128), default="system")
+
     def get_task_duration(self):
         if self.started:
             if self.finished:
@@ -114,8 +116,8 @@ class Task(db.Model, AbstractSortableStatusModel):
         await publish_data_in_internal_channel(VDI_TASKS_SUBSCRIPTION, "UPDATED", self)
 
     @classmethod
-    async def soft_create(cls, entity_id, task_type, **kwargs):
-        task = await Task.create(entity_id=entity_id, task_type=task_type)
+    async def soft_create(cls, entity_id, task_type, creator=None):
+        task = await Task.create(entity_id=entity_id, task_type=task_type, creator=creator)
 
         await publish_data_in_internal_channel(VDI_TASKS_SUBSCRIPTION, "CREATED", task)
 

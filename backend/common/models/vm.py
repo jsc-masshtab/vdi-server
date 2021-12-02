@@ -1152,7 +1152,8 @@ class Vm(VeilModel):
         self,
         active_directory_obj: AuthenticationDirectory = None,
         ad_ou: str = None,
-        automated_pool=None
+        automated_pool=None,
+        creator="system"
     ):
         """Подготовка ВМ с ограничением по времени."""
         try:
@@ -1167,6 +1168,7 @@ class Vm(VeilModel):
                 ),
                 entity=self.entity,
                 description=str(err_msg),
+                user=creator
             )
             raise
         except ValueError as err_msg:
@@ -1177,5 +1179,6 @@ class Vm(VeilModel):
                         self.verbose_name),
                     description=err_str,
                     entity=self.entity,
+                    user=creator
                 )
             raise
