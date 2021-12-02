@@ -1969,7 +1969,7 @@ class AutomatedPool(db.Model):
         await veil_template.info()
         return veil_template.os_type
 
-    async def add_initial_vms(self):
+    async def add_initial_vms(self, creator="system"):
         """Create required initial amount of VMs for pool."""
         # Fetching template info from controller.
         verbose_name = await self.verbose_name
@@ -1998,7 +1998,8 @@ class AutomatedPool(db.Model):
             await system_logger.error(
                 _local_("VM creation error."),
                 entity=self.entity,
-                description=str(creation_error)
+                description=str(creation_error),
+                user=creator
             )
 
         # Непредусмотренные ошибки пройдены -> завершаем выполнение
@@ -2011,7 +2012,7 @@ class AutomatedPool(db.Model):
             msg = _local_("{} vm(s) are successfully added in the {} pool.").format(
                 self.initial_size, verbose_name
             )
-            await system_logger.info(msg, entity=self.entity)
+            await system_logger.info(msg, entity=self.entity, user=creator)
         else:
             msg = _local_("Adding VM to the pool {} finished with errors.").format(
                 verbose_name
@@ -2020,12 +2021,12 @@ class AutomatedPool(db.Model):
                 self.initial_size, num_of_vms_in_pool
             )
             await system_logger.error(
-                message=msg, entity=self.entity, description=description
+                message=msg, entity=self.entity, description=description, user=creator
             )
             # без исключения таска завершится с FINISHED а не FAILED
             raise PoolCreationError(msg)
 
-    async def prepare_initial_vms(self):
+    async def prepare_initial_vms(self, creator="system"):
         """Подготавливает ВМ для дальнейшего использования тонким клиентом."""
         vm_objects = await VmModel.query.where(VmModel.pool_id == self.id).gino.all()
         if not vm_objects:
@@ -2037,7 +2038,7 @@ class AutomatedPool(db.Model):
         results_future = await asyncio.gather(
             *[
                 vm_object.prepare_with_timeout(
-                    active_directory_object, self.ad_ou, self
+                    active_directory_object, self.ad_ou, self, creator
                 )
                 for vm_object in vm_objects
             ],
@@ -2057,3 +2058,6 @@ class AutomatedPool(db.Model):
         pool = await Pool.get(self.id)
         free_vm_amount = await pool.get_vm_amount(only_free=True)
         return free_vm_amount < self.reserve_size
+
+    def preparation_required(self):
+        return self.enable_vms_remote_access or self.start_vms or self.set_vms_hostnames or self.include_vms_in_ad
