@@ -74,11 +74,11 @@ export class LoginComponent implements OnInit {
     }
   }
 
-  
+
   public get ldapToggleStatus(): boolean {
     return this.authStorageService.getLdapCheckbox();
   }
-  
+
   public send() {
 
     this.loginService.auth(this.loginForm.value).subscribe((res: { data: { access_token: string, expires_on: string, username: string }} & { errors: [] } ) => {

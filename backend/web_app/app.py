@@ -102,9 +102,7 @@ def make_app():
         debug=DEBUG,
         websocket_ping_interval=WS_PING_INTERVAL,
         websocket_ping_timeout=WS_PING_TIMEOUT,
-        autoreload=autoreload,
-        sso_realm="astravdi.test.team",
-        sso_service="HTTP"
+        autoreload=autoreload
     )
 
 

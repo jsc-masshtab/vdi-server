@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from abc import ABC
 
-from tornado import escape
 from tornado.web import HTTPError
 
 from common.languages import _local_
@@ -17,8 +16,6 @@ from common.veil.auth.veil_jwt import (
 from common.veil.veil_errors import AssertError, SilentError, ValidationError
 from common.veil.veil_gino import EntityType
 from common.veil.veil_handlers import BaseHttpHandler
-
-from web_app.auth.sso import KerberosAuthMixin
 
 
 class AuthHandler(BaseHttpHandler, ABC):
@@ -148,26 +145,17 @@ class SettingsHandler(BaseHttpHandler, ABC):
         return self.finish(response)
 
 
-class KerberosAuthHandler(KerberosAuthMixin, ABC):
+class KerberosAuthHandler(BaseHttpHandler, ABC):
     async def get(self):
         auth_header = self.request.headers.get("Authorization")
-        auth_headers = self.request.headers
-        await system_logger.warning("Kerberos Auth HEADERS", description=str(auth_headers))
-        if auth_header:
-            self.get_authenticated_user(self._on_auth)
+        remote_user = self.request.headers.get("X-Remote-User")
+        if auth_header and remote_user:
+            await system_logger.debug("KerberosAuthHandler user: {}".format(remote_user))  # To see what you get
+            next_url = self.get_argument("next", None)  # To redirect properly
+            if next_url:
+                self.redirect(next_url)
+            else:
+                self.redirect("/")
             return
-        self.authenticate_redirect()
-
-    async def _on_auth(self, user):
-        if not user:
-            raise HTTPError(500, "Kerberos auth failed")
-        self.set_secure_cookie("user", escape.json_encode(user))
-        await system_logger.warning("KerberosAuthHandler user: {}".format(user))  # To see what you get
-        next_url = self.get_argument("next", None)  # To redirect properly
-        if next_url:
-            self.redirect(next_url)
         else:
-            self.redirect("/")
-
-    async def data_received(self, chunk: bytes):
-        await super().data_received(chunk)
+            raise HTTPError(500, "Kerberos auth failed")
