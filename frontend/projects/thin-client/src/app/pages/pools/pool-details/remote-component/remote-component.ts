@@ -21,29 +21,29 @@ export class RemoteComponent implements OnInit, OnDestroy{
     public data: RemoteData;
     public url: SafeResourceUrl;
     public subPool$: Subscription;
-    
+
     constructor(
         private poolSerive: PoolsService,
         private waitService: WaitService,
         private sanitizer: DomSanitizer,
         private dialog: MatDialog,
         private dialogRef: MatDialogRef<RemoteComponent>,
-        @Inject(MAT_DIALOG_DATA) data: RemoteData 
-    ) { 
+        @Inject(MAT_DIALOG_DATA) data: RemoteData
+    ) {
         this.data = data;
     }
-  
+
     ngOnInit() {
         this.generateUrl();
       }
-  
+
   public generateUrl(): void {
     const {pool, connectionType} = this.data;
     let url: string;
-      
+
     switch (connectionType) {
       case 'SPICE':
-        
+
         url = `/spice-web-client-master/index.html?host=${pool.host}`;
         if (pool.port){
           url += `&port=${pool.port}`;
@@ -52,8 +52,8 @@ export class RemoteComponent implements OnInit, OnDestroy{
         if (pool.password){
           url += `?password=${pool.password}`;
         }
-        
-        url += `&vmInfoToken=${pool.token}`;        
+
+        url += `&vmInfoToken=${pool.token}`;
         break;
       case 'VNC':
         url = `novnc/${connectionType}.html?/host=${pool.host}`;
@@ -74,21 +74,21 @@ export class RemoteComponent implements OnInit, OnDestroy{
         if (pool.password){
           url += `&password=${pool.password}`;
         }
-        
+
         url += `&path=websockify?token=${pool.token}`;
         break
       default:
         throw new Error('Method is not implemented');
     }
-      
+
     this.url = this.sanitizer.bypassSecurityTrustResourceUrl(url);
-  
+
   }
 
   public get name(): string {
     return this.data.pool.vmVerboseName;
   }
-  
+
   public close(): void {
     this.dialogRef.close();
   }
@@ -97,13 +97,13 @@ export class RemoteComponent implements OnInit, OnDestroy{
     if (this.subPool$) {
       this.subPool$.unsubscribe();
     }
-    this.waitService.setWait(true);   
+    this.waitService.setWait(true);
 
     this.subPool$ = this.poolSerive.getPoolDetail(this.data.idPool).subscribe( (res) => {
       this.data = { pool: PoolDetailMapper.transformToClient(res.data), ...this.data };
       this.generateUrl();
-      this.waitService.setWait(false);       
-    })    
+      this.waitService.setWait(false);
+    })
   }
 
   public manageVM(action: VMActions): void{
