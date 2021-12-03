@@ -8,7 +8,6 @@ from dateutil.tz import tzlocal
 
 import graphene
 
-from common.backup import Backup
 from common.graphene_utils import ShortString
 from common.languages import _local_
 from common.log.journal import system_logger
@@ -329,40 +328,11 @@ class DoServiceAction(graphene.Mutation):
         return DoServiceAction(ok=True, service_status=service_status)
 
 
-class CreateBackup(graphene.Mutation):
-    ok = graphene.Boolean()
-
-    @administrator_required
-    async def mutate(self, _info, creator, **kwargs):
-        return_code = Backup.create_backup(creator=creator)
-        if return_code == 0:
-            return CreateBackup(ok=True)
-        return CreateBackup(ok=False)
-
-
-class RestoreDB(graphene.Mutation):
-    class Arguments:
-        backup_file = ShortString()
-        sudo_password = ShortString()
-
-    ok = graphene.Boolean()
-
-    @administrator_required
-    async def mutate(self, _info, sudo_password, backup_file, creator, **kwargs):
-        return_code = Backup.restore_db(sudo_password=sudo_password, backup_file=backup_file, creator=creator)
-        if return_code == 0:
-            return RestoreDB(ok=True)
-        return RestoreDB(ok=False)
-
-
 class SettingsMutations(graphene.ObjectType):
     changeSettings = ChangeSettingsMutation.Field()
     changeSmtpSettings = ChangeSmtpSettingsMutation.Field()
 
     doServiceAction = DoServiceAction.Field()
-
-    createBackup = CreateBackup.Field()
-    restoreDB = RestoreDB.Field()
 
 
 settings_schema = graphene.Schema(
