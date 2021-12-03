@@ -44,8 +44,7 @@ export class RemoteComponent implements OnInit, OnDestroy{
     switch (connectionType) {
       case 'SPICE':
         
-        url = `/spice-web-client/index.html?host=${pool.host}`;
-
+        url = `/spice-web-client-master/index.html?host=${pool.host}`;
         if (pool.port){
           url += `&port=${pool.port}`;
         }
@@ -54,7 +53,7 @@ export class RemoteComponent implements OnInit, OnDestroy{
           url += `?password=${pool.password}`;
         }
         
-        url += `&vmInfoToken=${pool.token}`;
+        url += `&vmInfoToken=${pool.token}`;        
         break;
       case 'VNC':
         url = `novnc/${connectionType}.html?/host=${pool.host}`;
