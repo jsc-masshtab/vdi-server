@@ -44,17 +44,17 @@ export class RemoteComponent implements OnInit, OnDestroy{
     switch (connectionType) {
       case 'SPICE':
         
-        url = `/spice-html5/spice_auto.html?host=${pool.host}`;
+        url = `/spice-web-client/index.html?host=${pool.host}`;
 
         if (pool.port){
           url += `&port=${pool.port}`;
         }
 
         if (pool.password){
-          url += `&password=${pool.password}`;
+          url += `?password=${pool.password}`;
         }
         
-        url += `&path=websockify?token=${pool.token}`;
+        url += `&vmInfoToken=${pool.token}`;
         break;
       case 'VNC':
         url = `novnc/${connectionType}.html?/host=${pool.host}`;
