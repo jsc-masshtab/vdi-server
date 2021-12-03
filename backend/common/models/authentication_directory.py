@@ -350,7 +350,7 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
             await self.update(status=Status.BAD_AUTH).apply()
             return False
         except ldap.SERVER_DOWN as ex_error:
-            msg = _local_("Authentication directory server {} is down.").format(
+            msg = _local_("Failed to connect to authentication directory server {}.").format(
                 self.directory_url
             )
             await system_logger.warning(msg, entity=self.entity, description=ex_error)
@@ -726,7 +726,7 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
             await self.update(status=Status.BAD_AUTH).apply()
             return False
         except ldap.SERVER_DOWN:
-            msg = _local_("Authentication directory server {} is down.").format(
+            msg = _local_("Failed to connect to authentication directory server {}.").format(
                 self.directory_url
             )
             await system_logger.warning(msg, entity=self.entity)

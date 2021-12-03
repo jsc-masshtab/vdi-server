@@ -22,7 +22,7 @@
                 <span class="name">Копировать пул</span>
             </button>
         </ng-container>
-     
+
         <button (click)="removePool()" *ngIf="menuActive === 'info' && pool" title="Удалить пул" class="btn-control">
             <fa-icon [icon]="['fas','trash-alt']" size="xs"></fa-icon>
             <span class="name">Удалить пул</span>
@@ -103,7 +103,7 @@
                 </ng-container>
 
                 <ng-container *ngIf="typePool === 'rds'">
-                    <vdi-table-into *ngIf="menuActive === 'info'" [item]="pool" [collection]="collectionDetailsStatic" (action)="actionEdit($event)"></vdi-table-into>
+                    <vdi-table-into *ngIf="menuActive === 'info'" [item]="pool" [collection]="collectionDetailsRds" (action)="actionEdit($event)"></vdi-table-into>
                     <vdi-table-component *ngIf="menuActive === 'vms'" [data]="pool?.vms" [collection]="collectionVmsRds" entity="vm" (clickRowData)="clickVm($event)" (sortListNow)="sortVms($event)" cursor="true"></vdi-table-component>
                 </ng-container>
 

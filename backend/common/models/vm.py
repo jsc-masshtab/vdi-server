@@ -890,6 +890,7 @@ class Vm(VeilModel):
                         increase_step=automated_pool.increase_step,
                         vm_name_template=automated_pool.vm_name_template,
                         keep_vms_on=pool.keep_vms_on,
+                        free_vm_from_user=pool.free_vm_from_user,
                         vm_action_upon_user_disconnect=pool.vm_action_upon_user_disconnect,
                         vm_disconnect_action_timeout=pool.vm_disconnect_action_timeout,
                         create_thin_clones=automated_pool.create_thin_clones,
@@ -1151,7 +1152,8 @@ class Vm(VeilModel):
         self,
         active_directory_obj: AuthenticationDirectory = None,
         ad_ou: str = None,
-        automated_pool=None
+        automated_pool=None,
+        creator="system"
     ):
         """Подготовка ВМ с ограничением по времени."""
         try:
@@ -1166,6 +1168,7 @@ class Vm(VeilModel):
                 ),
                 entity=self.entity,
                 description=str(err_msg),
+                user=creator
             )
             raise
         except ValueError as err_msg:
@@ -1176,5 +1179,6 @@ class Vm(VeilModel):
                         self.verbose_name),
                     description=err_str,
                     entity=self.entity,
+                    user=creator
                 )
             raise
