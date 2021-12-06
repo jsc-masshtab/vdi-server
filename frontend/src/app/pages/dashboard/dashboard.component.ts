@@ -2,7 +2,9 @@ import { Component, OnInit, HostListener, OnDestroy } from '@angular/core';
 
 import { MatDialog } from '@angular/material/dialog';
 import { WebsocketService } from '@app/core/services/websock.service';
+import { Observable } from 'rxjs';
 
+import { ISettings, LoginService } from '../login/login.service';
 
 @Component({
   selector: 'vdi-dashboard',
@@ -10,11 +12,12 @@ import { WebsocketService } from '@app/core/services/websock.service';
 
 })
 export class DashboardComponent implements OnInit, OnDestroy {
-
-  constructor(private ws: WebsocketService, public dialog: MatDialog) { }
+  public settings$: Observable<ISettings>;
+  constructor(private ws: WebsocketService, public dialog: MatDialog, private loginService: LoginService) { }
 
   ngOnInit() {
     this.ws.init();
+    this.settings$ = this.loginService.getSettings();
   }
 
   @HostListener('window:keydown', ['$event'])
