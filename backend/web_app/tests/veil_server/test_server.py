@@ -27,6 +27,9 @@ class VeilTestServer:
         self.app.add_routes(
             [web.post(self.base_url + "domains/{domain_id}/shutdown/", self.shutdown_vm)])
 
+        self.app.add_routes(
+            [web.post(self.base_url + "domains/{domain_id}/vdi-prepare/", self.prepare_vm)])
+
         # Групповые действия
         self.app.add_routes(
             [web.post(self.base_url + "domains/multi-manager/", self.multi_manager)])
@@ -1142,6 +1145,74 @@ class VeilTestServer:
                 ]
             }
             return web.Response(text=json.dumps(res_dict), content_type="application/json", status=200)
+
+    async def prepare_vm(self, request):
+        domain_id = request.match_info["domain_id"]
+        res_dict = {
+            "_task": {
+                "id": "0daf02eb-3172-48a8-b50c-a38b751f9b0b",
+                "verbose_name": "Task",
+                "name": "Starting the virtual machine win_test.",
+                "progress": 0,
+                "status": "IN_PROGRESS",
+                "created": "2020-10-29T12:08:18.248553Z",
+                "executed": 0,
+                "finished_time": None,
+                "nodes_user_responses": [
+                    {
+                        "node_id": "cdf10fc6-57f8-436c-a031-78ba3ba1ae40",
+                        "node_response": "None"
+                    }
+                ],
+                "events": [
+                    {
+                        "id": "79280435-3b14-4374-990b-6831aea1008c",
+                        "message": "Task created:  Starting the virtual machine win_test.",
+                        "user": "solomin",
+                        "created": "2020-10-29T12:08:18.433958Z",
+                        "task": "0daf02eb-3172-48a8-b50c-a38b751f9b0b",
+                        "readed": [],
+                        "entities": [
+                            {
+                                "entity_uuid": domain_id,
+                                "entity_class": "domain"
+                            },
+                            {
+                                "entity_uuid": "cdf10fc6-57f8-436c-a031-78ba3ba1ae40",
+                                "entity_class": "node"
+                            }
+                        ],
+                        "detail_message": "Task",
+                        "permissions": {
+                            "mark": True
+                        },
+                        "type": "info"
+                    }
+                ],
+                "nodes_list": [
+                    "cdf10fc6-57f8-436c-a031-78ba3ba1ae40"
+                ],
+                "user": {
+                    "id": 204,
+                    "username": "solomin"
+                },
+                "error_message": "",
+                "is_cancellable": True,
+                "permissions": {
+                    "cancel": True,
+                    "release_locks": True,
+                    "check": True,
+                    "run": True
+                },
+                "is_multitask": False,
+                "parent": None,
+                "entities": {
+                    domain_id: "domain",
+                    "cdf10fc6-57f8-436c-a031-78ba3ba1ae40": "node"
+                }
+            }
+        }
+        return web.Response(text=json.dumps(res_dict), content_type="application/json", status=202)
 
     async def multi_create_domain(self, request):
 

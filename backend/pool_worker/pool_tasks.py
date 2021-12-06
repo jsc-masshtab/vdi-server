@@ -306,6 +306,7 @@ class ExpandPoolTask(AbstractTask):
                 active_directory_object = await AuthenticationDirectory.query.where(
                     AuthenticationDirectory.status == Status.ACTIVE
                 ).gino.first()
+
                 if vm_list and automated_pool.preparation_required():
                     await asyncio.gather(
                         *[
@@ -382,6 +383,7 @@ class RecreationGuestVmTask(AbstractTask):
                 active_directory_object = await AuthenticationDirectory.query.where(
                     AuthenticationDirectory.status == Status.ACTIVE
                 ).gino.first()
+
                 if vm_list and automated_pool.preparation_required():
                     await asyncio.gather(
                         *[
@@ -517,9 +519,6 @@ class PrepareVmTask(AbstractTask):
 
     async def _do_full_preparation(self, vm):
         """Full preparation."""
-        active_directory_object = None
-        ad_ou = None
-
         pool = await Pool.get(vm.pool_id)
 
         pool_type = pool.pool_type

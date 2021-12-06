@@ -1054,70 +1054,6 @@ class Vm(VeilModel):
                 await system_logger.info(message=msg, entity=self.entity)
         return True
 
-    async def set_hostname_and_reboot(self):
-        """Задание hostname и перезагрузка ВМ."""
-        reboot_is_success = await self.reboot()
-        if reboot_is_success:
-            hostname_is_success = await self.set_hostname()
-            # Когда hostname начнет гарантировано задаваться в этой проверке будет смысл
-            if hostname_is_success:
-                await self.reboot()
-
-    async def include_in_ad(self,
-                            active_directory_obj: AuthenticationDirectory,
-                            ad_ou: str = None):
-        """Вводит в домен.
-
-        Т.к. гостевой агент некорректно показывает hostname ВМ, то одновременное назначение и заведение не отработает.
-        """
-        if not active_directory_obj:
-            return False
-        # Прежде чем заводить в домен мы должны дождаться активации гостевого агента
-        await self.qemu_guest_agent_waiting()
-        # Если дождались - можно заводить
-        domain_entity = await self.get_veil_entity()
-        # APIPA == Automatic Private IP Addressing
-        if domain_entity.first_ipv4 and domain_entity.apipa_problem:
-            raise ValueError(
-                _local_("VM {} failed to receive DHCP ip address ({}).").format(
-                    self.verbose_name, domain_entity.guest_agent.ipv4
-                )
-            )
-
-        already_in_domain = (
-            await domain_entity.is_in_ad() if domain_entity.os_windows else True
-        )
-        if active_directory_obj and domain_entity.os_windows and not already_in_domain and active_directory_obj.directory_type != active_directory_obj.DirectoryTypes.OpenLDAP:
-            ad_params_dict = {"domain_name": str(active_directory_obj.dc_str),
-                              "login": active_directory_obj.service_username,
-                              "password": active_directory_obj.password}
-            # Если передан параметр группы AD - добавляем
-            if ad_ou and isinstance(ad_ou, str):
-                ad_params_dict["oupath"] = ",".join(
-                    [ad_ou, AuthenticationDirectory.convert_dc_str(active_directory_obj.dc_str)])
-            # Вызываем команду на ECP VeiL
-            action_response = await domain_entity.add_to_ad(
-                **ad_params_dict
-            )
-            if action_response.task:
-                await self.task_waiting(action_response.task)
-            # Если задача выполнена с ошибкой - прерываем выполнение
-            if action_response.task:
-                task_success = await action_response.task.is_success()
-            else:
-                task_success = False
-            if not task_success:
-                raise ValueError(
-                    _local_("VM {} domain including task failed.").format(
-                        self.verbose_name)
-                )
-            msg = _local_("VM {} AD inclusion success.").format(self.verbose_name)
-            await system_logger.info(message=msg, entity=self.entity)
-            return True
-        msg = _local_("VM {} AD inclusion skipped.").format(self.verbose_name)
-        await system_logger.warning(message=msg, entity=self.entity)
-        return False
-
     async def prepare(
         self,
         active_directory_obj: AuthenticationDirectory = None,
@@ -1128,24 +1064,67 @@ class Vm(VeilModel):
 
         Вся процедура должна продолжаться не более 10 минут для 1 ВМ.
         """
-        if automated_pool:
-            if automated_pool.enable_vms_remote_access:
-                await self.enable_remote_access()
-            if automated_pool.start_vms:
-                await self.start()
-            if not automated_pool.is_guest:
-                if automated_pool.set_vms_hostnames:
-                    await self.set_hostname_and_reboot()
-                if active_directory_obj and automated_pool.include_vms_in_ad:
-                    await self.include_in_ad(active_directory_obj,
-                                             ad_ou=ad_ou)
+        domain_entity = await self.get_veil_entity()
 
-            # Протоколируем успех
-            msg = _local_("VM {} has been prepared.").format(self.verbose_name)
-            await system_logger.info(message=msg, entity=self.entity)
+        # Формируем параметры для задачи подготовки
+        remote_access = True
+        start_vms = False
+        set_hostname = False
+        domain_name = None
+        login = None
+        password = None
+        oupath = None
+
+        if automated_pool:
+            if not automated_pool.preparation_required():
+                return False
+
+            # remote access
+            remote_access = automated_pool.enable_vms_remote_access
+
+            # start vm
+            start_vms = automated_pool.start_vms
+
+            if not automated_pool.is_guest:
+                # hostname if required
+                if automated_pool.set_vms_hostnames and \
+                        str(domain_entity.hostname).upper() != str(self.verbose_name).upper():  # noqa
+                    set_hostname = True
+
+                # add to AD if required
+                if automated_pool.include_vms_in_ad and active_directory_obj:
+                    domain_name = str(active_directory_obj.dc_str)
+                    login = active_directory_obj.service_username
+                    password = active_directory_obj.password
+
+                    if ad_ou and isinstance(ad_ou, str):
+                        oupath = ",".join([ad_ou, AuthenticationDirectory.convert_dc_str(active_directory_obj.dc_str)])
+
+        # Запускаем на контроллере задачу подготовки ВМ
+        prepare_response = await domain_entity.prepare(remote_access=remote_access,
+                                                       start=start_vms,
+                                                       set_hostname=set_hostname,
+                                                       domain_name=domain_name,
+                                                       login=login,
+                                                       password=password,
+                                                       restart=True,
+                                                       oupath=oupath
+                                                       )
+
+        # Ожидаем выполнения задачи
+        if prepare_response.status_code == 202 and prepare_response.task:
+            await self.task_waiting(prepare_response.task)
+
+            is_success = await prepare_response.task.is_success()
+            if is_success:
+                # Протоколируем результат
+                msg = _local_("VM {} has been prepared.").format(self.verbose_name)
+                await system_logger.info(message=msg, entity=self.entity)
+            else:
+                raise RuntimeError(_local_("VM preparation task finished with errors. Check ECP Veil."))
         else:
-            msg = _local_("VM {} has been not prepared.").format(self.verbose_name)
-            await system_logger.warning(message=msg, entity=self.entity, description=_local_("Check pool settings."))
+            raise RuntimeError(_local_("ECP Veil failed to prepare VM."))
+
         return True
 
     async def prepare_with_timeout(
@@ -1171,7 +1150,7 @@ class Vm(VeilModel):
                 user=creator
             )
             raise
-        except ValueError as err_msg:
+        except (ValueError, RuntimeError) as err_msg:
             err_str = str(err_msg)
             if err_str:
                 await system_logger.error(
