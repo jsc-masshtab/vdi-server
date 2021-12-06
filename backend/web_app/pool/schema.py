@@ -781,7 +781,7 @@ class DeletePoolMutation(graphene.Mutation, PoolValidator):
         # Авто пул или Гостевой пул
         if pool_type == Pool.PoolTypes.AUTOMATED or pool_type == Pool.PoolTypes.GUEST:
             await execute_delete_pool_task(
-                str(pool.id), full=full, wait_for_result=False
+                str(pool.id), full=full, wait_for_result=False, creator=creator
             )
             return DeletePoolMutation(ok=True)
         else:
@@ -900,7 +900,7 @@ class CreateStaticPoolMutation(graphene.Mutation, PoolValidator, ControllerFetch
         # Запустить задачи подготовки машин
         for vm_data in vms:
             await request_to_execute_pool_task(
-                vm_data.id, PoolTaskType.VM_PREPARE, full=False, creator=creator
+                vm_data.id, PoolTaskType.VM_PREPARE, full_preparation=False, creator=creator
             )
 
         return {
@@ -998,7 +998,7 @@ class AddVmsToStaticPoolMutation(graphene.Mutation):
 
             # Запустить задачи подготовки машин
             await request_to_execute_pool_task(
-                vm.id, PoolTaskType.VM_PREPARE, full=False, creator=creator
+                vm.id, PoolTaskType.VM_PREPARE, full_preparation=False, creator=creator
             )
 
         # Разом прикрепляем теги
