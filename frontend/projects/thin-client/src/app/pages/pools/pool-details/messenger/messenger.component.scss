@@ -20,7 +20,10 @@
     min-width: 800px;
     width: 50%;
     transition: all 300ms ease-out;
-  
+    &.full-width{
+      width: 100%;
+      transition:none;
+    }
     &-messages {
       position: relative;
   

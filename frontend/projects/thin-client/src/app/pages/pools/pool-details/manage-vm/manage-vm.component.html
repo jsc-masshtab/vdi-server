@@ -16,4 +16,13 @@
     <fa-icon [icon]="['fas','undo']"></fa-icon>
   </button>
 
+  <button  class="btn-control" mat-button [matMenuTriggerFor]="menu" title="Помощь">
+    Помощь
+  </button>
+  <mat-menu #menu="matMenu">
+    <button mat-menu-item (click)="onClickOpenDialog()">Открыть диалог с админом</button>
+    <a mat-menu-item href='https://veil.mashtab.org/products/veil_vdi/' target="_blank" >Официальная страница ECP Veil</a>
+    <a mat-menu-item href="/docs" target="_blank">Документация</a>
+    <button mat-menu-item>Информация о соединении</button>
+  </mat-menu>
 </div>
