@@ -5,7 +5,7 @@ import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
 import {faBars,
    faChartBar,
    faCheckSquare,
-   faCog, faCommentDots, faDesktop, faExclamationTriangle, faPauseCircle, faPlay, faPlayCircle, faSignOutAlt, faSpinner, faStopCircle, faSyncAlt, faTimesCircle, faTv, faUndo, faUserCircle} from '@fortawesome/free-solid-svg-icons';
+   faCog, faCommentDots, faDesktop, faExclamationTriangle, faFire, faPauseCircle, faPlay, faPlayCircle, faPowerOff, faSignOutAlt, faSpinner, faStopCircle, faSyncAlt, faTimesCircle, faTv, faUndo, faUserCircle} from '@fortawesome/free-solid-svg-icons';
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
@@ -66,6 +66,9 @@ export class AppModule {
       faPauseCircle, 
       faStopCircle, 
       faUndo, 
-      faExclamationTriangle )
+      faExclamationTriangle,
+      faFire,
+      faPowerOff
+      )
   }
  }
