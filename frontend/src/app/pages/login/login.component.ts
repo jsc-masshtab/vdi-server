@@ -45,12 +45,32 @@ export class LoginComponent implements OnInit {
               private errorService: ErrorsService) { this.routePage(); }
 
   ngOnInit() {
-    this.loaded = true;
+    this.sendSSO();
+
     this.loginForm.get('ldap').valueChanges.subscribe(v => {
       this.authStorageService.setLdap(v)
     })
 
     this.settings$ = this.loginService.getSettings();
+  }
+
+  private sendSSO() {
+    this.loginService.getSSO().subscribe(
+      (res) => {
+        if (res && res.data) {
+          this.authStorageService.saveInStorage(res.data);
+          this.routePage();
+          
+          this.loaded = true;
+        }
+
+        if (res.errors !== undefined) {
+          this.errorService.setError(res.errors);
+        }
+      }, () => {
+        this.loaded = true;
+      }
+    );
   }
 
   private createForm(): void {
@@ -73,7 +93,6 @@ export class LoginComponent implements OnInit {
       this.createForm();
     }
   }
-
 
   public get ldapToggleStatus(): boolean {
     return this.authStorageService.getLdapCheckbox();
