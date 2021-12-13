@@ -2,7 +2,7 @@
 <header class="main-header">
   <div class="logo" routerLink="./pools">
     <img src="../assets/favicon.png" width="20" height="20">
-    <span [style.fontSize]="'18px'" >{{(settings$ | async).broker_name }}</span>
+    <span [style.fontSize]="'18px'" *ngIf="(settings$ | async)?.broker_name as brokerName" >{{ brokerName }}</span>
 
   </div>
 

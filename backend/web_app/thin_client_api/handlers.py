@@ -710,3 +710,27 @@ class UpdateUserDataHandler(BaseHttpHandler):
             response = {"errors": [{"message": str(error)}]}
 
         return await self.log_finish(response)
+
+
+@jwtauth
+class VmDataHandler(BaseHttpHandler):
+    """Возвращает все пулы пользователя."""
+
+    async def get(self, vm_id):
+        vm = await Vm.get(vm_id)
+
+        if not vm:
+            response = self.form_err_res(_local_("VM {} is not registered in VDI broker.").format(vm_id))
+            return await self.log_finish(response)
+
+        vm_controller = await vm.controller
+        http_vac_client = vm_controller.veil_client.domain(domain_id=vm.id_str)
+        domain_info = await http_vac_client.info()
+
+        response_data = domain_info.data
+        response_data["controller_address"] = vm_controller.address
+        response = {
+            "data": response_data
+        }
+
+        return await self.log_finish(response)

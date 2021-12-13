@@ -24,6 +24,14 @@ if [ ! $BACKUP_FILE ]; then
 fi;
 
 
+# Check if BACKUP_FILE contains '/'
+if [[ "$BACKUP_FILE" == *\/* ]]; then
+    BACKUP_PATH=$BACKUP_FILE
+else
+    BACKUP_PATH=$BACKUP_DIR$BACKUP_FILE
+fi
+
+
 # Stop services
 echo "Stop 'vdi-monitor_worker' service"
 sudo service vdi-monitor_worker stop
@@ -34,8 +42,8 @@ sudo service vdi-web stop
 
 
 # Start restore
-echo "Starting restore from '$BACKUP_FILE'"
-sudo -u "$USERNAME" psql vdi -f $BACKUP_DIR$BACKUP_FILE
+echo "Starting restore from '$BACKUP_PATH'"
+sudo -u "$USERNAME" psql vdi -f "$BACKUP_PATH"
 
 
 # Start services

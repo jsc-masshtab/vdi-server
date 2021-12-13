@@ -8,9 +8,15 @@ import { Component, EventEmitter, Output } from '@angular/core';
 export class ManageVmComponent{
   @Output()
   public readonly manageVM = new EventEmitter<string>();
+  @Output()
+  public readonly openDialog = new EventEmitter<void>();
 
   public onClickAction(action: string): void{
     this.manageVM.emit(action)
+  }
+
+  public onClickOpenDialog(): void {
+    this.openDialog.emit()
   }
 
 }
