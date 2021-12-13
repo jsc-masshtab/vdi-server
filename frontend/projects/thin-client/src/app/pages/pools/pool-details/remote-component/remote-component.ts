@@ -8,6 +8,7 @@ import { PoolDetailMapper } from '../pool-detail.mapper';
 import { RemoteData } from '../pool-details.component';
 import { WaitService } from '../../../../core/wait/wait.service';
 import { YesNoFormComponent } from '../../../../components/yes-no-form/yes-no-form.component';
+import { RemoteMessengerComponent } from '../remote-messenger/remote-messenger.component';
 
 
 
@@ -237,6 +238,16 @@ export class RemoteComponent implements OnInit, OnDestroy{
         throw Error('Something went wrong')
         break;
     }
+  }
+
+  public openDialog(){
+    this.dialog.open(RemoteMessengerComponent, {
+      disableClose: true,
+      maxWidth: '90vw',
+      maxHeight: '90vh',
+      height: '100%',
+      width: '100%'
+    })
   }
 
   public ngOnDestroy(): void {

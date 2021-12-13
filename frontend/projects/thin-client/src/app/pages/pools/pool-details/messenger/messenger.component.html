@@ -1,5 +1,5 @@
 <div class="messenger-container">
-    <div class="messenger">
+    <div class="messenger" [ngClass]="isFullWidth ? 'full-width' : ''">
       <div #messenger class="messenger-messages">
 
         <div class="messenger-message" *ngFor="let message of messages" [class.message-justify]="message.self">
