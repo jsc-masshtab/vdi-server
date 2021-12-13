@@ -169,6 +169,28 @@ export class RemoteComponent implements OnInit, OnDestroy{
           }
         })
         break;
+      case VMActions.ForceShutdown:
+        this.dialog.open(YesNoFormComponent, {
+          disableClose: true,
+          width: '500px',
+          data: {
+            form: {
+              header: 'Подтверждение действия',
+              question: 'Принудительно выключить ВМ?',
+              button: 'Выполнить'
+            },
+            request: {
+              service: this.poolSerive,
+              action: 'manageVM',
+              body: {
+                id: this.data.idPool,
+                action: VMActions.Shutdown,
+                force: true
+              }
+            }
+          }
+        })
+        break;
       case VMActions.Reboot:
         this.dialog.open(YesNoFormComponent, {
           disableClose: true,
@@ -185,6 +207,28 @@ export class RemoteComponent implements OnInit, OnDestroy{
               body: {
                 id: this.data.idPool,
                 action: VMActions.Reboot,
+              }
+            }
+          }
+        })
+        break;
+      case VMActions.ForceReboot:
+        this.dialog.open(YesNoFormComponent, {
+          disableClose: true,
+          width: '500px',
+          data: {
+            form: {
+              header: 'Подтверждение действия',
+              question: 'Принудительно перезагрузить ВМ?',
+              button: 'Выполнить'
+            },
+            request: {
+              service: this.poolSerive,
+              action: 'manageVM',
+              body: {
+                id: this.data.idPool,
+                action: VMActions.Reboot,
+                force: true
               }
             }
           }

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from web_app.thin_client_api.handlers import (
     AttachUsb, DetachUsb, GenerateUserQrCodeHandler, GetUserDataHandler, PoolGetVm, PoolHandler,
-    SendTextMsgHandler, ThinClientWsHandler, UpdateUserDataHandler, VmAction
+    SendTextMsgHandler, ThinClientWsHandler, UpdateUserDataHandler, VmAction, VmDataHandler
 )
 
 
@@ -28,4 +28,8 @@ thin_client_api_urls = [
     (r"/client/generate_user_qr_code/?", GenerateUserQrCodeHandler),
     (r"/client/get_user_data/?", GetUserDataHandler),
     (r"/client/update_user_data/?", UpdateUserDataHandler),
+    (
+        r"/client/get_vm_data/(?P<vm_id>[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})/?",
+        VmDataHandler
+    ),
 ]
