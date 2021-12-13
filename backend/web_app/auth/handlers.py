@@ -156,11 +156,16 @@ class KerberosAuthHandler(BaseHttpHandler, ABC):
         remote_user = self.request.headers.get("X-Remote-User")
         if auth_header and remote_user:
             await system_logger.debug("KerberosAuthHandler user: {}".format(remote_user))  # To see what you get
-            next_url = self.get_argument("next", None)  # To redirect properly
-            if next_url:
-                self.redirect(next_url)
-            else:
-                self.redirect("/")
-            return
+            auth_dir = await AuthenticationDirectory.get_objects(first=True)
+            access_token = encode_jwt(remote_user, domain=auth_dir.dc_str if auth_dir else "")
+            await User.login(
+                username=remote_user,
+                token=access_token.get("access_token"),
+                ip=self.remote_ip,
+                ldap=True,
+                client_type=self.client_type,
+            )
+            response = {"data": access_token}
+            return await self.log_finish(response)
         else:
             raise HTTPError(500, "Kerberos auth failed")
