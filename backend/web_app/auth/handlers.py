@@ -9,6 +9,7 @@ from common.models.active_tk_connection import ActiveTkConnection
 from common.models.auth import User
 from common.models.authentication_directory import AuthenticationDirectory
 from common.settings import EXTERNAL_AUTH, LANGUAGE, LOCAL_AUTH, PAM_AUTH
+from common.veil.auth.auth_dir_utils import extract_domain_from_username
 from common.veil.auth.veil_jwt import (
     encode_jwt,
     extract_user_and_token_with_no_expire_check,
@@ -154,12 +155,13 @@ class KerberosAuthHandler(BaseHttpHandler, ABC):
     async def get(self):
         auth_header = self.request.headers.get("Authorization")
         remote_user = self.request.headers.get("X-Remote-User")
+        await system_logger.warning("AAAAA", description=str(self.request.headers))
         if auth_header and remote_user:
             await system_logger.debug("KerberosAuthHandler user: {}".format(remote_user))  # To see what you get
-            auth_dir = await AuthenticationDirectory.get_objects(first=True)
-            access_token = encode_jwt(remote_user, domain=auth_dir.dc_str if auth_dir else "")
+            account_name, domain_name = extract_domain_from_username(remote_user)
+            access_token = encode_jwt(account_name, domain=domain_name)
             await User.login(
-                username=remote_user,
+                username=account_name,
                 token=access_token.get("access_token"),
                 ip=self.remote_ip,
                 ldap=True,
@@ -168,4 +170,4 @@ class KerberosAuthHandler(BaseHttpHandler, ABC):
             response = {"data": access_token}
             return await self.log_finish(response)
         else:
-            raise HTTPError(500, "Kerberos auth failed")
+            raise HTTPError(500, "Kerberos auth error")
