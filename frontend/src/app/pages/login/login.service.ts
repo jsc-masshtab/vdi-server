@@ -40,9 +40,6 @@ export class LoginService {
         return this.http.post(url, {}, { headers });
     }
 
-
-
-
     public getSettings(): Observable<ISettings> {
         return this.http.get<ISettings>('/api/settings/').pipe(map((res: any) => res.data));
     }
