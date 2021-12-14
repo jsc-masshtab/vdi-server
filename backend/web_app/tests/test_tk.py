@@ -512,3 +512,23 @@ class TestUserAuth(VdiHttpTestCase):
         assert response_dict["data"]["ok"]
         two_factor = response_dict["data"]["user"]["two_factor"]
         assert two_factor  # Проверяем что 2fa включена
+
+
+class TestVmDataRequest(VdiHttpTestCase):
+    @pytest.mark.usefixtures("fixt_db", "fixt_create_static_pool", "fixt_user")
+    @gen_test
+    async def test_vm_data(self):
+
+        vm = await Vm.query.gino.first()
+
+        # Thin client login
+        auth_headers = await self.do_login_and_get_auth_headers(username="test_user")
+
+        # Get user's data
+        vm_id_str = str(vm.id)
+        url = "/client/get_vm_data/{}/".format(vm_id_str)
+        response_dict = await self.get_response(
+            body=None, url=url, headers=auth_headers, method="GET"
+        )
+
+        assert vm_id_str == response_dict["data"]["id"]

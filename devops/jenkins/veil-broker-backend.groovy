@@ -45,10 +45,11 @@ pipeline {
     }
 
     parameters {
-        string(      name: 'BRANCH',      defaultValue: 'dev',                     description: 'branch')
-        choice(      name: 'REPO',        choices: ['test', 'prod-30', 'prod-31'], description: 'repo for uploading')
-        string(      name: 'VERSION',     defaultValue: '3.1.2',                   description: 'base version')
-        string(      name: 'AGENT',       defaultValue: 'bld-agent',               description: 'jenkins build agent')
+        string(    name: 'BRANCH',        defaultValue: 'dev',                     description: 'branch')
+        choice(    name: 'REPO',          choices: ['test', 'prod-30', 'prod-31'], description: 'repo for uploading')
+        string(    name: 'VERSION',       defaultValue: '3.1.2',                   description: 'base version')
+        string(    name: 'AGENT',         defaultValue: 'bld-agent',               description: 'jenkins build agent')
+        string(    name: 'BROKER_NAME',   defaultValue: 'VeiL VDI',                description: 'broker name')
     }
 
     stages {
@@ -88,19 +89,24 @@ pipeline {
                     mkdir -p "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/app"
                     rsync -a ${WORKSPACE}/backend/ "${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/app"
 
-                    # создаем виртуальное окружение
+                    # create virtual env
                     /usr/bin/python3 -m virtualenv ${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/env
-                    # устанавливаем зависимости
+                    # install requirements
                     cd ${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/app
                     ${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/env/bin/python -m pip --no-cache-dir install -r requirements.txt
-                    # делаем виртуальное окружение перемещаемым
+                    # set BROKER_NAME
+                    echo "BROKER_NAME = \\"${BROKER_NAME}\\"" > common/broker_name.py
+                    # make relocatable env
                     virtualenv --relocatable ../env
 
+                    # compilemessages
                     cd common
                     chmod +x compilemessages.sh
                     ./compilemessages.sh en
                     ./compilemessages.sh ru
                     cd ..
+
+                    # build deb
                     make -C "${DEB_ROOT}/${PRJNAME}"
 
                     # upload to nfs

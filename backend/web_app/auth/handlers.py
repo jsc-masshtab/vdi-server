@@ -136,8 +136,13 @@ class VersionHandler(BaseHttpHandler, ABC):
 
 class SettingsHandler(BaseHttpHandler, ABC):
     async def get(self):
+        try:
+            from common.broker_name import BROKER_NAME
+        except ImportError:
+            from common.settings import BROKER_NAME
         auth_dir = await AuthenticationDirectory.get_objects(first=True)
         data = {"language": LANGUAGE,
+                "broker_name": BROKER_NAME,
                 "ldap": auth_dir.dc_str if auth_dir else ""}
         response = {"data": data}
         return self.finish(response)

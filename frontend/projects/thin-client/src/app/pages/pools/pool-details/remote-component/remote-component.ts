@@ -8,6 +8,7 @@ import { PoolDetailMapper } from '../pool-detail.mapper';
 import { RemoteData } from '../pool-details.component';
 import { WaitService } from '../../../../core/wait/wait.service';
 import { YesNoFormComponent } from '../../../../components/yes-no-form/yes-no-form.component';
+import { RemoteMessengerComponent } from '../remote-messenger/remote-messenger.component';
 
 
 
@@ -168,6 +169,28 @@ export class RemoteComponent implements OnInit, OnDestroy{
           }
         })
         break;
+      case VMActions.ForceShutdown:
+        this.dialog.open(YesNoFormComponent, {
+          disableClose: true,
+          width: '500px',
+          data: {
+            form: {
+              header: 'Подтверждение действия',
+              question: 'Принудительно выключить ВМ?',
+              button: 'Выполнить'
+            },
+            request: {
+              service: this.poolSerive,
+              action: 'manageVM',
+              body: {
+                id: this.data.idPool,
+                action: VMActions.Shutdown,
+                force: true
+              }
+            }
+          }
+        })
+        break;
       case VMActions.Reboot:
         this.dialog.open(YesNoFormComponent, {
           disableClose: true,
@@ -189,10 +212,42 @@ export class RemoteComponent implements OnInit, OnDestroy{
           }
         })
         break;
+      case VMActions.ForceReboot:
+        this.dialog.open(YesNoFormComponent, {
+          disableClose: true,
+          width: '500px',
+          data: {
+            form: {
+              header: 'Подтверждение действия',
+              question: 'Принудительно перезагрузить ВМ?',
+              button: 'Выполнить'
+            },
+            request: {
+              service: this.poolSerive,
+              action: 'manageVM',
+              body: {
+                id: this.data.idPool,
+                action: VMActions.Reboot,
+                force: true
+              }
+            }
+          }
+        })
+        break;
       default:
         throw Error('Something went wrong')
         break;
     }
+  }
+
+  public openDialog(){
+    this.dialog.open(RemoteMessengerComponent, {
+      disableClose: true,
+      maxWidth: '90vw',
+      maxHeight: '90vh',
+      height: '100%',
+      width: '100%'
+    })
   }
 
   public ngOnDestroy(): void {

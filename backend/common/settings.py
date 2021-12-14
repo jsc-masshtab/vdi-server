@@ -98,6 +98,7 @@ LANGUAGE = "ru"
 # Others
 # -----------------------------
 DEFAULT_NAME = "-"
+BROKER_NAME = "VeiL VDI"
 
 # LDAP
 # -----------------------------

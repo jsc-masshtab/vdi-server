@@ -4,7 +4,7 @@ import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatSelectModule } from '@angular/material/select';
 import { MatDialogModule } from '@angular/material/dialog';
-
+import {MatMenuModule} from '@angular/material/menu'; 
 
 import { PoolDetailsComponent } from './pool-details/pool-details.component';
 import { PoolsComponent } from './all-pools/pools.component';
@@ -15,6 +15,7 @@ import { ManageVmComponent } from './pool-details/manage-vm/manage-vm.component'
 import { SharedModule } from '@app/shared/shared.module';
 import { YesNoFormModule } from '../../components/yes-no-form/yes-no-form.module';
 import { MessengerComponent } from './pool-details/messenger/messenger.component';
+import { RemoteMessengerComponent } from './pool-details/remote-messenger/remote-messenger.component';
 
 
 @NgModule({
@@ -24,6 +25,7 @@ import { MessengerComponent } from './pool-details/messenger/messenger.component
     RemoteComponent,
     ManageVmComponent,
     MessengerComponent,
+    RemoteMessengerComponent
     ],
   imports: [
     CommonModule,
@@ -34,7 +36,8 @@ import { MessengerComponent } from './pool-details/messenger/messenger.component
     ReactiveFormsModule,
     AppRoutingModule,
     MatSelectModule,
-    MatDialogModule
+    MatDialogModule,
+    MatMenuModule
   ],
   providers: [
     PoolsService,

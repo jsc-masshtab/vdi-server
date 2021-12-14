@@ -1,4 +1,4 @@
-import { Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, Input, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { Subscription } from 'rxjs';
 
@@ -12,9 +12,12 @@ import { MessengerService } from './messenger.service';
     styleUrls: ['./messenger.component.scss']
   })
 export class MessengerComponent implements OnInit, OnDestroy{
+  @Input() isFullWidth?: boolean;
+  
   @ViewChild('messenger', { static: false }) messenger: ElementRef;
   
   private socketSub: Subscription;
+
 
   public messages: any[] = [];
   public message = new FormControl('')
@@ -78,4 +81,6 @@ export class MessengerComponent implements OnInit, OnDestroy{
       this.socketSub.unsubscribe();
     }
   }
+
+  
 }
