@@ -4,6 +4,7 @@ import {
   transition,
   animate
 } from '@angular/animations';
+import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -67,7 +68,11 @@ export class LoginComponent implements OnInit {
         if (res.errors !== undefined) {
           this.errorService.setError(res.errors);
         }
-      }, () => {
+      }, (res: HttpErrorResponse) => {
+        if(res.status === 401 && !res.message) {
+          this.sendSSO()
+        }
+        
         this.loaded = true;
       }
     );

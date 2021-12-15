@@ -41,11 +41,12 @@ export class LoginService {
     }
 
     public getSettings(): Observable<ISettings> {
-        return this.http.get<ISettings>('/api/settings/').pipe(map((res: any) => res.data));
+        let url = `${environment.api}settings/`
+        return this.http.get<ISettings>(url).pipe(map((res: any) => res.data));
     }
 
     public getSSO(): any {
-        let url = '/sso/';
+        let url = `${environment.api}sso/`;
         return this.http.get(url);
     }
 }
