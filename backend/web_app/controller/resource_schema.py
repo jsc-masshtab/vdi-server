@@ -8,16 +8,14 @@ import graphene
 
 from veil_api_client import VeilRestPaginator
 
-from yaaredis import StrictRedis
-
 from common import settings
+from common.cache import REDIS_CLIENT, get_params_for_cache
 from common.graphene_utils import ShortString
 from common.languages import _local_
 from common.log.journal import system_logger
 from common.models.controller import Controller
 from common.models.pool import Pool
 from common.models.vm import Vm
-from common.utils import get_params_for_cache
 from common.veil.veil_decorators import administrator_required
 from common.veil.veil_errors import SilentError, SimpleError
 from common.veil.veil_gino import StatusGraphene
@@ -29,13 +27,6 @@ from common.veil.veil_graphene import (
 )
 
 from web_app.controller.schema import ControllerFetcher, ControllerType
-
-
-REDIS_CLIENT = StrictRedis(
-    host=settings.REDIS_HOST, port=settings.REDIS_PORT,
-    db=settings.REDIS_DB, password=settings.REDIS_PASSWORD,
-    max_connections=settings.REDIS_MAX_CLIENT_CONN
-)
 
 
 # Cluster
