@@ -106,3 +106,18 @@ async def create_subprocess(cmd):
     stdout, stderr = await process.communicate()
 
     return process.returncode, stdout, stderr
+
+
+def get_params_for_cache(*args) -> tuple:
+    """
+    Используется для преобразования uuid.UUID в str.
+
+    Преобразование uuid.UUID в str необходимо для возможности их сериализации.
+    Сериализованные аргументы используются для генерации уникального ключа кэша.
+    """
+    cache_params = list()
+    for arg in args:
+        arg = str(arg)
+        cache_params.append(arg)
+
+    return tuple(cache_params)

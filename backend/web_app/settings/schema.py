@@ -15,6 +15,8 @@ from common.utils import create_subprocess
 from common.veil.veil_decorators import administrator_required
 from common.veil.veil_errors import SilentError, SimpleError
 
+from web_app.controller.resource_schema import REDIS_CLIENT
+
 
 # Dictionary of services.{Service name: human friendly service name}.
 app_services = OrderedDict([
@@ -317,11 +319,23 @@ class DoServiceAction(graphene.Mutation):
         return DoServiceAction(ok=True, service_status=service_status)
 
 
+class ClearRedisCache(graphene.Mutation):
+    ok = graphene.Boolean()
+
+    @administrator_required
+    async def mutate(self, _info, creator):
+        await REDIS_CLIENT.flushall()
+
+        return ClearRedisCache(ok=True)
+
+
 class SettingsMutations(graphene.ObjectType):
     changeSettings = ChangeSettingsMutation.Field()
     changeSmtpSettings = ChangeSmtpSettingsMutation.Field()
 
     doServiceAction = DoServiceAction.Field()
+
+    clearRedisCache = ClearRedisCache.Field()
 
 
 settings_schema = graphene.Schema(
