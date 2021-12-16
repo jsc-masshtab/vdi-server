@@ -20,7 +20,7 @@
         # Static
         DocumentRoot /opt/veil-vdi/www
 
-        <Location "/sso">
+        <Location "/api/sso/">
                 AuthType Kerberos
                 # Имя реалма Керберос - имя домена ЗАГЛАВНЫМИ буквами
                 KrbAuthRealms TEST.TEAM
@@ -34,6 +34,7 @@
                 KrbMethodK5Passwd off
                 require valid-user
                 KrbSaveCredentials on
+                RequestHeader set X-Remote-User expr=%{REMOTE_USER}
         </Location>
 
 
