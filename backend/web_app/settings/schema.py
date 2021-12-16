@@ -46,6 +46,7 @@ ServiceActionGraphene = graphene.Enum.from_enum(ServiceAction)
 class SettingsType(graphene.ObjectType):
     LANGUAGE = graphene.Field(ShortString)
     DEBUG = graphene.Boolean()
+    REDIS_EXPIRE_TIME = graphene.Int()
     VEIL_CACHE_TTL = graphene.Int()
     VEIL_CACHE_SERVER = graphene.Field(ShortString)
     VEIL_CACHE_PORT = graphene.Int()
@@ -212,6 +213,7 @@ class ChangeSettingsMutation(graphene.Mutation):
     class Arguments:
         LANGUAGE = ShortString(description="Язык сообщений журнала")
         DEBUG = graphene.Boolean()
+        REDIS_EXPIRE_TIME = graphene.Int()
         VEIL_CACHE_TTL = graphene.Int()
         VEIL_CACHE_SERVER = ShortString()
         VEIL_CACHE_PORT = graphene.Int()
