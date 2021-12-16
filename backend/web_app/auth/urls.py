@@ -7,5 +7,5 @@ auth_api_urls = [
     (r"/logout/?", LogoutHandler),
     (r"/version/?", VersionHandler),
     (r"/settings/?", SettingsHandler),
-    (r"/sso", KerberosAuthHandler),
+    (r"/sso/", KerberosAuthHandler),
 ]
