@@ -17,7 +17,7 @@ from common.log.journal import system_logger
 from common.models.controller import Controller
 from common.models.pool import Pool
 from common.models.vm import Vm
-from common.utils import get_params_for_cache
+from common.utils import get_params_for_cache, get_redis_expire_time
 from common.veil.veil_decorators import administrator_required
 from common.veil.veil_errors import SilentError, SimpleError
 from common.veil.veil_gino import StatusGraphene
@@ -370,7 +370,7 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
                 resource_type="cluster", resource_id=cluster_id, controller_id=controller_id
             )
             await cache.set(
-                cache_key, resource_data, cache_params, expire_time=settings.REDIS_EXPIRE_TIME
+                cache_key, resource_data, cache_params, expire_time=await get_redis_expire_time()
             )
         return ResourceClusterType(**resource_data)
 
@@ -405,7 +405,7 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
                 controller_id=controller_id,
             )
             await cache.set(
-                cache_key, resource_data, cache_params, expire_time=settings.REDIS_EXPIRE_TIME
+                cache_key, resource_data, cache_params, expire_time=await get_redis_expire_time()
             )
         return ResourcePoolType(**resource_data)
 
@@ -436,7 +436,7 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
                 resource_type="node", resource_id=node_id, controller_id=controller_id
             )
             await cache.set(
-                cache_key, resource_data, cache_params, expire_time=settings.REDIS_EXPIRE_TIME
+                cache_key, resource_data, cache_params, expire_time=await get_redis_expire_time()
             )
         resource_data["cpu_count"] = resource_data["cpu_topology"]["cpu_count"]
         return ResourceNodeType(**resource_data)
@@ -470,7 +470,7 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
                 controller_id=controller_id,
             )
             await cache.set(
-                cache_key, resource_data, cache_params, expire_time=settings.REDIS_EXPIRE_TIME
+                cache_key, resource_data, cache_params, expire_time=await get_redis_expire_time()
             )
         return ResourceDataPoolType(**resource_data)
 
@@ -508,7 +508,7 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
                 resource_type="domain", resource_id=domain_id, controller_id=controller_id
             )
             await cache.set(
-                cache_key, resource_data, cache_params, expire_time=settings.REDIS_EXPIRE_TIME
+                cache_key, resource_data, cache_params, expire_time=await get_redis_expire_time()
             )
 
         tag_list = await veil_domain.tags_list()

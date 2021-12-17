@@ -121,3 +121,16 @@ def get_params_for_cache(*args) -> tuple:
         cache_params.append(arg)
 
     return tuple(cache_params)
+
+
+async def get_redis_expire_time() -> int:
+    from common.models.settings import Settings
+    from common.settings import REDIS_EXPIRE_TIME
+    db_settings = await Settings.select("settings").gino.first()
+    settings_dict = dict(db_settings[0])
+    try:
+        expire_time = settings_dict["REDIS_EXPIRE_TIME"]
+    except KeyError:
+        print("'REDIS_EXPIRE_TIME' is missing from the DB. Assigned value from 'common.settings'.")
+        expire_time = REDIS_EXPIRE_TIME
+    return int(expire_time)
