@@ -155,7 +155,6 @@ class KerberosAuthHandler(BaseHttpHandler, ABC):
     async def get(self):
         auth_header = self.request.headers.get("Authorization")
         remote_user = self.request.headers.get("X-Remote-User")
-        await system_logger.warning("AAAAA", description=str(self.request.headers))
         if auth_header and remote_user:
             await system_logger.debug("KerberosAuthHandler user: {}".format(remote_user))  # To see what you get
             account_name, domain_name = extract_domain_from_username(remote_user)
