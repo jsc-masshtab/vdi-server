@@ -7,6 +7,9 @@ from dateutil.tz import tzlocal
 
 import graphene
 
+from yaaredis import StrictRedis
+
+from common import settings
 from common.graphene_utils import ShortString
 from common.languages import _local_
 from common.log.journal import system_logger
@@ -14,8 +17,6 @@ from common.models.settings import Settings
 from common.utils import create_subprocess
 from common.veil.veil_decorators import administrator_required
 from common.veil.veil_errors import SilentError, SimpleError
-
-from web_app.controller.resource_schema import REDIS_CLIENT
 
 
 # Dictionary of services.{Service name: human friendly service name}.
@@ -326,7 +327,12 @@ class ClearRedisCache(graphene.Mutation):
 
     @administrator_required
     async def mutate(self, _info, creator):
-        await REDIS_CLIENT.flushall()
+        redis_client = StrictRedis(
+            host=settings.REDIS_HOST, port=settings.REDIS_PORT,
+            db=settings.REDIS_DB, password=settings.REDIS_PASSWORD,
+            max_connections=settings.REDIS_MAX_CLIENT_CONN
+        )
+        await redis_client.flushall()
 
         return ClearRedisCache(ok=True)
 
