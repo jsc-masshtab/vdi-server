@@ -199,7 +199,14 @@ nav:
       - Общие ошибки: connect/possible_errors/common.md
       - Ошибки RDP: connect/possible_errors/rdp.md
       - Ошибки Spice: connect/possible_errors/spice.md
-    - Конфигурационные файлы приложения: connect/ini_file_description.md
+    - Конфигурационные файлы приложения:
+      - Общие сведения о файле настроек: connect/ini_file/index.md
+      - Группа настроек General: connect/ini_file/general.md
+      - Группа настроек RemoteViewerConnect: connect/ini_file/remoteviewerconnect.md
+      - Группа настроек SpiceSettings: connect/ini_file/spicesettings.md
+      - Группа настроек RDPSettings: connect/ini_file/rdpsettings.md
+      - Группа настроек X2GoSettings: connect/ini_file/x2gosettings.md
+      - Пример файла настроек Veil Connect: connect/ini_file/example.md
     - Описание логов: connect/log_files_description.md
     - Тонкие клиенты:
       - FAQ ТК: connect/thin_clients/thin_clients.md
