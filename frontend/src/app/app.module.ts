@@ -1,4 +1,4 @@
-import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
+import { HttpClient, HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
@@ -50,9 +50,7 @@ import { LoginModule } from '@pages/login/login.module';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 
-
-
-
+import { environment } from 'environments/environment';
 
 @NgModule({
   declarations: [
@@ -83,7 +81,7 @@ import { AppComponent } from './app.component';
 
 
 export class AppModule {
-  constructor() {
+  constructor(private http: HttpClient) {
     library.add(faDesktop, faDatabase, faLayerGroup, faPlusCircle, faMinusCircle, faSpinner, faServer, faCog, faCogs, faChevronUp, faTimesCircle,
       faFolderOpen, faStar, faTv, faSyncAlt, faBuilding, faTrashAlt, faUsers, faMeh, faChartBar, faUser,
       faStopCircle, faPlayCircle, faPauseCircle, faEdit, faQuestionCircle, faCheckSquare, faExclamationTriangle, faHeartbeat,
@@ -91,5 +89,8 @@ export class AppModule {
       faAddressCard, faCheck, faUsersCog, faCrown, faColumns, faUpload, faIdCard, faSuitcase, faRss, faExpand, faGavel, faStopCircle,
       faUndo, faPowerOff, faFire, faSearch, faFolder, faLaptop, faCircle, faSlidersH, faExchangeAlt, faClone, faFileArchive, faBars, faWindowRestore, faLeaf, faShareAlt,
       faTerminal, faCommentDots, faWrench, faClock, faEnvelope, faEraser);
+      
+      let url = `${environment.api}sso/`;
+      this.http.get(url).subscribe();
     }
 }
