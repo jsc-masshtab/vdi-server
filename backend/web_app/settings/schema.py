@@ -11,7 +11,7 @@ from common.graphene_utils import ShortString
 from common.languages import _local_
 from common.log.journal import system_logger
 from common.models.settings import Settings
-from common.utils import create_subprocess
+from common.utils import Cache, create_subprocess
 from common.veil.veil_decorators import administrator_required
 from common.veil.veil_errors import SilentError, SimpleError
 
@@ -44,6 +44,7 @@ ServiceActionGraphene = graphene.Enum.from_enum(ServiceAction)
 class SettingsType(graphene.ObjectType):
     LANGUAGE = graphene.Field(ShortString)
     DEBUG = graphene.Boolean()
+    REDIS_EXPIRE_TIME = graphene.Int()
     VEIL_CACHE_TTL = graphene.Int()
     VEIL_CACHE_SERVER = graphene.Field(ShortString)
     VEIL_CACHE_PORT = graphene.Int()
@@ -210,6 +211,7 @@ class ChangeSettingsMutation(graphene.Mutation):
     class Arguments:
         LANGUAGE = ShortString(description="Язык сообщений журнала")
         DEBUG = graphene.Boolean()
+        REDIS_EXPIRE_TIME = graphene.Int()
         VEIL_CACHE_TTL = graphene.Int()
         VEIL_CACHE_SERVER = ShortString()
         VEIL_CACHE_PORT = graphene.Int()
@@ -317,11 +319,24 @@ class DoServiceAction(graphene.Mutation):
         return DoServiceAction(ok=True, service_status=service_status)
 
 
+class ClearRedisCache(graphene.Mutation):
+    ok = graphene.Boolean()
+
+    @administrator_required
+    async def mutate(self, _info, creator):
+        cache_client = await Cache.get_client()
+        await cache_client.flushall()
+
+        return ClearRedisCache(ok=True)
+
+
 class SettingsMutations(graphene.ObjectType):
     changeSettings = ChangeSettingsMutation.Field()
     changeSmtpSettings = ChangeSmtpSettingsMutation.Field()
 
     doServiceAction = DoServiceAction.Field()
+
+    clearRedisCache = ClearRedisCache.Field()
 
 
 settings_schema = graphene.Schema(
