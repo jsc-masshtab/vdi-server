@@ -8,16 +8,13 @@ import graphene
 
 from veil_api_client import VeilRestPaginator
 
-from yaaredis import StrictRedis
-
-from common import settings
 from common.graphene_utils import ShortString
 from common.languages import _local_
 from common.log.journal import system_logger
 from common.models.controller import Controller
 from common.models.pool import Pool
 from common.models.vm import Vm
-from common.utils import get_params_for_cache, get_redis_expire_time
+from common.utils import Cache
 from common.veil.veil_decorators import administrator_required
 from common.veil.veil_errors import SilentError, SimpleError
 from common.veil.veil_gino import StatusGraphene
@@ -29,15 +26,6 @@ from common.veil.veil_graphene import (
 )
 
 from web_app.controller.schema import ControllerFetcher, ControllerType
-
-
-REDIS_SETTINGS = {
-    "host": settings.REDIS_HOST,
-    "port": settings.REDIS_PORT,
-    "db": settings.REDIS_DB,
-    "password": settings.REDIS_PASSWORD,
-    "max_connections": settings.REDIS_MAX_CLIENT_CONN
-}
 
 
 # Cluster
@@ -361,11 +349,11 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
     @classmethod
     @administrator_required
     async def resolve_cluster(cls, root, info, creator, cluster_id, controller_id):
-        redis_client = StrictRedis(**REDIS_SETTINGS)
+        cache_client = await Cache.get_client()
+        cache_params = await Cache.get_params(cluster_id, controller_id)
+        expire_time = await Cache.get_expire_time()
         cache_key = "cluster_cache"
-        cache = redis_client.cache(cache_key)
-        cache_params = get_params_for_cache(cluster_id, controller_id)
-        expire_time = await get_redis_expire_time()
+        cache = cache_client.cache(cache_key)
 
         resource_data = await cache.get(key=cache_key, param=cache_params)
         if not resource_data:
@@ -396,11 +384,11 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
     async def resolve_resource_pool(
         cls, root, info, creator, resource_pool_id, controller_id
     ):
-        redis_client = StrictRedis(**REDIS_SETTINGS)
+        cache_client = await Cache.get_client()
+        cache_params = await Cache.get_params(resource_pool_id, controller_id)
+        expire_time = await Cache.get_expire_time()
         cache_key = "resource_pool_cache"
-        cache = redis_client.cache(cache_key)
-        cache_params = get_params_for_cache(resource_pool_id, controller_id)
-        expire_time = await get_redis_expire_time()
+        cache = cache_client.cache(cache_key)
 
         resource_data = await cache.get(key=cache_key, param=cache_params)
         if not resource_data:
@@ -431,11 +419,11 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
     @classmethod
     @administrator_required
     async def resolve_node(cls, root, info, creator, node_id, controller_id):
-        redis_client = StrictRedis(**REDIS_SETTINGS)
+        cache_client = await Cache.get_client()
+        cache_params = await Cache.get_params(node_id, controller_id)
+        expire_time = await Cache.get_expire_time()
         cache_key = "node_cache"
-        cache = redis_client.cache(cache_key)
-        cache_params = get_params_for_cache(node_id, controller_id)
-        expire_time = await get_redis_expire_time()
+        cache = cache_client.cache(cache_key)
 
         resource_data = await cache.get(key=cache_key, param=cache_params)
         if not resource_data:
@@ -465,11 +453,11 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
     @classmethod
     @administrator_required
     async def resolve_datapool(cls, root, info, creator, datapool_id, controller_id):
-        redis_client = StrictRedis(**REDIS_SETTINGS)
+        cache_client = await Cache.get_client()
+        cache_params = await Cache.get_params(datapool_id, controller_id)
+        expire_time = await Cache.get_expire_time()
         cache_key = "datapool_cache"
-        cache = redis_client.cache(cache_key)
-        cache_params = get_params_for_cache(datapool_id, controller_id)
-        expire_time = await get_redis_expire_time()
+        cache = cache_client.cache(cache_key)
 
         resource_data = await cache.get(key=cache_key, param=cache_params)
         if not resource_data:
@@ -507,11 +495,11 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
         veil_domain = controller.veil_client.domain(domain_id=str(domain_id))
         await veil_domain.info()
 
-        redis_client = StrictRedis(**REDIS_SETTINGS)
+        cache_client = await Cache.get_client()
+        cache_params = await Cache.get_params(domain_id, controller_id)
+        expire_time = await Cache.get_expire_time()
         cache_key = "domain_cache"
-        cache = redis_client.cache(cache_key)
-        cache_params = get_params_for_cache(domain_id, controller_id)
-        expire_time = await get_redis_expire_time()
+        cache = cache_client.cache(cache_key)
 
         resource_data = await cache.get(key=cache_key, param=cache_params)
         if not resource_data:
