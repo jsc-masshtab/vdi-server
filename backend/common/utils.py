@@ -3,6 +3,10 @@ import functools
 import signal
 from enum import Enum
 
+from yaaredis import StrictRedis
+
+from common import settings
+
 
 def clamp_value(my_value, min_value, max_value):
     """Limit value by min_value and max_value."""
@@ -106,3 +110,46 @@ async def create_subprocess(cmd):
     stdout, stderr = await process.communicate()
 
     return process.returncode, stdout, stderr
+
+
+class Cache:
+    """Класс реализует методы, обеспечивающие кэширование в Redis."""
+
+    @staticmethod
+    async def get_client():
+        """Создает клиент Redis."""
+        client = StrictRedis(
+            host=settings.REDIS_HOST, port=settings.REDIS_PORT,
+            db=settings.REDIS_DB, password=settings.REDIS_PASSWORD,
+            max_connections=settings.REDIS_MAX_CLIENT_CONN
+        )
+        return client
+
+    async def get_params(*args) -> tuple:
+        """
+        Используется для преобразования uuid.UUID в str.
+
+        Преобразование uuid.UUID в str необходимо для возможности их сериализации.
+        Сериализованные аргументы используются для генерации уникального ключа кэша.
+        """
+        cache_params = list()
+        for arg in args:
+            arg = str(arg)
+            cache_params.append(arg)
+
+        return tuple(cache_params)
+
+    @staticmethod
+    async def get_expire_time() -> int:
+        """Возвращает время хранения кэша."""
+        from common.models.settings import Settings
+        from common.settings import REDIS_EXPIRE_TIME
+
+        db_settings = await Settings.select("settings").gino.first()
+        settings_dict = dict(db_settings[0])
+        try:
+            expire_time = settings_dict["REDIS_EXPIRE_TIME"]
+        except KeyError:
+            print("'REDIS_EXPIRE_TIME' is missing from the DB. Assigned value from 'common.settings'.")
+            expire_time = REDIS_EXPIRE_TIME
+        return int(expire_time)
