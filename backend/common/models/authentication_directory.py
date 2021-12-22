@@ -110,6 +110,7 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
     # Из-за шифрования размер строки с паролем сильно увеличивается.
     service_password = db.Column(db.Unicode(length=1000), nullable=True)
     status = db.Column(AlchemyEnum(Status), nullable=False, index=True)
+    sso = db.Column(db.Boolean(), nullable=False, default=False)
 
     @property
     def entity_type(self):
@@ -177,6 +178,7 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
         connection_type=ConnectionTypes.LDAP,
         directory_type=DirectoryTypes.ActiveDirectory,
         id=None,
+        sso=False,
     ):
         """Создает запись Authentication Directory.
 
@@ -203,6 +205,7 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
             "service_password": service_password,
             "status": Status.CREATING,
             "dc_str": dc_str,
+            "sso": sso,
         }
         if id:
             auth_dir_dict["id"] = id

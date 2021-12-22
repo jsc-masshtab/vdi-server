@@ -30,6 +30,7 @@ export class AuthenticationDirectoryService {
                                 service_password,
                                 dc_str,
                                 status,
+                                sso,
                                 assigned_ad_groups {
                                     id
                                     ad_search_cn
@@ -119,7 +120,8 @@ export class AuthenticationDirectoryService {
                                 service_username,
                                 service_password,
                                 dc_str,
-                                status
+                                status,
+                                sso
                             }
                         }
                     `,

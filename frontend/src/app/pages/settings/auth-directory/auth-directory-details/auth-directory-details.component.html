@@ -34,6 +34,11 @@
         <span class="ad-status-text" [class.ad-success]="connected" [class.ad-failed]="!connected" *ngIf="tested">{{ connected ? 'Успешно' : 'Нет соединения' }}</span>
       </button>
 
+      <button (click)="changeSso()" title="Конфигурация SSO" class="btn-control">
+        <fa-icon [icon]="['fas','cog']" size="xs"></fa-icon>
+        <span class="name">Конфигурация SSO</span>
+      </button>
+
       <button *ngIf="AuthenticationDirectory?.directory_type === 'OpenLDAP'" (click)="syncOpenLDAPUsers()" title="Синхронизировать пользователей" class="btn-control">
         <fa-icon [icon]="['fas','rss']" size="xs"></fa-icon>
         <span class="name">Синхронизировать пользователей</span>
