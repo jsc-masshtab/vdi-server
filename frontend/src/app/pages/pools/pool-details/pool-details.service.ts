@@ -283,7 +283,7 @@ export class PoolDetailsService {
             query: gql` query controllers($controller_id: UUID, $resource_pool_id: UUID) {
                 controller(id_: $controller_id) {
                     id
-                    vms(resource_pool_id: $resource_pool_id) {
+                    vms(resource_pool_id: $resource_pool_id, ordering: "verbose_name") {
                             id
                             verbose_name
                         }
