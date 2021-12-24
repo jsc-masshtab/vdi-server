@@ -1,0 +1,20 @@
+<div class="control-panel">
+
+  <div class="crumb" [style.marginRight]="'15px'">
+    <fa-icon [icon]="['fas','folder']"></fa-icon>
+    <span class="crumb-name">Настройки кэша</span>
+  </div>
+
+  <div class="control-btns">
+    <button type="button" (click)="clearCache()">
+      <fa-icon [icon]="['fas','trash-alt']"></fa-icon>
+      <span class="btn-name">Очистить кэш</span>
+    </button>
+  </div>
+</div>
+
+<div class="components-info">
+  <ng-container *ngIf="item">
+    <vdi-table-into [item]="item" [collection]="collection_cache_time" (action)="actionEdit($event)"></vdi-table-into>
+  </ng-container>
+</div>

@@ -150,6 +150,5 @@ class Cache:
         try:
             expire_time = settings_dict["REDIS_EXPIRE_TIME"]
         except KeyError:
-            print("'REDIS_EXPIRE_TIME' is missing from the DB. Assigned value from 'common.settings'.")
             expire_time = REDIS_EXPIRE_TIME
         return int(expire_time)

@@ -126,7 +126,7 @@ class VersionHandler(BaseHttpHandler, ABC):
     async def get(self):
         info_dict = {
             "version": "3.1.3",
-            "year": "2019-2021",
+            "year": "2019-2022",
             "url": "https://mashtab.org",
             "copyright": "© mashtab.org",
         }

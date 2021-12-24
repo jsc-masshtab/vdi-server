@@ -38,6 +38,7 @@ import { DashboardRoutingModule } from './dashboard-routing.module';
 import { DashboardComponent } from './dashboard.component';
 import { SystemModule } from '../settings/system/system.module';
 import { SmtpModule } from '../settings/smtp/smtp.module';
+import { CacheModule } from '../settings/cache/cache.module';
 
 
 @NgModule({
@@ -69,7 +70,8 @@ import { SmtpModule } from '../settings/smtp/smtp.module';
     ThinClientsModule,
     SystemModule,
     ServicePageModule,
-    SmtpModule
+    SmtpModule,
+    CacheModule
   ],
   providers:
     [
