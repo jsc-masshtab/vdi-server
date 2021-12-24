@@ -38,7 +38,7 @@ import { DashboardRoutingModule } from './dashboard-routing.module';
 import { DashboardComponent } from './dashboard.component';
 import { SystemModule } from '../settings/system/system.module';
 import { SmtpModule } from '../settings/smtp/smtp.module';
-import { CacheModule } from "@pages/settings/cache/cache.module";
+import { CacheModule } from '../settings/cache/cache.module';
 
 
 @NgModule({

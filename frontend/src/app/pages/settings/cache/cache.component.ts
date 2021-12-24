@@ -4,7 +4,7 @@ import { map } from 'rxjs/operators';
 
 import { FormForEditComponent } from '../../../shared/forms-dinamic/change-form/form-edit.component';
 import { CacheService } from './cache.service';
-import {YesNoFormComponent} from "@shared/forms-dinamic/yes-no-form/yes-no-form.component";
+import {YesNoFormComponent} from '@shared/forms-dinamic/yes-no-form/yes-no-form.component';
 
 
 @Component({

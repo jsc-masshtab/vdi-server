@@ -35,7 +35,7 @@ import { ThinClientDetailsComponent } from '../thin-clients/thin-client-details/
 import { ThinClientsComponent } from '../thin-clients/thin-clients.component';
 import { DashboardComponent } from './dashboard.component';
 import { SmtpComponent } from '../settings/smtp/smtp.component';
-import { CacheComponent } from "@pages/settings/cache/cache.component";
+import { CacheComponent } from '../settings/cache/cache.component';
 
 
 const routes: Routes = [
