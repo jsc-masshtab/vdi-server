@@ -526,7 +526,7 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
             resource_data["guest_agent"] = veil_domain.guest_agent.qemu_state
         if veil_domain.powered:
             resource_data["hostname"] = veil_domain.hostname
-            resource_data["address"] = veil_domain.guest_agent.ipv4
+            resource_data["address"] = veil_domain.guest_agent.ipv4 if veil_domain.guest_agent else None
         return ResourceVmType(**resource_data)
 
     @classmethod

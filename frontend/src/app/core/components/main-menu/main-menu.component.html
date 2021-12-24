@@ -104,13 +104,13 @@
     <fa-icon [icon]="['fas','address-card']" size="s" [style.color]="'rgb(255, 235, 205)'"></fa-icon>
     <span>Службы каталогов</span>
   </a>
-  
-  <a class="top-menu-item item-tree" 
-  [@fadeInOut] 
-  *ngIf="toggleSetting" 
-  (click)="routeTo('settings/system')" 
-  (keydown.enter)="routeTo('settings/system')" 
-  [class.clicked-link]="clickedManage =='system'"  
+
+  <a class="top-menu-item item-tree"
+  [@fadeInOut]
+  *ngIf="toggleSetting"
+  (click)="routeTo('settings/system')"
+  (keydown.enter)="routeTo('settings/system')"
+  [class.clicked-link]="clickedManage =='system'"
   tabindex="0">
     <fa-icon title="Система" [icon]="['fas','sliders-h']" size="s" [style.color]="'rgb(255, 235, 205)'"></fa-icon>
   <span>Система</span>
@@ -125,6 +125,17 @@
     tabindex="0">
     <fa-icon [icon]="['fas','cogs']" size="s" [style.color]="'rgb(255, 235, 205)'"></fa-icon>
     <span>Сервисы</span>
+  </a>
+
+  <a class="top-menu-item item-tree"
+    [@fadeInOut]
+    *ngIf="toggleSetting"
+    (click)="routeTo('settings/cache')"
+    (keydown.enter)="routeTo('settings/cache')"
+    [class.clicked-link]="clickedManage =='cache'"
+    tabindex="0">
+    <fa-icon [icon]="['fas','folder']" size="s" [style.color]="'rgb(255, 235, 205)'"></fa-icon>
+    <span>Кэширование</span>
   </a>
 
   <a class="top-menu-item item-tree"
