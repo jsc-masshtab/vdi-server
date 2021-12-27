@@ -4,11 +4,9 @@ import { Observable } from 'rxjs';
 
 import { IParams } from '@app/shared/types';
 import { environment } from 'environments/environment';
+import { IResponse } from '../../interfaces/https';
 
 
-interface IResponse<T> {
-  data: T
-}
 
 export interface IPool {
   connection_types: string[]
