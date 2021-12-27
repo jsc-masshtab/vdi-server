@@ -1,5 +1,7 @@
 import { Component, OnInit } from '@angular/core';
+import { MatDialog } from '@angular/material/dialog';
 
+import { GenerateQrcodeComponent } from '../../components/generate-qrcode/generate-qrcode.component';
 import { AuthStorageService } from '../services/authStorage.service';
 import { LoginService } from '../services/login.service';
 
@@ -18,7 +20,7 @@ export class HeaderUserComponent implements OnInit {
   public user: string;
   public openMenu: boolean = false;
 
-  constructor(private authStorageService: AuthStorageService, private loginService: LoginService) {}
+  constructor(private authStorageService: AuthStorageService, private loginService: LoginService, public dialog: MatDialog) {}
 
   ngOnInit() {
     this.user = this.authStorageService.getItemStorage('username');
@@ -34,4 +36,10 @@ export class HeaderUserComponent implements OnInit {
     });
   }
 
+  public openGenerateQrcode() {
+    this.dialog.open(GenerateQrcodeComponent, {
+      disableClose: true,
+      width: '500px'
+    });
+  }
 }
