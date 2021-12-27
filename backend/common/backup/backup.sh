@@ -1,29 +1,20 @@
 #!/bin/bash
 
 # Скрипт создаёт бекап БД 'vdi'.
-# При запуске, скрипту можно передать параметром директорию: в неё будет сохранён файла бэкапа.
-# При запуске скрипта без параметра, для сохранения файла бэкапа будет использована директория из backup.config
-
-
-# Load config
-SCRIPTPATH=$(cd ${0%/*} && pwd -P)
-source $SCRIPTPATH/backup.config
+# Для запуска, скрипту требуется передать параметром директорию в которую будет сохранён файла бэкапа:
+# sudo ./backup.sh /opt/veil-vdi/other
 
 
 # Initialise default
-if [ ! $USERNAME ]; then
-	USERNAME="postgres"
-fi;
+USERNAME="postgres"
 
 
 # Initialise backup directory
-BACKUP_DIR_ARG=$1
-if [ ! $BACKUP_DIR_ARG ]; then
-    echo "Used default backup directory $BACKUP_DIR"
-else
-    echo "Used backup directory $BACKUP_DIR_ARG"
-    BACKUP_DIR=$BACKUP_DIR_ARG
-fi;
+BACKUP_DIR=$1
+if [ ! $BACKUP_DIR ]; then
+    echo "Backup directory not passed as parameter."
+    exit
+fi
 
 
 # Check '/' at the end of backup directory
