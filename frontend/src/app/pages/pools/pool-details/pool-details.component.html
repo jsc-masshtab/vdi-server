@@ -11,9 +11,7 @@
         </div>
     </div>
     <div class="details-control-panel">
-        <button (click)="getPool()" class="btn-refresh" title="Обновить">
-            <fa-icon [icon]="['fas','sync-alt']"></fa-icon>
-        </button>
+        <vdi-button-refresh (clickRefresh)="getPool()" ></vdi-button-refresh>
         <ng-container *ngIf="menuActive === 'info' && (pool?.pool_type == 'AUTOMATED' || pool?.pool_type == 'GUEST')">
             <button (click)="expandPool()"  title="Расширить пул" class="btn-control">
                 <fa-icon [icon]="['fas','expand']" size="xs"></fa-icon>
@@ -24,7 +22,7 @@
                 <span class="name">Копировать пул</span>
             </button>
         </ng-container>
-     
+
         <button (click)="removePool()" *ngIf="menuActive === 'info' && pool" title="Удалить пул" class="btn-control">
             <fa-icon [icon]="['fas','trash-alt']" size="xs"></fa-icon>
             <span class="name">Удалить пул</span>
@@ -105,7 +103,7 @@
                 </ng-container>
 
                 <ng-container *ngIf="typePool === 'rds'">
-                    <vdi-table-into *ngIf="menuActive === 'info'" [item]="pool" [collection]="collectionDetailsStatic" (action)="actionEdit($event)"></vdi-table-into>
+                    <vdi-table-into *ngIf="menuActive === 'info'" [item]="pool" [collection]="collectionDetailsRds" (action)="actionEdit($event)"></vdi-table-into>
                     <vdi-table-component *ngIf="menuActive === 'vms'" [data]="pool?.vms" [collection]="collectionVmsRds" entity="vm" (clickRowData)="clickVm($event)" (sortListNow)="sortVms($event)" cursor="true"></vdi-table-component>
                 </ng-container>
 

@@ -16,9 +16,7 @@
   </div>
 
   <div class="details-control-panel">
-    <button (click)="getAuthenticationDirectory()" class="btn-refresh" title="Обновить">
-      <fa-icon [icon]="['fas','sync-alt']"></fa-icon>
-    </button>
+    <vdi-button-refresh (clickRefresh)="getAuthenticationDirectory()" ></vdi-button-refresh>
 
     <ng-container *ngIf="menuActive === 'info'">
       <button (click)="remove()" title="Удалить службу каталогов" class="btn-control">

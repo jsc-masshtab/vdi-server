@@ -1,10 +1,11 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup } from '@angular/forms';
+import { FormBuilder, FormControl, FormGroup } from '@angular/forms';
 import { Router } from '@angular/router';
 
 import { AuthStorageService } from '../../core/services/authStorage.service';
-import { LoginService } from '../../core/services/login.service';
+import { ISettings, LoginService } from '../../core/services/login.service';
 import { ErrorsService } from '../../core/errors/errors.service';
+import { Observable } from 'rxjs';
 
 @Component({
   selector: 'tc-login',
@@ -13,6 +14,8 @@ import { ErrorsService } from '../../core/errors/errors.service';
 })
 export class LoginComponent implements OnInit {
   public loginForm: FormGroup;
+  public settings$: Observable<ISettings>;
+  public useCode = new FormControl(false)
 
   constructor(
     private formBuilder: FormBuilder,
@@ -28,8 +31,16 @@ export class LoginComponent implements OnInit {
     }
     this.loginForm = this.formBuilder.group({
       username: '' ,
-      password: ''
+      password: '',
+      code: '',
+      ldap: this.authStorageService.getLdapCheckbox()
     });
+
+    this.loginForm.get('ldap').valueChanges.subscribe(v => {
+      this.authStorageService.setLdap(v)
+    })
+    this.settings$ = this.loginService.getSettings();
+
   }
 
   private routePage(): void {
@@ -38,6 +49,10 @@ export class LoginComponent implements OnInit {
     }
   }
 
+  public get ldapToggleStatus(): boolean {
+    return this.authStorageService.getLdapCheckbox();
+  }
+  
   public send() {
     this.loginService.auth(this.loginForm.value).subscribe((res: { data: { access_token: string, expires_on: string, username: string }} & { errors: [] } ) => {
       if (res && res.data) {

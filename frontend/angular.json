@@ -176,7 +176,8 @@
             "assets": [
               "projects/thin-client/src/assets",
               "projects/thin-client/src/novnc",
-              "projects/thin-client/src/spice-html5"
+              "projects/thin-client/src/spice-html5",
+              "projects/thin-client/src/spice-web-client"
               ],  
             "styles": [
               "src/reset.scss",

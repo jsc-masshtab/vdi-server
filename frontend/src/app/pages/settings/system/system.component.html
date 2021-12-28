@@ -1,24 +1,23 @@
 <div class="control-panel">
-    
+
   <div class="crumb" [style.marginRight]="'15px'">
     <fa-icon [icon]="['fas','sliders-h']"></fa-icon>
       <span class="crumb-name">Система</span>
   </div>
-  <button (click)="getSystemInfo()" class="btn-refresh" title="Обновить">
-    <fa-icon [icon]="['fas','sync-alt']"></fa-icon>
-  </button>
+  <vdi-button-refresh (clickRefresh)="getSystemInfo()" ></vdi-button-refresh>
+
   <div class="control-btns">
-  
+
   </div>
 </div>
 
 
 <div class="components-info" #view>
   <vdi-tabs>
-      
+
     <vdi-tab title="Время" iconName="clock">
-      <vdi-table-into 
-        [item]="dateInfo" 
+      <vdi-table-into
+        [item]="dateInfo"
         [collection]="intoCollection">
       </vdi-table-into>
     </vdi-tab>

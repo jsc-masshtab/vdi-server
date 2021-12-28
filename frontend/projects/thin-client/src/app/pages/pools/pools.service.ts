@@ -4,11 +4,9 @@ import { Observable } from 'rxjs';
 
 import { IParams } from '@app/shared/types';
 import { environment } from 'environments/environment';
+import { IResponse } from '../../interfaces/https';
 
 
-interface IResponse<T> {
-  data: T
-}
 
 export interface IPool {
   connection_types: string[]
@@ -36,7 +34,9 @@ export enum VMActions {
   Start = 'start',
   Suspend = 'suspend',
   Shutdown = 'shutdown',
-  Reboot = 'reboot'
+  ForceShutdown = 'force_shutdown',
+  Reboot = 'reboot',
+  ForceReboot = 'force_reboot'
 }
 
 
@@ -63,7 +63,7 @@ export class PoolsService {
       return this.http.post<IResponse<IPoolDetail>>(`${this.url}/${id}`, {});
    }
 
-   public manageVM( body: {id: string, action: VMActions} ): Observable<IResponse<string>> {
-    return this.http.post<IResponse<string>>(`${this.url}/${body.id}/${body.action}/`, { force : true});
+   public manageVM( body: {id: string, action: VMActions, force?: boolean} ): Observable<IResponse<string>> {
+    return this.http.post<IResponse<string>>(`${this.url}/${body.id}/${body.action}/`, body.force ? {force: true} : {});
    }
 }

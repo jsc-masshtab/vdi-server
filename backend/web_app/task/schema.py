@@ -9,6 +9,8 @@ from sqlalchemy import and_
 
 from common.graphene_utils import ShortString
 from common.languages import _local_
+from common.log.journal import system_logger
+from common.models.controller import Controller
 from common.models.task import PoolTaskType, Task, TaskStatus
 from common.utils import convert_gino_model_to_graphene_type
 from common.veil.veil_decorators import administrator_required
@@ -35,6 +37,7 @@ class TaskType(graphene.ObjectType):
     progress = graphene.Int(default_value=0)
     message = graphene.Field(ShortString)
     duration = graphene.Field(ShortString)
+    creator = graphene.Field(ShortString)
 
 
 class TaskQuery(graphene.ObjectType):
@@ -114,14 +117,12 @@ class CancelTaskMutation(graphene.Mutation):
     ok = graphene.Boolean()
 
     @administrator_required
-    async def mutate(self, _info, task, **kwargs):
+    async def mutate(self, _info, task, creator, **kwargs):
 
         # Check if task exists and has status IN_PROGRESS
-        progressing_task_id = await Task.query.where(
-            (Task.id == task) & (Task.status == TaskStatus.IN_PROGRESS)
-        ).gino.scalar()
-        # print("progressing_task_id ", progressing_task_id, flush=True)
-        if not progressing_task_id:
+        task_model = await Task.query.where((Task.id == task) & (Task.status == TaskStatus.IN_PROGRESS)).gino.first()
+
+        if not task_model:
             entity = {"entity_type": EntityType.SYSTEM, "entity_uuid": None}
             raise SimpleError(
                 _local_(
@@ -135,6 +136,11 @@ class CancelTaskMutation(graphene.Mutation):
         # send cmd
         task_id_str_list = [str(task)]
         await send_cmd_to_cancel_tasks(task_id_str_list)
+
+        # log
+        await system_logger.info(_local_("Task '{} ({})' is requested to be cancelled by user {}.").format(
+            task_model.message, task_model.task_type, creator), user=creator)
+
         return CancelTaskMutation(ok=True)
 
 
@@ -145,8 +151,25 @@ class CancelTaskAssocWithContMutation(graphene.Mutation):
     ok = graphene.Boolean()
 
     @administrator_required
-    async def mutate(self, _info, controller, **kwargs):
+    async def mutate(self, _info, controller, creator, **kwargs):
+
+        controller_model = await Controller.get(controller)
+
+        if not controller_model:
+            entity = {"entity_type": EntityType.SYSTEM, "entity_uuid": None}
+            raise SimpleError(
+                _local_("No controller with id {}.".format(controller)),
+                entity=entity,
+            )
+
+        # send cmd
         await send_cmd_to_cancel_tasks_associated_with_controller(controller)
+
+        # log
+        await system_logger.info(_local_("Tasks associated with controller {} are requested "
+                                         "to be cancelled by user {}.").format(
+            controller_model.verbose_name, creator), user=creator)
+
         return CancelTaskAssocWithContMutation(ok=True)
 
 

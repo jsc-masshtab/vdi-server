@@ -35,6 +35,7 @@ import { ThinClientDetailsComponent } from '../thin-clients/thin-client-details/
 import { ThinClientsComponent } from '../thin-clients/thin-clients.component';
 import { DashboardComponent } from './dashboard.component';
 import { SmtpComponent } from '../settings/smtp/smtp.component';
+import { CacheComponent } from '../settings/cache/cache.component';
 
 
 const routes: Routes = [
@@ -120,6 +121,10 @@ const routes: Routes = [
       {
         path: 'settings/services',
         component: ServicePageComponent
+      },
+      {
+        path: 'settings/cache',
+        component: CacheComponent
       },
       {
         path: 'settings/smtp',

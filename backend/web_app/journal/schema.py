@@ -375,7 +375,7 @@ class MarkEventsReadByMutation(graphene.Mutation):
     ok = graphene.Boolean()
 
     @operator_required
-    async def mutate(self, _info, user, events=None, **kwargs):
+    async def mutate(self, _info, user, creator, events=None, **kwargs):
         await Event.mark_read_by(user, events)
         return MarkEventsReadByMutation(ok=True)
 
@@ -388,7 +388,7 @@ class UnmarkEventsReadByMutation(graphene.Mutation):
     ok = graphene.Boolean()
 
     @operator_required
-    async def mutate(self, _info, user, events=None, **kwargs):
+    async def mutate(self, _info, user, creator, events=None, **kwargs):
         await Event.unmark_read_by(user, events)
         return UnmarkEventsReadByMutation(ok=True)
 
@@ -408,11 +408,11 @@ class EventExportMutation(graphene.Mutation):
     ok = graphene.Boolean()
 
     @operator_required
-    async def mutate(self, _info, start, finish, journal_path="/tmp/", **kwargs):
+    async def mutate(self, _info, creator, start, finish, journal_path="/tmp/", **kwargs):
         name = await Event.event_export(start, finish, journal_path)
         entity = {"entity_type": "SECURITY", "entity_uuid": None}
         await system_logger.info(
-            _local_("Journal is exported."), description=name, entity=entity
+            _local_("Journal is exported."), description=name, entity=entity, user=creator
         )
         return EventExportMutation(ok=True)
 
@@ -427,8 +427,8 @@ class ChangeJournalSettingsMutation(graphene.Mutation):
     ok = graphene.Boolean()
 
     @administrator_required
-    async def mutate(self, _info, **kwargs):
-        await JournalSettings.change_journal_settings(**kwargs)
+    async def mutate(self, _info, creator, **kwargs):
+        await JournalSettings.change_journal_settings(creator=creator, **kwargs)
         return ChangeJournalSettingsMutation(ok=True)
 
 

@@ -350,7 +350,7 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
             await self.update(status=Status.BAD_AUTH).apply()
             return False
         except ldap.SERVER_DOWN as ex_error:
-            msg = _local_("Authentication directory server {} is down.").format(
+            msg = _local_("Failed to connect to authentication directory server {}.").format(
                 self.directory_url
             )
             await system_logger.warning(msg, entity=self.entity, description=ex_error)
@@ -369,7 +369,7 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
 
     # Authentication Directory synchronization methods
 
-    async def sync_openldap_users(self, ou):
+    async def sync_openldap_users(self, ou, creator="system"):
         if self.directory_type == AuthenticationDirectory.DirectoryTypes.OpenLDAP:
             ldap_server = ldap.initialize(self.directory_url)
             dc_str = self.convert_dc_str(self.dc_str)
@@ -385,7 +385,7 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
                 info["email"] = user[1].get("mail")[0].decode("UTF-8") if user[1].get("mail") else user[1].get("mail")
                 sync_members.append(info)
             # group = await GroupModel.soft_create(verbose_name="OpenLDAP", creator="system")
-            await self.sync_users(sync_members)
+            await self.sync_users(sync_members, creator=creator)
             # new_users = await self.sync_users(sync_members)
             # await group.add_users(user_id_list=new_users, creator="system")
             return True
@@ -726,7 +726,7 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
             await self.update(status=Status.BAD_AUTH).apply()
             return False
         except ldap.SERVER_DOWN:
-            msg = _local_("Authentication directory server {} is down.").format(
+            msg = _local_("Failed to connect to authentication directory server {}.").format(
                 self.directory_url
             )
             await system_logger.warning(msg, entity=self.entity)
@@ -1034,7 +1034,7 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
         return users_list
 
     @staticmethod
-    async def sync_group(group_info):
+    async def sync_group(group_info, creator="system"):
         """При необходимости создает группу из Authentication Directory на VDI."""
         group = await GroupModel.query.where(
             GroupModel.verbose_name == group_info["verbose_name"]
@@ -1043,7 +1043,7 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
             await group.update(ad_guid=str(group_info["ad_guid"])).apply()
             return group
         try:
-            group = await GroupModel.soft_create(creator="system", **group_info)
+            group = await GroupModel.soft_create(creator=creator, **group_info)
         except UniqueViolationError:
             # Если срабатывает этот сценарий - что-то пошло не по плану
             return await GroupModel.query.where(
@@ -1052,7 +1052,7 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
         return group
 
     @staticmethod
-    async def sync_users(users_info):
+    async def sync_users(users_info, creator="system"):
         """При необходимости создает пользователей из Authentication Directory на VDI."""
         users_list = list()
         async with db.transaction():
@@ -1077,7 +1077,7 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
                     email=email,
                     by_ad=True,
                     local_password=False,
-                    creator="system",
+                    creator=creator,
                 )
                 if user:
                     users_list.append(user.id)
@@ -1088,6 +1088,7 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
                 new_users_count
             ),
             entity=entity,
+            user=creator
         )
         return users_list
 
@@ -1118,13 +1119,13 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
         # Исключаем лишних пользователей
         await group.remove_users(user_id_list=exclude_user_list, creator=creator)
         # Синхронизируем пользователей
-        new_users = await self.sync_users(ad_group_members)
+        new_users = await self.sync_users(ad_group_members, creator=creator)
         # Добавлено 22.10.2020
         # Включаем пользователей в группу
         await group.add_users(user_id_list=new_users, creator=creator)
         return True
 
-    async def synchronize(self, data):
+    async def synchronize(self, data, creator="system"):
         """Синхронизирует переданные группы на VDI."""
         # Создаем группу
         group_info = {
@@ -1132,9 +1133,9 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
             "verbose_name": data["group_verbose_name"],
             "ad_cn": data["group_ad_cn"],
         }
-        group = await self.sync_group(group_info)
+        group = await self.sync_group(group_info, creator=creator)
         # Синхронизируем пользователей
-        await self.synchronize_group(group.id)
+        await self.synchronize_group(group.id, creator=creator)
         return True
 
 

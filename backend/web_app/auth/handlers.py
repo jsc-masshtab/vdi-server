@@ -6,7 +6,7 @@ from common.log.journal import system_logger
 from common.models.active_tk_connection import ActiveTkConnection
 from common.models.auth import User
 from common.models.authentication_directory import AuthenticationDirectory
-from common.settings import EXTERNAL_AUTH, LOCAL_AUTH, PAM_AUTH
+from common.settings import EXTERNAL_AUTH, LANGUAGE, LOCAL_AUTH, PAM_AUTH
 from common.veil.auth.veil_jwt import (
     encode_jwt,
     extract_user_and_token_with_no_expire_check,
@@ -125,10 +125,24 @@ class LogoutHandler(BaseHttpHandler, ABC):
 class VersionHandler(BaseHttpHandler, ABC):
     async def get(self):
         info_dict = {
-            "version": "3.1.2",
-            "year": "2019-2021",
+            "version": "3.1.3",
+            "year": "2019-2022",
             "url": "https://mashtab.org",
             "copyright": "© mashtab.org",
         }
         response = {"data": info_dict}
+        return self.finish(response)
+
+
+class SettingsHandler(BaseHttpHandler, ABC):
+    async def get(self):
+        try:
+            from common.broker_name import BROKER_NAME
+        except ImportError:
+            from common.settings import BROKER_NAME
+        auth_dir = await AuthenticationDirectory.get_objects(first=True)
+        data = {"language": LANGUAGE,
+                "broker_name": BROKER_NAME,
+                "ldap": auth_dir.dc_str if auth_dir else ""}
+        response = {"data": data}
         return self.finish(response)

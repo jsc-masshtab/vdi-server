@@ -7,10 +7,11 @@ import {
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup } from '@angular/forms';
 import { Router } from '@angular/router';
+import { Observable } from 'rxjs';
 
 import { ErrorsService } from '../../core/components/errors/errors.service';
 import { AuthStorageService } from './authStorage.service';
-import { LoginService } from './login.service';
+import { ISettings, LoginService } from './login.service';
 
 @Component({
   selector: 'vdi-login',
@@ -34,7 +35,7 @@ export class LoginComponent implements OnInit {
 
   public loaded: boolean = false;
   public loginForm: FormGroup;
-
+  public settings$: Observable<ISettings>;
   public useCode = new FormControl(false)
 
   constructor(private fb: FormBuilder,
@@ -48,6 +49,8 @@ export class LoginComponent implements OnInit {
     this.loginForm.get('ldap').valueChanges.subscribe(v => {
       this.authStorageService.setLdap(v)
     })
+
+    this.settings$ = this.loginService.getSettings();
   }
 
   private createForm(): void {
@@ -71,8 +74,13 @@ export class LoginComponent implements OnInit {
     }
   }
 
-  public send() {
   
+  public get ldapToggleStatus(): boolean {
+    return this.authStorageService.getLdapCheckbox();
+  }
+  
+  public send() {
+
     this.loginService.auth(this.loginForm.value).subscribe((res: { data: { access_token: string, expires_on: string, username: string }} & { errors: [] } ) => {
       if (res && res.data) {
         this.authStorageService.saveInStorage(res.data);

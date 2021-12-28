@@ -60,7 +60,7 @@ export class PoolDetailsService {
     }
 
     public getPool(pool_id: string | number, type: string): QueryRef<any, any> {
-      
+
         if (type === 'automated' || type === 'guest') {
             return this.service.watchQuery({
                 query: gql`  query pools($pool_id: ShortString, $ordering_vms: ShortString, $ordering_users: ShortString, $ordering_groups: ShortString) {
@@ -117,6 +117,7 @@ export class PoolDetailsService {
                                     set_vms_hostnames
                                     include_vms_in_ad
                                     keep_vms_on
+                                    free_vm_from_user
                                     assigned_groups(ordering: $ordering_groups) {
                                         id
                                         verbose_name
@@ -190,6 +191,7 @@ export class PoolDetailsService {
                                         id
                                         verbose_name
                                     }
+                                    free_vm_from_user
                                     vm_action_upon_user_disconnect
                                     vm_disconnect_action_timeout
                                     assigned_connection_types
@@ -281,7 +283,7 @@ export class PoolDetailsService {
             query: gql` query controllers($controller_id: UUID, $resource_pool_id: UUID) {
                 controller(id_: $controller_id) {
                     id
-                    vms(resource_pool_id: $resource_pool_id) {
+                    vms(resource_pool_id: $resource_pool_id, ordering: "verbose_name") {
                             id
                             verbose_name
                         }
@@ -375,12 +377,12 @@ export class PoolDetailsService {
         });
     }
 
-    public setVmActions(idPool, poolType, action, timeout){
+    public setVmActions(idPool, poolType, freeVm, action, timeout){
         if (poolType === 'static'){
             return this.service.mutate<any>({
                 mutation: gql`
-                    mutation pools($idPool: UUID!, $timeout: Int, $action: VmActionUponUserDisconnect) {
-                        updateStaticPool(pool_id: $idPool, vm_action_upon_user_disconnect: $action, vm_disconnect_action_timeout: $timeout ) {
+                    mutation pools($idPool: UUID!, $freeVm: Boolean, $timeout: Int, $action: VmActionUponUserDisconnect) {
+                        updateStaticPool(pool_id: $idPool, free_vm_from_user: $freeVm, vm_action_upon_user_disconnect: $action, vm_disconnect_action_timeout: $timeout ) {
                             ok
                         }
                     }
@@ -389,6 +391,7 @@ export class PoolDetailsService {
                     method: 'POST',
                     idPool,
                     poolType,
+                    freeVm,
                     action,
                     timeout
                 }
@@ -397,8 +400,8 @@ export class PoolDetailsService {
         if (poolType === 'automated'){
             return this.service.mutate<any>({
                 mutation: gql`
-                    mutation pools($idPool: UUID!, $timeout: Int, $action: VmActionUponUserDisconnect) {
-                        updateDynamicPool(pool_id: $idPool, vm_action_upon_user_disconnect: $action, vm_disconnect_action_timeout: $timeout ) {
+                    mutation pools($idPool: UUID!, $freeVm: Boolean, $timeout: Int, $action: VmActionUponUserDisconnect) {
+                        updateDynamicPool(pool_id: $idPool, free_vm_from_user: $freeVm, vm_action_upon_user_disconnect: $action, vm_disconnect_action_timeout: $timeout ) {
                             ok
                         }
                     }
@@ -407,12 +410,13 @@ export class PoolDetailsService {
                     method: 'POST',
                     idPool,
                     poolType,
+                    freeVm,
                     action,
                     timeout
                 }
             });
         }
-    } 
+    }
     public updatePool({pool_id, pool_type }, {connection_types, verbose_name, increase_step, reserve_size, total_size,
                                               vm_disconnect_action_timeout, vm_name_template, create_thin_clones,
                                               enable_vms_remote_access, start_vms, set_vms_hostnames, include_vms_in_ad,

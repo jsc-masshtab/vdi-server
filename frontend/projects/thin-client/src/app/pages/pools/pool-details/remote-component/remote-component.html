@@ -6,8 +6,8 @@
         </div>
     </div>
   
-    <app-manage-vm  (manageVM)="manageVM($event)" >
-      <tc-button-refresh (clickRefresh)="refresh()" slot="refreshButton"></tc-button-refresh>
+    <app-manage-vm  (manageVM)="manageVM($event)" (openDialog)="openDialog()" >
+      <vdi-button-refresh (clickRefresh)="refresh()" slot="refreshButton"></vdi-button-refresh>
     </app-manage-vm>
     <div class="details-row">
       <div class="details-slide">

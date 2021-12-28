@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import re
 from collections import OrderedDict
 from datetime import datetime, timezone
 from enum import Enum
@@ -12,7 +11,7 @@ from common.graphene_utils import ShortString
 from common.languages import _local_
 from common.log.journal import system_logger
 from common.models.settings import Settings
-from common.utils import create_subprocess
+from common.utils import Cache, create_subprocess
 from common.veil.veil_decorators import administrator_required
 from common.veil.veil_errors import SilentError, SimpleError
 
@@ -45,6 +44,7 @@ ServiceActionGraphene = graphene.Enum.from_enum(ServiceAction)
 class SettingsType(graphene.ObjectType):
     LANGUAGE = graphene.Field(ShortString)
     DEBUG = graphene.Boolean()
+    REDIS_EXPIRE_TIME = graphene.Int()
     VEIL_CACHE_TTL = graphene.Int()
     VEIL_CACHE_SERVER = graphene.Field(ShortString)
     VEIL_CACHE_PORT = graphene.Int()
@@ -211,6 +211,7 @@ class ChangeSettingsMutation(graphene.Mutation):
     class Arguments:
         LANGUAGE = ShortString(description="Язык сообщений журнала")
         DEBUG = graphene.Boolean()
+        REDIS_EXPIRE_TIME = graphene.Int()
         VEIL_CACHE_TTL = graphene.Int()
         VEIL_CACHE_SERVER = ShortString()
         VEIL_CACHE_PORT = graphene.Int()
@@ -230,8 +231,8 @@ class ChangeSettingsMutation(graphene.Mutation):
     ok = graphene.Boolean()
 
     @administrator_required
-    async def mutate(self, _info, **kwargs):
-        ok = await Settings.change_settings(**kwargs)
+    async def mutate(self, _info, creator, **kwargs):
+        ok = await Settings.change_settings(creator=creator, **kwargs)
         return ChangeSettingsMutation(ok=ok)
 
 
@@ -249,33 +250,24 @@ class ChangeSmtpSettingsMutation(graphene.Mutation):
     ok = graphene.Boolean()
 
     @administrator_required
-    async def mutate(self, _info, **kwargs):
-        ok = await Settings.change_smtp_settings(**kwargs)
+    async def mutate(self, _info, creator, **kwargs):
+        ok = await Settings.change_smtp_settings(creator=creator, **kwargs)
         return ChangeSmtpSettingsMutation(ok=ok)
 
 
 class DoServiceAction(graphene.Mutation):
     class Arguments:
-        sudo_password = ShortString()
         service_name = ShortString()
         service_action = ServiceActionGraphene()
         check_errors = graphene.Boolean()
+        sudo_password = ShortString()  # legacy. Remove later
 
     ok = graphene.Boolean()
     service_status = ShortString()
 
     @administrator_required
-    async def mutate(self, _info, sudo_password, service_name, service_action,
-                     check_errors=True, creator="system"):
-
-        # Проверка  для защиты от иньекции команд c помощью проблелов и спец символов
-        # service_action валидируется на уровне  graphql
-        pass_validated = re.match("^[a-zA-Z0-9~@#$&_^*%?.+:;=!]*$", sudo_password)
-        if not pass_validated:
-            raise SimpleError(
-                _local_("Password {} contains invalid characters.").format(sudo_password),
-                user=creator
-            )
+    async def mutate(self, _info, creator, service_name, service_action,
+                     check_errors=True, sudo_password=None):
 
         if service_name not in app_services.keys():
             raise SimpleError(
@@ -290,8 +282,7 @@ class DoServiceAction(graphene.Mutation):
             parent_service_name = "postgresql.service"
         else:
             parent_service_name = service_name
-        cmd = "echo '{}' | sudo -S timeout 50s systemctl {} {}".format(
-            sudo_password, service_action, parent_service_name)
+        cmd = "sudo timeout 50s systemctl {} {}".format(service_action, parent_service_name)
 
         return_code, stdout, stderr = await create_subprocess(cmd)
 
@@ -328,11 +319,25 @@ class DoServiceAction(graphene.Mutation):
         return DoServiceAction(ok=True, service_status=service_status)
 
 
+class ClearRedisCache(graphene.Mutation):
+    ok = graphene.Boolean()
+
+    @administrator_required
+    async def mutate(self, _info, creator, **kwargs):
+        cache_client = await Cache.get_client()
+        await cache_client.flushall()
+        await system_logger.info(_local_("Cache is cleared."), user=creator)
+
+        return ClearRedisCache(ok=True)
+
+
 class SettingsMutations(graphene.ObjectType):
     changeSettings = ChangeSettingsMutation.Field()
     changeSmtpSettings = ChangeSmtpSettingsMutation.Field()
 
     doServiceAction = DoServiceAction.Field()
+
+    clearRedisCache = ClearRedisCache.Field()
 
 
 settings_schema = graphene.Schema(

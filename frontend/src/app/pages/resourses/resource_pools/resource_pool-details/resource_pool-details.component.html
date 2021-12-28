@@ -8,7 +8,7 @@
         </div>
     </div>
     <div class="details-control-panel">
-        <button (click)="getResourcePool()" class="btn-refresh" title="Обновить"><fa-icon [icon]="['fas','sync-alt']"></fa-icon></button>
+        <vdi-button-refresh (clickRefresh)="getResourcePool()" ></vdi-button-refresh>
     </div>
 
     <div class="details-row">

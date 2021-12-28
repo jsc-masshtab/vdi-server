@@ -5,9 +5,7 @@
     <span class="crumb-name">Статистика подключений</span>
   </div>
 
-  <button (click)="getStatictic()" class="btn-refresh" title="Обновить">
-    <fa-icon [icon]="['fas','sync-alt']"></fa-icon>
-  </button>
+  <vdi-button-refresh (clickRefresh)="getStatistics()" ></vdi-button-refresh>
 
 </div>
 

@@ -13,33 +13,38 @@
 			<p [style.font-size]="'10px'" [style.margin-top]="'10px'">(Заполните данные формы)</p>
 		</div>
 
+
 		<div class="form-fields">
-			<label class="field">
-				<p class="field-name">Логин</p>
-				<input type="text" placeholder="Введите имя пользователя" formControlName="username">
-			</label>
+			<div class="wrapper">
+				<label class="field login-field">
+					<p class="field-name">Логин</p>
+					<input type="text" placeholder="Введите логин..." formControlName="username">
+				</label>
 
-			<label class="field">
-				<p class="field-name">Пароль</p>
-				<input type="password" placeholder="Введите пароль" formControlName="password">
-			</label>
+				<label class="field login-field">
+					<p class="field-name">Пароль</p>
+					<input type="password" placeholder="Введите пароль..." formControlName="password">
+				</label>
+				<label class="ldap-field login-field">
+					<div class="checkbox-bg">
+						<input id="ldap" type="checkbox" formControlName="ldap" >
+						<label class="toggle-btn ldap-toggle-btn" for="ldap"></label>
+						<label for="ldap" class="checkbox-bg-text">LDAP</label>
+					</div>
+					<span class="field" *ngIf="ldapToggleStatus && (settings$ | async)?.ldap as ldap" >
+						@{{ldap}}
+					</span>
+				</label>
+			</div>
 
-			<label class="field-inline" [style.marginBottom]="'15px'">
+			<label class="field-inline code"  [style.marginBottom]="'15px'">
 				<mat-checkbox [color]="'primary'" [formControl]="useCode"></mat-checkbox>
 				<p class="description">Одноразовый пароль</p>
 			</label>
 
 			<label class="field" *ngIf="useCode.value">
-				
+
 				<input type="text" placeholder="Введите 6-значный код" formControlName="code">
-			</label>
-			
-			<label [class.ldap-disabled]="ldapDomain===''">
-				<div class="checkbox-bg">
-					<input id="ldap" type="checkbox" formControlName="ldap" >
-					<label class="toggle-btn ldap-toggle-btn" for="ldap"><span></span></label>
-					<label for="ldap" class="checkbox-bg-text">LDAP</label>
-				</div>
 			</label>
 		</div>
 

@@ -14,6 +14,7 @@ from common.log.journal import system_logger
 from common.models.controller import Controller
 from common.models.pool import Pool
 from common.models.vm import Vm
+from common.utils import Cache
 from common.veil.veil_decorators import administrator_required
 from common.veil.veil_errors import SilentError, SimpleError
 from common.veil.veil_gino import StatusGraphene
@@ -336,7 +337,7 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
             # В случае успеха добавляем параметры контроллера на VDI
             resource_data = resource_info.value
             resource_data["controller"] = {
-                "id": controller.id,
+                "id": str(controller.id),
                 "verbose_name": controller.verbose_name,
             }
             return resource_data
@@ -348,9 +349,20 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
     @classmethod
     @administrator_required
     async def resolve_cluster(cls, root, info, creator, cluster_id, controller_id):
-        resource_data = await cls.get_resource_data(
-            resource_type="cluster", resource_id=cluster_id, controller_id=controller_id
-        )
+        cache_client = await Cache.get_client()
+        cache_params = await Cache.get_params(cluster_id, controller_id)
+        expire_time = await Cache.get_expire_time()
+        cache_key = "cluster_cache"
+        cache = cache_client.cache(cache_key)
+
+        resource_data = await cache.get(key=cache_key, param=cache_params)
+        if not resource_data:
+            resource_data = await cls.get_resource_data(
+                resource_type="cluster", resource_id=cluster_id, controller_id=controller_id
+            )
+            await cache.set(
+                key=cache_key, value=resource_data, param=cache_params, expire_time=expire_time
+            )
         return ResourceClusterType(**resource_data)
 
     @classmethod
@@ -372,11 +384,22 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
     async def resolve_resource_pool(
         cls, root, info, creator, resource_pool_id, controller_id
     ):
-        resource_data = await cls.get_resource_data(
-            resource_type="resource_pool",
-            resource_id=resource_pool_id,
-            controller_id=controller_id,
-        )
+        cache_client = await Cache.get_client()
+        cache_params = await Cache.get_params(resource_pool_id, controller_id)
+        expire_time = await Cache.get_expire_time()
+        cache_key = "resource_pool_cache"
+        cache = cache_client.cache(cache_key)
+
+        resource_data = await cache.get(key=cache_key, param=cache_params)
+        if not resource_data:
+            resource_data = await cls.get_resource_data(
+                resource_type="resource_pool",
+                resource_id=resource_pool_id,
+                controller_id=controller_id,
+            )
+            await cache.set(
+                key=cache_key, value=resource_data, param=cache_params, expire_time=expire_time
+            )
         return ResourcePoolType(**resource_data)
 
     @classmethod
@@ -396,9 +419,20 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
     @classmethod
     @administrator_required
     async def resolve_node(cls, root, info, creator, node_id, controller_id):
-        resource_data = await cls.get_resource_data(
-            resource_type="node", resource_id=node_id, controller_id=controller_id
-        )
+        cache_client = await Cache.get_client()
+        cache_params = await Cache.get_params(node_id, controller_id)
+        expire_time = await Cache.get_expire_time()
+        cache_key = "node_cache"
+        cache = cache_client.cache(cache_key)
+
+        resource_data = await cache.get(key=cache_key, param=cache_params)
+        if not resource_data:
+            resource_data = await cls.get_resource_data(
+                resource_type="node", resource_id=node_id, controller_id=controller_id
+            )
+            await cache.set(
+                key=cache_key, value=resource_data, param=cache_params, expire_time=expire_time
+            )
         resource_data["cpu_count"] = resource_data["cpu_topology"]["cpu_count"]
         return ResourceNodeType(**resource_data)
 
@@ -419,11 +453,22 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
     @classmethod
     @administrator_required
     async def resolve_datapool(cls, root, info, creator, datapool_id, controller_id):
-        resource_data = await cls.get_resource_data(
-            resource_type="datapool",
-            resource_id=datapool_id,
-            controller_id=controller_id,
-        )
+        cache_client = await Cache.get_client()
+        cache_params = await Cache.get_params(datapool_id, controller_id)
+        expire_time = await Cache.get_expire_time()
+        cache_key = "datapool_cache"
+        cache = cache_client.cache(cache_key)
+
+        resource_data = await cache.get(key=cache_key, param=cache_params)
+        if not resource_data:
+            resource_data = await cls.get_resource_data(
+                resource_type="datapool",
+                resource_id=datapool_id,
+                controller_id=controller_id,
+            )
+            await cache.set(
+                key=cache_key, value=resource_data, param=cache_params, expire_time=expire_time
+            )
         return ResourceDataPoolType(**resource_data)
 
     @classmethod
@@ -449,9 +494,22 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
         controller = await cls.fetch_by_id(controller_id)
         veil_domain = controller.veil_client.domain(domain_id=str(domain_id))
         await veil_domain.info()
-        resource_data = await cls.get_resource_data(
-            resource_type="domain", resource_id=domain_id, controller_id=controller_id
-        )
+
+        cache_client = await Cache.get_client()
+        cache_params = await Cache.get_params(domain_id, controller_id)
+        expire_time = await Cache.get_expire_time()
+        cache_key = "domain_cache"
+        cache = cache_client.cache(cache_key)
+
+        resource_data = await cache.get(key=cache_key, param=cache_params)
+        if not resource_data:
+            resource_data = await cls.get_resource_data(
+                resource_type="domain", resource_id=domain_id, controller_id=controller_id
+            )
+            await cache.set(
+                key=cache_key, value=resource_data, param=cache_params, expire_time=expire_time
+            )
+
         tag_list = await veil_domain.tags_list()
         resource_data["domain_tags"] = list()
         for tag in tag_list.response:
@@ -468,7 +526,7 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
             resource_data["guest_agent"] = veil_domain.guest_agent.qemu_state
         if veil_domain.powered:
             resource_data["hostname"] = veil_domain.hostname
-            resource_data["address"] = veil_domain.guest_agent.ipv4
+            resource_data["address"] = veil_domain.guest_agent.ipv4 if veil_domain.guest_agent else None
         return ResourceVmType(**resource_data)
 
     @classmethod
