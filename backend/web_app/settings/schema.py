@@ -323,9 +323,10 @@ class ClearRedisCache(graphene.Mutation):
     ok = graphene.Boolean()
 
     @administrator_required
-    async def mutate(self, _info, creator):
+    async def mutate(self, _info, creator, **kwargs):
         cache_client = await Cache.get_client()
         await cache_client.flushall()
+        await system_logger.info(_local_("Cache is cleared."), user=creator)
 
         return ClearRedisCache(ok=True)
 

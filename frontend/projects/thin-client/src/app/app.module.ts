@@ -2,10 +2,17 @@ import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
-import {faBars,
-   faChartBar,
-   faCheckSquare,
-   faCog, faCommentDots, faDesktop, faExclamationTriangle, faFire, faPauseCircle, faPlay, faPlayCircle, faPowerOff, faSignOutAlt, faSpinner, faStopCircle, faSyncAlt, faTimesCircle, faTv, faUndo, faUserCircle} from '@fortawesome/free-solid-svg-icons';
+import {
+  faBars,
+  faChartBar,
+  faCheckSquare,
+  faCog,
+  faCommentDots,
+  faDesktop, 
+  faExclamationTriangle, 
+  faFire, 
+  faPauseCircle, 
+  faPlay, faPlayCircle, faPowerOff, faSignOutAlt, faSpinner, faStopCircle, faSyncAlt, faTimesCircle, faTv, faUndo, faUserCircle, faEdit} from '@fortawesome/free-solid-svg-icons';
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
@@ -68,7 +75,8 @@ export class AppModule {
       faUndo, 
       faExclamationTriangle,
       faFire,
-      faPowerOff
+      faPowerOff,
+      faEdit
       )
   }
  }

@@ -126,6 +126,7 @@ nav:
         - Группы: broker/operator_guide/groups.md
         - Пользователи: broker/operator_guide/users.md
         - Службы каталогов: broker/operator_guide/ad.md
+        - Кэширование: broker/operator_guide/cache.md
         - SMTP: broker/operator_guide/smtp.md
       - Журнал: 
         - События: broker/operator_guide/events.md
@@ -203,6 +204,8 @@ nav:
   - ECP VeiL: https://veil.mashtab.org/docs/
   - Cписок изменений:
     - VeiL Broker:
+      - 3.2.0 (Будущая): broker/changelog/3.2.0.md
+      - 3.1.3 (Текущая): broker/changelog/3.1.3.md
       - 3.1.2: broker/changelog/3.1.2.md
       - 3.1.1: broker/changelog/3.1.1.md
       - 3.1.0: broker/changelog/3.1.0.md

@@ -55,7 +55,7 @@ export class AddPoolService {
                 controllers($id_: UUID, $resource_pool_id: UUID) {
                     controller(id_: $id_) {
                         id
-                        vms(resource_pool_id: $resource_pool_id, exclude_existed: true) {
+                        vms(resource_pool_id: $resource_pool_id, exclude_existed: true, ordering: "verbose_name") {
                             id
                             verbose_name
                         }
@@ -70,7 +70,8 @@ export class AddPoolService {
                     controller(id_: $id_) {
                         id
                         templates(resource_pool_id: $resource_pool_id,
-                                  data_pool_id: $data_pool_id) {
+                                  data_pool_id: $data_pool_id,
+                                  ordering: "verbose_name") {
                             id
                             verbose_name
                         }

@@ -38,6 +38,7 @@
             <span *ngIf="obj.type === 'bites'">{{ formatBytes(item[obj.property], obj.delimiter) }}</span>
 
             <span *ngIf="obj.type === 'vm_disconnect_action_timeout'">{{ item[obj.property] }} сек</span>
+            <span *ngIf="obj.type === 'cache_time'">{{ item[obj.property] }} сек</span>
             <span *ngIf="obj.type === 'array-length'">{{ item[obj.property]?.length }}</span>
             <span *ngIf="obj.type === 'level'">{{ lvlDescription }}</span>
             <span *ngIf="obj.type === 'pool_type'">{{ item[obj.property] | poolType }}</span>

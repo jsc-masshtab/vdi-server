@@ -1,6 +1,7 @@
 <div class="header-user" (click)="open()">
     <span class="name-block" [title]="user"><span class="name"><fa-icon [icon]="['fas','user-circle']" size="s" [style.margin-right]="'5px'"></fa-icon>{{user}}</span></span>
     <ul class="header-user-menu" *ngIf="openMenu">
+        <li (click)="openGenerateQrcode()"><fa-icon [icon]="['fas','cog']" size="s" [style.margin-right]="'10px'"></fa-icon>Настройки</li>
         <li (click)="logout()"><fa-icon [icon]="['fas','sign-out-alt']" size="s" [style.margin-right]="'10px'"></fa-icon>Выйти</li>
     </ul>
 </div>
