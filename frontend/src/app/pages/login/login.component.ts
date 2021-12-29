@@ -4,7 +4,7 @@ import {
   transition,
   animate
 } from '@angular/animations';
-import { HttpErrorResponse } from '@angular/common/http';
+
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -58,22 +58,16 @@ export class LoginComponent implements OnInit {
   private sendSSO() {
     this.loginService.getSSO().subscribe(
       (res) => {
-        if (res && res.data) {
-          this.authStorageService.saveInStorage(res.data);
+        this.authStorageService.saveInStorage(res.body.data);
+        this.routePage();  
+        this.loaded = true;
+      }, (res) => {
+        if(!res.status) {
+          this.sendSSO();
+        } else {
           this.routePage();
-          
           this.loaded = true;
         }
-
-        if (res.errors !== undefined) {
-          this.errorService.setError(res.errors);
-        }
-      }, (res: HttpErrorResponse) => {
-        if(res.status === 401 && !res.message) {
-          this.sendSSO()
-        }
-        
-        this.loaded = true;
       }
     );
   }

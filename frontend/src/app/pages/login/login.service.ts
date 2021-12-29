@@ -47,6 +47,6 @@ export class LoginService {
 
     public getSSO(): any {
         let url = `${environment.api}sso/`;
-        return this.http.get(url);
+        return this.http.get(url, { observe: 'response' });
     }
 }
