@@ -187,7 +187,7 @@ nav:
       - Общие ошибки: connect/possible_errors/common.md
       - Ошибки RDP: connect/possible_errors/rdp.md
       - Ошибки Spice: connect/possible_errors/spice.md
-    - Описание ini файла настроек: connect/ini_file_description.md
+    - Конфигурационные файлы приложения: connect/ini_file_description.md
     - Описание логов: connect/log_files_description.md
     - Тонкие клиенты:
       - FAQ ТК: connect/thin_clients/thin_clients.md
