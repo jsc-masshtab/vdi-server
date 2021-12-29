@@ -13,7 +13,7 @@ pipeline {
         DATE = "${currentDate}"
         VEIL_ADDRESS = "192.168.11.102"
         VEIL_NODE_ID = "4c2d5d96-966e-4ca5-aee8-d9f6e226c053"
-        VEIL_DATAPOOL_ID = "9868f5b7-2616-4fa3-ba54-ced42e3e5ab7"
+        VEIL_DATAPOOL_ID = "9e11d68f-2206-4726-a5ea-7bc20ca53ed3"
         ASTRA_TEMPLATE_ID = "a1734d0b-e0f9-4e97-b5db-038bcc3186ba"
         VM_NAME = "veil-broker-va-${VERSION}"
         VM_USERNAME = "astravdi"
