@@ -8,8 +8,8 @@ import { ISettings, LoginService } from '../login/login.service';
 
 @Component({
   selector: 'vdi-dashboard',
-  templateUrl: './dashboard.component.html'
-
+  templateUrl: './dashboard.component.html',
+  styleUrls: ['./dashboard.component.scss']
 })
 export class DashboardComponent implements OnInit, OnDestroy {
   public settings$: Observable<ISettings>;
