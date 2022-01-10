@@ -1,4 +1,9 @@
 @import "~@angular/material/prebuilt-themes/indigo-pink.css";
+@import "app/shared/styles/form";
+@import "app/shared/styles/panel-buttons";
+@import "app/shared/styles/details-wrap";
+@import "app/shared/styles/panel-btn-into";
+@import "app/shared/styles/common";
 
 html,body {
     width: 100%;
