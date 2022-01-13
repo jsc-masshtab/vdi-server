@@ -16,9 +16,7 @@ theme:
     scheme: 'default'
     primary: 'blue grey'
     accent: 'deep purple'
-  font:
-    text: 'Roboto'
-    code: 'Roboto Mono'
+  font: false
   logo: '_assets/common/veil-32x32.png'
   favicon: '_assets/common/veil-32x32.ico'
 #  feature:
