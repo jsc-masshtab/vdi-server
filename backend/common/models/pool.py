@@ -44,8 +44,9 @@ from common.settings import (
     DOMAIN_CREATION_MAX_STEP,
     POOL_MAX_CREATE_ATTEMPTS,
     VEIL_DEFAULT_VM_DISCONNECT_ACTION_TIMEOUT,
+    VEIL_GUEST_AGENT_WIN_PATH,
     VEIL_MAX_IDS_LEN,
-    VEIL_OPERATION_WAITING,
+    VEIL_OPERATION_WAITING
 )
 from common.subscription_sources import POOLS_SUBSCRIPTION
 from common.utils import extract_ordering_data
@@ -1364,10 +1365,9 @@ class RdsPool(db.Model):
         domain_veil_api = controller_client.domain(
             domain_id=str(vms[0].id))  # В пуле только одна ВМ - RDS
 
-        qemu_agent_path = "C:\\Program Files\\Qemu-ga\\"
         qemu_guest_command = {"path": "wscript.exe",
-                              "arg": [qemu_agent_path + "vbs.vbs",
-                                      qemu_agent_path + "get_published_apps.ps1",
+                              "arg": [VEIL_GUEST_AGENT_WIN_PATH + "vbs.vbs",
+                                      VEIL_GUEST_AGENT_WIN_PATH + "get_published_apps.ps1",
                                       user_name,
                                       "//B",
                                       "//NoLogo"],
