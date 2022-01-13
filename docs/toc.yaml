@@ -162,11 +162,11 @@ nav:
     - Установка VeiL Connect:
       - Общие сведения: connect/operator_guide/install/index.md
       - Установка VeiL Connect с CD/DVD диска: 
-       - Установка  на операционную систему Linux: connect/operator_guide/install/cd/linux.md
-       - Установка  на операционную систему Windows: connect/operator_guide/install/cd/win.md
+        - Установка  на операционную систему Linux: connect/operator_guide/install/cd/linux.md
+        - Установка  на операционную систему Windows: connect/operator_guide/install/cd/win.md
       - Установка VeiL Connect по сети Интернет с сервера НИИ "Масштаб":
-       - Установка   на операционную систему Linux: connect/operator_guide/install/net/linux.md
-       - Установка  на операционную систему Windows: connect/operator_guide/install/net/win.md
+        - Установка   на операционную систему Linux: connect/operator_guide/install/net/linux.md
+        - Установка  на операционную систему Windows: connect/operator_guide/install/net/win.md
     - Удаление VeiL Connect: connect/operator_guide/delete.md
     - Выполнение программы:
       - Подготовка к работе: connect/operator_guide/prepare.md

@@ -12,7 +12,7 @@
 
 [:fontawesome-solid-server: Установка VeiL Broker](./broker/faq/install_v3.md){ .md-button }
 
-[:fontawesome-solid-desktop: Установка VeiL Connect](./connect/operator_guide/install.md){ .md-button }
+[:fontawesome-solid-desktop: Установка VeiL Connect](./connect/operator_guide/install/index.md){ .md-button }
 
 #### Руководство по работе
 
