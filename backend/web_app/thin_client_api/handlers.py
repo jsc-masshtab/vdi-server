@@ -33,7 +33,9 @@ from common.settings import (
 from common.subscription_sources import (
     EVENTS_THIN_CLIENT_SUBSCRIPTION, USERS_SUBSCRIPTION, WsMessageDirection, WsMessageType
 )
+from common.timezone import get_corresponding_linux_time_zone, get_corresponding_windows_time_zone
 from common.veil.auth.veil_jwt import jwtauth, jwtauth_ws
+from common.veil.veil_api import DomainOsType
 from common.veil.veil_handlers import BaseHttpHandler, BaseWsHandler
 from common.veil.veil_redis import (
     ThinClientCmd,
@@ -74,10 +76,15 @@ class PoolGetVm(BaseHttpHandler):
         super().__init__(application, request, **kwargs)
         self.user_id = None
         self.request_id = None
+        self.client_time_zone = None
+        self.client_os = None
 
     async def post(self, pool_id):
         remote_protocol = self.args.get("remote_protocol", PoolM.PoolConnectionTypes.SPICE.name)
         self.request_id = self.args.get("request_id")
+        self.client_time_zone = self.args.get("time_zone")
+        self.client_os = self.args.get("os")
+
         user = await self.get_user_model_instance()
         self.user_id = user.id
         pool = await PoolM.get(pool_id)
@@ -139,7 +146,7 @@ class PoolGetVm(BaseHttpHandler):
 
         #  Включение ВМ и включение удаленного доступа, если спайс
         await self._notify_vm_await_progress(progress=30, msg=_local_("Machine is being prepared."))
-        is_ok, response = await self._prepare_vm_if_required(vm, remote_protocol)
+        is_ok, response = await self._prepare_vm_if_required(vm, pool_type, remote_protocol)
         if not is_ok:
             return await self.log_finish(response)
         await system_logger.info(
@@ -235,10 +242,10 @@ class PoolGetVm(BaseHttpHandler):
 
         return True, None, vm_address, vm_port, vm_token
 
-    async def _prepare_vm_if_required(self, vm, remote_protocol):
+    async def _prepare_vm_if_required(self, vm, pool_type, remote_protocol):
         """Prepare VM if it's not ready. Return true if everything is ok."""
         try:
-            # Дальше запросы начинают уходить на veil
+            # Запуск ВМ
             veil_domain = await vm.vm_client
             if not veil_domain:
                 raise client_exceptions.ServerDisconnectedError()
@@ -248,6 +255,9 @@ class PoolGetVm(BaseHttpHandler):
             if self._is_spice(remote_protocol) and not veil_domain.remote_access:
                 await veil_domain.enable_remote_access()
 
+            # Time zone
+            await self._set_time_zone_if_required(vm, veil_domain, pool_type)
+
         except client_exceptions.ServerDisconnectedError:
             response = self.form_err_res(_local_("VM is unreachable on ECP VeiL."), "004")
             return False, response
@@ -256,6 +266,69 @@ class PoolGetVm(BaseHttpHandler):
             return False, response
 
         return True, None
+
+    async def _set_time_zone_if_required(self, vm, veil_domain, pool_type):
+
+        # В случае RDS пула пробос зоны возможен на уровне сервера удаленных раб столов
+        print("!!! TZ test: ", self.client_time_zone, self.client_os, flush=True)
+        if pool_type != PoolM.PoolTypes.RDS and self.client_time_zone and self.client_os:
+            try:
+                print("Here1", flush=True)
+                await self._notify_vm_await_progress(progress=40, msg=_local_("Setting time zone."))
+
+                # Дождаться активности qemu агента
+                await asyncio.wait_for(vm.qemu_guest_agent_waiting(), VEIL_OPERATION_WAITING * 3)
+                print("Here2", flush=True)
+                # Установка временной зоны.
+                # Если ОС клиента и удаленной ВМ не совпадают, то находим соответствующее имя временной зоны
+                vm_time_zone = None
+                if self.client_os == DomainOsType.OTHER.value:
+                    vm_time_zone = None
+                elif self.client_os == veil_domain.os_type:
+                    vm_time_zone = self.client_time_zone
+                else:
+                    if self.client_os == DomainOsType.LINUX.value and veil_domain.os_type == DomainOsType.WIN.value:
+                        vm_time_zone = get_corresponding_windows_time_zone(self.client_time_zone)
+                    elif self.client_os == DomainOsType.WIN.value and veil_domain.os_type == DomainOsType.LINUX.value:
+                        vm_time_zone = get_corresponding_linux_time_zone(self.client_time_zone)
+                print("Here3 vm_time_zone: ", vm_time_zone, flush=True)
+                # execute qemu agent command
+                if vm_time_zone:
+                    if veil_domain.os_type == DomainOsType.LINUX.value:
+                        qemu_guest_command = {"path": "timedatectl",
+                                              "arg": ["set-timezone", vm_time_zone],
+                                              "capture-output": True}
+                        response = await veil_domain.guest_command(qemu_cmd="guest-exec",
+                                                                   f_args=qemu_guest_command)
+
+                    elif veil_domain.os_type == DomainOsType.WIN.value:
+                        qemu_guest_command = {"path": "tzutil.exe",
+                                              "arg": ["/s", vm_time_zone],
+                                              "capture-output": True}
+                        response = await veil_domain.guest_command(qemu_cmd="guest-exec",
+                                                                   f_args=qemu_guest_command)
+                    else:
+                        print("!!! UNreachible", flush=True)
+                        return
+
+                    print("!!! QA response.data ", response.data, flush=True)
+                    if response.status_code == 400:
+                        errors = response.data["errors"]
+                        raise RuntimeError(errors)
+
+                    stderr = response.data["guest-exec"].get("err-data")
+                    if stderr:
+                        stderr_stripped = stderr.strip().strip("\r\n")
+                        if stderr_stripped:
+                            raise RuntimeError(stderr_stripped)
+
+            except (asyncio.TimeoutError, JSONDecodeError, KeyError, RuntimeError) as ex:
+                # Если не удалось установить временную зону, это не причина не выдавать ВМ.
+                # Лишь пишем предупреждение.
+                await system_logger.warning(
+                    message=_local_("Failed to set time zone for vm {}.").format(vm.verbose_name),
+                    description=str(ex),
+                )
 
     async def _get_ipv4_address(self, veil_domain):
         """Ожидаем получения адреса машиной."""
