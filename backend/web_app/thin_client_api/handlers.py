@@ -270,15 +270,12 @@ class PoolGetVm(BaseHttpHandler):
     async def _set_time_zone_if_required(self, vm, veil_domain, pool_type):
 
         # В случае RDS пула пробос зоны возможен на уровне сервера удаленных раб столов
-        print("!!! TZ test: ", self.client_time_zone, self.client_os, flush=True)
         if pool_type != PoolM.PoolTypes.RDS and self.client_time_zone and self.client_os:
             try:
-                print("Here1", flush=True)
                 await self._notify_vm_await_progress(progress=40, msg=_local_("Setting time zone."))
 
                 # Дождаться активности qemu агента
                 await asyncio.wait_for(vm.qemu_guest_agent_waiting(), VEIL_OPERATION_WAITING * 3)
-                print("Here2", flush=True)
                 # Установка временной зоны.
                 # Если ОС клиента и удаленной ВМ не совпадают, то находим соответствующее имя временной зоны
                 vm_time_zone = None
@@ -291,7 +288,7 @@ class PoolGetVm(BaseHttpHandler):
                         vm_time_zone = get_corresponding_windows_time_zone(self.client_time_zone)
                     elif self.client_os == DomainOsType.WIN.value and veil_domain.os_type == DomainOsType.LINUX.value:
                         vm_time_zone = get_corresponding_linux_time_zone(self.client_time_zone)
-                print("Here3 vm_time_zone: ", vm_time_zone, flush=True)
+
                 # execute qemu agent command
                 if vm_time_zone:
                     if veil_domain.os_type == DomainOsType.LINUX.value:
@@ -307,11 +304,9 @@ class PoolGetVm(BaseHttpHandler):
                                               "capture-output": True}
                         response = await veil_domain.guest_command(qemu_cmd="guest-exec",
                                                                    f_args=qemu_guest_command)
-                    else:
-                        print("!!! UNreachible", flush=True)
+                    else:  # Unreachable
                         return
 
-                    print("!!! QA response.data ", response.data, flush=True)
                     if response.status_code == 400:
                         errors = response.data["errors"]
                         raise RuntimeError(errors)
