@@ -386,6 +386,24 @@ class TestPoolVm(VdiHttpTestCase):
         # Проверяем, что ВМ выдана
         assert 'data' in response_dict
 
+    @pytest.mark.usefixtures("fixt_db", "fixt_user", "several_static_pools_with_user")
+    @gen_test
+    async def test_set_time_zone(self):
+        pool = await Pool.query.gino.first()
+        vm_url = self.API_URL.format(pool_id=pool.id_str)
+        body_dict = {
+            "remote_protocol": "RDP",
+            "time_zone": "Asia/Irkutsk",
+            "os": "Linux"
+        }
+        body = json.dumps(body_dict)
+        auth_headers = await self.do_login_and_get_auth_headers(username="test_user")
+        response_dict = await self.get_response(
+            body=body, url=vm_url, headers=auth_headers, method="POST"
+        )
+        # Проверяем отсутствие ошибок
+        assert 'errors' not in response_dict
+
 
 @pytest.mark.asyncio
 @pytest.mark.usefixtures(
