@@ -1,0 +1,26 @@
+:host {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+  
+  .flexable-height {
+    flex-wrap: wrap;
+    height: auto;
+    min-height: auto;
+    
+    > button {
+      height: 36px;
+    }
+  }
+  
+  .date {
+    &-checkbox {
+      padding: 0 10px;
+    }
+  
+    &-field {
+      padding: 0 10px;
+      max-width: 200px;
+    }
+  }

@@ -39,12 +39,12 @@ import { DashboardComponent } from './dashboard.component';
 import { SystemModule } from '../settings/system/system.module';
 import { SmtpModule } from '../settings/smtp/smtp.module';
 import { CacheModule } from '../settings/cache/cache.module';
+import { StatisticsModule } from '../log/statistics/statistics.module';
 
 
 @NgModule({
   declarations: [
     DashboardComponent,
-
   ],
   imports: [
     CommonModule,
@@ -71,7 +71,8 @@ import { CacheModule } from '../settings/cache/cache.module';
     SystemModule,
     ServicePageModule,
     SmtpModule,
-    CacheModule
+    CacheModule,
+    StatisticsModule
   ],
   providers:
     [

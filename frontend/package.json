@@ -21,6 +21,7 @@
     "@angular/core": "^10.2.4",
     "@angular/forms": "^10.2.4",
     "@angular/material": "^10.2.7",
+    "@angular/material-moment-adapter": "^13.1.1",
     "@angular/platform-browser": "^10.2.4",
     "@angular/platform-browser-dynamic": "^10.2.4",
     "@angular/router": "^10.2.4",
@@ -40,6 +41,7 @@
     "graphql": "^14.1.1",
     "graphql-tag": "^2.10.1",
     "graphql-typescript": "^0.3.0",
+    "moment": "^2.29.1",
     "rxjs": "~6.6.6",
     "tslib": "^2.3.0",
     "zone.js": "~0.10.2"
