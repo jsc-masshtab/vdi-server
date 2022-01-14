@@ -18,15 +18,11 @@ export class StatisticsComponent implements OnInit {
   constructor(private statisticsService: StatisticsService){}
 
   ngOnInit(): void {
+    this.statisticsService.getStatistics().valueChanges.subscribe((res)=>{
+      console.log(res);
+      
+    })
     
-      this.statisticsService.getStatistics().subscribe((res)=>{
-        console.log(res);
-        
-      },
-      (error) => {                              //Error callback
-        console.error('error caught in component')
-        console.log(error);
-      })
   }
   public chosenYearHandler() {
    
