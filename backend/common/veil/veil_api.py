@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Обобщенный функционал напрямую связанный с VeiL ECP."""
 import json
+from enum import Enum
 from typing import Optional
 
 from pymemcache.client.base import Client as MemcachedClient
@@ -22,6 +23,14 @@ from common.settings import (
     VEIL_MAX_URL_LEN,
     VEIL_REQUEST_TIMEOUT,
 )  # noqa: F401
+
+
+class DomainOsType(Enum):
+    """Possible domain os types."""
+
+    WIN = "Windows"
+    LINUX = "Linux"
+    OTHER = "Other"
 
 
 class DictSerde:

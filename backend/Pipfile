@@ -38,6 +38,8 @@ veil-aio-au = "==0.1.*"
 aiosmtplib = "==1.1.6"
 pyotp = "*"
 pillow = "*"
+cffi = "==1.14.6"
+idna = "==2.*"
 
 [requires]
 python_version = "3.5"
