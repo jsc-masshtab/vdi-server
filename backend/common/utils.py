@@ -170,10 +170,9 @@ class Cache:
         cacheable_resources = list()
 
         for resource_data in resources_list:
-            cacheable_resource_data = dict()
-            for key, value in resource_data.items():
-                if key in resource_class_attrs:
-                    cacheable_resource_data[key] = value
+            cacheable_resource_data = {key: value for key, value in resource_data.items() if
+                                       key in resource_class_attrs}
+
             cacheable_resource_data = await Cache.uuid_to_str(cacheable_resource_data)
             cacheable_resources.append(cacheable_resource_data)
 

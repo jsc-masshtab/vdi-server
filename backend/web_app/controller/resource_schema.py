@@ -167,13 +167,13 @@ class ResourceVmType(VeilResourceType):
     os_type = graphene.Field(ShortString)
     cpu_type = graphene.Field(ShortString)
     description = graphene.Field(ShortString)
-    guest_agent = graphene.Boolean()
+    guest_agent = graphene.Boolean()  # * property object
     os_version = graphene.Field(ShortString)
     spice_stream = graphene.Boolean()
     tablet = graphene.Boolean()
     parent = graphene.Field(VeilShortEntityType)
-    parent_name = graphene.Field(ShortString)
-    hostname = graphene.Field(ShortString)
+    parent_name = graphene.Field(ShortString)  # * property object
+    hostname = graphene.Field(ShortString)  # * property object
     address = graphene.List(ShortString)
     domain_tags = graphene.List(VeilTagsType)
 
@@ -598,30 +598,51 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
         return await cls.domain_info(domain_id=template_id, controller_id=controller_id)
 
     @classmethod
-    async def domain_list(cls, limit, offset, ordering, template: bool):
-        domains = await cls.get_resources_list(
-            limit=limit,
-            offset=offset,
-            ordering=ordering,
-            template=template,
-            resource_type="domain",
-        )
+    async def domain_list(cls, limit, offset, ordering, template: bool):  # * template=0 — vms, =1 — templates
+        cache_client = await Cache.get_client()
+        expire_time = await Cache.get_expire_time()
+        cache_key = "domain_list_cache"
+        cache = cache_client.cache(cache_key)
+
+        cacheable_domain_list = await cache.get(cache_key)
+        if not cacheable_domain_list:
+            domains = await cls.get_resources_list(
+                limit=limit,
+                offset=offset,
+                ordering=ordering,
+                template=template,
+                resource_type="domain",
+            )
+
+            for data in domains:
+                vm = await Vm.get(data["id"])
+                if vm:
+                    pool = await Pool.get(vm.pool_id)
+                    data["pool_name"] = pool.verbose_name
+                else:
+                    data["pool_name"] = "--"
+
+            # ordering here
+            if ordering == "pool_name":
+                domains.sort(key=lambda data: data["pool_name"])
+            elif ordering == "-pool_name":
+                domains.sort(key=lambda data: data["pool_name"], reverse=True)
+
+            cacheable_domain_list = await Cache.get_cacheable_resources(
+                domains, ResourceVmType
+            )
+            # ! Костыль
+            for cacheable_domain in cacheable_domain_list:
+                del cacheable_domain["hostname"]
+                del cacheable_domain["guest_agent"]
+                del cacheable_domain["parent_name"]
+
+            await  cache.set(
+                key=cache_key, value=cacheable_domain_list, expire_time=expire_time
+            )
+
         domain_list = list()
-
-        for data in domains:
-            vm = await Vm.get(data["id"])
-            if vm:
-                pool = await Pool.get(vm.pool_id)
-                data["pool_name"] = pool.verbose_name
-            else:
-                data["pool_name"] = "--"
-
-        if ordering == "pool_name":
-            domains.sort(key=lambda data: data["pool_name"])
-        elif ordering == "-pool_name":
-            domains.sort(key=lambda data: data["pool_name"], reverse=True)
-
-        for resource_data in domains:
+        for resource_data in cacheable_domain_list:
             domain_list.append(ResourceVmType(**resource_data))
         return domain_list
 
