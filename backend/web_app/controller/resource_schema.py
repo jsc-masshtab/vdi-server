@@ -370,11 +370,25 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
     async def resolve_clusters(
         cls, root, info, creator, limit, offset, ordering: str = None
     ):
-        clusters_list = await cls.get_resources_list(
-            limit=limit, offset=offset, ordering=ordering, resource_type="cluster"
-        )
+        cache_client = await Cache.get_client()
+        expire_time = await Cache.get_expire_time()
+        cache_key = "clusters_cache"
+        cache = cache_client.cache(cache_key)
+
+        cacheable_clusters_list = await cache.get(cache_key)
+        if not cacheable_clusters_list:
+            clusters_list = await cls.get_resources_list(
+                limit=limit, offset=offset, ordering=ordering, resource_type="cluster"
+            )
+            cacheable_clusters_list = await Cache.get_cacheable_resources(
+                clusters_list, ResourceClusterType
+            )
+            await cache.set(
+                key=cache_key, value=cacheable_clusters_list, expire_time=expire_time
+            )
+
         veil_clusters_list = list()
-        for resource_data in clusters_list:
+        for resource_data in cacheable_clusters_list:
             veil_clusters_list.append(ResourceClusterType(**resource_data))
         return veil_clusters_list
 
@@ -407,11 +421,25 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
     async def resolve_resource_pools(
         cls, root, info, creator, limit, offset, ordering: str = None
     ):
-        resource_pools_list = await cls.get_resources_list(
-            limit=limit, offset=offset, ordering=ordering, resource_type="resource_pool"
-        )
+        cache_client = await Cache.get_client()
+        expire_time = await Cache.get_expire_time()
+        cache_key = "resource_pools_cache"
+        cache = cache_client.cache(cache_key)
+
+        cacheable_resource_pools_list = await cache.get(cache_key)
+        if not cacheable_resource_pools_list:
+            resource_pools_list = await cls.get_resources_list(
+                limit=limit, offset=offset, ordering=ordering, resource_type="resource_pool"
+            )
+            cacheable_resource_pools_list = await Cache.get_cacheable_resources(
+                resource_pools_list, ResourcePoolType
+            )
+            await cache.set(
+                key=cache_key, value=cacheable_resource_pools_list, expire_time=expire_time
+            )
+
         veil_resource_pools_list = list()
-        for data in resource_pools_list:
+        for data in cacheable_resource_pools_list:
             veil_resource_pools_list.append(ResourcePoolType(**data))
         return veil_resource_pools_list
 
@@ -441,11 +469,25 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
     async def resolve_nodes(
         cls, root, info, creator, limit, offset, ordering: str = None
     ):
-        nodes_list = await cls.get_resources_list(
-            limit=limit, offset=offset, ordering=ordering, resource_type="node"
-        )
+        cache_client = await Cache.get_client()
+        expire_time = await Cache.get_expire_time()
+        cache_key = "nodes_cache"
+        cache = cache_client.cache(cache_key)
+
+        cacheable_nodes_list = await cache.get(cache_key)
+        if not cacheable_nodes_list:
+            nodes_list = await cls.get_resources_list(
+                limit=limit, offset=offset, ordering=ordering, resource_type="node"
+            )
+            cacheable_nodes_list = await Cache.get_cacheable_resources(
+                nodes_list, ResourceNodeType
+            )
+            await cache.set(
+                key=cache_key, value=cacheable_nodes_list, expire_time=expire_time
+            )
+
         veil_nodes_list = list()
-        for resource_data in nodes_list:
+        for resource_data in cacheable_nodes_list:
             veil_nodes_list.append(ResourceNodeType(**resource_data))
         return veil_nodes_list
 
@@ -476,11 +518,25 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
     async def resolve_datapools(
         cls, root, info, creator, limit, offset, ordering: str = None
     ):
-        datapools_list = await cls.get_resources_list(
-            limit=limit, offset=offset, ordering=ordering, resource_type="datapool"
-        )
+        cache_client = await Cache.get_client()
+        expire_time = await Cache.get_expire_time()
+        cache_key = "datapools_cache"
+        cache = cache_client.cache(cache_key)
+
+        cacheable_datapools_list = await cache.get(cache_key)
+        if not cacheable_datapools_list:
+            datapools_list = await cls.get_resources_list(
+                limit=limit, offset=offset, ordering=ordering, resource_type="datapool"
+            )
+            cacheable_datapools_list = await Cache.get_cacheable_resources(
+                datapools_list, ResourceDataPoolType
+            )
+            await cache.set(
+                key=cache_key, value=cacheable_datapools_list, expire_time=expire_time
+            )
+
         veil_datapools_list = list()
-        for resource_data in datapools_list:
+        for resource_data in cacheable_datapools_list:
             veil_datapools_list.append(ResourceDataPoolType(**resource_data))
         return veil_datapools_list
 

@@ -1,6 +1,7 @@
 import asyncio
 import functools
 import signal
+import uuid
 from enum import Enum
 
 from yaaredis import StrictRedis
@@ -152,3 +153,33 @@ class Cache:
         except KeyError:
             expire_time = REDIS_EXPIRE_TIME
         return int(expire_time)
+
+    @staticmethod
+    async def uuid_to_str(resource_data: dict) -> dict:
+        for key, value in resource_data.items():
+            if isinstance(value, dict):
+                await Cache.uuid_to_str(value)
+            else:
+                if isinstance(value, uuid.UUID):
+                    resource_data[key] = str(value)
+        return resource_data
+
+    @staticmethod
+    async def get_cacheable_resources(resources_list, resource_type_class) -> list:
+        resource_class_attrs = dir(resource_type_class)
+        cacheable_resources = list()
+
+        for resource_data in resources_list:
+            cacheable_resource_data = dict()
+            for key, value in resource_data.items():
+                if key in resource_class_attrs:
+                    cacheable_resource_data[key] = value
+            cacheable_resource_data = await Cache.uuid_to_str(cacheable_resource_data)
+            cacheable_resources.append(cacheable_resource_data)
+
+        return cacheable_resources
+
+    # async def del_cache(self, cache_key, cache_params=None):
+    #     cache_client = await self.get_client()
+    #     cache = cache_client.cache(cache_key)
+    #     await cache.delete(key=cache_key, param=cache_params)
