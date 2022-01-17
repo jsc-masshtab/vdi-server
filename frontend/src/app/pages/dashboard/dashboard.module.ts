@@ -39,7 +39,7 @@ import { DashboardComponent } from './dashboard.component';
 import { SystemModule } from '../settings/system/system.module';
 import { SmtpModule } from '../settings/smtp/smtp.module';
 import { CacheModule } from '../settings/cache/cache.module';
-import { StatisticsModule } from '../log/statistics/statistics.module';
+import { StatisticsModule } from '../statistics/statistics.module';
 
 
 @NgModule({

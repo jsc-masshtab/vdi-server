@@ -20,7 +20,8 @@
             "allowedCommonJsDependencies": [
               "graphql-tag",
               "zen-observable",
-              "qrcode"
+              "qrcode",
+              "file-saver"
             ],
             "aot": false,
             "outputPath": "dist/frontend",

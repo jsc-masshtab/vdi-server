@@ -178,8 +178,9 @@
     <span>Настройки</span>
   </a>
 
-  <a class="top-menu-item item-tree" [@fadeInOut] *ngIf="toggleLog" (click)="routeTo('log/statistics')" (keydown.enter)="routeTo('log/statistics')" [class.clicked-link]="clickedManage =='statistics'"  tabindex="0">
+  <a class="top-menu-item" [@fadeInOut] (click)="routeTo('statistics')" (keydown.enter)="routeTo('statistics')" [class.clicked-link]="clickedManage =='statistics'"  tabindex="0">
     <fa-icon title="События" [icon]="['fas','chart-bar']" size="s" [style.color]="'rgb(94, 185, 161)'"></fa-icon>
     <span>Статистика</span>
   </a>
+
 </div>

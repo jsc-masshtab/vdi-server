@@ -38,6 +38,7 @@
     "apollo-link": "^1.2.11",
     "apollo-link-error": "^1.1.11",
     "core-js": "^2.5.4",
+    "file-saver": "^2.0.5",
     "graphql": "^14.1.1",
     "graphql-tag": "^2.10.1",
     "graphql-typescript": "^0.3.0",
