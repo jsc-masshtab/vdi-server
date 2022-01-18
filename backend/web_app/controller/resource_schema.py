@@ -167,13 +167,13 @@ class ResourceVmType(VeilResourceType):
     os_type = graphene.Field(ShortString)
     cpu_type = graphene.Field(ShortString)
     description = graphene.Field(ShortString)
-    guest_agent = graphene.Boolean()  # * property object
+    guest_agent = graphene.Boolean()
     os_version = graphene.Field(ShortString)
     spice_stream = graphene.Boolean()
     tablet = graphene.Boolean()
     parent = graphene.Field(VeilShortEntityType)
-    parent_name = graphene.Field(ShortString)  # * property object
-    hostname = graphene.Field(ShortString)  # * property object
+    parent_name = graphene.Field(ShortString)
+    hostname = graphene.Field(ShortString)
     address = graphene.List(ShortString)
     domain_tags = graphene.List(VeilTagsType)
 
@@ -300,7 +300,6 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
             resources_list.sort(
                 key=lambda data: data["controller"]["verbose_name"], reverse=True
             )
-
         return resources_list
 
     @classmethod
@@ -598,10 +597,14 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
         return await cls.domain_info(domain_id=template_id, controller_id=controller_id)
 
     @classmethod
-    async def domain_list(cls, limit, offset, ordering, template: bool):  # * template=0 — vms, =1 — templates
+    async def domain_list(cls, limit, offset, ordering, template: bool):
+        # TODO Ордеринг
         cache_client = await Cache.get_client()
         expire_time = await Cache.get_expire_time()
-        cache_key = "domain_list_cache"
+        if template == 0:
+            cache_key = "vms_list_cache"
+        else:
+            cache_key = "templates_list_cache"
         cache = cache_client.cache(cache_key)
 
         cacheable_domain_list = await cache.get(cache_key)
@@ -622,7 +625,6 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
                 else:
                     data["pool_name"] = "--"
 
-            # ordering here
             if ordering == "pool_name":
                 domains.sort(key=lambda data: data["pool_name"])
             elif ordering == "-pool_name":
@@ -631,7 +633,7 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
             cacheable_domain_list = await Cache.get_cacheable_resources(
                 domains, ResourceVmType
             )
-            # ! Костыль
+            # TODO Получать значения вместо удаления
             for cacheable_domain in cacheable_domain_list:
                 del cacheable_domain["hostname"]
                 del cacheable_domain["guest_agent"]
