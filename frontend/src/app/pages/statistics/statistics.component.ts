@@ -18,6 +18,7 @@ export class StatisticsComponent implements OnInit {
   public year = new FormControl('all');
   public month = new FormControl('all');
   public report: string;
+
   constructor(private statisticsService: StatisticsService){}
 
   ngOnInit(): void {
@@ -30,6 +31,7 @@ export class StatisticsComponent implements OnInit {
 
   public generateReport(): void {
     const params: IDate = {};
+    
     if (this.month.value !== 'all'){
       params.month = this.month.value;
     }
@@ -37,15 +39,18 @@ export class StatisticsComponent implements OnInit {
     if (this.year.value !== 'all'){
       params.year = this.year.value;
     }
+
     this.statisticsService.getStatistics(params).valueChanges.subscribe( (res: ApolloQueryResult<ApiResponse>) => {
       this.report = res.data.statisticsReport;
-      this.myDiv.nativeElement.innerHTML = this.changeIconsSrc(this.report);
-    })
 
-  }
-  
-  public changeIconsSrc(htmlPage: string): string {
-    return htmlPage.replace( new RegExp('/awstatsicons/', 'g'), '../assets/icon/')
+      let iframe = document.createElement('iframe');
+      iframe.width = '100%';
+      iframe.height = '100%';
+      iframe.srcdoc = this.report;
+      
+      this.myDiv.nativeElement.innerHTML = '';
+      this.myDiv.nativeElement.appendChild(iframe);
+    })
   }
   
   public downloadReport(): void {
@@ -53,6 +58,7 @@ export class StatisticsComponent implements OnInit {
     const blob = new Blob([this.report], {
       type: 'text/plain;charset=utf-8'
     });
+
     saveAs(blob, filename)
-} 
+  } 
 }
