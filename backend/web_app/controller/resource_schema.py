@@ -393,6 +393,8 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
         cache_client = await Cache.get_client()
         expire_time = await Cache.get_expire_time()
         cache_key = "clusters_cache"
+        if ordering:
+            cache_key += "_" + ordering
         cache = cache_client.cache(cache_key)
 
         cacheable_clusters_list = await cache.get(cache_key)
@@ -444,6 +446,8 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
         cache_client = await Cache.get_client()
         expire_time = await Cache.get_expire_time()
         cache_key = "resource_pools_cache"
+        if ordering:
+            cache_key += "_" + ordering
         cache = cache_client.cache(cache_key)
 
         cacheable_resource_pools_list = await cache.get(cache_key)
@@ -492,6 +496,8 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
         cache_client = await Cache.get_client()
         expire_time = await Cache.get_expire_time()
         cache_key = "nodes_cache"
+        if ordering:
+            cache_key += "_" + ordering
         cache = cache_client.cache(cache_key)
 
         cacheable_nodes_list = await cache.get(cache_key)
@@ -541,6 +547,8 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
         cache_client = await Cache.get_client()
         expire_time = await Cache.get_expire_time()
         cache_key = "datapools_cache"
+        if ordering:
+            cache_key += "_" + ordering
         cache = cache_client.cache(cache_key)
 
         cacheable_datapools_list = await cache.get(cache_key)
@@ -619,13 +627,14 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
 
     @classmethod
     async def domain_list(cls, limit, offset, ordering, template: bool, refresh: bool):
-        # TODO Ордеринг
         cache_client = await Cache.get_client()
         expire_time = await Cache.get_expire_time()
         if template == 0:
             cache_key = "vms_list_cache"
         else:
             cache_key = "templates_list_cache"
+        if ordering:
+            cache_key += "_" + ordering
         cache = cache_client.cache(cache_key)
 
         cacheable_domain_list = await cache.get(cache_key)

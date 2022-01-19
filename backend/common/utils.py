@@ -156,6 +156,7 @@ class Cache:
 
     @staticmethod
     async def uuid_to_str(resource_data: dict) -> dict:
+        """Принимает словарь и если он содержит значения UUID, то преобразует их в str."""
         for key, value in resource_data.items():
             if isinstance(value, dict):
                 await Cache.uuid_to_str(value)
@@ -177,8 +178,3 @@ class Cache:
             cacheable_resources.append(cacheable_resource_data)
 
         return cacheable_resources
-
-    # async def del_cache(self, cache_key, cache_params=None):
-    #     cache_client = await self.get_client()
-    #     cache = cache_client.cache(cache_key)
-    #     await cache.delete(key=cache_key, param=cache_params)
