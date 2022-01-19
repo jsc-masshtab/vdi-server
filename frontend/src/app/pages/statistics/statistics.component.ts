@@ -42,7 +42,8 @@ export class StatisticsComponent implements OnInit {
 
     this.statisticsService.getStatistics(params).valueChanges.subscribe( (res: ApolloQueryResult<ApiResponse>) => {
       this.report = res.data.statisticsReport;
-
+      this.disableLinks()
+      
       let iframe = document.createElement('iframe');
       iframe.width = '100%';
       iframe.height = '100%';
@@ -61,4 +62,8 @@ export class StatisticsComponent implements OnInit {
 
     saveAs(blob, filename)
   } 
+
+  private disableLinks(): void {
+    this.report += '<style type="text/css">a { pointer-events: none;}</style>'    
+  }
 }
