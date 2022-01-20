@@ -8,11 +8,10 @@ import {
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup } from '@angular/forms';
 import { Router } from '@angular/router';
-import { Observable } from 'rxjs';
 
 import { ErrorsService } from '../../core/components/errors/errors.service';
 import { AuthStorageService } from './authStorage.service';
-import { ISettings, LoginService } from './login.service';
+import { LoginService } from './login.service';
 
 @Component({
   selector: 'vdi-login',
@@ -36,70 +35,86 @@ export class LoginComponent implements OnInit {
 
   public loaded: boolean = false;
   public loginForm: FormGroup;
-  public settings$: Observable<ISettings>;
   public useCode = new FormControl(false)
 
-  constructor(private fb: FormBuilder,
-              private authStorageService: AuthStorageService,
-              private loginService: LoginService,
-              private route: Router,
-              private errorService: ErrorsService) { this.routePage(); }
+  constructor(
+    private fb: FormBuilder,
+    private authStorageService: AuthStorageService,
+    private loginService: LoginService,
+    private route: Router,
+    private errorService: ErrorsService
+  ) {}
 
   ngOnInit() {
-    this.sendSSO();
+    this.createForm();
+    this.checkLogin();
 
-    this.loginForm.get('ldap').valueChanges.subscribe(v => {
-      this.authStorageService.setLdap(v)
+    this.useCode.valueChanges.subscribe((value) => {
+      if(!value) {
+        this.loginForm.get('code').setValue('');
+      }
     })
-
-    this.settings$ = this.loginService.getSettings();
   }
 
-  private sendSSO() {
+  private createForm(): void {
+    this.loginForm = this.fb.group({
+      username: '',
+      password: '',
+      code: '',
+      ldap: false
+    });
+  }
+  
+  private checkLogin(): void {
+    if (this.authStorageService.checkLogin()) {
+      this.route.navigate(['/pages']);
+    } else {
+      this.getSettings();
+    }
+  }
+
+  private getSettings(): void {
+    this.loginService.getSettings().subscribe((res) => {
+
+      this.loginForm.get('ldap').setValue(res.ldap);
+
+      if(res.sso) {
+        this.getSSO();
+      } else {
+        this.routePage();
+      }
+    })
+  }
+
+  routePage() {
+    if (this.authStorageService.checkLogin()) {
+      this.route.navigate(['/pages']);
+    } else {
+      this.loaded = true;
+    }
+  }
+
+  private getSSO() {
     this.loginService.getSSO().subscribe(
+
       (res) => {
         this.authStorageService.saveInStorage(res.body.data);
-        this.routePage();  
-        this.loaded = true;
-      }, (res) => {
+        this.routePage();
+      }, 
+
+      (res) => {
         if(!res.status) {
-          this.sendSSO();
+          this.getSSO();
         } else {
           this.routePage();
-          this.loaded = true;
         }
       }
     );
   }
 
-  private createForm(): void {
-    if (!this.loginForm) {
-      this.loginForm = this.fb.group({
-        username: '' ,
-        password: '',
-        code: '',
-        ldap: this.authStorageService.getLdapCheckbox()
-      });
-    } else {
-      return;
-    }
-  }
+  public auth() {
+    this.loginService.auth(this.loginForm.value).subscribe((res) => {
 
-  private routePage(): void {
-    if (this.authStorageService.checkLogin()) {
-      this.route.navigate(['/pages']);
-    } else {
-      this.createForm();
-    }
-  }
-
-  public get ldapToggleStatus(): boolean {
-    return this.authStorageService.getLdapCheckbox();
-  }
-
-  public send() {
-
-    this.loginService.auth(this.loginForm.value).subscribe((res: { data: { access_token: string, expires_on: string, username: string }} & { errors: [] } ) => {
       if (res && res.data) {
         this.authStorageService.saveInStorage(res.data);
         this.routePage();
@@ -107,6 +122,7 @@ export class LoginComponent implements OnInit {
 
       if (res.errors !== undefined) {
         this.errorService.setError(res.errors);
+        this.routePage();
       }
     });
   }

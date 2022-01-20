@@ -43,13 +43,12 @@
 			</label>
 
 			<label class="field" *ngIf="useCode.value">
-
 				<input type="text" placeholder="Введите 6-значный код" formControlName="code">
 			</label>
 		</div>
 
 		<div class="form-actions">
-			<button type="submit" (click)="send()" class="form-btn">Войти</button>
+			<button type="submit" (click)="auth()" class="form-btn">Войти</button>
 		</div>
 	</form>
 </div>

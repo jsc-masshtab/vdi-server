@@ -22,12 +22,6 @@ export class AuthStorageService {
             return false;
         }
     }
-    public getLdapCheckbox(): boolean {
-        return localStorage.getItem('ldap') === 'true';
-    }
-    public setLdap(ldap: string): void {
-            localStorage.setItem('ldap', ldap)
-    }
 
     public saveInStorage(token: {access_token: string, expires_on: string, username: string}): void {
         if (token.access_token) {
@@ -35,6 +29,7 @@ export class AuthStorageService {
         } else {
             throw new Error('нет токена');
         }
+
         if (token.username) {
             localStorage.setItem('username', token.username);
         } else {
@@ -43,6 +38,7 @@ export class AuthStorageService {
     }
 
     public logout(): void {
+        console.log('delete token')
         localStorage.removeItem('token');
         localStorage.removeItem('username');
         this.router.navigate(['login']);
@@ -51,6 +47,4 @@ export class AuthStorageService {
     public getItemStorage(item: 'token' | 'username'): string | null {
         return localStorage.getItem(item) || null;
     }
-
 }
-
