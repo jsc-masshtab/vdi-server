@@ -15,6 +15,9 @@ pipeline {
         DEB_ROOT = "${WORKSPACE}/devops/deb"
         DATE = "${currentDate}"
         VER = "${VERSION}-${BUILD_NUMBER}"
+        NEXUS_DOCKER_REGISTRY = "nexus.bazalt.team"
+        NEXUS_CREDS = credentials('nexus-jenkins-creds')
+        DOCKER_IMAGE_NAME = "${NEXUS_DOCKER_REGISTRY}/vdi-builder"
     }
 
     post {
@@ -48,7 +51,7 @@ pipeline {
         string(name: 'BRANCH',  defaultValue: 'dev',                            description: 'branch')
         choice(name: 'REPO',    choices: ['test', 'dev', 'prod-30', 'prod-31'], description: 'repo for uploading')
         string(name: 'VERSION', defaultValue: '3.1.3',                          description: 'base version')
-        string(name: 'AGENT',   defaultValue: 'bld-agent',                      description: 'jenkins build agent')
+        choice(name: 'AGENT',   choices: ['cloud-ubuntu-20', 'bld-agent'],      description: 'jenkins build agent')
     }
 
     stages {
@@ -59,22 +62,30 @@ pipeline {
                     branches: [[name: '$BRANCH']],
                     doGenerateSubmoduleConfigurations: false,
                     extensions: [], submoduleCfg: [],
-                    userRemoteConfigs: [[credentialsId: '952e22ff-a42d-442c-83bd-76240a6ee793',
-                    url: 'git@gitlab.bazalt.team:vdi/vdi-server.git']]
+                    userRemoteConfigs: [[credentialsId: 'jenkins-vdi-token',
+                    url: 'http://gitlab.bazalt.team/vdi/vdi-server.git']]
                 ])
             }
         }
 
         stage('prepare build image') {
             steps {
-                sh "cd devops/docker/builder; docker build . -t vdi-builder:${VERSION}"
+                sh script: '''
+                    echo -n $NEXUS_CREDS_PSW | docker login -u $NEXUS_CREDS_USR --password-stdin $NEXUS_DOCKER_REGISTRY
+                    docker pull $DOCKER_IMAGE_NAME:latest || true
+                    cd devops/docker/builder
+                    docker build . --pull --cache-from $DOCKER_IMAGE_NAME:latest --tag $DOCKER_IMAGE_NAME:$VERSION
+                    docker push $DOCKER_IMAGE_NAME:$VERSION
+                    docker tag $DOCKER_IMAGE_NAME:$VERSION $DOCKER_IMAGE_NAME:latest
+                    docker push $DOCKER_IMAGE_NAME:latest
+                '''
             }
         }
 
         stage ('build') {
             agent {
                 docker {
-                    image "vdi-builder:${VERSION}"
+                    image "${DOCKER_IMAGE_NAME}:${VERSION}"
                     args '-u root:root -v /nfs:/nfs'
                     reuseNode true
                     label "${AGENT}"
@@ -85,7 +96,7 @@ pipeline {
                 sh script: '''
                     sed -i "s:%%VER%%:${VERSION}-${BUILD_NUMBER}:g" "${DEB_ROOT}/${PRJNAME}/root/DEBIAN/control"
 
-                    # генерация документации
+                    # generate docs
                     cd ${WORKSPACE}/docs
                     export LC_ALL=C.UTF-8
                     export LANG=C.UTF-8
@@ -104,15 +115,17 @@ pipeline {
 
         stage ('deploy to clientsapp') {
             steps {
-                sh script: '''
-                    case ${BRANCH} in
-                        dev)
-                            cd ${WORKSPACE}/docs
-                            mv docs vdi-docs
-                            scp -r ./vdi-docs jenkins@clientsapp:
-                            ;;
-                    esac
-                '''
+                withCredentials([sshUserPrivateKey(credentialsId: '952e22ff-a42d-442c-83bd-76240a6ee793', keyFileVariable: 'SSH_KEY')]) {
+                    sh script: '''
+                        case ${BRANCH} in
+                            dev)
+                                cd ${WORKSPACE}/docs
+                                mv docs vdi-docs
+                                scp -o StrictHostKeyChecking=no -i $SSH_KEY -r ./vdi-docs jenkins@clientsapp.bazalt.team:
+                                ;;
+                        esac
+                    '''
+                }
             }
         }
 

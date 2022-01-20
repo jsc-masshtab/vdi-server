@@ -52,6 +52,9 @@ class ThinClientType(graphene.ObjectType):
     avg_rtt = graphene.Float()
     loss_percentage = graphene.Int()
 
+    mac_address = graphene.Field(ShortString)
+    hostname = graphene.Field(ShortString)
+
     @staticmethod
     async def create_from_db_data(tk_db_data):
         thin_client_type = ThinClientType()
@@ -75,6 +78,9 @@ class ThinClientType(graphene.ObjectType):
         thin_client_type.write_speed = tk_db_data.write_speed
         thin_client_type.avg_rtt = tk_db_data.avg_rtt
         thin_client_type.loss_percentage = tk_db_data.loss_percentage
+
+        thin_client_type.mac_address = tk_db_data.mac_address
+        thin_client_type.hostname = tk_db_data.hostname
 
         # AFK
         if tk_db_data.disconnected:
@@ -164,6 +170,8 @@ class ThinClientQuery(graphene.ObjectType):
                 ActiveTkConnection.write_speed,
                 ActiveTkConnection.avg_rtt,
                 ActiveTkConnection.loss_percentage,
+                ActiveTkConnection.mac_address,
+                ActiveTkConnection.hostname,
                 User.id.label("user_id"),
                 User.username,
                 Vm.verbose_name,

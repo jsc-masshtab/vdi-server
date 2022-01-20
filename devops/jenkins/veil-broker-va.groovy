@@ -51,7 +51,7 @@ pipeline {
         string(name: 'BRANCH',  defaultValue: 'dev',                            description: 'branch')
         choice(name: 'REPO',    choices: ['test', 'dev', 'prod-30', 'prod-31'], description: 'repo for uploading')
         string(name: 'VERSION', defaultValue: '3.1.3',                          description: 'base version')
-        string(name: 'AGENT',   defaultValue: 'bld-agent',                      description: 'jenkins build agent')
+        choice(name: 'AGENT',   choices: ['cloud-ubuntu-20', 'bld-agent'],      description: 'jenkins build agent')
     }
 
     stages {
@@ -62,8 +62,8 @@ pipeline {
                     branches: [[name: '$BRANCH']],
                     doGenerateSubmoduleConfigurations: false,
                     extensions: [], submoduleCfg: [],
-                    userRemoteConfigs: [[credentialsId: '952e22ff-a42d-442c-83bd-76240a6ee793',
-                    url: 'git@gitlab.bazalt.team:vdi/vdi-server.git']]
+                    userRemoteConfigs: [[credentialsId: 'jenkins-vdi-token',
+                    url: 'http://gitlab.bazalt.team/vdi/vdi-server.git']]
                 ])
             }
         }

@@ -557,6 +557,8 @@ class ThinClientWsHandler(BaseWsHandler):
                 vm_id=self.get_query_argument(name="vm_id", default=None),
                 tk_ip=self.remote_ip,
                 tk_os=self.get_query_argument("tk_os"),
+                mac_address=self.get_query_argument("mac_address", default=None),
+                hostname=self.get_query_argument("hostname", default=None)
             )
             self.conn_id = tk_conn.id
 
