@@ -13,27 +13,23 @@ def notifyBuild(rocketNotify, buildStatus, msg) {
     }
 }
 
-
 notifyBuild(rocketNotify, ":bell: STARTED", "Start new build. Version: ${currentDate}")
 
 pipeline {
     agent {
         label "${AGENT}"
     }
-
     post {
         failure {
             println "Something goes wrong"
             println "Current build marked as ${currentBuild.result}"
             notifyBuild(rocketNotify,":x: FAILED", "Something goes wrong. Version: ${currentDate}")
         }
-
         aborted {
             println "Build was interrupted manually"
             println "Current build marked as ${currentBuild.result}"
             notifyBuild(rocketNotify,":x: FAILED", "Build was interrupted manually. Version: ${currentDate}")
         }
-
         success {
             notifyBuild(rocketNotify, ":white_check_mark: SUCCESSFUL","Build SUCCESSFUL. Version: ${currentDate}")
         }
@@ -49,12 +45,11 @@ pipeline {
     }
 
     parameters {
-        string(      name: 'BRANCH',      defaultValue: 'dev',                     description: 'branch')
-        string(      name: 'AGENT',       defaultValue: 'bld-agent',               description: 'jenkins build agent')
+        string(name: 'BRANCH', defaultValue: 'dev',                       description: 'branch')
+        choice(name: 'AGENT',  choices: ['cloud-ubuntu-20', 'bld-agent'], description: 'jenkins build agent')
     }
 
     stages {
-
         stage ('checkout') {
             steps {
                 cleanWs()
@@ -62,14 +57,13 @@ pipeline {
                     branches: [[name: '$BRANCH']],
                     doGenerateSubmoduleConfigurations: false,
                     extensions: [], submoduleCfg: [],
-                    userRemoteConfigs: [[credentialsId: '952e22ff-a42d-442c-83bd-76240a6ee793',
-                    url: 'git@gitlab.bazalt.team:vdi/vdi-server.git']]
+                    userRemoteConfigs: [[credentialsId: 'jenkins-vdi-token',
+                    url: 'http://gitlab.bazalt.team/vdi/vdi-server.git']]
                 ])
             }
         }
 
         stage ('sync repos') {
-
             steps {
                 sh script: """
                     bash devops/github/vdi-github-sync.sh
