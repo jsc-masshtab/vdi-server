@@ -15,12 +15,10 @@ export class LoginGuard implements CanActivate, CanActivateChild {
   constructor(private authStorageService: AuthStorageService) {}
 
   public canActivate(): boolean {
-    console.log('route', navigator)
     return this.authStorageService.checkLogin();
   }
 
   public canActivateChild(): boolean {
-    console.log('child-route', navigator)
     return this.authStorageService.checkLogin();
   }
 
