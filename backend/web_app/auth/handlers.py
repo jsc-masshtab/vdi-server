@@ -146,6 +146,7 @@ class SettingsHandler(BaseHttpHandler, ABC):
         auth_dir = await AuthenticationDirectory.get_objects(first=True)
         data = {"language": LANGUAGE,
                 "broker_name": BROKER_NAME,
+                "sso": auth_dir.sso if auth_dir else False,
                 "ldap": auth_dir.dc_str if auth_dir else ""}
         response = {"data": data}
         return self.finish(response)

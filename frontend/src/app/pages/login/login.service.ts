@@ -11,6 +11,7 @@ import { AuthStorageService } from './authStorage.service';
 export interface ISettings {
     language: string
     ldap: string
+    sso: boolean
     broker_name: string
 }
 @Injectable()
