@@ -61,12 +61,17 @@ class ActiveTkConnection(db.Model, AbstractSortableStatusModel):
 
     connection_type = db.Column(AlchemyEnum(Pool.PoolConnectionTypes), nullable=True)  # тип подключения к ВМ
     is_connection_secure = db.Column(db.Boolean(), default=False, nullable=False)  # используется ли TLS
+    # (речь о соединении с ВМ)
 
     # network stats overall (RDP/Spice). Текущие(последние) Характеристики взаимодействия ТК <-> ВМ
     read_speed = db.Column(db.Integer(), default=0)  # Скорость получения байт с ВМ на ТК
     write_speed = db.Column(db.Integer(), default=0)  # Отправка байт. Только для RDP. Спайс не дает эти данные
     avg_rtt = db.Column(db.Float(), default=0)
     loss_percentage = db.Column(db.Integer(), default=0)
+
+    # additional data about client machine
+    mac_address = db.Column(db.Unicode(length=128), nullable=True)
+    hostname = db.Column(db.Unicode(length=128), nullable=True)
 
     @classmethod
     async def soft_create(cls, conn_id, is_conn_init_by_user, **kwargs):
@@ -87,7 +92,7 @@ class ActiveTkConnection(db.Model, AbstractSortableStatusModel):
 
         if (
             is_conn_init_by_user
-        ):  # Флаг чтобы различить инициировано ли соединение ползователем или это авторекконкт
+        ):  # Флаг чтобы различить инициировано ли соединение ползователем или это автореконнект
             await model.update_last_interaction()
 
         return model
