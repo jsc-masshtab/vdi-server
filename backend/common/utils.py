@@ -178,3 +178,12 @@ class Cache:
             cacheable_resources.append(cacheable_resource_data)
 
         return cacheable_resources
+
+    @staticmethod
+    async def prepare_cache(cache_key: str, ordering: str = None):
+        cache_client = await Cache.get_client()
+        expire_time = await Cache.get_expire_time()
+        if ordering:
+            cache_key += "_" + ordering
+        cache = cache_client.cache(cache_key)
+        return cache, cache_key, expire_time

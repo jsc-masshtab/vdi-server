@@ -369,11 +369,8 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
     @classmethod
     @administrator_required
     async def resolve_cluster(cls, root, info, creator, cluster_id, controller_id, refresh: bool):
-        cache_client = await Cache.get_client()
+        cache, cache_key, expire_time = await Cache.prepare_cache(cache_key="cluster_cache")
         cache_params = await Cache.get_params(cluster_id, controller_id)
-        expire_time = await Cache.get_expire_time()
-        cache_key = "cluster_cache"
-        cache = cache_client.cache(cache_key)
 
         resource_data = await cache.get(key=cache_key, param=cache_params)
         if not resource_data or refresh:
@@ -390,12 +387,9 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
     async def resolve_clusters(
         cls, root, info, creator, limit, offset, refresh: bool, ordering: str = None
     ):
-        cache_client = await Cache.get_client()
-        expire_time = await Cache.get_expire_time()
-        cache_key = "clusters_cache"
-        if ordering:
-            cache_key += "_" + ordering
-        cache = cache_client.cache(cache_key)
+        cache, cache_key, expire_time = await Cache.prepare_cache(
+            cache_key="clusters_cache", ordering=ordering
+        )
 
         cacheable_clusters_list = await cache.get(cache_key)
         if not cacheable_clusters_list or refresh:
@@ -420,11 +414,8 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
     async def resolve_resource_pool(
         cls, root, info, creator, resource_pool_id, controller_id, refresh: bool
     ):
-        cache_client = await Cache.get_client()
+        cache, cache_key, expire_time = await Cache.prepare_cache(cache_key="resource_pool_cache")
         cache_params = await Cache.get_params(resource_pool_id, controller_id)
-        expire_time = await Cache.get_expire_time()
-        cache_key = "resource_pool_cache"
-        cache = cache_client.cache(cache_key)
 
         resource_data = await cache.get(key=cache_key, param=cache_params)
         if not resource_data or refresh:
@@ -443,12 +434,9 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
     async def resolve_resource_pools(
         cls, root, info, creator, limit, offset, refresh: bool, ordering: str = None
     ):
-        cache_client = await Cache.get_client()
-        expire_time = await Cache.get_expire_time()
-        cache_key = "resource_pools_cache"
-        if ordering:
-            cache_key += "_" + ordering
-        cache = cache_client.cache(cache_key)
+        cache, cache_key, expire_time = await Cache.prepare_cache(
+            cache_key="resource_pools_cache", ordering=ordering
+        )
 
         cacheable_resource_pools_list = await cache.get(cache_key)
         if not cacheable_resource_pools_list or refresh:
@@ -471,11 +459,8 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
     @classmethod
     @administrator_required
     async def resolve_node(cls, root, info, creator, node_id, controller_id, refresh: bool):
-        cache_client = await Cache.get_client()
+        cache, cache_key, expire_time = await Cache.prepare_cache(cache_key="node_cache")
         cache_params = await Cache.get_params(node_id, controller_id)
-        expire_time = await Cache.get_expire_time()
-        cache_key = "node_cache"
-        cache = cache_client.cache(cache_key)
 
         resource_data = await cache.get(key=cache_key, param=cache_params)
         if not resource_data or refresh:
@@ -493,12 +478,9 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
     async def resolve_nodes(
         cls, root, info, creator, limit, offset, refresh: bool, ordering: str = None
     ):
-        cache_client = await Cache.get_client()
-        expire_time = await Cache.get_expire_time()
-        cache_key = "nodes_cache"
-        if ordering:
-            cache_key += "_" + ordering
-        cache = cache_client.cache(cache_key)
+        cache, cache_key, expire_time = await Cache.prepare_cache(
+            cache_key="nodes_cache", ordering=ordering
+        )
 
         cacheable_nodes_list = await cache.get(cache_key)
         if not cacheable_nodes_list or refresh:
@@ -521,11 +503,8 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
     @classmethod
     @administrator_required
     async def resolve_datapool(cls, root, info, creator, datapool_id, controller_id, refresh: bool):
-        cache_client = await Cache.get_client()
+        cache, cache_key, expire_time = await Cache.prepare_cache(cache_key="datapool_cache")
         cache_params = await Cache.get_params(datapool_id, controller_id)
-        expire_time = await Cache.get_expire_time()
-        cache_key = "datapool_cache"
-        cache = cache_client.cache(cache_key)
 
         resource_data = await cache.get(key=cache_key, param=cache_params)
         if not resource_data or refresh:
@@ -544,12 +523,9 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
     async def resolve_datapools(
         cls, root, info, creator, limit, offset, refresh: bool, ordering: str = None
     ):
-        cache_client = await Cache.get_client()
-        expire_time = await Cache.get_expire_time()
-        cache_key = "datapools_cache"
-        if ordering:
-            cache_key += "_" + ordering
-        cache = cache_client.cache(cache_key)
+        cache, cache_key, expire_time = await Cache.prepare_cache(
+            cache_key="datapools_cache", ordering=ordering
+        )
 
         cacheable_datapools_list = await cache.get(cache_key)
         if not cacheable_datapools_list or refresh:
@@ -579,11 +555,8 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
         veil_domain = controller.veil_client.domain(domain_id=str(domain_id))
         await veil_domain.info()
 
-        cache_client = await Cache.get_client()
+        cache, cache_key, expire_time = await Cache.prepare_cache(cache_key="domain_cache")
         cache_params = await Cache.get_params(domain_id, controller_id)
-        expire_time = await Cache.get_expire_time()
-        cache_key = "domain_cache"
-        cache = cache_client.cache(cache_key)
 
         resource_data = await cache.get(key=cache_key, param=cache_params)
         if not resource_data or refresh:
@@ -627,15 +600,14 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
 
     @classmethod
     async def domain_list(cls, limit, offset, ordering, template: bool, refresh: bool):
-        cache_client = await Cache.get_client()
-        expire_time = await Cache.get_expire_time()
         if template == 0:
             cache_key = "vms_list_cache"
         else:
             cache_key = "templates_list_cache"
-        if ordering:
-            cache_key += "_" + ordering
-        cache = cache_client.cache(cache_key)
+
+        cache, cache_key, expire_time = await Cache.prepare_cache(
+            cache_key=cache_key, ordering=ordering
+        )
 
         cacheable_domain_list = await cache.get(cache_key)
         if not cacheable_domain_list or refresh:
