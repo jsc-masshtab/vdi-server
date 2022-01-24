@@ -16,9 +16,7 @@ theme:
     scheme: 'default'
     primary: 'blue grey'
     accent: 'deep purple'
-  font:
-    text: 'Roboto'
-    code: 'Roboto Mono'
+  font: false
   logo: '_assets/common/veil-32x32.png'
   favicon: '_assets/common/veil-32x32.ico'
 #  feature:
@@ -158,10 +156,16 @@ nav:
     - Аннотация: connect/operator_guide/annotate.md
     - Назначение программы: connect/operator_guide/general_info.md
     - Условия выполнения программы: connect/operator_guide/program_condition.md
-    - Установка и удаление программы:
-      - Проверка целостности VeiL Connect: connect/operator_guide/integrity_check.md
-      - Установка VeiL Connect: connect/operator_guide/install.md
-      - Удаление VeiL Connect: connect/operator_guide/delete.md
+    - Проверка целостности VeiL Connect: connect/operator_guide/integrity_check.md
+    - Установка VeiL Connect:
+      - Общие сведения: connect/operator_guide/install/index.md
+      - Установка VeiL Connect с CD/DVD диска: 
+        - Установка  на операционную систему Linux: connect/operator_guide/install/cd/linux.md
+        - Установка  на операционную систему Windows: connect/operator_guide/install/cd/win.md
+      - Установка VeiL Connect по сети Интернет с сервера НИИ "Масштаб":
+        - Установка   на операционную систему Linux: connect/operator_guide/install/net/linux.md
+        - Установка  на операционную систему Windows: connect/operator_guide/install/net/win.md
+    - Удаление VeiL Connect: connect/operator_guide/delete.md
     - Выполнение программы:
       - Подготовка к работе: connect/operator_guide/prepare.md
       - Общие правила при работе с программой: connect/operator_guide/rules.md
@@ -212,6 +216,8 @@ nav:
       - 3.0.0: broker/changelog/3.0.0.md
       - 2.1.4: broker/changelog/2.1.4.md
     - VeiL Connect:
+      - 1.10.0: connect/changelog/1.10.0.md
+      - 1.9.2: connect/changelog/1.9.2.md
       - 1.9.1: connect/changelog/1.9.1.md
       - 1.9.0: connect/changelog/1.9.0.md
       - 1.8.10: connect/changelog/1.8.10.md

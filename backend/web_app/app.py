@@ -36,9 +36,9 @@ from web_app.controller.resource_schema import resources_schema
 from web_app.controller.schema import controller_schema
 from web_app.front_ws_api.urls import ws_event_monitoring_urls
 from web_app.journal.schema import event_schema
-from web_app.journal.urls import journal_api_urls
 from web_app.pool.schema import pool_schema
 from web_app.settings.schema import settings_schema
+from web_app.statistics.schema import statistics_schema
 from web_app.task.schema import task_schema
 from web_app.thin_client_api.schema import thin_client_schema
 from web_app.thin_client_api.urls import thin_client_api_urls
@@ -80,13 +80,13 @@ handlers = [
         VdiTornadoGraphQLHandler,
         dict(graphiql=True, schema=thin_client_schema),
     ),
+    (r"/statistics", VdiTornadoGraphQLHandler, dict(graphiql=True, schema=statistics_schema))
 ]
 
 handlers += auth_api_urls
 handlers += thin_client_api_urls
 handlers += ws_event_monitoring_urls
 handlers += license_api_urls
-handlers += journal_api_urls
 
 
 def make_app():

@@ -38,7 +38,7 @@ NPM lint:
   script:
     - ng --version
     - npm run lint
-    - npm run build
+    - npm run build -- --prod
   only:
     changes:
       - frontend/**/*
@@ -52,7 +52,7 @@ Security check:
   before_script:
     - apk add --no-cache build-base
     - python -m pip install $PIP_ARGS --upgrade pip
-    - python -m pip install $PIP_ARGS pipenv safety
+    - python -m pip install $PIP_ARGS pipenv==2021.5.29 safety
     - pipenv install
     - pipenv lock --requirements > requirements.txt
   script:
