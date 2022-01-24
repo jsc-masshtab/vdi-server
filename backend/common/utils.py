@@ -1,6 +1,7 @@
 import asyncio
 import functools
 import signal
+import uuid
 from enum import Enum
 
 from yaaredis import StrictRedis
@@ -152,3 +153,61 @@ class Cache:
         except KeyError:
             expire_time = REDIS_EXPIRE_TIME
         return int(expire_time)
+
+    @staticmethod
+    async def uuid_to_str(resource_data: dict) -> dict:
+        """Принимает словарь и если он содержит значения UUID, то преобразует их в str."""
+        for key, value in resource_data.items():
+            if isinstance(value, dict):
+                await Cache.uuid_to_str(value)
+            else:
+                if isinstance(value, uuid.UUID):
+                    resource_data[key] = str(value)
+        return resource_data
+
+    @staticmethod
+    async def get_cacheable_resources(resources_list, resource_type_class) -> list:
+        resource_class_attrs = dir(resource_type_class)
+        cacheable_resources = list()
+
+        for resource_data in resources_list:
+            cacheable_resource_data = {key: value for key, value in resource_data.items() if
+                                       key in resource_class_attrs}
+
+            cacheable_resource_data = await Cache.uuid_to_str(cacheable_resource_data)
+            cacheable_resources.append(cacheable_resource_data)
+
+        return cacheable_resources
+
+    @staticmethod
+    async def prepare_cache(cache_key: str, ordering: str = None):
+        cache_client = await Cache.get_client()
+        expire_time = await Cache.get_expire_time()
+        if ordering:
+            cache_key += "_" + ordering
+        cache = cache_client.cache(cache_key)
+        return cache, cache_key, expire_time
+
+    @staticmethod
+    async def get_cacheable_resources_list(
+        cache,
+        cache_key,
+        expire_time,
+        limit,
+        offset,
+        resource_type,
+        resource_type_class,
+        ordering: str = None
+    ):
+        from web_app.controller.resource_schema import ResourcesQuery
+
+        resources_list = await ResourcesQuery.get_resources_list(
+            limit=limit, offset=offset, ordering=ordering, resource_type=resource_type
+        )
+        cacheable_resources_list = await Cache.get_cacheable_resources(
+            resources_list, resource_type_class
+        )
+        await cache.set(
+            key=cache_key, value=cacheable_resources_list, expire_time=expire_time
+        )
+        return cacheable_resources_list
