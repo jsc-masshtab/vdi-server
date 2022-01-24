@@ -189,58 +189,79 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
     """
 
     cluster = graphene.Field(
-        ResourceClusterType, cluster_id=graphene.UUID(), controller_id=graphene.UUID()
+        ResourceClusterType,
+        cluster_id=graphene.UUID(),
+        controller_id=graphene.UUID(),
+        refresh=graphene.Boolean(default_value=False)
     )
     clusters = graphene.List(
         ResourceClusterType,
         ordering=ShortString(),
         limit=graphene.Int(default_value=100),
         offset=graphene.Int(default_value=0),
+        refresh=graphene.Boolean(default_value=False)
     )
 
     resource_pool = graphene.Field(
         ResourcePoolType,
         resource_pool_id=graphene.UUID(),
         controller_id=graphene.UUID(),
+        refresh=graphene.Boolean(default_value=False)
     )
     resource_pools = graphene.List(
         ResourcePoolType,
         ordering=ShortString(),
         limit=graphene.Int(default_value=100),
         offset=graphene.Int(default_value=0),
+        refresh=graphene.Boolean(default_value=False)
     )
 
     node = graphene.Field(
-        ResourceNodeType, node_id=graphene.UUID(), controller_id=graphene.UUID()
+        ResourceNodeType,
+        node_id=graphene.UUID(),
+        controller_id=graphene.UUID(),
+        refresh=graphene.Boolean(default_value=False)
     )
     nodes = graphene.List(
         ResourceNodeType,
         ordering=ShortString(),
         limit=graphene.Int(default_value=100),
         offset=graphene.Int(default_value=0),
+        refresh=graphene.Boolean(default_value=False)
     )
 
     datapool = graphene.Field(
-        ResourceDataPoolType, datapool_id=graphene.UUID(), controller_id=graphene.UUID()
+        ResourceDataPoolType,
+        datapool_id=graphene.UUID(),
+        controller_id=graphene.UUID(),
+        refresh=graphene.Boolean(default_value=False)
     )
     datapools = graphene.List(
         ResourceDataPoolType,
         ordering=ShortString(),
         limit=graphene.Int(default_value=100),
         offset=graphene.Int(default_value=0),
+        refresh=graphene.Boolean(default_value=False)
     )
 
     template = graphene.Field(
-        ResourceVmType, template_id=graphene.UUID(), controller_id=graphene.UUID()
+        ResourceVmType,
+        template_id=graphene.UUID(),
+        controller_id=graphene.UUID(),
+        refresh=graphene.Boolean(default_value=False)
     )
     vm = graphene.Field(
-        ResourceVmType, vm_id=graphene.UUID(), controller_id=graphene.UUID()
+        ResourceVmType,
+        vm_id=graphene.UUID(),
+        controller_id=graphene.UUID(),
+        refresh=graphene.Boolean(default_value=False)
     )
     templates = graphene.List(
         ResourceVmType,
         ordering=ShortString(),
         limit=graphene.Int(default_value=100),
         offset=graphene.Int(default_value=0),
+        refresh=graphene.Boolean(default_value=False)
     )
     vms = templates
 
@@ -281,6 +302,15 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
 
             for data in veil_response.response:
                 resource = data.public_attrs
+
+                if resource_type == "domain":
+                    if data.guest_agent is None:
+                        resource["guest_agent"] = data.guest_agent
+                    else:
+                        resource["guest_agent"] = data.guest_agent.qemu_state
+                    resource["hostname"] = data.hostname
+                    resource["parent_name"] = data.parent_name
+
                 # Добавляем id, так как в response он не присутствует в чистом виде
                 resource["id"] = resource["api_object_id"]
                 # Добавляем параметры контроллера на VDI
@@ -300,7 +330,6 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
             resources_list.sort(
                 key=lambda data: data["controller"]["verbose_name"], reverse=True
             )
-
         return resources_list
 
     @classmethod
@@ -348,15 +377,12 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
     # Кластеры
     @classmethod
     @administrator_required
-    async def resolve_cluster(cls, root, info, creator, cluster_id, controller_id):
-        cache_client = await Cache.get_client()
+    async def resolve_cluster(cls, root, info, creator, cluster_id, controller_id, refresh: bool):
+        cache, cache_key, expire_time = await Cache.prepare_cache(cache_key="cluster_cache")
         cache_params = await Cache.get_params(cluster_id, controller_id)
-        expire_time = await Cache.get_expire_time()
-        cache_key = "cluster_cache"
-        cache = cache_client.cache(cache_key)
 
         resource_data = await cache.get(key=cache_key, param=cache_params)
-        if not resource_data:
+        if not resource_data or refresh:
             resource_data = await cls.get_resource_data(
                 resource_type="cluster", resource_id=cluster_id, controller_id=controller_id
             )
@@ -368,13 +394,27 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
     @classmethod
     @administrator_required
     async def resolve_clusters(
-        cls, root, info, creator, limit, offset, ordering: str = None
+        cls, root, info, creator, limit, offset, refresh: bool, ordering: str = None
     ):
-        clusters_list = await cls.get_resources_list(
-            limit=limit, offset=offset, ordering=ordering, resource_type="cluster"
+        cache, cache_key, expire_time = await Cache.prepare_cache(
+            cache_key="clusters_cache", ordering=ordering
         )
+
+        cacheable_clusters_list = await cache.get(cache_key)
+        if not cacheable_clusters_list or refresh:
+            cacheable_clusters_list = await Cache.get_cacheable_resources_list(
+                cache=cache,
+                cache_key=cache_key,
+                expire_time=expire_time,
+                limit=limit,
+                offset=offset,
+                resource_type="cluster",
+                resource_type_class=ResourceClusterType,
+                ordering=ordering
+            )
+
         veil_clusters_list = list()
-        for resource_data in clusters_list:
+        for resource_data in cacheable_clusters_list:
             veil_clusters_list.append(ResourceClusterType(**resource_data))
         return veil_clusters_list
 
@@ -382,16 +422,13 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
     @classmethod
     @administrator_required
     async def resolve_resource_pool(
-        cls, root, info, creator, resource_pool_id, controller_id
+        cls, root, info, creator, resource_pool_id, controller_id, refresh: bool
     ):
-        cache_client = await Cache.get_client()
+        cache, cache_key, expire_time = await Cache.prepare_cache(cache_key="resource_pool_cache")
         cache_params = await Cache.get_params(resource_pool_id, controller_id)
-        expire_time = await Cache.get_expire_time()
-        cache_key = "resource_pool_cache"
-        cache = cache_client.cache(cache_key)
 
         resource_data = await cache.get(key=cache_key, param=cache_params)
-        if not resource_data:
+        if not resource_data or refresh:
             resource_data = await cls.get_resource_data(
                 resource_type="resource_pool",
                 resource_id=resource_pool_id,
@@ -405,28 +442,39 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
     @classmethod
     @administrator_required
     async def resolve_resource_pools(
-        cls, root, info, creator, limit, offset, ordering: str = None
+        cls, root, info, creator, limit, offset, refresh: bool, ordering: str = None
     ):
-        resource_pools_list = await cls.get_resources_list(
-            limit=limit, offset=offset, ordering=ordering, resource_type="resource_pool"
+        cache, cache_key, expire_time = await Cache.prepare_cache(
+            cache_key="resource_pools_cache", ordering=ordering
         )
+
+        cacheable_resource_pools_list = await cache.get(cache_key)
+        if not cacheable_resource_pools_list or refresh:
+            cacheable_resource_pools_list = await Cache.get_cacheable_resources_list(
+                cache=cache,
+                cache_key=cache_key,
+                expire_time=expire_time,
+                limit=limit,
+                offset=offset,
+                resource_type="resource_pool",
+                resource_type_class=ResourcePoolType,
+                ordering=ordering
+            )
+
         veil_resource_pools_list = list()
-        for data in resource_pools_list:
+        for data in cacheable_resource_pools_list:
             veil_resource_pools_list.append(ResourcePoolType(**data))
         return veil_resource_pools_list
 
     # Ноды
     @classmethod
     @administrator_required
-    async def resolve_node(cls, root, info, creator, node_id, controller_id):
-        cache_client = await Cache.get_client()
+    async def resolve_node(cls, root, info, creator, node_id, controller_id, refresh: bool):
+        cache, cache_key, expire_time = await Cache.prepare_cache(cache_key="node_cache")
         cache_params = await Cache.get_params(node_id, controller_id)
-        expire_time = await Cache.get_expire_time()
-        cache_key = "node_cache"
-        cache = cache_client.cache(cache_key)
 
         resource_data = await cache.get(key=cache_key, param=cache_params)
-        if not resource_data:
+        if not resource_data or refresh:
             resource_data = await cls.get_resource_data(
                 resource_type="node", resource_id=node_id, controller_id=controller_id
             )
@@ -439,28 +487,39 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
     @classmethod
     @administrator_required
     async def resolve_nodes(
-        cls, root, info, creator, limit, offset, ordering: str = None
+        cls, root, info, creator, limit, offset, refresh: bool, ordering: str = None
     ):
-        nodes_list = await cls.get_resources_list(
-            limit=limit, offset=offset, ordering=ordering, resource_type="node"
+        cache, cache_key, expire_time = await Cache.prepare_cache(
+            cache_key="nodes_cache", ordering=ordering
         )
+
+        cacheable_nodes_list = await cache.get(cache_key)
+        if not cacheable_nodes_list or refresh:
+            cacheable_nodes_list = await Cache.get_cacheable_resources_list(
+                cache=cache,
+                cache_key=cache_key,
+                expire_time=expire_time,
+                limit=limit,
+                offset=offset,
+                resource_type="node",
+                resource_type_class=ResourceNodeType,
+                ordering=ordering
+            )
+
         veil_nodes_list = list()
-        for resource_data in nodes_list:
+        for resource_data in cacheable_nodes_list:
             veil_nodes_list.append(ResourceNodeType(**resource_data))
         return veil_nodes_list
 
     # Пулы данных
     @classmethod
     @administrator_required
-    async def resolve_datapool(cls, root, info, creator, datapool_id, controller_id):
-        cache_client = await Cache.get_client()
+    async def resolve_datapool(cls, root, info, creator, datapool_id, controller_id, refresh: bool):
+        cache, cache_key, expire_time = await Cache.prepare_cache(cache_key="datapool_cache")
         cache_params = await Cache.get_params(datapool_id, controller_id)
-        expire_time = await Cache.get_expire_time()
-        cache_key = "datapool_cache"
-        cache = cache_client.cache(cache_key)
 
         resource_data = await cache.get(key=cache_key, param=cache_params)
-        if not resource_data:
+        if not resource_data or refresh:
             resource_data = await cls.get_resource_data(
                 resource_type="datapool",
                 resource_id=datapool_id,
@@ -474,19 +533,33 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
     @classmethod
     @administrator_required
     async def resolve_datapools(
-        cls, root, info, creator, limit, offset, ordering: str = None
+        cls, root, info, creator, limit, offset, refresh: bool, ordering: str = None
     ):
-        datapools_list = await cls.get_resources_list(
-            limit=limit, offset=offset, ordering=ordering, resource_type="datapool"
+        cache, cache_key, expire_time = await Cache.prepare_cache(
+            cache_key="datapools_cache", ordering=ordering
         )
+
+        cacheable_datapools_list = await cache.get(cache_key)
+        if not cacheable_datapools_list or refresh:
+            cacheable_datapools_list = await Cache.get_cacheable_resources_list(
+                cache=cache,
+                cache_key=cache_key,
+                expire_time=expire_time,
+                limit=limit,
+                offset=offset,
+                resource_type="datapool",
+                resource_type_class=ResourceDataPoolType,
+                ordering=ordering
+            )
+
         veil_datapools_list = list()
-        for resource_data in datapools_list:
+        for resource_data in cacheable_datapools_list:
             veil_datapools_list.append(ResourceDataPoolType(**resource_data))
         return veil_datapools_list
 
     # Виртуальные машины и шаблоны
     @classmethod
-    async def domain_info(cls, domain_id, controller_id):
+    async def domain_info(cls, domain_id, controller_id, refresh: bool):
         """Пересылаем запрос на VeiL ECP.
 
         Даже если отправить template=True, а с таким ID только ВМ - VeiL вернет данные.
@@ -495,14 +568,11 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
         veil_domain = controller.veil_client.domain(domain_id=str(domain_id))
         await veil_domain.info()
 
-        cache_client = await Cache.get_client()
+        cache, cache_key, expire_time = await Cache.prepare_cache(cache_key="domain_cache")
         cache_params = await Cache.get_params(domain_id, controller_id)
-        expire_time = await Cache.get_expire_time()
-        cache_key = "domain_cache"
-        cache = cache_client.cache(cache_key)
 
         resource_data = await cache.get(key=cache_key, param=cache_params)
-        if not resource_data:
+        if not resource_data or refresh:
             resource_data = await cls.get_resource_data(
                 resource_type="domain", resource_id=domain_id, controller_id=controller_id
             )
@@ -531,53 +601,71 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
 
     @classmethod
     @administrator_required
-    async def resolve_vm(cls, root, info, creator, vm_id, controller_id):
+    async def resolve_vm(cls, root, info, creator, vm_id, controller_id, refresh: bool):
         """Обёртка для получения информации о ВМ на ECP."""
-        return await cls.domain_info(domain_id=vm_id, controller_id=controller_id)
+        return await cls.domain_info(domain_id=vm_id, controller_id=controller_id, refresh=refresh)
 
     @classmethod
     @administrator_required
-    async def resolve_template(cls, root, info, creator, template_id, controller_id):
+    async def resolve_template(cls, root, info, creator, template_id, controller_id, refresh: bool):
         """Обёртка для получения информации о шаблоне ВМ на ECP."""
-        return await cls.domain_info(domain_id=template_id, controller_id=controller_id)
+        return await cls.domain_info(domain_id=template_id, controller_id=controller_id, refresh=refresh)
 
     @classmethod
-    async def domain_list(cls, limit, offset, ordering, template: bool):
-        domains = await cls.get_resources_list(
-            limit=limit,
-            offset=offset,
-            ordering=ordering,
-            template=template,
-            resource_type="domain",
+    async def domain_list(cls, limit, offset, ordering, template: bool, refresh: bool):
+        if template == 0:
+            cache_key = "vms_list_cache"
+        else:
+            cache_key = "templates_list_cache"
+
+        cache, cache_key, expire_time = await Cache.prepare_cache(
+            cache_key=cache_key, ordering=ordering
         )
+
+        cacheable_domain_list = await cache.get(cache_key)
+        if not cacheable_domain_list or refresh:
+            domains = await cls.get_resources_list(
+                limit=limit,
+                offset=offset,
+                ordering=ordering,
+                template=template,
+                resource_type="domain",
+            )
+
+            for data in domains:
+                vm = await Vm.get(data["id"])
+                if vm:
+                    pool = await Pool.get(vm.pool_id)
+                    data["pool_name"] = pool.verbose_name
+                else:
+                    data["pool_name"] = "--"
+
+            if ordering == "pool_name":
+                domains.sort(key=lambda data: data["pool_name"])
+            elif ordering == "-pool_name":
+                domains.sort(key=lambda data: data["pool_name"], reverse=True)
+
+            cacheable_domain_list = await Cache.get_cacheable_resources(
+                domains, ResourceVmType
+            )
+            await cache.set(
+                key=cache_key, value=cacheable_domain_list, expire_time=expire_time
+            )
+
         domain_list = list()
-
-        for data in domains:
-            vm = await Vm.get(data["id"])
-            if vm:
-                pool = await Pool.get(vm.pool_id)
-                data["pool_name"] = pool.verbose_name
-            else:
-                data["pool_name"] = "--"
-
-        if ordering == "pool_name":
-            domains.sort(key=lambda data: data["pool_name"])
-        elif ordering == "-pool_name":
-            domains.sort(key=lambda data: data["pool_name"], reverse=True)
-
-        for resource_data in domains:
+        for resource_data in cacheable_domain_list:
             domain_list.append(ResourceVmType(**resource_data))
         return domain_list
 
     @classmethod
     @administrator_required
     async def resolve_vms(
-        cls, root, info, creator, limit, offset, ordering: str = None
+        cls, root, info, creator, limit, offset, refresh: bool, ordering: str = None
     ):
         """Все виртуальные машины на подключенных ECP VeiL."""
         # Для каждого контроллера получаем список всех ВМ за вычетом шаблонов.
         vm_type_list = await cls.domain_list(
-            template=0, limit=limit, offset=offset, ordering=ordering
+            template=0, limit=limit, offset=offset, ordering=ordering, refresh=refresh
         )
 
         return vm_type_list
@@ -585,12 +673,12 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
     @classmethod
     @administrator_required
     async def resolve_templates(
-        cls, root, info, creator, limit, offset, ordering: str = None
+        cls, root, info, creator, limit, offset, refresh: bool, ordering: str = None
     ):
         """Все шаблоны на подключенных ECP VeiL."""
         # Для каждого контроллера получаем список всех шаблонов за вычетом ВМ.
         template_type_list = await cls.domain_list(
-            template=1, limit=limit, offset=offset, ordering=ordering
+            template=1, limit=limit, offset=offset, ordering=ordering, refresh=refresh
         )
 
         return template_type_list
