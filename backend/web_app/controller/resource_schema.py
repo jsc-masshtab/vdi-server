@@ -302,6 +302,15 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
 
             for data in veil_response.response:
                 resource = data.public_attrs
+
+                if resource_type == "domain":
+                    if data.guest_agent is None:
+                        resource["guest_agent"] = data.guest_agent
+                    else:
+                        resource["guest_agent"] = data.guest_agent.qemu_state
+                    resource["hostname"] = data.hostname
+                    resource["parent_name"] = data.parent_name
+
                 # Добавляем id, так как в response он не присутствует в чистом виде
                 resource["id"] = resource["api_object_id"]
                 # Добавляем параметры контроллера на VDI
@@ -635,12 +644,6 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
             cacheable_domain_list = await Cache.get_cacheable_resources(
                 domains, ResourceVmType
             )
-            # TODO Получать значения вместо удаления
-            for cacheable_domain in cacheable_domain_list:
-                del cacheable_domain["hostname"]
-                del cacheable_domain["guest_agent"]
-                del cacheable_domain["parent_name"]
-
             await cache.set(
                 key=cache_key, value=cacheable_domain_list, expire_time=expire_time
             )
