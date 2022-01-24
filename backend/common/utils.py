@@ -187,3 +187,27 @@ class Cache:
             cache_key += "_" + ordering
         cache = cache_client.cache(cache_key)
         return cache, cache_key, expire_time
+
+    @staticmethod
+    async def get_cacheable_resources_list(
+        cache,
+        cache_key,
+        expire_time,
+        limit,
+        offset,
+        resource_type,
+        resource_type_class,
+        ordering: str = None
+    ):
+        from web_app.controller.resource_schema import ResourcesQuery
+
+        resources_list = await ResourcesQuery.get_resources_list(
+            limit=limit, offset=offset, ordering=ordering, resource_type=resource_type
+        )
+        cacheable_resources_list = await Cache.get_cacheable_resources(
+            resources_list, resource_type_class
+        )
+        await cache.set(
+            key=cache_key, value=cacheable_resources_list, expire_time=expire_time
+        )
+        return cacheable_resources_list

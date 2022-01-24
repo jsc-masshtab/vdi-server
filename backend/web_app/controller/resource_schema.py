@@ -402,14 +402,15 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
 
         cacheable_clusters_list = await cache.get(cache_key)
         if not cacheable_clusters_list or refresh:
-            clusters_list = await cls.get_resources_list(
-                limit=limit, offset=offset, ordering=ordering, resource_type="cluster"
-            )
-            cacheable_clusters_list = await Cache.get_cacheable_resources(
-                clusters_list, ResourceClusterType
-            )
-            await cache.set(
-                key=cache_key, value=cacheable_clusters_list, expire_time=expire_time
+            cacheable_clusters_list = await Cache.get_cacheable_resources_list(
+                cache=cache,
+                cache_key=cache_key,
+                expire_time=expire_time,
+                limit=limit,
+                offset=offset,
+                resource_type="cluster",
+                resource_type_class=ResourceClusterType,
+                ordering=ordering
             )
 
         veil_clusters_list = list()
@@ -449,14 +450,15 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
 
         cacheable_resource_pools_list = await cache.get(cache_key)
         if not cacheable_resource_pools_list or refresh:
-            resource_pools_list = await cls.get_resources_list(
-                limit=limit, offset=offset, ordering=ordering, resource_type="resource_pool"
-            )
-            cacheable_resource_pools_list = await Cache.get_cacheable_resources(
-                resource_pools_list, ResourcePoolType
-            )
-            await cache.set(
-                key=cache_key, value=cacheable_resource_pools_list, expire_time=expire_time
+            cacheable_resource_pools_list = await Cache.get_cacheable_resources_list(
+                cache=cache,
+                cache_key=cache_key,
+                expire_time=expire_time,
+                limit=limit,
+                offset=offset,
+                resource_type="resource_pool",
+                resource_type_class=ResourcePoolType,
+                ordering=ordering
             )
 
         veil_resource_pools_list = list()
@@ -493,14 +495,15 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
 
         cacheable_nodes_list = await cache.get(cache_key)
         if not cacheable_nodes_list or refresh:
-            nodes_list = await cls.get_resources_list(
-                limit=limit, offset=offset, ordering=ordering, resource_type="node"
-            )
-            cacheable_nodes_list = await Cache.get_cacheable_resources(
-                nodes_list, ResourceNodeType
-            )
-            await cache.set(
-                key=cache_key, value=cacheable_nodes_list, expire_time=expire_time
+            cacheable_nodes_list = await Cache.get_cacheable_resources_list(
+                cache=cache,
+                cache_key=cache_key,
+                expire_time=expire_time,
+                limit=limit,
+                offset=offset,
+                resource_type="node",
+                resource_type_class=ResourceNodeType,
+                ordering=ordering
             )
 
         veil_nodes_list = list()
@@ -538,14 +541,15 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
 
         cacheable_datapools_list = await cache.get(cache_key)
         if not cacheable_datapools_list or refresh:
-            datapools_list = await cls.get_resources_list(
-                limit=limit, offset=offset, ordering=ordering, resource_type="datapool"
-            )
-            cacheable_datapools_list = await Cache.get_cacheable_resources(
-                datapools_list, ResourceDataPoolType
-            )
-            await cache.set(
-                key=cache_key, value=cacheable_datapools_list, expire_time=expire_time
+            cacheable_datapools_list = await Cache.get_cacheable_resources_list(
+                cache=cache,
+                cache_key=cache_key,
+                expire_time=expire_time,
+                limit=limit,
+                offset=offset,
+                resource_type="datapool",
+                resource_type_class=ResourceDataPoolType,
+                ordering=ordering
             )
 
         veil_datapools_list = list()
