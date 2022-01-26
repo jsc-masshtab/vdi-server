@@ -117,6 +117,16 @@ export class ThinClientDetailsComponent implements OnInit, OnDestroy {
       title: 'Процент сетевых потерь',
       property: 'loss_percentage',
       type: 'string'
+    },
+    {
+      title: 'Mac адрес',
+      property: 'mac_address',
+      type: 'string'
+    },
+    {
+      title: 'Имя хоста',
+      property: 'hostname',
+      type: 'string'
     }
   ];
 
