@@ -13,7 +13,7 @@
       <div class="details-slide">
         <div class="details-slide-into">
           <ng-container *ngIf="url" >
-            <iframe  [src]="url" width="100%" height="100%"></iframe>
+            <iframe #iframe [src]="url" width="100%" height="100%"></iframe>
           </ng-container>
         </div>
       </div>

@@ -9,6 +9,7 @@ import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { AppRoutingModule } from '../app-routing.module';
 import { AddSelectComponent } from './components/add-select/add-select';
 import { ButtonRefreshComponent } from './components/button-refresh/button-refresh.component';
+import { CheckboxInputComponent } from './components/checkbox-input/checkbox-input.component';
 import { PaginationComponent } from './components/pagination/pagination.component';
 import { TableComponentComponent } from './components/table-component/table-component.component';
 import { TableIntoComponent } from './components/table-into-component/table-into';
@@ -31,7 +32,8 @@ const COMPONENTS = [
   TableIntoComponent,
   PaginationComponent,
   AddSelectComponent,
-  ButtonRefreshComponent
+  ButtonRefreshComponent,
+  CheckboxInputComponent
 ];
 
 const DIRECTIVES = [
