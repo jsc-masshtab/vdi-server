@@ -132,6 +132,11 @@ nav:
         - Группы: broker/operator_guide/groups.md
         - Пользователи: broker/operator_guide/users.md
         - Службы каталогов: broker/operator_guide/ad.md
+        - Single Sign-On:
+          - Общие сведения: broker/operator_guide/sso/index.md
+          - Настройка службы каталогов: broker/operator_guide/sso/ad.md
+          - Включение и отключение SSO: broker/operator_guide/sso/enable.md
+          - Настройка браузера для работы с SSO: broker/operator_guide/sso/browser.md
         - Кэширование: broker/operator_guide/cache.md
         - SMTP: broker/operator_guide/smtp.md
       - Журнал: 
