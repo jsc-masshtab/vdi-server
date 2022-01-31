@@ -71,7 +71,7 @@ export class TemplatesService {
 
     public getTemplate(id: string, controller_address: string, refresh: boolean): QueryRef<any, any> {
 
-      let query: string = ` query resources($id: UUID, $controller_address: UUID) {
+        let query: string = ` query resources($id: UUID, $controller_address: UUID) {
                                 template(template_id: $id, controller_id: $controller_address) {
                                     verbose_name
                                     description
@@ -100,35 +100,35 @@ export class TemplatesService {
                                 }
                             }`
 
-      if (refresh) {
-        query = ` query resources($id: UUID, $controller_address: UUID, $refresh: Boolean) {
-                    template(template_id: $id, controller_id: $controller_address, refresh: $refresh) {
-                        verbose_name
-                        description
-                        os_type
-                        os_version
-                        cpu_count
-                        memory_count
-                        tablet
-                        domain_tags {
-                            colour
-                            verbose_name
-                            slug
-                        }
-                        ha_enabled
-                        disastery_enabled
-                        remote_access
-                        spice_stream
-                        status
-                        user_power_state
-                        boot_type
-                        start_on_boot
-                        resource_pool {
-                            id
-                            verbose_name
-                        }
-                    }
-                }`
+        if (refresh) {
+          query = ` query resources($id: UUID, $controller_address: UUID, $refresh: Boolean) {
+                      template(template_id: $id, controller_id: $controller_address, refresh: $refresh) {
+                          verbose_name
+                          description
+                          os_type
+                          os_version
+                          cpu_count
+                          memory_count
+                          tablet
+                          domain_tags {
+                              colour
+                              verbose_name
+                              slug
+                          }
+                          ha_enabled
+                          disastery_enabled
+                          remote_access
+                          spice_stream
+                          status
+                          user_power_state
+                          boot_type
+                          start_on_boot
+                          resource_pool {
+                              id
+                              verbose_name
+                          }
+                      }
+                  }`
         }
         return this.service.watchQuery({
             query: gql(query),
