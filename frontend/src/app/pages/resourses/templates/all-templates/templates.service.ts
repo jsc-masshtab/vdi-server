@@ -131,13 +131,13 @@ export class TemplatesService {
                 }`
         }
         return this.service.watchQuery({
-          query: gql(query),
-          variables: {
-            method: 'GET',
-            id,
-            controller_address,
-            refresh
-          }
+            query: gql(query),
+            variables: {
+                method: 'GET',
+                id,
+                controller_address,
+                refresh
+            }
         });
     }
 
