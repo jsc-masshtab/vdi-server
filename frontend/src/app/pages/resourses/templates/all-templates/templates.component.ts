@@ -22,6 +22,8 @@ export class TemplatesComponent extends DetailsMove implements OnInit, OnDestroy
 
   @Input() filter: object
 
+  public refresh: boolean = false
+
   private sub: Subscription;
 
   public templates: object[] = [];
@@ -58,21 +60,24 @@ export class TemplatesComponent extends DetailsMove implements OnInit, OnDestroy
     this.getTemplates();
   }
 
-  public getTemplates() {
+  public getTemplates(refresh?) {
     if (this.sub) {
       this.sub.unsubscribe();
     }
     this.waitService.setWait(true);
 
     let filtered = (data) => {
-      if (this.filter) {
+      if ((this.filter && !this.refresh) || (this.filter && this.refresh)) {
         return data.data.controller.templates
       } else {
         return data.data.templates
       }
     }
 
-    this.sub = this.service.getAllTemplates(this.filter).valueChanges.pipe(map(data => filtered(data))).subscribe((data) => {
+    if (refresh) {
+      this.refresh = refresh
+    }
+    this.sub = this.service.getAllTemplates(this.filter, this.refresh).valueChanges.pipe(map(data => filtered(data))).subscribe((data) => {
       this.templates = data;
       this.waitService.setWait(false);
     });

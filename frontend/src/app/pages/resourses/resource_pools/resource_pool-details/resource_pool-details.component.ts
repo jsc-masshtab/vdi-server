@@ -22,6 +22,7 @@ export class ResourcePoolDetailsComponent implements OnInit, OnDestroy {
   private sub: Subscription;
 
   public host: boolean = false;
+  public refresh: boolean = false;
 
   public resource_pool: ICollection = {};
   public collectionDetails: object[] = [
@@ -92,12 +93,15 @@ export class ResourcePoolDetailsComponent implements OnInit, OnDestroy {
     });
   }
 
-  public getResourcePool() {
+  public getResourcePool(refresh?) {
     if (this.sub) {
       this.sub.unsubscribe();
     }
     this.host = false;
-    this.sub = this.service.getResourcePool(this.idResourcePool, this.address).valueChanges.pipe(map(data => data.data.resource_pool))
+    if (refresh) {
+      this.refresh = refresh
+    }
+    this.sub = this.service.getResourcePool(this.idResourcePool, this.address, this.refresh).valueChanges.pipe(map(data => data.data.resource_pool))
       .subscribe((data) => {
         this.resource_pool = data;
         this.host = true;

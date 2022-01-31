@@ -8,7 +8,7 @@
         </div>
     </div>
     <div class="details-control-panel">
-        <vdi-button-refresh (clickRefresh)="getNode()" ></vdi-button-refresh>
+        <vdi-button-refresh (clickRefresh)="getNode(true)" ></vdi-button-refresh>
     </div>
 
     <div class="details-row">
@@ -18,20 +18,20 @@
             <li (click)="routeTo('vms')" [class.active]="menuActive === 'vms'" title="Виртуальные машины"><fa-icon [icon]="['fas','desktop']"></fa-icon><span class="name">Виртуальные машины</span></li>
             <li (click)="routeTo('templates')" [class.active]="menuActive === 'templates'" title="Шаблоны виртуальныx машин"><fa-icon [icon]="['fas','tv']"></fa-icon><span class="name">Шаблоны ВМ</span></li>
         </ul>
-        
+
         <div class="details-slide" *ngIf="host">
             <div class="details-slide-header">
                 <ng-container *ngIf="menuActive === 'info'">Информация о сервере</ng-container>
                 <ng-container *ngIf="menuActive === 'datapools'">Пулы данных сервера</ng-container>
                 <ng-container *ngIf="menuActive === 'templates'">Шаблоны ВМ сервера</ng-container>
-                <ng-container *ngIf="menuActive === 'vms'">ВМ сервера</ng-container>  
+                <ng-container *ngIf="menuActive === 'vms'">ВМ сервера</ng-container>
             </div>
             <div class="details-slide-into">
                 <vdi-table-into [item]="node" [collection]="collection" *ngIf="menuActive === 'info'"></vdi-table-into>
                 <vdi-datapools [filter]="filter" *ngIf="menuActive === 'datapools'"></vdi-datapools>
                 <vdi-vms [filter]="filter" *ngIf="menuActive === 'vms'"></vdi-vms>
                 <vdi-templates [filter]="filter" *ngIf="menuActive === 'templates'"></vdi-templates>
-            </div>     
+            </div>
         </div>
     </div>
 </div>

@@ -22,6 +22,7 @@ export class ClusterDetailsComponent implements OnInit, OnDestroy {
   private sub: Subscription;
 
   public host: boolean = false;
+  public refresh: boolean = false;
 
   public cluster: ICollection = {};
   public collectionDetails: object[] = [
@@ -94,12 +95,15 @@ export class ClusterDetailsComponent implements OnInit, OnDestroy {
     });
   }
 
-  public getCluster() {
+  public getCluster(refresh?) {
     if (this.sub) {
       this.sub.unsubscribe();
     }
     this.host = false;
-    this.sub = this.service.getCluster(this.idCluster, this.address).valueChanges.pipe(map(data => data.data.cluster))
+    if (refresh) {
+      this.refresh = refresh
+    }
+    this.sub = this.service.getCluster(this.idCluster, this.address, this.refresh).valueChanges.pipe(map(data => data.data.cluster))
       .subscribe((data) => {
         this.cluster = data;
         this.host = true;

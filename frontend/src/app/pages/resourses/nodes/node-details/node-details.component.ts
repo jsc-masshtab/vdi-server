@@ -21,6 +21,7 @@ export class NodeDetailsComponent implements OnInit, OnDestroy {
   private sub: Subscription;
 
   public host: boolean = false;
+  public refresh: boolean = false;
 
   public node: TypeNode = {};
 
@@ -98,12 +99,15 @@ export class NodeDetailsComponent implements OnInit, OnDestroy {
     });
   }
 
-  public getNode() {
+  public getNode(refresh?) {
     if (this.sub) {
       this.sub.unsubscribe();
     }
     this.host = false;
-    this.sub = this.service.getNode(this.node_id, this.address).valueChanges.pipe(map(data => data.data.node))
+    if (refresh) {
+      this.refresh = refresh
+    }
+    this.sub = this.service.getNode(this.node_id, this.address, this.refresh).valueChanges.pipe(map(data => data.data.node))
       .subscribe((data) => {
         this.node = data;
         this.host = true;
