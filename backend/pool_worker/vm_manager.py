@@ -236,29 +236,20 @@ class VmManager:
                         redis_message_data_dict["msg_type"] != WsMessageType.DATA.value:  # noqa
                         continue
 
-                    description = redis_message_data_dict.get("description")
-                    if description is None:
+                    tk_conn_event = redis_message_data_dict.get("tk_conn_event")
+                    if tk_conn_event is None:
                         continue
 
                     vm_id_for_action = None  # id машины над которой произвести действие
 
-                    if description == TkConnectionEvent.VM_CHANGED.name:
-                        prev_vm_id = redis_message_data_dict.get("prev_vm_id")
+                    if tk_conn_event == TkConnectionEvent.VM_CONNECTED.value:
                         vm_id = redis_message_data_dict.get("vm_id")
-
-                        if vm_id is None and prev_vm_id:
-                            # Пользователь отключился от ВМ
-                            vm_id_for_action = prev_vm_id
-                        elif vm_id:
-                            # Отменить действие, если пользователь успел подключиться к ВМ до
-                            # до таймаута
-                            await self._cancel_vm_action_coroutine(vm_id)
-                            continue
-                    elif description == TkConnectionEvent.CONNECTION_CLOSED.name:
+                        await self._cancel_vm_action_coroutine(vm_id)
+                    elif tk_conn_event == TkConnectionEvent.VM_DISCONNECTED.value:
+                        vm_id_for_action = redis_message_data_dict.get("vm_id")
+                    elif tk_conn_event == TkConnectionEvent.CONNECTION_CLOSED.value:
                         # Пользователь отключился от VDI
-                        vm_id = redis_message_data_dict.get("vm_id")
-                        if vm_id:
-                            vm_id_for_action = vm_id
+                        vm_id_for_action = redis_message_data_dict.get("vm_id")
 
                     if vm_id_for_action:
                         await self._cancel_vm_action_coroutine(vm_id_for_action)

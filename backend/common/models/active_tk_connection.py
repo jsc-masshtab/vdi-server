@@ -2,9 +2,7 @@
 import uuid
 from enum import Enum
 
-from sqlalchemy import (
-    Enum as AlchemyEnum
-)
+from sqlalchemy import desc
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import and_, func
 
@@ -13,6 +11,7 @@ from common.languages import _local_
 from common.log.journal import system_logger
 from common.models.auth import User
 from common.models.pool import Pool
+from common.models.tk_vm_connection import TkVmConnection
 from common.models.vm import Vm
 from common.subscription_sources import THIN_CLIENTS_SUBSCRIPTION
 from common.veil.veil_gino import AbstractSortableStatusModel
@@ -26,9 +25,13 @@ from web_app.auth.license.utils import License
 class TkConnectionEvent(Enum):
     """События от ТК."""
 
-    VM_CHANGED = "vm_changed"  # ВМ изменилась (подключение/отключение)
+    VM_CHANGED = "vm_changed"  # ВМ изменилась (подключение/отключение). Outdated.
+    # Оставлено для поддержки тонких клиентов до версии 1.10.0 включительно
+
+    VM_CONNECTED = "vm_connected"  # Клиент подключился к ВМ
+    VM_DISCONNECTED = "vm_disconnected"  # Клиент отключился от ВМ
     VM_CONNECTION_ERROR = "vm_connection_error"  # Не удалось подключиться к ВМ
-    CONNECTION_CLOSED = "connection_closed"  # Соединение с сервером завершилось
+    CONNECTION_CLOSED = "connection_closed"  # Соединение с сервером VDI завершилось
     USER_GUI = "user_gui"  # Юзер нажал кнопку/кликнул
     NETWORK_STATS = "network_stats"  # Обновление сетевой статистики
 
@@ -42,7 +45,7 @@ class ActiveTkConnection(db.Model, AbstractSortableStatusModel):
 
     user_id = db.Column(UUID(), nullable=True)  # Сделан nullable=True для работы в режиме без авторизации
     veil_connect_version = db.Column(db.Unicode(length=128))
-    vm_id = db.Column(UUID())
+
     tk_ip = db.Column(db.Unicode(length=128))
     tk_os = db.Column(db.Unicode(length=128))
 
@@ -58,16 +61,6 @@ class ActiveTkConnection(db.Model, AbstractSortableStatusModel):
     disconnected = db.Column(
         db.DateTime(timezone=True)
     )  # Если это поле None, значит соединение активно
-
-    connection_type = db.Column(AlchemyEnum(Pool.PoolConnectionTypes), nullable=True)  # тип подключения к ВМ
-    is_connection_secure = db.Column(db.Boolean(), default=False, nullable=False)  # используется ли TLS
-    # (речь о соединении с ВМ)
-
-    # network stats overall (RDP/Spice). Текущие(последние) Характеристики взаимодействия ТК <-> ВМ
-    read_speed = db.Column(db.Integer(), default=0)  # Скорость получения байт с ВМ на ТК
-    write_speed = db.Column(db.Integer(), default=0)  # Отправка байт. Только для RDP. Спайс не дает эти данные
-    avg_rtt = db.Column(db.Float(), default=0)
-    loss_percentage = db.Column(db.Integer(), default=0)
 
     # additional data about client machine
     mac_address = db.Column(db.Unicode(length=128), nullable=True)
@@ -111,15 +104,6 @@ class ActiveTkConnection(db.Model, AbstractSortableStatusModel):
         return conn_count
 
     @staticmethod
-    async def get_vm_id(conn_id):
-        vm_id = (
-            await ActiveTkConnection.select("vm_id")
-            .where((ActiveTkConnection.id == conn_id))
-            .gino.scalar()
-        )
-        return vm_id
-
-    @staticmethod
     def build_thin_clients_filters(get_disconnected, user_id):
         filters = []
         # Если get_disconnected == false, то берем только активные соединения (disconnected == None)
@@ -137,51 +121,93 @@ class ActiveTkConnection(db.Model, AbstractSortableStatusModel):
         current_clients_count = await ActiveTkConnection.get_thin_clients_conn_count()
         return current_clients_count >= current_license.thin_clients_limit
 
-    async def update_vm_data(self, vm_id, conn_type, is_conn_secure):
+    async def get_username(self):
+        user = await User.get(self.user_id) if self.user_id else None
+        username = user.username if user else "unknown"
+        return username
 
-        is_conn_secure = is_conn_secure if (is_conn_secure is not None) else False
-        prev_vm_id = self.vm_id
+    async def get_last_connected_vm_id(self):
+        """Последняя ВМ, к которой произошло подключение."""
+        query = TkVmConnection.query.where(TkVmConnection.tk_connection_id == self.id).\
+            order_by(desc(TkVmConnection.connected_to_vm))
 
-        await self.update(vm_id=vm_id, connection_type=conn_type,
-                          is_connection_secure=is_conn_secure,
-                          data_received=func.now()).apply()
+        tk_vm_conn = await query.gino.first()
+        if tk_vm_conn:
+            return tk_vm_conn.vm_id
+        else:
+            return None
+
+    async def update_vm_data(self, tk_event_type, vm_id, conn_type, is_conn_secure):
+
+        username = await self.get_username()
+        await self.update(data_received=func.now()).apply()
+
+        vm = await Vm.get(vm_id)
+        if vm is None:
+            return
+        vm_verbose_name = vm.verbose_name
+        vm_entity = vm.entity
+
+        if tk_event_type == TkConnectionEvent.VM_CONNECTED.value:
+            # Запись о подключении к ВМ
+            await TkVmConnection.soft_create(vm_id=vm_id, tk_connection_id=self.id,
+                                             connection_type=conn_type, is_connection_secure=is_conn_secure,
+                                             successful=True, conn_error_str=None,
+                                             connected_to_vm=func.now(),
+                                             disconnected_from_vm=None)
+            log_msg = _local_("User {} connected to VM {}.").format(username, vm_verbose_name)
+            await system_logger.info(log_msg, entity=vm_entity, user=username)
+
+        elif tk_event_type == TkConnectionEvent.VM_DISCONNECTED.value:
+            #  Выставляем время отключения (Подключения имеющие время отключения считаются завершенными)
+
+            tk_vm_conn = await TkVmConnection.get_active_vm_conn(vm_id, self.id)
+            if tk_vm_conn:
+                await tk_vm_conn.deactivate()
+                log_msg = _local_("User {} disconnected from VM {}.").format(username, vm_verbose_name)
+                await system_logger.info(log_msg, entity=vm_entity, user=username)
+        else:
+            return
 
         # front ws notification
-        additional_data = dict(prev_vm_id=str(prev_vm_id)) if prev_vm_id else None
-        await publish_data_in_internal_channel(THIN_CLIENTS_SUBSCRIPTION, "UPDATED", self, additional_data,
-                                               description=TkConnectionEvent.VM_CHANGED.name)
+        additional_data = dict(tk_conn_event=tk_event_type, vm_id=str(vm_id))
+        await publish_data_in_internal_channel(THIN_CLIENTS_SUBSCRIPTION, "UPDATED", self,
+                                               additional_data)
+
+    async def update_vm_data_on_error(self, vm_id, connection_type, conn_error_code, conn_error_str):
+        """Обновляем когда пользователь не смог подключиться к ВМ."""
+        username = await self.get_username()
+        vm = await Vm.get(vm_id)
+
+        # Запись о неудачном подключении
+        await TkVmConnection.soft_create(vm_id=vm_id, connection_type=connection_type,
+                                         successful=False, connected_to_vm=func.now(),
+                                         tk_connection_id=self.id, conn_error_str=conn_error_str)
+
         # log
-        user = await User.get(self.user_id) if self.user_id else None
-        if user:
-            if vm_id:
-                vm = await Vm.get(vm_id)
-                await system_logger.info(
-                    _local_("User {} connected to VM {}.").format(user.username, vm.verbose_name),
-                    entity=vm.entity,
-                    user=user.username,
-                )
-            else:
-                vm = await Vm.get(prev_vm_id)
-                if vm:
-                    vm_verbose_name = vm.verbose_name
-                    vm_entity = vm.entity
-                    await system_logger.info(
-                        _local_("User {} disconnected from VM {}.").format(user.username, vm_verbose_name),
-                        entity=vm_entity,
-                        user=user.username,
-                    )
+        if vm:
+            await system_logger.info(
+                _local_("User {} failed to connect to VM {}.").format(username, vm.verbose_name),
+                user=username,
+                description=_local_("Error code: {}. Error message: {}.").format(
+                    conn_error_code, conn_error_str)
+            )
 
     async def update_last_interaction(self):
         await self.update(last_interaction=func.now(), data_received=func.now()).apply()
 
     async def update_network_stats(self, **kwarg):
+
+        vm_id = kwarg.get("vm_id")
+        if vm_id is None:
+            return
+
         conn_type = kwarg["connection_type"]
 
         read_speed = 0
         write_speed = 0
         avg_rtt = kwarg["avg_rtt"]
-        # min_rtt = kwarg["min_rtt"]
-        # max_rtt = kwarg["max_rtt"]
+
         loss_percentage = kwarg["loss_percentage"]
 
         if conn_type == Pool.PoolConnectionTypes.SPICE.name:
@@ -190,16 +216,21 @@ class ActiveTkConnection(db.Model, AbstractSortableStatusModel):
             read_speed = kwarg["read_speed"]
             write_speed = kwarg["write_speed"]
 
-        await self.update(read_speed=read_speed, write_speed=write_speed,
-                          avg_rtt=avg_rtt,
-                          loss_percentage=loss_percentage,
-                          data_received=func.now()).apply()
+        tk_vm_conn = await TkVmConnection.get_active_vm_conn(vm_id, self.id)
+        if tk_vm_conn:
+            await tk_vm_conn.update(read_speed=read_speed,
+                                    write_speed=write_speed,
+                                    avg_rtt=avg_rtt,
+                                    loss_percentage=loss_percentage).apply()
 
     async def deactivate(self, dead_connection_detected=False):
         """Соединение неактивно, когда у него выставлено время дисконнекта."""
         await self.update(disconnected=func.now()).apply()
+        # Помечаем соединения с ВМ как завершенные (disconnected_from_vm != None)
+        await TkVmConnection.update.values(disconnected_from_vm=func.now()).where(
+            TkVmConnection.tk_connection_id == self.id).gino.status()
 
         # send event
-        additional_data = dict(dead_connection_detected=dead_connection_detected)
-        await publish_data_in_internal_channel(THIN_CLIENTS_SUBSCRIPTION, "UPDATED", self, additional_data,
-                                               description=TkConnectionEvent.CONNECTION_CLOSED.name)
+        additional_data = dict(tk_conn_event=TkConnectionEvent.CONNECTION_CLOSED.value,
+                               dead_connection_detected=dead_connection_detected)
+        await publish_data_in_internal_channel(THIN_CLIENTS_SUBSCRIPTION, "UPDATED", self, additional_data)

@@ -5,7 +5,6 @@ import asyncio
 from uuid import uuid4
 from common.database import db
 
-import tornado
 from tornado.testing import gen_test
 
 from web_app.tests.utils import VdiHttpTestCase
@@ -13,6 +12,7 @@ from web_app.tests.utils import VdiHttpTestCase
 from common.models.active_tk_connection import ActiveTkConnection, TkConnectionEvent
 from common.models.auth import User
 from common.models.pool import Pool
+from common.models.tk_vm_connection import TkVmConnection
 from common.models.vm import Vm, VmActionUponUserDisconnect
 from common.models.user_tk_permission import TkPermission
 from common.veil.veil_redis import redis_wait_for_message
@@ -53,10 +53,10 @@ pytestmark = [
 
 class TestWebsockets(VdiHttpTestCase):
 
-    @pytest.mark.usefixtures("fixt_db", "fixt_user_admin")
+    @pytest.mark.usefixtures("fixt_db", "fixt_user_admin", "fixt_create_static_pool")
     @gen_test
     async def test_ws_connect_update_disconnect_ok(self):
-        """Check ws communication"""
+        """Check ws communication."""
         # clear all
         await db.status(db.text("TRUNCATE TABLE active_tk_connection CASCADE;"))
 
@@ -67,24 +67,26 @@ class TestWebsockets(VdiHttpTestCase):
         ws_client = await self.connect_to_thin_client_ws(access_token)
         assert ws_client
 
+        pool = await Pool.query.where(Pool.pool_type == Pool.PoolTypes.STATIC).gino.first()
+        vm_id = await Vm.select("id").where(Vm.pool_id == pool.id).gino.scalar()  # id ВМ, созданной в фикстуре
+
         try:
             # update (Эмулировать подключение к ВМ)
-            vm_id = "201d318f-d57e-4f1b-9097-93d69f8782dd"
             update_data_dict = {
                 "msg_type": WsMessageType.UPDATED.value,
-                "vm_id": vm_id,
-                "event": TkConnectionEvent.VM_CHANGED.value,
+                "vm_id": str(vm_id),
+                "event": TkConnectionEvent.VM_CONNECTED.value,
             }
             ws_client.write_message(json.dumps(update_data_dict))
             await asyncio.sleep(1)  # Подождем так как на update ответов не присылается
 
             user_id = await User.get_id(user_name)
-            real_vm_id = (
-                await ActiveTkConnection.select("vm_id")
-                .where(ActiveTkConnection.user_id == user_id)
+
+            real_vm_id = await db.select([TkVmConnection.vm_id]).select_from(TkVmConnection.join(ActiveTkConnection))\
+                .where(ActiveTkConnection.user_id == user_id)\
                 .gino.scalar()
-            )
-            self.assertEqual(vm_id, str(real_vm_id))
+            #
+            self.assertEqual(vm_id, real_vm_id)
 
             # test current connection data
             qu = """{
@@ -123,6 +125,7 @@ class TestWebsockets(VdiHttpTestCase):
             update_data_dict = {
                 "msg_type": WsMessageType.UPDATED.value,
                 "event": TkConnectionEvent.NETWORK_STATS.value,
+                "vm_id": str(vm_id),
                 "connection_type": Pool.PoolConnectionTypes.RDP.name,
                 "read_speed": 1024,
                 "write_speed": 1024,
@@ -197,7 +200,7 @@ class VmActionWhenUserDisconnectsTestCase(VdiHttpTestCase):
             update_data_dict = {
                 "msg_type": WsMessageType.UPDATED.value,
                 "vm_id": vm_id,
-                "event": TkConnectionEvent.VM_CHANGED.value,
+                "event": TkConnectionEvent.VM_CONNECTED.value,
             }
             tk_ws_client.write_message(json.dumps(update_data_dict))
             await asyncio.sleep(0.5)  # Подождем пока данные дойдут до процесса воркера
@@ -205,8 +208,8 @@ class VmActionWhenUserDisconnectsTestCase(VdiHttpTestCase):
             # update (Эмулировать отключение от ВМ)
             update_data_dict = {
                 "msg_type": WsMessageType.UPDATED.value,
-                "vm_id": None,
-                "event": TkConnectionEvent.VM_CHANGED.value,
+                "vm_id": vm_id,
+                "event": TkConnectionEvent.VM_DISCONNECTED.value,
             }
             tk_ws_client.write_message(json.dumps(update_data_dict))
 
@@ -247,7 +250,7 @@ class TestPool(VdiHttpTestCase):
     @pytest.mark.usefixtures("fixt_db", "fixt_user_admin", "fixt_create_static_pool")
     @gen_test
     async def test_superuser_pools_list(self):
-        """Check tk rest api"""
+        """Check tk rest api."""
         auth_headers = await self.do_login_and_get_auth_headers(username="test_user_admin")
 
         response_dict = await self.get_response(
@@ -299,21 +302,21 @@ class TestPoolVm(VdiHttpTestCase):
     def test_bad_license(self):
         self.init_fake_license(expired=True)
         vm_url = self.API_URL.format(pool_id=str(uuid4()))
-        body = ''
+        body = ""
         auth_headers = yield self.do_login_and_get_auth_headers(username="test_user")
         response_dict = yield self.get_response(
             body=body, url=vm_url, headers=auth_headers, method="POST"
         )
 
-        assert 'errors' in response_dict
-        assert '001' == response_dict['errors'][0]['code']
+        assert "errors" in response_dict
+        assert "001" == response_dict["errors"][0]["code"]
 
     @pytest.mark.usefixtures("fixt_db", "fixt_user")
     @gen_test(timeout=20)
     def test_bad_pool_id(self):
         """Сценарий, когда отправляется несуществующий пул."""
         vm_url = self.API_URL.format(pool_id=str(uuid4()))
-        body = ''
+        body = ""
         auth_headers = yield self.do_login_and_get_auth_headers(username="test_user")
         response_dict = yield self.get_response(
             body=body,
@@ -321,8 +324,8 @@ class TestPoolVm(VdiHttpTestCase):
             headers=auth_headers,
         )
 
-        assert 'errors' in response_dict
-        assert '404' == response_dict['errors'][0]['code']
+        assert "errors" in response_dict
+        assert "404" == response_dict["errors"][0]["code"]
 
     @pytest.mark.usefixtures("fixt_db", "fixt_user", "several_static_pools_with_user")
     @gen_test(timeout=20)
@@ -331,7 +334,7 @@ class TestPoolVm(VdiHttpTestCase):
         pool = yield Pool.query.gino.first()
         get_vm_url = self.API_URL.format(pool_id=pool.id_str)
         auth_headers = yield self.do_login_and_get_auth_headers(username="test_user")
-        body = ''
+        body = ""
         # Получаем
         response_dict = yield self.get_response(
             body=body,
@@ -339,25 +342,25 @@ class TestPoolVm(VdiHttpTestCase):
             headers=auth_headers,
         )
         # Проверяем, что ВМ выдана
-        assert 'data' in response_dict
-        port = response_dict['data']['port']
+        assert "data" in response_dict
+        port = response_dict["data"]["port"]
         assert port == 5900
         # Проверка наличие всех разрешений
-        permissions = response_dict['data']['permissions']
+        permissions = response_dict["data"]["permissions"]
         for permission_type in TkPermission:
             assert permission_type.name in permissions
 
-        pool_type = response_dict['data']['pool_type']
-        assert pool_type == 'STATIC'
-        host = response_dict['data']['host']
-        assert host == '0.0.0.0'
-        assert 'vm_id' in response_dict['data']
-        vm_controller_address = response_dict['data']['vm_controller_address']
-        assert vm_controller_address == '0.0.0.0'
-        vm_verbose_name = response_dict['data']['vm_verbose_name']
-        assert vm_verbose_name == 'alt_linux'
-        password = response_dict['data']['password']
-        assert password == '1'
+        pool_type = response_dict["data"]["pool_type"]
+        assert pool_type == "STATIC"
+        host = response_dict["data"]["host"]
+        assert host == "0.0.0.0"
+        assert "vm_id" in response_dict["data"]
+        vm_controller_address = response_dict["data"]["vm_controller_address"]
+        assert vm_controller_address == "0.0.0.0"
+        vm_verbose_name = response_dict["data"]["vm_verbose_name"]
+        assert vm_verbose_name == "alt_linux"
+        password = response_dict["data"]["password"]
+        assert password == "1"
 
     @pytest.mark.usefixtures("fixt_db", "fixt_user", "several_static_pools_with_user")
     @gen_test(timeout=20)
@@ -370,8 +373,8 @@ class TestPoolVm(VdiHttpTestCase):
             body=body, url=vm_url, headers=auth_headers, method="POST"
         )
 
-        assert 'errors' in response_dict
-        assert '404' == response_dict['errors'][0]['code']
+        assert "errors" in response_dict
+        assert "404" == response_dict["errors"][0]["code"]
 
     @pytest.mark.usefixtures("fixt_db", "fixt_user", "several_static_pools_with_user")
     @gen_test(timeout=20)
@@ -384,7 +387,7 @@ class TestPoolVm(VdiHttpTestCase):
             body=body, url=vm_url, headers=auth_headers, method="POST"
         )
         # Проверяем, что ВМ выдана
-        assert 'data' in response_dict
+        assert "data" in response_dict
 
     @pytest.mark.usefixtures("fixt_db", "fixt_user", "several_static_pools_with_user")
     @gen_test
@@ -402,7 +405,7 @@ class TestPoolVm(VdiHttpTestCase):
             body=body, url=vm_url, headers=auth_headers, method="POST"
         )
         # Проверяем отсутствие ошибок
-        assert 'errors' not in response_dict
+        assert "errors" not in response_dict
 
 
 @pytest.mark.asyncio
@@ -427,18 +430,18 @@ class VmActionTestCase(VdiHttpTestCase):
 
         # Формируем данные для тестируемого параметра
         headers = await self.do_login_and_get_auth_headers()
-        body = '{"force": true}'
+        body = json.dumps(dict(force=True))
         url = "/client/pools/{pool_id}/{action}/".format(pool_id=pool_id, action=action)
         return {"headers": headers, "body": body, "url": url}
 
     @gen_test(timeout=20)
     async def test_valid_action(self):
-        action = 'start'  # Заведомо правильное действие.
+        action = "start"  # Заведомо правильное действие.
         moking_dict = await self.get_moking_dict(action=action)
         self.assertIsInstance(moking_dict, dict)
         response_dict = await self.get_response(**moking_dict)
-        response_data = response_dict['data']
-        self.assertEqual(response_data, 'success')
+        response_data = response_dict["data"]
+        self.assertEqual(response_data, "success")
 
 
 @pytest.mark.asyncio
@@ -475,16 +478,16 @@ class USbTestCase(VdiHttpTestCase):
 
         # Send attach request
         response_dict = await self.get_response(**request_data_dict)
-        # print('!!!response_dict ', response_dict, flush=True)
-        usb_array = response_dict['tcp_usb_devices']
+        # print("!!!response_dict ", response_dict, flush=True)
+        usb_array = response_dict["tcp_usb_devices"]
 
         # some attach response checks
         try:
-            usb = next(usb for usb in usb_array if usb['service'] == usb_tcp_port and usb['host'] == usb_tcp_ip)
+            usb = next(usb for usb in usb_array if usb["service"] == usb_tcp_port and usb["host"] == usb_tcp_ip)
         except StopIteration:
             raise AssertionError("USB not found")
 
-        usb_uuid = usb.get('uuid')
+        usb_uuid = usb.get("uuid")
         assert usb_uuid is not None
 
         # Данные для detach
@@ -505,7 +508,7 @@ class TestUserAuth(VdiHttpTestCase):
 
         # Thin client login
         auth_headers = await self.do_login_and_get_auth_headers(username="test_user")
-        # Get user's data
+        # Get user"s data
         response_dict = await self.get_response(
             body=None, url="/client/get_user_data/", headers=auth_headers, method="GET"
         )
@@ -542,7 +545,7 @@ class TestVmDataRequest(VdiHttpTestCase):
         # Thin client login
         auth_headers = await self.do_login_and_get_auth_headers(username="test_user")
 
-        # Get user's data
+        # Get user"s data
         vm_id_str = str(vm.id)
         url = "/client/get_vm_data/{}/".format(vm_id_str)
         response_dict = await self.get_response(
