@@ -15,7 +15,7 @@ export class DatapoolsService {
 
     constructor(private service: Apollo) {}
 
-    public getAllDatapools(filter?): QueryRef<any, any> {
+    public getAllDatapools(filter?, refresh?): QueryRef<any, any> {
 
         let query: string = `query resources($ordering:ShortString) {
                 datapools(ordering: $ordering) {
@@ -47,6 +47,21 @@ export class DatapoolsService {
                     }
                 }
             }`
+        } else if (refresh && !filter) {
+            query = `query resources($ordering:ShortString, $refresh: Boolean) {
+                  datapools(ordering: $ordering, refresh: $refresh) {
+                      id
+                      used_space
+                      free_space
+                      status
+                      type
+                      verbose_name
+                      controller {
+                          id
+                          verbose_name
+                      }
+                  }
+              }`
         }
 
         return  this.service.watchQuery({
@@ -54,34 +69,56 @@ export class DatapoolsService {
             variables: {
                 method: 'GET',
                 ordering: this.paramsForGetDatapools.nameSort,
-                ...filter
+                ...filter,
+                refresh
             }
         });
     }
 
-    public getDatapool(id: string, controller_address: string): QueryRef<any, any> {
-        return  this.service.watchQuery({
-            query: gql` query resources($id: UUID, $controller_address: UUID) {
-                            datapool(datapool_id: $id, controller_id: $controller_address) {
-                                used_space
-                                free_space
-                                description
-                                size
-                                status
-                                type
-                                verbose_name
-                                nodes_connected {
-                                    id
-                                    verbose_name
+    public getDatapool(id: string, controller_address: string, refresh: boolean): QueryRef<any, any> {
+
+        let query: string = ` query resources($id: UUID, $controller_address: UUID) {
+                                datapool(datapool_id: $id, controller_id: $controller_address) {
+                                    used_space
+                                    free_space
+                                    description
+                                    size
                                     status
+                                    type
+                                    verbose_name
+                                    nodes_connected {
+                                        id
+                                        verbose_name
+                                        status
+                                    }
                                 }
-                            }
-                        }
-                    `,
+                            }`
+
+        if (refresh) {
+          query = ` query resources($id: UUID, $controller_address: UUID, $refresh: Boolean) {
+                      datapool(datapool_id: $id, controller_id: $controller_address, refresh: $refresh) {
+                          used_space
+                          free_space
+                          description
+                          size
+                          status
+                          type
+                          verbose_name
+                          nodes_connected {
+                              id
+                              verbose_name
+                              status
+                          }
+                      }
+                  }`
+        }
+        return this.service.watchQuery({
+            query: gql(query),
             variables: {
                 method: 'GET',
                 id,
-                controller_address
+                controller_address,
+                refresh
             }
         });
     }

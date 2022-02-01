@@ -20,6 +20,8 @@ export class NodesComponent extends DetailsMove implements OnInit, OnDestroy {
 
   @Input() filter: object
 
+  public refresh: boolean = false
+
   public infoTemplates: [];
   public collection: object[] = [
     {
@@ -101,21 +103,24 @@ export class NodesComponent extends DetailsMove implements OnInit, OnDestroy {
     });
   }
 
-  public getNodes() {
+  public getNodes(refresh?) {
     if (this.sub) {
       this.sub.unsubscribe();
     }
     this.waitService.setWait(true);
 
     let filtered = (data) => {
-      if (this.filter) {
+      if ((this.filter && !this.refresh) || (this.filter && this.refresh)) {
         return data.data.controller.nodes
       } else {
         return data.data.nodes
       }
     }
 
-    this.sub = this.service.getAllNodes(this.filter).valueChanges.pipe(map(data => filtered(data)))
+    if (refresh) {
+      this.refresh = refresh
+    }
+    this.sub = this.service.getAllNodes(this.filter, this.refresh).valueChanges.pipe(map(data => filtered(data)))
       .subscribe((data) => {
         this.nodes = data;
         this.waitService.setWait(false);

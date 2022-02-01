@@ -161,6 +161,7 @@ export class VmDetailsComponent implements OnInit, OnDestroy {
   public idVm: string;
   public menuActive: string = 'info';
   public host: boolean = false;
+  public refresh: boolean = false;
   private address: string;
   private sub: Subscription;
 
@@ -177,12 +178,15 @@ export class VmDetailsComponent implements OnInit, OnDestroy {
     });
   }
 
-  public getVM() {
+  public getVM(refresh?) {
     if (this.sub) {
       this.sub.unsubscribe();
     }
     this.host = false;
-    this.sub = this.service.getVm(this.idVm, this.address).valueChanges.pipe(map(data => data.data.vm))
+    if (refresh) {
+      this.refresh = refresh
+    }
+    this.sub = this.service.getVm(this.idVm, this.address, this.refresh).valueChanges.pipe(map(data => data.data.vm))
       .subscribe((data) => {
         this.vm = data;
         this.host = true;

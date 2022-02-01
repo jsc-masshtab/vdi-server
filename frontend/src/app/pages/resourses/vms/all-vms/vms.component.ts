@@ -21,6 +21,8 @@ export class VmsComponent extends DetailsMove implements OnInit, OnDestroy {
 
   @Input() filter: object
 
+  public refresh: boolean = false
+
   private sub: Subscription;
   private socketSub: Subscription;
 
@@ -88,7 +90,7 @@ export class VmsComponent extends DetailsMove implements OnInit, OnDestroy {
     });
   }
 
-  public getAllVms() {
+  public getAllVms(refresh?) {
     if (this.sub) {
       this.sub.unsubscribe();
     }
@@ -104,14 +106,17 @@ export class VmsComponent extends DetailsMove implements OnInit, OnDestroy {
     this.waitService.setWait(true);
 
     let filtered = (data) => {
-      if (this.filter) {
+      if ((this.filter && !this.refresh) || (this.filter && this.refresh)) {
         return data.data.controller.vms
       } else {
         return data.data.vms
       }
     }
 
-    this.sub = this.service.getAllVms(this.filter).valueChanges.pipe(map(data => filtered(data))).subscribe((data) => {
+    if (refresh) {
+      this.refresh = refresh
+    }
+    this.sub = this.service.getAllVms(this.filter, this.refresh).valueChanges.pipe(map(data => filtered(data))).subscribe((data) => {
       this.vms = data;
       this.waitService.setWait(false);
     });

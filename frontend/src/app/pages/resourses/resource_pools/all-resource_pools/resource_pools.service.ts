@@ -15,7 +15,7 @@ export class ResourcePoolsService {
 
     constructor(private service: Apollo) {}
 
-    public getAllResourcePools(filter?): QueryRef<any, any> {
+    public getAllResourcePools(filter?, refresh?): QueryRef<any, any> {
 
         let query: string = `query resources($ordering:ShortString) {
             resource_pools(ordering: $ordering) {
@@ -46,6 +46,22 @@ export class ResourcePoolsService {
                     }
                 }
             }`
+        } else if (refresh && !filter) {
+            query = `query resources($ordering:ShortString, $refresh: Boolean) {
+                resource_pools(ordering: $ordering, refresh: $refresh) {
+                    id
+                    verbose_name
+                    domains_count
+                    cpu_limit
+                    memory_limit
+                    controller {
+                        id
+                        verbose_name
+                        address
+                    }
+
+                }
+            }`
         }
 
         return  this.service.watchQuery({
@@ -53,35 +69,58 @@ export class ResourcePoolsService {
             variables: {
                 method: 'GET',
                 ordering: this.paramsForGetResourcePools.nameSort,
-                ...filter
+                ...filter,
+                refresh
             }
         });
     }
 
-    public getResourcePool(id: string, controller_address: string): QueryRef<any, any> {
-        return  this.service.watchQuery({
-            query: gql` query resources($id: UUID, $controller_address: UUID) {
-                            resource_pool(resource_pool_id: $id, controller_id: $controller_address) {
-                                id
-                                verbose_name
-                                description
-                                cpu_limit
-                                memory_limit
-                                nodes_cpu_count
-                                domains_cpu_count
-                                nodes_memory_count
-                                domains_memory_count
-                                controller {
+    public getResourcePool(id: string, controller_address: string, refresh: boolean): QueryRef<any, any> {
+
+        let query: string = ` query resources($id: UUID, $controller_address: UUID) {
+                                resource_pool(resource_pool_id: $id, controller_id: $controller_address) {
                                     id
-                                    address
+                                    verbose_name
+                                    description
+                                    cpu_limit
+                                    memory_limit
+                                    nodes_cpu_count
+                                    domains_cpu_count
+                                    nodes_memory_count
+                                    domains_memory_count
+                                    controller {
+                                        id
+                                        address
+                                    }
                                 }
-                            }
-                        }
-                    `,
+                            }`
+
+        if (refresh) {
+          query = ` query resources($id: UUID, $controller_address: UUID, $refresh: Boolean) {
+                      resource_pool(resource_pool_id: $id, controller_id: $controller_address, refresh: $refresh) {
+                          id
+                          verbose_name
+                          description
+                          cpu_limit
+                          memory_limit
+                          nodes_cpu_count
+                          domains_cpu_count
+                          nodes_memory_count
+                          domains_memory_count
+                          controller {
+                              id
+                              address
+                          }
+                      }
+                  }`
+        }
+        return this.service.watchQuery({
+            query: gql(query),
             variables: {
                 method: 'GET',
                 id,
-                controller_address
+                controller_address,
+                refresh
             }
         });
     }
