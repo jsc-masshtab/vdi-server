@@ -1,7 +1,7 @@
 """Change_lenght_token.
 
 Revision ID: 6g78tf2ee56d
-Revises: 17997eb1f91f
+Revises: a3da31776be8
 Create Date: 2022-02-01 15:49:32.314111
 
 """
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision = '6g78tf2ee56d'
-down_revision = '17997eb1f91f'
+down_revision = 'a3da31776be8'
 branch_labels = None
 depends_on = None
 
