@@ -605,8 +605,6 @@ class ThinClientWsHandler(BaseWsHandler):
                         await tk_conn.update_vm_data(event_type, vm_id, conn_type, is_conn_secure)
 
                     elif event_type == TkConnectionEvent.VM_CONNECTION_ERROR.value:  # connection_type
-                        print("event_type == TkConnectionEvent.VM_CONNECTION_ERROR.value conn_error_str: ",
-                              recv_data_dict.get("conn_error_str"), flush=True)
                         await tk_conn.update_vm_data_on_error(recv_data_dict.get("vm_id"),
                                                               recv_data_dict.get("connection_type"),
                                                               recv_data_dict.get("conn_error_code"),
@@ -641,8 +639,6 @@ class ThinClientWsHandler(BaseWsHandler):
             await tk_conn.deactivate()
 
     async def on_pong(self, data: bytes) -> None:
-        # print("WebSocket on_pong", flush=True)
-
         # Обновляем дату последнего сообщения от ТК
         await ActiveTkConnection.update.values(data_received=func.now()).where(
             ActiveTkConnection.id == self.conn_id
