@@ -138,6 +138,8 @@ nav:
         - События: broker/operator_guide/events.md
         - Задачи: broker/operator_guide/tasks.md
         - Настройка: broker/operator_guide/web_settings.md
+      - Статистика:
+        - Веб-статистика: broker/operator_guide/web_stats.md
       - Перечень принятых сокращений: broker/operator_guide/abbreviations.md
     - Спецификация:
       - Требования к хост-системе брокера: broker/spec/domain-req.md
