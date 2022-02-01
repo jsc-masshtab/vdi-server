@@ -17,7 +17,7 @@ class ThinClientConnMonitor:
         # веб приложения. Тогда остаются висеть записи, которые мы подчищаем здесь
         # дельта после достижении которой удаляем данные о неактивном соединении при старле приложения
         # (В иделале на системном уровнем добавить ночную задачу по очистке или что-то типа того)
-        delete_time_delta = timedelta(days=14)
+        delete_time_delta = timedelta(days=31)
 
         cur_time = datetime.now(timezone.utc)
         await ActiveTkConnection.delete.where(
