@@ -197,7 +197,7 @@ class ControllerType(graphene.ObjectType, ControllerFetcher):
     description = graphene.Field(ShortString)
     status = StatusGraphene()
     version = graphene.Field(ShortString)
-    token = graphene.Field(ShortString)
+    token = graphene.String()
     # Новые поля
     pools = graphene.List(ControllerPoolType)
     clusters = graphene.List(
@@ -500,7 +500,7 @@ class AddControllerMutation(graphene.Mutation, ControllerValidator):
     class Arguments:
         verbose_name = ShortString(required=True)
         address = ShortString(required=True)
-        token = ShortString(required=True)
+        token = graphene.String(required=True)
         description = ShortString()
 
     controller = graphene.Field(lambda: ControllerType)
@@ -532,7 +532,7 @@ class UpdateControllerMutation(
         verbose_name = ShortString()
         address = ShortString()
         description = ShortString()
-        token = ShortString()
+        token = graphene.String()
 
     controller = graphene.Field(lambda: ControllerType)
     __TOKEN_PREFIX = re.compile("jwt ", re.I)

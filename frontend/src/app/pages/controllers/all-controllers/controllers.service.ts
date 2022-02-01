@@ -67,7 +67,7 @@ export class ControllersService {
                     $verbose_name: ShortString,
                     $description: ShortString,
                     $address: ShortString,
-                    $token: ShortString) {
+                    $token: String) {
                     updateController(
                         id_: $id,
                         verbose_name: $verbose_name,
@@ -98,7 +98,7 @@ export class ControllersService {
                 mutation controllers(
                     $address: ShortString!
                     $verbose_name: ShortString!
-                    $token: ShortString!
+                    $token: String!
                     $description: ShortString) {
                     addController(
                         address: $address
