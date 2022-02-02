@@ -13,7 +13,8 @@ import { RemoteComponent } from './remote-component/remote-component';
 export type RemoteData = {
   pool: IPoolDetailClient,
   connectionType: string,
-  idPool: string
+  idPool: string,
+  isFullscreenActive: boolean
 }
 @Component({
   selector: 'app-pool-details',
@@ -25,6 +26,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
   private subPool$: Subscription;
   private socketSub$: Subscription;
   private idPool: string;
+  public isFullscreenActive: boolean = false;
   public notifications: number = 0;
   public host: boolean = false;
   public pool: IPoolDetailClient;
@@ -112,11 +114,12 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
   }
 
 
-  public clickConnect(): void  {
+  public clickConnect(): void  {    
     const remoteData: RemoteData = {
       pool: this.pool,
       connectionType: this.connectionControl.value,
-      idPool: this.idPool
+      idPool: this.idPool,
+      isFullscreenActive: this.isFullscreenActive
     }
 
     this.dialog.open(RemoteComponent, {

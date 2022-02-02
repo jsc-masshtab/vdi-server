@@ -1,0 +1,7 @@
+<div class="checkbox-bg">
+  <input id="isChecked"  type="checkbox" [ngModel]="value" (change)='setValue()'  />
+  <label class="toggle-btn" for="isChecked"></label>
+  <label for="isChecked" class="checkbox-bg-text">
+    <ng-content></ng-content>
+  </label>
+</div>

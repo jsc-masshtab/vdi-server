@@ -16,11 +16,13 @@
               </mat-option>
             </mat-select>
           </mat-form-field>
-          <button  (click)="clickConnect()" title="Подключиться" class="btn-control connect">
+        <button  (click)="clickConnect()" title="Подключиться" class="btn-control connect">
             <fa-icon [icon]="['fas','play']" size="xs"></fa-icon>
             <span class="name">Подключиться</span>
         </button>
+        <vdi-checkbox-input [(ngModel)]='isFullscreenActive'>Полноэкранный режим</vdi-checkbox-input>
     </div>
+   
     <div class="details-row">
         <vdi-tabs (clickTab)="clearNotifications()" >
             <vdi-tab title="Информация о пулах рабочих столов" iconName="chart-bar">

@@ -1,4 +1,4 @@
-import { Component, Inject, OnDestroy, OnInit } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, Inject, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { Subscription } from 'rxjs';
@@ -18,25 +18,33 @@ import { RemoteMessengerComponent } from '../remote-messenger/remote-messenger.c
   templateUrl: './remote-component.html',
   styleUrls: ['./remote-component.scss']
 })
-export class RemoteComponent implements OnInit, OnDestroy{
-    public data: RemoteData;
-    public url: SafeResourceUrl;
-    public subPool$: Subscription;
+export class RemoteComponent implements OnInit, AfterViewInit, OnDestroy{
+  public data: RemoteData;
+  public url: SafeResourceUrl;
+  public subPool$: Subscription;
+  @ViewChild('iframe') iframeRef: ElementRef;
 
-    constructor(
-        private poolSerive: PoolsService,
-        private waitService: WaitService,
-        private sanitizer: DomSanitizer,
-        private dialog: MatDialog,
-        private dialogRef: MatDialogRef<RemoteComponent>,
-        @Inject(MAT_DIALOG_DATA) data: RemoteData
-    ) {
-        this.data = data;
+  constructor(
+      private poolSerive: PoolsService,
+      private waitService: WaitService,
+      private sanitizer: DomSanitizer,
+      private dialog: MatDialog,
+      private dialogRef: MatDialogRef<RemoteComponent>,
+      @Inject(MAT_DIALOG_DATA) data: RemoteData
+  ) {
+      this.data = data;
+  }
+
+  ngOnInit() {
+      this.generateUrl();      
     }
-
-    ngOnInit() {
-        this.generateUrl();
-      }
+  
+  ngAfterViewInit(): void {
+    const { isFullscreenActive } = this.data;
+    if (isFullscreenActive){
+      this.iframeRef.nativeElement.requestFullscreen();
+    }
+  }
 
   public generateUrl(): void {
     const {pool, connectionType} = this.data;
