@@ -20,14 +20,16 @@ export class AuthInterceptor implements HttpInterceptor {
 
         return next.handle(authReq).pipe(
             tap(event => {
-                if (event instanceof HttpResponse) { 
+                
+                if (event instanceof HttpResponse) {                     
                     if (event.body && event.body.errors){
                         this.errorService.setError(event.body.errors);
                     }
                     return;
                      }
             }, err => {
-                    if (err instanceof HttpErrorResponse) {                        
+                    if (err instanceof HttpErrorResponse) {      
+                        console.log(err);
                         this.errorService.setError(err.error.errors);
                         if (err.status === 401) { this.authStorageService.logout(); }
                 }

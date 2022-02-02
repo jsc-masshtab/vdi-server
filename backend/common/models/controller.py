@@ -53,7 +53,7 @@ class Controller(AbstractSortableStatusModel, VeilModel):
     address = db.Column(db.Unicode(length=15), nullable=False, unique=True, index=True)
     description = db.Column(db.Unicode(length=256))
     version = db.Column(db.Unicode(length=128))
-    token = db.Column(db.Unicode(length=1024), nullable=False)
+    token = db.Column(db.Unicode(length=2048), nullable=False)
 
     @property
     async def check_jwt_token(self):
@@ -151,7 +151,7 @@ class Controller(AbstractSortableStatusModel, VeilModel):
         major_version, minor_version, patch_version = version.split(".")
         await self.update(version=version).apply()
         # Проверяем версию контроллера в пределах допустимой.
-        if major_version != "4" or int(minor_version) < 3:
+        if major_version < "4" or (major_version == "4" and int(minor_version) < 3):
             msg = _local_(
                 "ECP VeiL version should be 4.3 or higher. Current version is incompatible."
             )

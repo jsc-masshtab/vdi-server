@@ -20,6 +20,8 @@ export class ClustersComponent extends DetailsMove implements OnInit, OnDestroy 
 
   @Input() filter: object
 
+  public refresh: boolean = false
+
   public clusters = [];
   public collection: object[] = [
     {
@@ -93,21 +95,23 @@ export class ClustersComponent extends DetailsMove implements OnInit, OnDestroy 
     });
   }
 
-  public getAllClusters(): void {
+  public getAllClusters(refresh?): void {
     if (this.sub) {
       this.sub.unsubscribe();
     }
     this.waitService.setWait(true);
 
     let filtered = (data) => {
-      if (this.filter) {
+      if ((this.filter && !this.refresh) || (this.filter && this.refresh)) {
         return data.data.controller.clusters
       } else {
         return data.data.clusters
       }
     }
-
-    this.sub = this.service.getAllClusters(this.filter).valueChanges.pipe(map(data => filtered(data)))
+    if (refresh) {
+      this.refresh = refresh
+    }
+    this.sub = this.service.getAllClusters(this.filter, this.refresh).valueChanges.pipe(map(data => filtered(data)))
       .subscribe((data) => {
         this.clusters = data;
         this.waitService.setWait(false);

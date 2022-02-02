@@ -21,6 +21,8 @@ export class DatapoolsComponent extends DetailsMove implements OnInit, OnDestroy
 
   @Input() filter: object
 
+  public refresh: boolean = false
+
   public datapools: object[] = [];
   public collection: object[] = [
     {
@@ -96,21 +98,24 @@ export class DatapoolsComponent extends DetailsMove implements OnInit, OnDestroy
     });
   }
 
-  public getDatapools() {
+  public getDatapools(refresh?) {
     if (this.sub) {
       this.sub.unsubscribe();
     }
     this.waitService.setWait(true);
 
     let filtered = (data) => {
-      if (this.filter) {
+      if ((this.filter && !this.refresh) || (this.filter && this.refresh)) {
         return data.data.controller.data_pools
       } else {
         return data.data.datapools
       }
     }
 
-    this.sub = this.service.getAllDatapools(this.filter).valueChanges.pipe(map(data => filtered(data)))
+    if (refresh) {
+      this.refresh = refresh
+    }
+    this.sub = this.service.getAllDatapools(this.filter, this.refresh).valueChanges.pipe(map(data => filtered(data)))
       .subscribe( (data) => {
         this.datapools = data;
         this.waitService.setWait(false);

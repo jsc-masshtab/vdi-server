@@ -40,7 +40,8 @@ export class ThinClientsService {
             data_received
             last_interaction
             is_afk
-
+            mac_address
+            hostname
             connection_type
             is_connection_secure
             read_speed

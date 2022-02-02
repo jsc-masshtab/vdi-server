@@ -20,6 +20,7 @@ interface ICollection {
 export class DatapoolDetailsComponent implements OnInit, OnDestroy {
   private sub: Subscription;
   public host: boolean = false;
+  public refresh: boolean = false;
 
   public datapool: ICollection = {};
 
@@ -89,13 +90,16 @@ export class DatapoolDetailsComponent implements OnInit, OnDestroy {
     });
   }
 
-  public getDatapool() {
+  public getDatapool(refresh?) {
     if (this.sub) {
       this.sub.unsubscribe();
     }
 
     this.host = false;
-    this.sub = this.service.getDatapool(this.idDatapool, this.address).valueChanges.pipe(map(data => data.data.datapool))
+    if (refresh) {
+      this.refresh = refresh
+    }
+    this.sub = this.service.getDatapool(this.idDatapool, this.address, this.refresh).valueChanges.pipe(map(data => data.data.datapool))
       .subscribe((data) => {
         this.datapool = data;
         this.host = true;

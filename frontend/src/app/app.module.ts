@@ -34,7 +34,8 @@ import {
           faClock,
           faCogs,
           faEnvelope,
-          faEraser
+          faEraser,
+          faDownload
 } from '@fortawesome/free-solid-svg-icons';
 
 import { ApolloModule  } from 'apollo-angular';
@@ -86,6 +87,6 @@ export class AppModule {
       faChevronCircleUp, faComment, faClipboardList, faNewspaper, faUserCircle, faSignOutAlt, faChevronCircleLeft, faChevronCircleRight,
       faAddressCard, faCheck, faUsersCog, faCrown, faColumns, faUpload, faIdCard, faSuitcase, faRss, faExpand, faGavel, faStopCircle,
       faUndo, faPowerOff, faFire, faSearch, faFolder, faLaptop, faCircle, faSlidersH, faExchangeAlt, faClone, faFileArchive, faBars, faWindowRestore, faLeaf, faShareAlt,
-      faTerminal, faCommentDots, faWrench, faClock, faEnvelope, faEraser);
+      faTerminal, faCommentDots, faWrench, faClock, faEnvelope, faEraser, faDownload);
     }
 }

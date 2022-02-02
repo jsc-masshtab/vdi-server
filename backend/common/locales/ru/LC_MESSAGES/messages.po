@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-12-20 12:41+0300\n"
+"POT-Creation-Date: 2022-01-26 15:44+0300\n"
 "PO-Revision-Date: 2020-07-30 11:25+0300\n"
 "Last-Translator: Emil <emil@emil-pc>\n"
 "Language-Team: Russian\n"
@@ -58,11 +58,11 @@ msgstr "Имя архива:"
 msgid "path:"
 msgstr "путь:"
 
-#: ../common/models/active_tk_connection.py:154
+#: ../common/models/active_tk_connection.py:159
 msgid "User {} connected to VM {}."
 msgstr "Пользователь {} подключился к ВМ {}."
 
-#: ../common/models/active_tk_connection.py:164
+#: ../common/models/active_tk_connection.py:169
 msgid "User {} disconnected from VM {}."
 msgstr "Пользователь {} отключился от ВМ {}."
 
@@ -474,114 +474,114 @@ msgstr "Количество должно быть больше 1."
 msgid "Journal settings changed."
 msgstr "Настройки журнала изменены."
 
-#: ../common/models/pool.py:217
+#: ../common/models/pool.py:218
 msgid "Incorrect sorting option {}."
 msgstr "Неверный параметр сортировки {}."
 
-#: ../common/models/pool.py:346 ../common/models/pool.py:1760
+#: ../common/models/pool.py:347 ../common/models/pool.py:1760
 msgid "Pool {} has been updated."
 msgstr "Пул {} обновлен."
 
-#: ../common/models/pool.py:618
+#: ../common/models/pool.py:619
 msgid "User {} has been included to pool {}."
 msgstr "Пользователь {} был включен в пул {}."
 
-#: ../common/models/pool.py:626 ../common/models/vm.py:334
+#: ../common/models/pool.py:627 ../common/models/vm.py:334
 msgid "{} already has permission."
 msgstr "{} уже имеет разрешение."
 
-#: ../common/models/pool.py:647
+#: ../common/models/pool.py:648
 msgid "Removing user {} from pool {}."
 msgstr "Удаление пользователя {} из пула {}."
 
-#: ../common/models/pool.py:655
+#: ../common/models/pool.py:656
 msgid "User {} has no direct right to pool {}."
 msgstr "У пользователя {} нет прямых прав на пул {}. Пропускаем."
 
-#: ../common/models/pool.py:683
+#: ../common/models/pool.py:684
 msgid "Group {} has been included to pool {}."
 msgstr "Группа {} включена в пул {}."
 
-#: ../common/models/pool.py:691
+#: ../common/models/pool.py:692
 msgid "Pool already has permission."
 msgstr "Пул уже имеет разрешение."
 
-#: ../common/models/pool.py:705
+#: ../common/models/pool.py:706
 msgid "Removing group {} from pool {}."
 msgstr "Удаление группы {} из пула {}."
 
-#: ../common/models/pool.py:751
+#: ../common/models/pool.py:752
 msgid "Controller {} not found."
 msgstr "Контроллер {} не найден."
 
-#: ../common/models/pool.py:786
+#: ../common/models/pool.py:787
 msgid "Delete VMs for GuestPool {}."
 msgstr "Удаление виртуальных машин для гостевого пула {}."
 
-#: ../common/models/pool.py:791
+#: ../common/models/pool.py:792
 msgid "Delete VMs for AutomatedPool {}."
 msgstr "Удаление виртуальных машин для автоматического пула {}."
 
-#: ../common/models/pool.py:798
+#: ../common/models/pool.py:799
 msgid "VM {} has been removed from ECP VeiL."
 msgstr "ВМ {} удалена из ECP VeiL."
 
-#: ../common/models/pool.py:824
+#: ../common/models/pool.py:825
 #, python-brace-format
 msgid "Complete removal pool of desktops {verbose_name} is done."
 msgstr "Выполнено полное удаление пула рабочих столов {verbose_name}."
 
-#: ../common/models/pool.py:857
+#: ../common/models/pool.py:858
 msgid "Pool {} has been activated."
 msgstr "Пул {} активирован."
 
-#: ../common/models/pool.py:874
+#: ../common/models/pool.py:875
 msgid "Pool {} status changed to {}."
 msgstr "Статус пула {} изменен на {}."
 
-#: ../common/models/pool.py:1058 ../web_app/journal/schema.py:285
+#: ../common/models/pool.py:1059 ../web_app/journal/schema.py:285
 msgid "The sort parameter is incorrect."
 msgstr "Неверный параметр сортировки."
 
-#: ../common/models/pool.py:1069
+#: ../common/models/pool.py:1070
 msgid "List of VM should not be empty."
 msgstr "Список виртуальных машин не должен быть пустым."
 
-#: ../common/models/pool.py:1086
+#: ../common/models/pool.py:1087
 msgid "VM doesn't belong to specified pool."
 msgstr "Виртуальная машина не принадлежит заданному пулу."
 
-#: ../common/models/pool.py:1097
+#: ../common/models/pool.py:1098
 msgid "VM {} has been removed from the pool {} and ECP VeiL."
 msgstr "ВМ {} удалена из пула {} и из ECP VeiL."
 
-#: ../common/models/pool.py:1101
+#: ../common/models/pool.py:1102
 msgid "VM {} has been removed from the pool {}."
 msgstr "ВМ {} удалена из пула {}."
 
-#: ../common/models/pool.py:1170
+#: ../common/models/pool.py:1171
 #, python-brace-format
 msgid "Tag {name} created for pool {name}."
 msgstr "Тэг {name} добавлен к пулу {name}."
 
-#: ../common/models/pool.py:1190
+#: ../common/models/pool.py:1191
 msgid "Tag {} removed from ECP VeiL."
 msgstr "Тэг {} удален из ECP VeiL."
 
-#: ../common/models/pool.py:1202
+#: ../common/models/pool.py:1203
 #, python-brace-format
 msgid "Tag {name} updated for pool {name} and all vms in pool."
 msgstr "Тэг {name} обновлен для пула {name} и всех ВМ в пуле."
 
-#: ../common/models/pool.py:1229
+#: ../common/models/pool.py:1230
 msgid "Tag {} removed from VM {}."
 msgstr "Тэг {} удален для ВМ {}."
 
-#: ../common/models/pool.py:1244 ../common/models/pool.py:1262
+#: ../common/models/pool.py:1245 ../common/models/pool.py:1263
 msgid "Tag {} added to VM {}."
 msgstr "Тэг {} назначен ВМ {}."
 
-#: ../common/models/pool.py:1338
+#: ../common/models/pool.py:1339
 msgid "RDS pool {} created."
 msgstr "Пул приложений {} создан."
 
@@ -655,8 +655,8 @@ msgid "Create VM {} on VDI DB."
 msgstr "Создание виртуальной машины {} на VDI DB."
 
 #: ../common/models/vm.py:179 ../common/models/vm.py:273
-#: ../web_app/thin_client_api/handlers.py:384
-#: ../web_app/thin_client_api/handlers.py:414
+#: ../web_app/thin_client_api/handlers.py:452
+#: ../web_app/thin_client_api/handlers.py:482
 msgid "VM has no api client."
 msgstr "ВМ не имеет клиента. Проверьте состояние контроллера."
 
@@ -855,15 +855,15 @@ msgstr "Пропущен заголовок авторизации."
 msgid "User {} not found."
 msgstr "Пользователь {} не найден."
 
-#: ../common/veil/veil_api.py:146
+#: ../common/veil/veil_api.py:155
 msgid "Can`t find VM {} on VeiL ECP."
 msgstr "Не удалось найти ВМ {} на VeiL ECP."
 
-#: ../common/veil/veil_api.py:157
+#: ../common/veil/veil_api.py:166
 msgid "Can`t find Tag {} on VeiL ECP."
 msgstr "Не удалось найти Тег {} на VeiL ECP."
 
-#: ../common/veil/veil_api.py:180
+#: ../common/veil/veil_api.py:189
 msgid "VeiL ECP {} request error."
 msgstr "Ошибка запроса ECP VeiL {}."
 
@@ -1201,7 +1201,7 @@ msgstr "Проверьте настройки брокера. Разрешена
 msgid "Auth system is disabled. Check broker settings."
 msgstr "Проверьте настройки брокера. Система аутентификации отключена."
 
-#: ../web_app/auth/handlers.py:73 ../web_app/thin_client_api/handlers.py:295
+#: ../web_app/auth/handlers.py:73 ../web_app/thin_client_api/handlers.py:363
 msgid "Thin client limit exceeded."
 msgstr "Превышен лимит тонких клиентов."
 
@@ -1230,7 +1230,7 @@ msgid "Valid license key is uploaded."
 msgstr "Лицензионный ключ загружен."
 
 #: ../web_app/auth/user_schema.py:30 ../web_app/auth/user_schema.py:272
-#: ../web_app/thin_client_api/schema.py:246
+#: ../web_app/thin_client_api/schema.py:254
 msgid "No such user."
 msgstr "Нет такого пользователя."
 
@@ -1266,15 +1266,15 @@ msgstr "Укажите id или имя пользователя."
 msgid "Can`t remove permission(s) {} because they are granted to groups of user {}."
 msgstr "Невозможно удалить разрешения {}, так как они выданы группам, в которых состоит пользователь."
 
-#: ../web_app/controller/resource_schema.py:345
+#: ../web_app/controller/resource_schema.py:375
 msgid "{} is unreachable on ECP VeiL."
 msgstr "{} недоступен на ECP VeiL."
 
-#: ../web_app/controller/resource_schema.py:558 ../web_app/pool/schema.py:1826
+#: ../web_app/controller/resource_schema.py:704 ../web_app/pool/schema.py:1826
 msgid "Cant create CD-ROM for powered domain {}."
 msgstr "Невозможно создать CD-ROM для включенной виртуальной машины {}."
 
-#: ../web_app/controller/resource_schema.py:567 ../web_app/pool/schema.py:1835
+#: ../web_app/controller/resource_schema.py:713 ../web_app/pool/schema.py:1835
 msgid "Creating a CD-ROM on the virtual machine {}."
 msgstr "Создание CD-ROM на виртуальной машине {}."
 
@@ -1329,10 +1329,6 @@ msgstr "Уже подписан."
 #: ../web_app/front_ws_api/handlers.py:100
 msgid "Not subscribed."
 msgstr "Не подписан."
-
-#: ../web_app/journal/handlers.py:24
-msgid "Failed to generate statistics report {}."
-msgstr "Ошибка создания отчета статистики {}."
 
 #: ../web_app/journal/schema.py:415
 msgid "Journal is exported."
@@ -1415,7 +1411,7 @@ msgstr "Пул RDS не может иметь действия при отклю
 msgid "Connection types {} are not supported."
 msgstr "Типы подключения {} не поддерживаются."
 
-#: ../web_app/pool/schema.py:624 ../web_app/thin_client_api/handlers.py:252
+#: ../web_app/pool/schema.py:624 ../web_app/thin_client_api/handlers.py:262
 msgid "VM is unreachable on ECP VeiL."
 msgstr "ВМ недоступна на ECP VeiL."
 
@@ -1543,33 +1539,41 @@ msgstr "Обработчик задач."
 msgid "Web application."
 msgstr "Веб-приложение."
 
-#: ../web_app/settings/schema.py:121
+#: ../web_app/settings/schema.py:122
 msgid "Unable to get services information. {}."
 msgstr "Невозможно получить информацию о сервисах. {}."
 
-#: ../web_app/settings/schema.py:125
+#: ../web_app/settings/schema.py:126
 msgid "No services launched."
 msgstr "Никаких сервисов не запущено."
 
-#: ../web_app/settings/schema.py:138
+#: ../web_app/settings/schema.py:139
 msgid "Output parsing error. {}."
 msgstr "Ошибка вывода парсинга. {}."
 
-#: ../web_app/settings/schema.py:272
+#: ../web_app/settings/schema.py:274
 msgid "Invalid service name {}."
 msgstr "Недействительное название службы {}."
 
-#: ../web_app/settings/schema.py:289
+#: ../web_app/settings/schema.py:291
 msgid "Error occurred during service action executing. {}."
 msgstr "Ошибка при выполнении действия сервиса. {}."
 
-#: ../web_app/settings/schema.py:294
+#: ../web_app/settings/schema.py:296
 msgid "Executed action {} for service {}."
 msgstr "Выполнено действие {} для сервиса {}."
 
-#: ../web_app/settings/schema.py:313
+#: ../web_app/settings/schema.py:315
 msgid "Unable to check status of service {}."
 msgstr "Невозможно проверить статус сервиса {}."
+
+#: ../web_app/settings/schema.py:329
+msgid "Cache is cleared."
+msgstr "Кэш очищен."
+
+#: ../web_app/statistics/schema.py:37
+msgid "Failed to generate statistics report."
+msgstr "Ошибка создания отчета статистики."
 
 #: ../web_app/task/schema.py:104
 msgid "No such task."
@@ -1591,230 +1595,238 @@ msgstr "Нет контроллера с id {}."
 msgid "Tasks associated with controller {} are requested to be cancelled by user {}."
 msgstr "Задачи, связанные с контроллером {}, запрошены для отменены пользователем {}."
 
-#: ../web_app/thin_client_api/handlers.py:57
+#: ../web_app/thin_client_api/handlers.py:59
 msgid "User {} requested pools data."
 msgstr "Пользователь {} запросил список пулов."
 
-#: ../web_app/thin_client_api/handlers.py:97
+#: ../web_app/thin_client_api/handlers.py:104
 msgid "Looking for machine."
 msgstr "Поиск ВМ."
 
-#: ../web_app/thin_client_api/handlers.py:113
+#: ../web_app/thin_client_api/handlers.py:120
 msgid "The pool is busy. Try again in 1 minute."
 msgstr "Пул занят. Попробуйте снова через 1 минуту."
 
-#: ../web_app/thin_client_api/handlers.py:131
+#: ../web_app/thin_client_api/handlers.py:138
 msgid "The pool doesn`t have free machines. Try again after 5 minutes."
 msgstr "В пуле нет свободных машин. Повторите попытку через 5 минут."
 
-#: ../web_app/thin_client_api/handlers.py:134
+#: ../web_app/thin_client_api/handlers.py:141
 msgid "The pool doesn`t have free machines."
 msgstr "В пуле нет свободных машин."
 
-#: ../web_app/thin_client_api/handlers.py:141
+#: ../web_app/thin_client_api/handlers.py:148
 msgid "Machine is being prepared."
 msgstr "ВМ подготавливается."
 
-#: ../web_app/thin_client_api/handlers.py:146
+#: ../web_app/thin_client_api/handlers.py:153
 msgid "User {} connected to pool {}."
 msgstr "Пользователь {} подключился к пулу {}."
 
-#: ../web_app/thin_client_api/handlers.py:153
+#: ../web_app/thin_client_api/handlers.py:160
 msgid "Connection data resolving (address/port)."
 msgstr "Получение данных подключения (адрес/порт)."
 
-#: ../web_app/thin_client_api/handlers.py:167
+#: ../web_app/thin_client_api/handlers.py:174
 msgid "Unable to get list of published applications. {}."
 msgstr "Невозможно получить список опубликованных приложений. {}."
 
-#: ../web_app/thin_client_api/handlers.py:203
+#: ../web_app/thin_client_api/handlers.py:210
 msgid "The remote controller is unavailable."
 msgstr "Контроллер недоступен."
 
-#: ../web_app/thin_client_api/handlers.py:215
+#: ../web_app/thin_client_api/handlers.py:222
 msgid "The controller didn`t provide a VM address. Try again in 1 minute."
 msgstr "Контроллер не передал адрес ВМ. Попробуйте снова через 1 минуту."
 
-#: ../web_app/thin_client_api/handlers.py:255
+#: ../web_app/thin_client_api/handlers.py:265
 msgid "Controller did not reply. Check if it is available."
 msgstr "Контроллер не ответил. Проверьте, доступен ли он."
 
-#: ../web_app/thin_client_api/handlers.py:276
+#: ../web_app/thin_client_api/handlers.py:275
+msgid "Setting time zone."
+msgstr "Настройки временной зоны."
+
+#: ../web_app/thin_client_api/handlers.py:324
+msgid "Failed to set time zone for vm {}."
+msgstr "Ошибка установки временной зоны для ВМ {}."
+
+#: ../web_app/thin_client_api/handlers.py:344
 msgid "VM address resolving. Attempt number {}."
 msgstr "Получение адреса ВМ. Попытка номер {}."
 
-#: ../web_app/thin_client_api/handlers.py:298
+#: ../web_app/thin_client_api/handlers.py:366
 msgid "Pool not found."
 msgstr "Пул не найден."
 
-#: ../web_app/thin_client_api/handlers.py:307
+#: ../web_app/thin_client_api/handlers.py:375
 msgid "The pool doesnt support connection type {}."
 msgstr "Пул не поддерживает тип соединения {}."
 
-#: ../web_app/thin_client_api/handlers.py:351
+#: ../web_app/thin_client_api/handlers.py:419
 msgid "User {} executed action {} on VM {}."
 msgstr "Пользователь {} выполнил действие {} над ВМ {}."
 
-#: ../web_app/thin_client_api/handlers.py:353
+#: ../web_app/thin_client_api/handlers.py:421
 msgid "User {} failed to execute action {} on VM {}."
 msgstr "Пользователю {} не удалось выполнить действие {} над ВМ {}."
 
-#: ../web_app/thin_client_api/handlers.py:438
+#: ../web_app/thin_client_api/handlers.py:506
 msgid "Message can not be empty."
 msgstr "Сообщение не может быть пустым."
 
-#: ../web_app/thin_client_api/handlers.py:459
+#: ../web_app/thin_client_api/handlers.py:527
 msgid "Wrong message format."
 msgstr "Неправильны формат сообщения."
 
-#: ../web_app/thin_client_api/handlers.py:530
+#: ../web_app/thin_client_api/handlers.py:600
 msgid "User {} failed to connect to VM {}."
 msgstr "Пользователю {} не удалось подключиться к ВМ {}."
 
-#: ../web_app/thin_client_api/handlers.py:532
+#: ../web_app/thin_client_api/handlers.py:602
 msgid "Error code: {}. Error message: {}."
 msgstr "Код ошибки: {}. Сообщение об ошибке: {}."
 
-#: ../web_app/thin_client_api/handlers.py:723
+#: ../web_app/thin_client_api/handlers.py:793
 msgid "VM {} is not registered in VDI broker."
 msgstr "ВМ {} не зарегистрирована в брокере VDI."
 
-#: ../web_app/thin_client_api/schema.py:237
+#: ../web_app/thin_client_api/schema.py:245
 msgid "All connections."
 msgstr "Все подключения."
 
-#: ../web_app/thin_client_api/schema.py:240
+#: ../web_app/thin_client_api/schema.py:248
 msgid "Connection id: {}."
 msgstr "id подключения: {}."
 
-#: ../web_app/thin_client_api/schema.py:247
+#: ../web_app/thin_client_api/schema.py:255
 msgid "Connections of user: {}."
 msgstr "Подключения пользователя {}."
 
-#: ../web_app/thin_client_api/schema.py:251
+#: ../web_app/thin_client_api/schema.py:259
 msgid "Thin client disconnect requested."
 msgstr "Запрошено отключение тонкого клиента."
 
-#: ../web_app/thin_client_api/schema.py:288
+#: ../web_app/thin_client_api/schema.py:296
 msgid "User {} does not exist."
 msgstr "Не существует пользователя {}."
 
-#~ msgid "Group {} is removed for user {}."
-#~ msgstr "Группа {} удалена у пользователя {}."
-
-#~ msgid "One-time password error for user: {}."
-#~ msgstr "Ошибка одноразового пароля для пользователя: {}."
-
-#~ msgid "User {} do not have a secret code for 2fa auth. Please generate this in settings of user."
-#~ msgstr "У пользователя {} нет секретного кода для двухфакторной аутентификации. Пожалуйста, сгенерируйте это в настройках пользователя."
-
-#~ msgid "2fa auth error for user: {}."
-#~ msgstr "Ошибка двухфакторной аутентификации для пользователя: {}."
-
-#~ msgid "StaticPool: Create Pool."
-#~ msgstr "Статический пул: создание пула."
-
-#~ msgid "StaticPool: Create StaticPool."
-#~ msgstr "Статический пул: создание статического пула."
-
-#~ msgid "StaticPool: Create VMs."
-#~ msgstr "Статический пул: создание виртуальных машин."
-
-#~ msgid "Can`t connect to {}."
-#~ msgstr "Не удается подключиться к {}."
-
-#~ msgid "Pool {} has been deactivated."
-#~ msgstr "Пул {} деактивирован."
-
-#~ msgid "Controller has not free space for creating new VM."
-#~ msgstr "На контроллере отсутствует место для создания новой виртуальной машины."
-
-#~ msgid "Something went wrong. Interrupt while."
-#~ msgstr "Что-то пошло не так. Прерываем while."
-
-#~ msgid "User {} created with role {}."
-#~ msgstr "Пользователь {} создан с ролью {}."
-
-#~ msgid "  Duration: {}."
-#~ msgstr "  Продолжительность: {}."
-
-#~ msgid "Attempts to create VM {} have been exhausted."
-#~ msgstr "Превышен лимит попыток создания ВМ {}."
-
-#~ msgid "Unknown node {}."
-#~ msgstr "Неизвестный узел {}."
-
-#~ msgid "Controller can`t create VM. Unknown node."
-#~ msgstr "Контроллер не может создать ВМ. Неизвестный узел."
-
-#~ msgid "Roles: {} was deleted to pool {}."
-#~ msgstr "Роли: {} удалены в пуле {}."
-
-#~ msgid "Pool already has role."
-#~ msgstr "Пул уже имеет роль."
-
-#~ msgid "Role {} has been set to pool {}."
-#~ msgstr "Роль {} добавлена в пул {}."
-
-#~ msgid "Critical controller error."
-#~ msgstr "Критическая ошибка контроллера."
-
-#~ msgid "ECP VeiL controller {} error."
-#~ msgstr "Ошибка контроллера ECP VeiL {}."
-
-#~ msgid "Failed to update automated pool {}. Name must be unique."
-#~ msgstr "Ошибка редактирования автоматического пула {}. Имя должно быть уникальным."
-
-#~ msgid "Failed to create automated pool {}."
-#~ msgstr "Ошибка создания автоматического пула {}."
-
-#~ msgid "Update Pool values for AutomatedPool {}."
-#~ msgstr "Обновление значений пула для автоматического пула {}."
-
-#~ msgid "Demo version."
-#~ msgstr "Демонстрационная версия."
-
-#~ msgid "VM {} AD group including successful."
-#~ msgstr "ВМ {} успешно заведена в контейнер/группу AD."
-
-#~ msgid "VM {} active directory group including error."
-#~ msgstr "Ошибка ввода ВМ {} в группу AD."
-
-#~ msgid "Active directory object has no service username or password. Including skipped."
-#~ msgstr "У службы каталогов не указаны имя пользователя и пароль. Пропускаем."
-
-#~ msgid "Expansion of guest pool {} requested."
-#~ msgstr "Запрошено расширение гостевого пула {}."
-
-#~ msgid "Another task works on pool {} before creating new blank VM."
-#~ msgstr "Другая задача выполняется над пулом {} перед созданием новой пустой ВМ."
-
-#~ msgid "User {} password setting error."
-#~ msgstr "Ошибка задания пароля пользователя {}."
-
-#~ msgid "Redis waiting exception."
-#~ msgstr "Ошибка Redis."
-
-#~ msgid "username {} must contain >= 3 chars (letters, digits, _, -, +), begin from letter and can't contain any spaces."
-#~ msgstr "имя пользователя {} должно быть >= 3 символов (буквы, цифры, _, -, +), начинаться с буквы и не содержать пробелов."
-
-#~ msgid "Password {} contains invalid characters."
-#~ msgstr "Пароль {} содержит недопустимые символы."
-
-#~ msgid "Check pool settings."
-#~ msgstr "Проверьте настройки пула."
-
-#~ msgid "VM {} has been not prepared."
-#~ msgstr "ВМ {} не подготовлена."
-
-#~ msgid "VM {} AD inclusion skipped."
-#~ msgstr "Заведение ВМ {} в домен пропущено."
-
-#~ msgid "VM {} AD inclusion success."
-#~ msgstr "ВМ {} успешно заведена в AD."
+#~ msgid "VM {} failed to receive DHCP ip address ({})."
+#~ msgstr "ВМ {} не получила IP адрес по DHCP ({})."
 
 #~ msgid "VM {} domain including task failed."
 #~ msgstr "Ошибка включения ВМ {} в домен."
 
-#~ msgid "VM {} failed to receive DHCP ip address ({})."
-#~ msgstr "ВМ {} не получила IP адрес по DHCP ({})."
+#~ msgid "VM {} AD inclusion success."
+#~ msgstr "ВМ {} успешно заведена в AD."
+
+#~ msgid "VM {} AD inclusion skipped."
+#~ msgstr "Заведение ВМ {} в домен пропущено."
+
+#~ msgid "VM {} has been not prepared."
+#~ msgstr "ВМ {} не подготовлена."
+
+#~ msgid "Check pool settings."
+#~ msgstr "Проверьте настройки пула."
+
+#~ msgid "Password {} contains invalid characters."
+#~ msgstr "Пароль {} содержит недопустимые символы."
+
+#~ msgid "username {} must contain >= 3 chars (letters, digits, _, -, +), begin from letter and can't contain any spaces."
+#~ msgstr "имя пользователя {} должно быть >= 3 символов (буквы, цифры, _, -, +), начинаться с буквы и не содержать пробелов."
+
+#~ msgid "Redis waiting exception."
+#~ msgstr "Ошибка Redis."
+
+#~ msgid "User {} password setting error."
+#~ msgstr "Ошибка задания пароля пользователя {}."
+
+#~ msgid "Another task works on pool {} before creating new blank VM."
+#~ msgstr "Другая задача выполняется над пулом {} перед созданием новой пустой ВМ."
+
+#~ msgid "Expansion of guest pool {} requested."
+#~ msgstr "Запрошено расширение гостевого пула {}."
+
+#~ msgid "Active directory object has no service username or password. Including skipped."
+#~ msgstr "У службы каталогов не указаны имя пользователя и пароль. Пропускаем."
+
+#~ msgid "VM {} active directory group including error."
+#~ msgstr "Ошибка ввода ВМ {} в группу AD."
+
+#~ msgid "VM {} AD group including successful."
+#~ msgstr "ВМ {} успешно заведена в контейнер/группу AD."
+
+#~ msgid "Demo version."
+#~ msgstr "Демонстрационная версия."
+
+#~ msgid "Update Pool values for AutomatedPool {}."
+#~ msgstr "Обновление значений пула для автоматического пула {}."
+
+#~ msgid "Failed to create automated pool {}."
+#~ msgstr "Ошибка создания автоматического пула {}."
+
+#~ msgid "Failed to update automated pool {}. Name must be unique."
+#~ msgstr "Ошибка редактирования автоматического пула {}. Имя должно быть уникальным."
+
+#~ msgid "ECP VeiL controller {} error."
+#~ msgstr "Ошибка контроллера ECP VeiL {}."
+
+#~ msgid "Critical controller error."
+#~ msgstr "Критическая ошибка контроллера."
+
+#~ msgid "Role {} has been set to pool {}."
+#~ msgstr "Роль {} добавлена в пул {}."
+
+#~ msgid "Pool already has role."
+#~ msgstr "Пул уже имеет роль."
+
+#~ msgid "Roles: {} was deleted to pool {}."
+#~ msgstr "Роли: {} удалены в пуле {}."
+
+#~ msgid "Controller can`t create VM. Unknown node."
+#~ msgstr "Контроллер не может создать ВМ. Неизвестный узел."
+
+#~ msgid "Unknown node {}."
+#~ msgstr "Неизвестный узел {}."
+
+#~ msgid "Attempts to create VM {} have been exhausted."
+#~ msgstr "Превышен лимит попыток создания ВМ {}."
+
+#~ msgid "  Duration: {}."
+#~ msgstr "  Продолжительность: {}."
+
+#~ msgid "User {} created with role {}."
+#~ msgstr "Пользователь {} создан с ролью {}."
+
+#~ msgid "Something went wrong. Interrupt while."
+#~ msgstr "Что-то пошло не так. Прерываем while."
+
+#~ msgid "Controller has not free space for creating new VM."
+#~ msgstr "На контроллере отсутствует место для создания новой виртуальной машины."
+
+#~ msgid "Pool {} has been deactivated."
+#~ msgstr "Пул {} деактивирован."
+
+#~ msgid "Can`t connect to {}."
+#~ msgstr "Не удается подключиться к {}."
+
+#~ msgid "StaticPool: Create VMs."
+#~ msgstr "Статический пул: создание виртуальных машин."
+
+#~ msgid "StaticPool: Create StaticPool."
+#~ msgstr "Статический пул: создание статического пула."
+
+#~ msgid "StaticPool: Create Pool."
+#~ msgstr "Статический пул: создание пула."
+
+#~ msgid "2fa auth error for user: {}."
+#~ msgstr "Ошибка двухфакторной аутентификации для пользователя: {}."
+
+#~ msgid "User {} do not have a secret code for 2fa auth. Please generate this in settings of user."
+#~ msgstr "У пользователя {} нет секретного кода для двухфакторной аутентификации. Пожалуйста, сгенерируйте это в настройках пользователя."
+
+#~ msgid "One-time password error for user: {}."
+#~ msgstr "Ошибка одноразового пароля для пользователя: {}."
+
+#~ msgid "Group {} is removed for user {}."
+#~ msgstr "Группа {} удалена у пользователя {}."

@@ -22,6 +22,8 @@ export class ResourcePoolsComponent extends DetailsMove implements OnInit, OnDes
 
   @Input() filter: object
 
+  public refresh: boolean = false
+
   public resource_pools = [];
   public collection: object[] = [
     {
@@ -73,21 +75,24 @@ export class ResourcePoolsComponent extends DetailsMove implements OnInit, OnDes
     this.getResourcePools();
   }
 
-  public getResourcePools(): void {
+  public getResourcePools(refresh?): void {
     if (this.sub) {
       this.sub.unsubscribe();
     }
     this.waitService.setWait(true);
 
     let filtered = (data) => {
-      if (this.filter) {
+      if ((this.filter && !this.refresh) || (this.filter && this.refresh)) {
         return data.data.controller.resource_pools
       } else {
         return data.data.resource_pools
       }
     }
 
-    this.sub = this.service.getAllResourcePools(this.filter).valueChanges.pipe(map(data => filtered(data)))
+    if (refresh) {
+      this.refresh = refresh
+    }
+    this.sub = this.service.getAllResourcePools(this.filter, this.refresh).valueChanges.pipe(map(data => filtered(data)))
       .subscribe((data) => {
         this.resource_pools = data;
         this.waitService.setWait(false);

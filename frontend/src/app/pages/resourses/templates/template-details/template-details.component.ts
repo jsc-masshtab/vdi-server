@@ -133,6 +133,7 @@ export class TemplateDetailsComponent implements OnInit, OnDestroy {
   public idTemplate: string;
   public menuActive: string = 'info';
   public host: boolean = false;
+  public refresh: boolean = false;
   private address: string;
   private sub: Subscription;
 
@@ -149,12 +150,15 @@ export class TemplateDetailsComponent implements OnInit, OnDestroy {
     });
   }
 
-  public getTemplate() {
+  public getTemplate(refresh?) {
     if (this.sub) {
       this.sub.unsubscribe();
     }
     this.host = false;
-    this.sub = this.service.getTemplate(this.idTemplate, this.address).valueChanges.pipe(map(data => data.data.template))
+    if (refresh) {
+      this.refresh = refresh
+    }
+    this.sub = this.service.getTemplate(this.idTemplate, this.address, this.refresh).valueChanges.pipe(map(data => data.data.template))
       .subscribe((data) => {
         this.template = data
         this.host = true;
