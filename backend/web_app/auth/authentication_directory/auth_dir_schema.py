@@ -158,6 +158,7 @@ class AuthenticationDirectoryType(graphene.ObjectType):
         description="Пароль пользователя имеющего права для управления AD"
     )
     status = StatusGraphene(description="Статус")
+    sso = graphene.Boolean(default_value=False, description="Технология Single Sign-on")
 
     mappings = graphene.List(
         MappingType,
@@ -303,6 +304,7 @@ class UpdateAuthenticationDirectoryMutation(
         directory_type = DirectoryTypesGraphene(description="Тип службы каталогов")
         domain_name = ShortString(description="NetBIOS — имя домена")
         dc_str = ShortString(description="FQDN — полное имя домена")
+        sso = graphene.Boolean(description="Технология Single Sign-on")
         service_username = ShortString(description="Пользователь имеющий права для управления AD")
         service_password = ShortString(description="Пароль пользователя имеющего права для управления AD")
 
@@ -324,6 +326,7 @@ class UpdateAuthenticationDirectoryMutation(
             service_username=kwargs.get("service_username"),
             service_password=kwargs.get("service_password"),
             dc_str=kwargs.get("dc_str"),
+            sso=kwargs.get("sso"),
             creator=creator,
         )
         return UpdateAuthenticationDirectoryMutation(

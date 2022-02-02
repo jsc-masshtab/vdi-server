@@ -1,12 +1,15 @@
 # -*- coding: utf-8 -*-
 from abc import ABC
 
+from tornado.web import HTTPError
+
 from common.languages import _local_
 from common.log.journal import system_logger
 from common.models.active_tk_connection import ActiveTkConnection
 from common.models.auth import User
 from common.models.authentication_directory import AuthenticationDirectory
 from common.settings import EXTERNAL_AUTH, LANGUAGE, LOCAL_AUTH, PAM_AUTH
+from common.veil.auth.auth_dir_utils import extract_domain_from_username
 from common.veil.auth.veil_jwt import (
     encode_jwt,
     extract_user_and_token_with_no_expire_check,
@@ -143,6 +146,32 @@ class SettingsHandler(BaseHttpHandler, ABC):
         auth_dir = await AuthenticationDirectory.get_objects(first=True)
         data = {"language": LANGUAGE,
                 "broker_name": BROKER_NAME,
+                "sso": auth_dir.sso if auth_dir else False,
                 "ldap": auth_dir.dc_str if auth_dir else ""}
         response = {"data": data}
         return self.finish(response)
+
+
+class KerberosAuthHandler(BaseHttpHandler, ABC):
+    async def get(self):
+        auth_dir = await AuthenticationDirectory.get_objects(first=True)
+        if auth_dir and auth_dir.sso:
+            auth_header = self.request.headers.get("Authorization")
+            remote_user = self.request.headers.get("X-Remote-User")
+            if auth_header and remote_user:
+                await system_logger.debug("KerberosAuthHandler user: {}".format(remote_user))  # To see what you get
+                account_name, domain_name = extract_domain_from_username(remote_user)
+                access_token = encode_jwt(account_name, domain=domain_name)
+                await User.login(
+                    username=account_name,
+                    token=access_token.get("access_token"),
+                    ip=self.remote_ip,
+                    ldap=True,
+                    client_type=self.client_type,
+                )
+                response = {"data": access_token}
+                return await self.log_finish(response)
+            else:
+                raise HTTPError(500, "Kerberos auth error")
+        else:
+            raise HTTPError(401, "Kerberos auth is unable")

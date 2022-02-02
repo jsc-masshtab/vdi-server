@@ -51,10 +51,6 @@ import { LoginModule } from '@pages/login/login.module';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 
-
-
-
-
 @NgModule({
   declarations: [
     AppComponent

@@ -258,6 +258,21 @@ export class AuthenticationDirectoryDetailsComponent implements OnInit, OnDestro
     });
   }
 
+  public changeSso(): void {
+    const options = {
+      title: 'SSO',
+      property: 'sso',
+      form: {
+        tag: 'input',
+        type: 'checkbox',
+        description: 'SSO',
+        gqlType: 'Boolean'
+      }
+    };
+
+    this.openEditForm(options);
+  }
+
   public addMatch() {
     this.dialog.open(AddMappingComponent, {
       disableClose: true,

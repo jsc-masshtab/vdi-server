@@ -31,7 +31,7 @@
 						<label class="toggle-btn ldap-toggle-btn" for="ldap"></label>
 						<label for="ldap" class="checkbox-bg-text">LDAP</label>
 					</div>
-					<span class="field" *ngIf="ldapToggleStatus && (settings$ | async)?.ldap as ldap" >
+					<span class="field" *ngIf="ldapToggleStatus && ldap" >
 						@{{ldap}}
 					</span>
 				</label>
