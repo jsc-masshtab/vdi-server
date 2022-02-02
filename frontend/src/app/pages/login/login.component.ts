@@ -56,7 +56,7 @@ export class LoginComponent implements OnInit {
     this.loginService.getSettings().subscribe((res) => {
       this.ldap = res.ldap;
 
-      if(res.sso) {
+      if (res.sso) {
         this.sendSSO();
       }
     });
@@ -88,11 +88,11 @@ export class LoginComponent implements OnInit {
 
       (res) => {
         this.authStorageService.saveInStorage(res.body.data);
-        this.routePage();  
-      }, 
+        this.routePage();
+      },
 
       (res) => {
-        if(!res.status) {
+        if (!res.status) {
           this.sendSSO();
         } else {
           this.routePage();

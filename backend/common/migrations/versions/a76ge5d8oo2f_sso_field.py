@@ -1,7 +1,7 @@
 """add_sso_field_for_auth_dir.
 
 Revision ID: a76ge5d8oo2f
-Revises: 9d14f7f75d65
+Revises: 6g78tf2ee56d
 Create Date: 2021-12-22 14:13:23.131024
 
 """
@@ -11,7 +11,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision = "a76ge5d8oo2f"
-down_revision = "9d14f7f75d65"
+down_revision = "6g78tf2ee56d"
 branch_labels = None
 depends_on = None
 
