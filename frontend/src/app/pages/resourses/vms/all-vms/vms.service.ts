@@ -14,7 +14,7 @@ export class VmsService {
         nameSort: undefined
     };
 
-    public getAllVms(filter?): QueryRef<any, any> {
+    public getAllVms(filter?, refresh?): QueryRef<any, any> {
 
         let query: string = `query resources($ordering:ShortString) {
             vms(ordering: $ordering) {
@@ -43,6 +43,20 @@ export class VmsService {
                     }
                 }
             }`
+        } else if (refresh && !filter) {
+            query = `query resources($ordering:ShortString, $refresh: Boolean) {
+                vms(ordering: $ordering, refresh: $refresh) {
+                    verbose_name
+                    pool_name
+                    status
+                    user_power_state
+                    id
+                    controller {
+                        id
+                        verbose_name
+                    }
+                }
+            }`
         }
 
         return  this.service.watchQuery({
@@ -50,50 +64,88 @@ export class VmsService {
             variables: {
                 method: 'GET',
                 ordering: this.params.nameSort,
-                ...filter
+                ...filter,
+                refresh
             }
         });
     }
 
-    public getVm(id: string, controller_address: string): QueryRef<any, any> {
-        return  this.service.watchQuery({
-            query: gql` query resources($id: UUID, $controller_address: UUID) {
-                            vm(vm_id: $id, controller_id: $controller_address) {
-                                verbose_name
-                                description
-                                os_type
-                                os_version
-                                cpu_count
-                                memory_count
-                                tablet
-                                ha_enabled
-                                disastery_enabled
-                                guest_agent
-                                remote_access
-                                spice_stream
-                                user_power_state
-                                boot_type
-                                start_on_boot
-                                address
-                                status
-                                hostname
-                                domain_tags {
-                                    colour
+    public getVm(id: string, controller_address: string, refresh: boolean): QueryRef<any, any> {
+
+        let query: string = ` query resources($id: UUID, $controller_address: UUID) {
+                                vm(vm_id: $id, controller_id: $controller_address) {
                                     verbose_name
-                                    slug
+                                    description
+                                    os_type
+                                    os_version
+                                    cpu_count
+                                    memory_count
+                                    tablet
+                                    ha_enabled
+                                    disastery_enabled
+                                    guest_agent
+                                    remote_access
+                                    spice_stream
+                                    user_power_state
+                                    boot_type
+                                    start_on_boot
+                                    address
+                                    status
+                                    hostname
+                                    domain_tags {
+                                        colour
+                                        verbose_name
+                                        slug
+                                    }
+                                    parent_name
+                                    resource_pool {
+                                        id
+                                        verbose_name
+                                    }
                                 }
-                                parent_name
-                                resource_pool {
-                                    id
-                                    verbose_name
-                                }
-                            }
-                        }
-                    `,
+                            }`
+
+        if (refresh) {
+          query = ` query resources($id: UUID, $controller_address: UUID, $refresh: Boolean) {
+                      vm(vm_id: $id, controller_id: $controller_address, refresh: $refresh) {
+                          verbose_name
+                          description
+                          os_type
+                          os_version
+                          cpu_count
+                          memory_count
+                          tablet
+                          ha_enabled
+                          disastery_enabled
+                          guest_agent
+                          remote_access
+                          spice_stream
+                          user_power_state
+                          boot_type
+                          start_on_boot
+                          address
+                          status
+                          hostname
+                          domain_tags {
+                              colour
+                              verbose_name
+                              slug
+                          }
+                          parent_name
+                          resource_pool {
+                              id
+                              verbose_name
+                          }
+                      }
+                  }`
+        }
+        return this.service.watchQuery({
+            query: gql(query),
             variables: {
                 method: 'GET',
                 id,
-                controller_address
+                controller_address,
+                refresh
             }
         });
     }

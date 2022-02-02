@@ -132,12 +132,19 @@ nav:
         - Группы: broker/operator_guide/groups.md
         - Пользователи: broker/operator_guide/users.md
         - Службы каталогов: broker/operator_guide/ad.md
+        - Single Sign-On:
+          - Общие сведения: broker/operator_guide/sso/index.md
+          - Настройка службы каталогов: broker/operator_guide/sso/ad.md
+          - Включение и отключение SSO: broker/operator_guide/sso/enable.md
+          - Настройка браузера для работы с SSO: broker/operator_guide/sso/browser.md
         - Кэширование: broker/operator_guide/cache.md
         - SMTP: broker/operator_guide/smtp.md
       - Журнал: 
         - События: broker/operator_guide/events.md
         - Задачи: broker/operator_guide/tasks.md
         - Настройка: broker/operator_guide/web_settings.md
+      - Статистика:
+        - Веб-статистика: broker/operator_guide/web_stats.md
       - Перечень принятых сокращений: broker/operator_guide/abbreviations.md
     - Спецификация:
       - Требования к хост-системе брокера: broker/spec/domain-req.md
@@ -223,8 +230,8 @@ nav:
   - ECP VeiL: https://veil.mashtab.org/docs/
   - Cписок изменений:
     - VeiL Broker:
-      - 3.2.0 (Будущая): broker/changelog/3.2.0.md
-      - 3.1.3 (Текущая): broker/changelog/3.1.3.md
+      - 3.2.0 (Текущая): broker/changelog/3.2.0.md
+      - 3.1.3 : broker/changelog/3.1.3.md
       - 3.1.2: broker/changelog/3.1.2.md
       - 3.1.1: broker/changelog/3.1.1.md
       - 3.1.0: broker/changelog/3.1.0.md

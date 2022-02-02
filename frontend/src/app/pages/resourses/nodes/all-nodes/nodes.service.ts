@@ -16,7 +16,7 @@ export class NodesService {
         nameSort: undefined
     };
 
-    public getAllNodes(filter?): QueryRef<any, any> {
+    public getAllNodes(filter?, refresh?): QueryRef<any, any> {
 
         let query: string = `query resources($ordering:ShortString) {
             nodes(ordering: $ordering) {
@@ -48,6 +48,22 @@ export class NodesService {
                     }
                 }
             }`
+        } else if (refresh && !filter) {
+            query = `query resources($ordering:ShortString, $refresh: Boolean) {
+                nodes(ordering: $ordering, refresh: $refresh) {
+                    id
+                    verbose_name
+                    status
+                    datacenter_name
+                    cpu_count
+                    memory_count
+                    management_ip
+                    controller {
+                        id
+                        verbose_name
+                    }
+                }
+            }`
         }
 
         return  this.service.watchQuery({
@@ -55,31 +71,50 @@ export class NodesService {
             variables: {
                 method: 'GET',
                 ordering: this.paramsForGetNodes.nameSort,
-                ...filter
+                ...filter,
+                refresh
             }
         });
     }
 
-    public getNode(id: string, controller_address: string): QueryRef<any, any> {
-        return  this.service.watchQuery({
-            query: gql` query resources($id: UUID, $controller_address: UUID) {
-                            node(node_id: $id, controller_id: $controller_address) {
-                                verbose_name
-                                description
-                                status
-                                cpu_count
-                                memory_count
-                                management_ip
-                                cluster_name
-                                datacenter_name
-                                node_plus_controller_installation
-                            }
-                        }
-                    `,
+    public getNode(id: string, controller_address: string, refresh: boolean): QueryRef<any, any> {
+
+        let query: string = ` query resources($id: UUID, $controller_address: UUID) {
+                                node(node_id: $id, controller_id: $controller_address) {
+                                    verbose_name
+                                    description
+                                    status
+                                    cpu_count
+                                    memory_count
+                                    management_ip
+                                    cluster_name
+                                    datacenter_name
+                                    node_plus_controller_installation
+                                }
+                            }`
+
+        if (refresh) {
+          query = ` query resources($id: UUID, $controller_address: UUID, $refresh: Boolean) {
+                      node(node_id: $id, controller_id: $controller_address, refresh: $refresh) {
+                          verbose_name
+                          description
+                          status
+                          cpu_count
+                          memory_count
+                          management_ip
+                          cluster_name
+                          datacenter_name
+                          node_plus_controller_installation
+                      }
+                  }`
+        }
+        return this.service.watchQuery({
+            query: gql(query),
             variables: {
                 method: 'GET',
                 id,
-                controller_address
+                controller_address,
+                refresh
             }
         });
     }

@@ -15,7 +15,7 @@ export class TemplatesService {
         nameSort: undefined
     };
 
-    public getAllTemplates(filter?): QueryRef<any, any> {
+    public getAllTemplates(filter?, refresh?): QueryRef<any, any> {
 
         let query: string = `query resources($ordering:ShortString) {
             templates(ordering: $ordering) {
@@ -44,6 +44,18 @@ export class TemplatesService {
                     }
                 }
             }`
+        } else if (refresh && !filter) {
+            query = `query resources($ordering:ShortString, $refresh: Boolean) {
+                templates(ordering: $ordering, refresh: $refresh) {
+                    id
+                    verbose_name
+                    status
+                    controller {
+                        id
+                        verbose_name
+                    }
+                }
+            }`
         }
 
         return  this.service.watchQuery({
@@ -51,46 +63,80 @@ export class TemplatesService {
             variables: {
                 method: 'GET',
                 ordering: this.params.nameSort,
-                ...filter
+                ...filter,
+                refresh
             }
         });
     }
 
-    public getTemplate(id: string, controller_address: string): QueryRef<any, any> {
-        return  this.service.watchQuery({
-            query: gql` query resources($id: UUID, $controller_address: UUID) {
-                            template(template_id: $id, controller_id: $controller_address) {
-                                verbose_name
-                                description
-                                os_type
-                                os_version
-                                cpu_count
-                                memory_count
-                                tablet
-                                domain_tags {
-                                    colour
+    public getTemplate(id: string, controller_address: string, refresh: boolean): QueryRef<any, any> {
+
+        let query: string = ` query resources($id: UUID, $controller_address: UUID) {
+                                template(template_id: $id, controller_id: $controller_address) {
                                     verbose_name
-                                    slug
+                                    description
+                                    os_type
+                                    os_version
+                                    cpu_count
+                                    memory_count
+                                    tablet
+                                    domain_tags {
+                                        colour
+                                        verbose_name
+                                        slug
+                                    }
+                                    ha_enabled
+                                    disastery_enabled
+                                    remote_access
+                                    spice_stream
+                                    status
+                                    user_power_state
+                                    boot_type
+                                    start_on_boot
+                                    resource_pool {
+                                        id
+                                        verbose_name
+                                    }
                                 }
-                                ha_enabled
-                                disastery_enabled
-                                remote_access
-                                spice_stream
-                                status
-                                user_power_state
-                                boot_type
-                                start_on_boot
-                                resource_pool {
-                                    id
-                                    verbose_name
-                                }
-                            }
-                        }
-                    `,
+                            }`
+
+        if (refresh) {
+          query = ` query resources($id: UUID, $controller_address: UUID, $refresh: Boolean) {
+                      template(template_id: $id, controller_id: $controller_address, refresh: $refresh) {
+                          verbose_name
+                          description
+                          os_type
+                          os_version
+                          cpu_count
+                          memory_count
+                          tablet
+                          domain_tags {
+                              colour
+                              verbose_name
+                              slug
+                          }
+                          ha_enabled
+                          disastery_enabled
+                          remote_access
+                          spice_stream
+                          status
+                          user_power_state
+                          boot_type
+                          start_on_boot
+                          resource_pool {
+                              id
+                              verbose_name
+                          }
+                      }
+                  }`
+        }
+        return this.service.watchQuery({
+            query: gql(query),
             variables: {
                 method: 'GET',
                 id,
-                controller_address
+                controller_address,
+                refresh
             }
         });
     }

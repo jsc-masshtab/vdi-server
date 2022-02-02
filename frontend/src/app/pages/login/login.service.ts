@@ -3,6 +3,7 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
+
 import { environment } from '../../../environments/environment';
 import { AuthStorageService } from './authStorage.service';
 
@@ -10,12 +11,16 @@ import { AuthStorageService } from './authStorage.service';
 export interface ISettings {
     language: string
     ldap: string
+    sso: boolean
     broker_name: string
 }
 @Injectable()
 export class LoginService {
 
-    constructor(private http: HttpClient, private authStorageService: AuthStorageService) {}
+    constructor(
+        private http: HttpClient,
+        private authStorageService: AuthStorageService
+    ) {}
 
     public auth(authData: {username: string, password: string}): Observable<any> {
         let url = `${environment.api}auth`;
@@ -36,10 +41,13 @@ export class LoginService {
         return this.http.post(url, {}, { headers });
     }
 
-
-
-
     public getSettings(): Observable<ISettings> {
-        return this.http.get<ISettings>('/api/settings/').pipe(map((res: any) => res.data));
-      }
+        let url = `${environment.api}settings/`
+        return this.http.get<ISettings>(url).pipe(map((res: any) => res.data));
+    }
+
+    public getSSO(): any {
+        let url = `${environment.api}sso/`;
+        return this.http.get(url, { observe: 'response' });
+    }
 }

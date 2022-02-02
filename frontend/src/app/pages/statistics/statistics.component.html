@@ -1,0 +1,60 @@
+<div class="control-panel flexable-height">
+  <div class="crumb">
+    <fa-icon [icon]="['fas','chart-bar']" ></fa-icon>
+    <span class="crumb-name">Статистика</span>
+  </div>
+  <vdi-button-refresh (clickRefresh)="refresh()" ></vdi-button-refresh>
+  <div class="control-btns" >
+    <button type="button" (click)="generateReport()">
+        <fa-icon [icon]="['fas','plus-circle']"></fa-icon>
+        <span class="btn-name">Создать отчет</span>
+    </button>
+</div>
+  <mat-form-field class="date-field">
+    <mat-label>Год</mat-label>
+    <mat-select [formControl]="year">
+      <mat-option [value]="'all'">
+        Все
+    </mat-option>
+        <mat-option [value]="2022">
+            2022
+        </mat-option>
+        <mat-option [value]="2021">
+            2021
+        </mat-option>
+        <mat-option [value]="2020">
+            2020
+        </mat-option>
+        <mat-option [value]="2019">
+            2019
+        </mat-option>
+        <mat-option [value]="2018">
+            2018
+        </mat-option>
+    </mat-select>
+</mat-form-field>
+
+<mat-form-field class="date-field">
+  <mat-label>Месяц</mat-label>
+  <mat-select [formControl]="month">
+      <mat-option [value]="'all'">
+          Все
+      </mat-option>
+      <mat-option *ngFor="let m of months; index as i" [value]="i + 1">
+        {{m}}
+      </mat-option>
+  </mat-select>
+</mat-form-field>
+<div class="control-btns" >
+  <button type="button" (click)="downloadReport()">
+    <fa-icon [icon]="['fas','download']"></fa-icon>
+    <span class="btn-name">Скачать отчет</span>
+  </button>
+</div>
+
+</div>
+
+<div class="components-info">
+  <div class="component-list" #myDiv>
+  </div>
+</div>

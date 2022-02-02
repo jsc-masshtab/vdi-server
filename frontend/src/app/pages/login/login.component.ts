@@ -4,6 +4,7 @@ import {
   transition,
   animate
 } from '@angular/animations';
+
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -37,6 +38,7 @@ export class LoginComponent implements OnInit {
   public loginForm: FormGroup;
   public settings$: Observable<ISettings>;
   public useCode = new FormControl(false)
+  public ldap = '';
 
   constructor(private fb: FormBuilder,
               private authStorageService: AuthStorageService,
@@ -45,43 +47,63 @@ export class LoginComponent implements OnInit {
               private errorService: ErrorsService) { this.routePage(); }
 
   ngOnInit() {
-    this.loaded = true;
+    this.createForm();
+
     this.loginForm.get('ldap').valueChanges.subscribe(v => {
       this.authStorageService.setLdap(v)
     })
 
-    this.settings$ = this.loginService.getSettings();
+    this.loginService.getSettings().subscribe((res) => {
+      this.ldap = res.ldap;
+
+      if (res.sso) {
+        this.sendSSO();
+      }
+    });
   }
 
   private createForm(): void {
-    if (!this.loginForm) {
-      this.loginForm = this.fb.group({
-        username: '' ,
-        password: '',
-        code: '',
-        ldap: this.authStorageService.getLdapCheckbox()
-      });
-    } else {
-      return;
-    }
+    this.loginForm = this.fb.group({
+      username: '' ,
+      password: '',
+      code: '',
+      ldap: this.authStorageService.getLdapCheckbox()
+    });
+  }
+
+  public get ldapToggleStatus(): boolean {
+    return this.authStorageService.getLdapCheckbox();
   }
 
   private routePage(): void {
     if (this.authStorageService.checkLogin()) {
       this.route.navigate(['/pages']);
     } else {
-      this.createForm();
+      this.loaded = true;
     }
   }
 
-  
-  public get ldapToggleStatus(): boolean {
-    return this.authStorageService.getLdapCheckbox();
-  }
-  
-  public send() {
+  private sendSSO() {
+    this.loginService.getSSO().subscribe(
 
+      (res) => {
+        this.authStorageService.saveInStorage(res.body.data);
+        this.routePage();
+      },
+
+      (res) => {
+        if (!res.status) {
+          this.sendSSO();
+        } else {
+          this.routePage();
+        }
+      }
+    );
+  }
+
+  public send() {
     this.loginService.auth(this.loginForm.value).subscribe((res: { data: { access_token: string, expires_on: string, username: string }} & { errors: [] } ) => {
+
       if (res && res.data) {
         this.authStorageService.saveInStorage(res.data);
         this.routePage();

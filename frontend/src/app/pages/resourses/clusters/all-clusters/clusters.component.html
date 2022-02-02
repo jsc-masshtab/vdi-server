@@ -4,7 +4,7 @@
         <span class="crumb-name">Кластеры</span>
     </div>
 
-    <vdi-button-refresh (clickRefresh)="getAllClusters()" ></vdi-button-refresh>
+    <vdi-button-refresh (clickRefresh)="getAllClusters(true)" ></vdi-button-refresh>
 
     <div class="control-btns-end">
         <button *ngIf="pageRollup" class="bars-btn" (click)="toggleShow()">

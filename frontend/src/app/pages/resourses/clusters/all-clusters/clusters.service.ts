@@ -15,8 +15,7 @@ export class ClustersService  {
 
     constructor(private service: Apollo) {}
 
-    public getAllClusters(filter?): QueryRef<any, any> {
-
+    public getAllClusters(filter?, refresh?): QueryRef<any, any> {
         let query: string = `query resources($ordering:ShortString) {
             clusters(ordering: $ordering) {
                 id
@@ -49,6 +48,23 @@ export class ClustersService  {
                     }
                 }
             }`
+        } else if (refresh && !filter) {
+            query = `query resources($ordering: ShortString, $refresh: Boolean) {
+                clusters(ordering: $ordering, refresh: $refresh) {
+                  id
+                  verbose_name
+                  nodes_count
+                  status
+                  cpu_count
+                  memory_count
+                  description
+                  controller {
+                      id
+                      verbose_name
+                  }
+
+                }
+            }`
         }
 
         return  this.service.watchQuery({
@@ -56,34 +72,56 @@ export class ClustersService  {
             variables: {
                 method: 'GET',
                 ordering: this.paramsForGetClusters.nameSort,
-                ...filter
+                ...filter,
+                refresh
             }
         });
     }
 
-    public getCluster(id: string, controller_address: string): QueryRef<any, any> {
-        return  this.service.watchQuery({
-            query: gql` query resources($id: UUID, $controller_address: UUID) {
-                            cluster(cluster_id: $id, controller_id: $controller_address) {
-                                id
-                                verbose_name
-                                description
-                                status
-                                cpu_count
-                                memory_count
-                                cluster_fs_configured
-                                cluster_fs_type
-                                nodes {
+    public getCluster(id: string, controller_address: string, refresh: boolean): QueryRef<any, any> {
+
+        let query: string = ` query resources($id: UUID, $controller_address: UUID) {
+                                cluster(cluster_id: $id, controller_id: $controller_address) {
+                                    id
                                     verbose_name
+                                    description
                                     status
+                                    cpu_count
+                                    memory_count
+                                    cluster_fs_configured
+                                    cluster_fs_type
+                                    nodes {
+                                        verbose_name
+                                        status
+                                    }
                                 }
-                            }
-                        }
-                    `,
+                            }`
+
+        if (refresh) {
+          query = ` query resources($id: UUID, $controller_address: UUID, $refresh: Boolean) {
+                      cluster(cluster_id: $id, controller_id: $controller_address, refresh: $refresh) {
+                          id
+                          verbose_name
+                          description
+                          status
+                          cpu_count
+                          memory_count
+                          cluster_fs_configured
+                          cluster_fs_type
+                          nodes {
+                              verbose_name
+                              status
+                          }
+                      }
+                  }`
+        }
+        return this.service.watchQuery({
+            query: gql(query),
             variables: {
                 method: 'GET',
                 id,
-                controller_address
+                controller_address,
+                refresh
             }
         });
     }

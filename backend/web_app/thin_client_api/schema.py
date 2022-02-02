@@ -12,11 +12,10 @@ from common.database import db
 from common.graphene_utils import ShortString
 from common.languages import _local_
 from common.log.journal import system_logger
-from common.models.active_tk_connection import (
-    ActiveTkConnection
-)
+from common.models.active_tk_connection import ActiveTkConnection
 from common.models.auth import User
 from common.models.pool import Pool
+from common.models.tk_vm_connection import TkVmConnection
 from common.models.vm import Vm
 from common.settings import REDIS_TEXT_MSG_CHANNEL, REDIS_THIN_CLIENT_CMD_CHANNEL
 from common.subscription_sources import WsMessageDirection, WsMessageType
@@ -98,36 +97,6 @@ class ThinClientType(graphene.ObjectType):
         return thin_client_type
 
 
-class ThinClientConnStatType(graphene.ObjectType):
-    id = graphene.UUID()
-    conn_id = graphene.UUID()
-    received = graphene.DateTime()
-
-    read_speed = graphene.Int()
-    write_speed = graphene.Int()
-
-    avg_rtt = graphene.Float()
-    min_rtt = graphene.Float()
-    max_rtt = graphene.Float()
-    loss_percentage = graphene.Int()
-
-    @staticmethod
-    async def create_from_db_data(tk_db_data):
-
-        tk_conn_stat_type = ThinClientConnStatType()
-        tk_conn_stat_type.id = tk_db_data.id
-        tk_conn_stat_type.conn_id = tk_db_data.conn_id
-
-        return tk_conn_stat_type
-
-
-class ThinClientConnStatOutdatedType(graphene.ObjectType):
-    id = graphene.UUID()
-    conn_id = graphene.UUID()
-    message = graphene.Field(ShortString)
-    created = graphene.DateTime()
-
-
 class ThinClientQuery(graphene.ObjectType):
 
     thin_clients_count = graphene.Int(get_disconnected=graphene.Boolean(),
@@ -154,6 +123,36 @@ class ThinClientQuery(graphene.ObjectType):
     async def resolve_thin_clients(
         self, _info, limit, offset, ordering, get_disconnected, user_id=None, **kwargs
     ):
+        # Найти подключения к ВМ с последней датой подключения (максимальной)
+        subquery_vm_conn = db.select(
+            [
+                TkVmConnection.tk_connection_id,
+                db.func.max(TkVmConnection.connected_to_vm).label("max_connected_to_vm")
+            ]).\
+            where((TkVmConnection.disconnected_from_vm == None)).group_by(TkVmConnection.tk_connection_id)  # noqa
+
+        subquery_vm_conn = subquery_vm_conn.alias("subquery_vm_conn")
+
+        # Джойн на себя (TkVmConnection) чтобы получить остальные данные TkVmConnection
+        subquery_vm_conn_2 = db.select(
+            [
+                TkVmConnection.vm_id,
+                TkVmConnection.tk_connection_id,
+                TkVmConnection.connection_type,
+                TkVmConnection.is_connection_secure,
+                TkVmConnection.read_speed,
+                TkVmConnection.write_speed,
+                TkVmConnection.avg_rtt,
+                TkVmConnection.loss_percentage
+            ]).\
+            select_from(
+            subquery_vm_conn.join(TkVmConnection,
+                                  (subquery_vm_conn.c.tk_connection_id == TkVmConnection.tk_connection_id) &  # noqa
+                                  (subquery_vm_conn.c.max_connected_to_vm == TkVmConnection.connected_to_vm)))
+
+        subquery_vm_conn_2 = subquery_vm_conn_2.alias("subquery_vm_conn_2")
+
+        # Финальный запрос. Получение соединений ТК с VDI с данными о последнем активном подключении к ВМ(если имеется)
         query = db.select(
             [
                 ActiveTkConnection.id.label("conn_id"),
@@ -164,24 +163,25 @@ class ThinClientQuery(graphene.ObjectType):
                 ActiveTkConnection.disconnected,
                 ActiveTkConnection.data_received,
                 ActiveTkConnection.last_interaction,
-                ActiveTkConnection.connection_type,
-                ActiveTkConnection.is_connection_secure,
-                ActiveTkConnection.read_speed,
-                ActiveTkConnection.write_speed,
-                ActiveTkConnection.avg_rtt,
-                ActiveTkConnection.loss_percentage,
                 ActiveTkConnection.mac_address,
                 ActiveTkConnection.hostname,
                 User.id.label("user_id"),
                 User.username,
                 Vm.verbose_name,
+                subquery_vm_conn_2.c.connection_type,
+                subquery_vm_conn_2.c.is_connection_secure,
+                subquery_vm_conn_2.c.read_speed,
+                subquery_vm_conn_2.c.write_speed,
+                subquery_vm_conn_2.c.avg_rtt,
+                subquery_vm_conn_2.c.loss_percentage
             ]
         )
 
         query = query.select_from(
-            ActiveTkConnection.join(User, ActiveTkConnection.user_id == User.id, isouter=True).join(
-                Vm, ActiveTkConnection.vm_id == Vm.id, isouter=True
-            )
+            ActiveTkConnection.join(
+                User, ActiveTkConnection.user_id == User.id, isouter=True).join(
+                subquery_vm_conn_2, ActiveTkConnection.id == subquery_vm_conn_2.c.tk_connection_id, isouter=True).join(
+                Vm, subquery_vm_conn_2.c.vm_id == Vm.id, isouter=True)
         )
 
         # ordering

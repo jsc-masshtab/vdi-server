@@ -20,7 +20,8 @@
             "allowedCommonJsDependencies": [
               "graphql-tag",
               "zen-observable",
-              "qrcode"
+              "qrcode",
+              "file-saver"
             ],
             "aot": false,
             "outputPath": "dist/frontend",
@@ -31,7 +32,8 @@
             "assets": [
               "src/assets",
               "src/novnc",
-              "src/spice-html5"
+              "src/spice-html5",
+              { "glob": "**/*", "input": "src/assets/awstatsicons", "output": "/awstatsicons" }
             ],
             "styles": [
               "src/reset.scss",

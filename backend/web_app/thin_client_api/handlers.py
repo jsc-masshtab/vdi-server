@@ -22,6 +22,7 @@ from common.models.active_tk_connection import ActiveTkConnection, TkConnectionE
 from common.models.auth import User
 from common.models.pool import AutomatedPool, Pool as PoolM, RdsPool
 from common.models.task import PoolTaskType, Task, TaskStatus
+from common.models.tk_vm_connection import TkVmConnection
 from common.models.vm import Vm
 from common.settings import (
     INTERNAL_EVENTS_CHANNEL,
@@ -554,7 +555,6 @@ class ThinClientWsHandler(BaseWsHandler):
                 ),
                 user_id=self.user_id,
                 veil_connect_version=self.get_query_argument("veil_connect_version"),
-                vm_id=self.get_query_argument(name="vm_id", default=None),
                 tk_ip=self.remote_ip,
                 tk_os=self.get_query_argument("tk_os"),
                 mac_address=self.get_query_argument("mac_address", default=None),
@@ -583,25 +583,32 @@ class ThinClientWsHandler(BaseWsHandler):
                 tk_conn = await ActiveTkConnection.get(self.conn_id)
                 if tk_conn:
                     if event_type == TkConnectionEvent.VM_CHANGED.value:  # юзер подключился/отключился от машины
+                        # Блок кода оставлен для поддержки старых версий ТК
+                        vm_id = recv_data_dict.get("vm_id")
                         conn_type = recv_data_dict.get("connection_type")
                         is_conn_secure = recv_data_dict.get("is_connection_secure")
-                        await tk_conn.update_vm_data(recv_data_dict["vm_id"], conn_type, is_conn_secure)
+                        if vm_id:
+                            event_type = TkConnectionEvent.VM_CONNECTED.value
+                        else:
+                            vm_id = await tk_conn.get_last_connected_vm_id()
+                            event_type = TkConnectionEvent.VM_DISCONNECTED.value
 
-                    elif event_type == TkConnectionEvent.VM_CONNECTION_ERROR.value:
-                        conn_error_code = recv_data_dict.get("conn_error_code")
-                        conn_error_str = recv_data_dict.get("conn_error_str")
+                        if vm_id:
+                            await tk_conn.update_vm_data(event_type, vm_id, conn_type, is_conn_secure)
 
-                        user = await User.get(self.user_id)
-                        vm_id = recv_data_dict.get("vm_id")
-                        vm = await Vm.get(vm_id)
+                    elif event_type == TkConnectionEvent.VM_CONNECTED.value or \
+                        event_type == TkConnectionEvent.VM_DISCONNECTED.value:  # noqa
 
-                        if user and vm:
-                            await system_logger.info(
-                                _local_("User {} failed to connect to VM {}.").format(user.username, vm.verbose_name),
-                                user=user.username,
-                                description=_local_("Error code: {}. Error message: {}.").format(
-                                    conn_error_code, conn_error_str)
-                            )
+                        vm_id = recv_data_dict["vm_id"]
+                        conn_type = recv_data_dict.get("connection_type")
+                        is_conn_secure = recv_data_dict.get("is_connection_secure")
+                        await tk_conn.update_vm_data(event_type, vm_id, conn_type, is_conn_secure)
+
+                    elif event_type == TkConnectionEvent.VM_CONNECTION_ERROR.value:  # connection_type
+                        await tk_conn.update_vm_data_on_error(recv_data_dict.get("vm_id"),
+                                                              recv_data_dict.get("connection_type"),
+                                                              recv_data_dict.get("conn_error_code"),
+                                                              recv_data_dict.get("conn_error_str"))
 
                     elif event_type == TkConnectionEvent.USER_GUI.value:  # юзер нажал кнопку/кликнул
                         await tk_conn.update_last_interaction()
@@ -611,6 +618,10 @@ class ThinClientWsHandler(BaseWsHandler):
 
         except (KeyError, ValueError, TypeError, JSONDecodeError) as ex:
             await self.send_msg(True, "Wrong msg format " + str(ex))
+        except Exception as ex:
+            await system_logger.debug(
+                message=_local_("Ws: on_message: error"), description=(str(ex))
+            )
 
     def on_close(self):
         loop = asyncio.get_event_loop()
@@ -628,8 +639,6 @@ class ThinClientWsHandler(BaseWsHandler):
             await tk_conn.deactivate()
 
     async def on_pong(self, data: bytes) -> None:
-        # print("WebSocket on_pong", flush=True)
-
         # Обновляем дату последнего сообщения от ТК
         await ActiveTkConnection.update.values(data_received=func.now()).where(
             ActiveTkConnection.id == self.conn_id
@@ -656,8 +665,9 @@ class ThinClientWsHandler(BaseWsHandler):
                             # Пересылаем сообщения об апдейте ВМ.
                             resource = redis_message_data_dict["resource"]
                             if resource == "/domains/":
-                                vm_id = await ActiveTkConnection.get_vm_id(self.conn_id)
-                                if vm_id and redis_message_data_dict["id"] == str(vm_id):
+                                vm_conn = await TkVmConnection.get_active_vm_conn(vm_id=redis_message_data_dict["id"],
+                                                                                  tk_conn_id=self.conn_id)
+                                if vm_conn:
                                     await self.write_msg(redis_message_data)
                             # Пересылем сообщения о событиях, связанных с ТК
                             elif resource == EVENTS_THIN_CLIENT_SUBSCRIPTION and \
