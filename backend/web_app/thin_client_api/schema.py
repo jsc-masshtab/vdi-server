@@ -112,6 +112,8 @@ class ThinClientQuery(graphene.ObjectType):
         user_id=graphene.UUID(default_value=None),
     )
 
+    thin_client = graphene.Field(ThinClientType, conn_id=graphene.UUID())
+
     @administrator_required
     async def resolve_thin_clients_count(self, _info, **kwargs):
 
@@ -123,6 +125,52 @@ class ThinClientQuery(graphene.ObjectType):
     async def resolve_thin_clients(
         self, _info, limit, offset, ordering, get_disconnected, user_id=None, **kwargs
     ):
+        query = ThinClientQuery.build_thin_client_query()
+
+        # ordering
+        ordering_sp, reverse = extract_ordering_data(ordering)
+        if ordering_sp == "user_name":
+            query = (
+                query.order_by(desc(User.username))
+                if reverse
+                else query.order_by(User.username)
+            )
+        elif ordering_sp == "vm_name":
+            query = (
+                query.order_by(desc(Vm.verbose_name))
+                if reverse
+                else query.order_by(Vm.verbose_name)
+            )
+        else:
+            query = ActiveTkConnection.build_ordering(query, ordering)
+
+        # filter.
+        filters = ActiveTkConnection.build_thin_clients_filters(get_disconnected, user_id)
+        if filters:
+            query = query.where(and_(*filters))
+
+        # request to db
+        tk_db_data_container = await query.limit(limit).offset(offset).gino.all()
+
+        # conversion
+        graphene_types = [
+            ThinClientType.create_from_db_data(tk_db_data)
+            for tk_db_data in tk_db_data_container
+        ]
+        return graphene_types
+
+    @administrator_required
+    async def resolve_thin_client(self, _info, conn_id, **kwargs):
+        query = ThinClientQuery.build_thin_client_query()
+
+        tk_conn = await query.where(ActiveTkConnection.id == conn_id).gino.first()
+        if not tk_conn:
+            raise SilentError(_local_("No connection information with id {}.").format(conn_id))
+
+        return ThinClientType.create_from_db_data(tk_conn)
+
+    @staticmethod
+    def build_thin_client_query():
         # Найти подключения к ВМ с последней датой подключения (максимальной)
         subquery_vm_conn = db.select(
             [
@@ -184,38 +232,7 @@ class ThinClientQuery(graphene.ObjectType):
                 Vm, subquery_vm_conn_2.c.vm_id == Vm.id, isouter=True)
         )
 
-        # ordering
-        ordering_sp, reverse = extract_ordering_data(ordering)
-        if ordering_sp == "user_name":
-            query = (
-                query.order_by(desc(User.username))
-                if reverse
-                else query.order_by(User.username)
-            )
-        elif ordering_sp == "vm_name":
-            query = (
-                query.order_by(desc(Vm.verbose_name))
-                if reverse
-                else query.order_by(Vm.verbose_name)
-            )
-        else:
-            query = ActiveTkConnection.build_ordering(query, ordering)
-
-        # filter.
-        filters = ActiveTkConnection.build_thin_clients_filters(get_disconnected,
-                                                                user_id)
-        if filters:
-            query = query.where(and_(*filters))
-
-        # request to db
-        tk_db_data_container = await query.limit(limit).offset(offset).gino.all()
-
-        # conversion
-        graphene_types = [
-            ThinClientType.create_from_db_data(tk_db_data)
-            for tk_db_data in tk_db_data_container
-        ]
-        return graphene_types
+        return query
 
 
 class DisconnectThinClientMutation(graphene.Mutation):
