@@ -620,7 +620,7 @@ class ThinClientWsHandler(BaseWsHandler):
             await self.send_msg(True, "Wrong msg format " + str(ex))
         except Exception as ex:
             await system_logger.debug(
-                message=_local_("Ws: on_message: error"), description=(str(ex))
+                message=_local_("Ws: on_message: error."), description=(str(ex))
             )
 
     def on_close(self):
