@@ -121,6 +121,21 @@ class TestWebsockets(VdiHttpTestCase):
             assert executed["thin_clients"][0]["user_name"] == user_name
             conn_id = executed["thin_clients"][0]["conn_id"]
 
+            # Тестирования запроса информации о подключении по id
+            qu = """
+            {
+                thin_client(conn_id:"%s"){
+                    conn_id
+                    user_name
+                }
+            }
+            """ % conn_id
+            auth_context = await get_auth_context()
+            executed = await execute_scheme(
+                thin_client_schema, qu, context=auth_context
+            )
+            assert executed["thin_client"]["user_name"] == user_name
+
             # update (Эмулировать отправку сетевой статистики с ТК)
             update_data_dict = {
                 "msg_type": WsMessageType.UPDATED.value,
