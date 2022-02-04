@@ -83,7 +83,6 @@ export class TemplatesService {
                                     domain_tags {
                                         colour
                                         verbose_name
-                                        slug
                                     }
                                     ha_enabled
                                     disastery_enabled
@@ -113,7 +112,6 @@ export class TemplatesService {
                           domain_tags {
                               colour
                               verbose_name
-                              slug
                           }
                           ha_enabled
                           disastery_enabled

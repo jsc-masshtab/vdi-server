@@ -2016,14 +2016,12 @@ class VeilTestServer:
                 {
                     "verbose_name": "tag10",
                     "id": "71b2543f-cc35-4f80-9238-bec86c08174f",
-                    "slug": "tag10_slug",
                     "colour": "#c0ffee",
                     "ui_entities": []
                 },
                 {
                     "verbose_name": "newname",
                     "id": "167e50d8-4fbc-4e05-966d-b429e9db9438",
-                    "slug": "tag9_slug",
                     "colour": "#ff0000",
                     "ui_entities": []
                 }
