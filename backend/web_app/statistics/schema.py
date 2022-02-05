@@ -268,9 +268,7 @@ class StatisticsQuery(graphene.ObjectType):
     @staticmethod
     async def get_web_statistics_page(month, year):
         """Обновляет статистику, создает отчет в виде html и возвращает его."""
-        cmd = "timeout 50s perl " \
-              "/usr/lib/cgi-bin/awstats.pl " \
-              "-config=vdi -update -output -staticlinks -month={} -year={}".format(month, year)
+        cmd = "/usr/sbin/vdi_update_web_statistics.sh {} {}".format(month, year)
         _, stdout, stderr = await create_subprocess(cmd)
 
         base_error_str = _local_("Failed to generate statistics report.")
