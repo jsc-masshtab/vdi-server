@@ -4,7 +4,8 @@ RUN apt-get update && apt-get install -y iproute2 python3-dev python3-setuptools
 COPY devops/deb/veil-broker-backend/root/usr/sbin/* /usr/sbin/
 COPY devops/docker/python/tests_entry_point.sh /usr/sbin/tests_entry_point.sh
 COPY devops/docker/python/systemctl /usr/sbin/systemctl
-COPY devops/docker/python/awstats.pl /usr/lib/cgi-bin/awstats.pl
+COPY devops/docker/python/vdi_update_web_statistics.sh /usr/sbin/vdi_update_web_statistics.sh
 RUN chmod 777 /usr/sbin/systemctl
+RUN chmod 777 /usr/sbin/vdi_update_web_statistics.sh
 ADD backend/*requirements.txt ./
 RUN pip install -r requirements.txt && pip install -r dev-requirements.txt
