@@ -1,7 +1,5 @@
-#!/usr/bin/perl
-# Скрипт имитирует вывод awstats для тестов.
-#print "<html>OK</html>";
-print(qq(<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+#!/bin/bash
+echo '<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html lang="ru">
 <head>
 <meta name="generator" content="AWStats 7.5 (build 20160301) from config file awstats.vdi.conf (http://www.awstats.org)">
@@ -624,4 +622,4 @@ a:hover   { color: #605040; text-decoration: underline; }
 <br />
 </body>
 </html>
-));
+'

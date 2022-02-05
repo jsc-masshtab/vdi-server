@@ -4,6 +4,7 @@ Cmnd_Alias VDICMDS = /usr/sbin/vdi_adduser_bi.sh, \
                      /usr/sbin/vdi_edituser_bi.sh, \
                      /usr/sbin/vdi_set_pass_bi.sh, \
                      /usr/sbin/vdi_remove_user_group_bi.sh, \
-                     /usr/sbin/vdi_kill_proc_bi.sh
+                     /usr/sbin/vdi_kill_proc_bi.sh, \
+                     /usr/sbin/vdi_update_web_statistics.sh
 
 vdiadmin ALL = (root) NOPASSWD: VDICMDS, /usr/bin/timeout, /bin/systemctl
