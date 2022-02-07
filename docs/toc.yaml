@@ -75,10 +75,10 @@ nav:
     - Установка: broker/faq/install_v3.md
     - Обновление: broker/faq/update_v3.md
     - Обновление  Veil Broker при отсутствии доступа в Интернет:
-      - Общие сведения: broker\faq\repo_without_inet\index.md
-      - Обновление с помощью установочного iso-образа: broker\faq\repo_without_inet\iso.md
-      - Обновление через виртуальный диск qcow2: broker\faq\repo_without_inet\qcow2.md
-      - Обновление через создание локальной копии репозитория: broker\faq\repo_without_inet\local_repo.md
+      - Общие сведения: broker/faq/repo_without_inet/index.md
+      - Обновление с помощью установочного iso-образа: broker/faq/repo_without_inet/iso.md
+      - Обновление через виртуальный диск qcow2: broker/faq/repo_without_inet/qcow2.md
+      - Обновление через создание локальной копии репозитория: broker/faq/repo_without_inet/local_repo.md
     - Резервные копии: broker/faq/backup.md
     - Службы системы: broker/faq/services.md
     - Протоколы удаленного подключения: broker/faq/remote_conn_protocols.md
