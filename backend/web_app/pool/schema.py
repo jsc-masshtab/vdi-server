@@ -603,7 +603,6 @@ class PoolType(graphene.ObjectType):
                     {
                         "colour": tag.colour,
                         "verbose_name": tag.verbose_name,
-                        "slug": tag.slug,
                     }
                 )
             data["controller"] = {

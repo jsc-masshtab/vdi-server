@@ -587,7 +587,6 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
                 {
                     "colour": tag.colour,
                     "verbose_name": tag.verbose_name,
-                    "slug": tag.slug,
                 }
             )
         resource_data["cpu_count"] = veil_domain.cpu_count_prop

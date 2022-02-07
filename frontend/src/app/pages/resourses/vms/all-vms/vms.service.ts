@@ -95,7 +95,6 @@ export class VmsService {
                                     domain_tags {
                                         colour
                                         verbose_name
-                                        slug
                                     }
                                     parent_name
                                     resource_pool {
@@ -129,7 +128,6 @@ export class VmsService {
                           domain_tags {
                               colour
                               verbose_name
-                              slug
                           }
                           parent_name
                           resource_pool {
