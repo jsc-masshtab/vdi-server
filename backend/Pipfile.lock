@@ -664,11 +664,11 @@
         },
         "veil-api-client": {
             "hashes": [
-                "sha256:259de150b8a9351a3f575157873c100d9e0e74f26f8a165779f560b55b2e205a",
-                "sha256:41ea1bc904b871ee4937c5a59822e8f6449c9b68e3782ab31c68d47882d65e5b"
+                "sha256:17d3cfcbe3d67aeed328cb18d89d452fb6a83c7eecad8da4c95529c05f99b3a5",
+                "sha256:401d86e7f0cb2b36af6de40efafb881f736309667bb758cdfd0d732c9f57676a"
             ],
             "index": "pypi",
-            "version": "==2.2.16"
+            "version": "==2.2.17"
         },
         "werkzeug": {
             "hashes": [
