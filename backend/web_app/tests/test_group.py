@@ -180,7 +180,7 @@ class TestGroupSchema:
         try:
             await execute_scheme(group_schema, query, context=fixt_auth_context)
         except ExecError as E:
-            assert "[GraphQLLocatedError('Отсутствует такая группа.',)]" in str(E)
+            assert "Отсутствует такая группа." in str(E)
         else:
             raise AssertionError()
 

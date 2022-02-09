@@ -1,4 +1,4 @@
-FROM debian:stretch-slim
+FROM debian:buster-slim
 
 # add pip proxy config
 COPY pip.conf /root/.pip/
@@ -15,6 +15,6 @@ RUN curl -sL https://deb.nodesource.com/setup_10.x | bash - && \
     rm -f /var/cache/apt/archives/*.deb /var/cache/apt/archives/partial/*.deb /var/cache/apt/*.bin || true
 
 # install pip-deps
-RUN /usr/bin/python3 -m pip --no-cache-dir install 'pip==20.3.4' --force-reinstall && \
-    /usr/bin/python3 -m pip --no-cache-dir install 'tornado==5.1.1' 'virtualenv==15.1.0' 'mkdocs==1.1.2' \
-    'mkdocs-material==7.1.2' 'pymdown-extensions==8.0' 'mkdocs-print-site-plugin==1.0.0' --force-reinstall
+RUN /usr/bin/python3 -m pip --no-cache-dir install 'pip==21.3.1' --force-reinstall && \
+    /usr/bin/python3 -m pip --no-cache-dir install 'tornado==6.1' 'virtualenv==16.7.12' 'mkdocs==1.2.3' \
+    'mkdocs-material==7.3.6' 'pymdown-extensions==9.1' 'mkdocs-print-site-plugin==2.1' --force-reinstall

@@ -1,4 +1,4 @@
-FROM python:3.5.5-slim-stretch
+FROM python:3.7-slim-buster
 WORKDIR /opt/veil-vdi/app
 RUN apt-get update && apt-get install -y iproute2 python3-dev python3-setuptools python-dev gcc python3-pip libsasl2-dev libldap2-dev libssl-dev sudo
 COPY devops/deb/veil-broker-backend/root/usr/sbin/* /usr/sbin/

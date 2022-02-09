@@ -3,7 +3,7 @@
 broker_db_name: "vdi"
 broker_db_user: "vdi"
 broker_local_settings: "/opt/veil-vdi/app/common/local_settings.py"
-broker_apt_repo: "deb [trusted=yes] file:///media/cdrom/repo smolensk main"
+broker_apt_repo: "deb [trusted=yes] file:///media/cdrom/repo 1.7_x86-64 main"
 
 broker_system_packages_list:
   - python3
@@ -22,3 +22,10 @@ broker_services_list:
   - vdi-monitor_worker
 
 broker_pg_ext_list: [uuid-ossp]
+
+broker_guacamole_packages_list:
+  - guacd
+  - libguac-client-rdp0
+  - libguac-client-ssh0
+  - libguac-client-telnet0
+  - libguac-client-vnc0

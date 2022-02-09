@@ -1,16 +1,17 @@
-"""Initial 3.0
+"""Initial_4.0.
 
-Revision ID: b58c521ba8d4
+Revision ID: b58c521ba8d3
 Revises:
-Create Date: 2021-02-19 18:36:16.359398
+Create Date: 2022-01-19 12:12:35.153423
 
 """
 from alembic import op
+
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = "b58c521ba8d4"
+revision = "b58c521ba8d3"
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -21,9 +22,8 @@ def upgrade():
     op.create_table(
         "active_tk_connection",
         sa.Column("id", postgresql.UUID(), nullable=False),
-        sa.Column("user_id", postgresql.UUID(), nullable=False),
+        sa.Column("user_id", postgresql.UUID(), nullable=True),
         sa.Column("veil_connect_version", sa.Unicode(length=128), nullable=True),
-        sa.Column("vm_id", postgresql.UUID(), nullable=True),
         sa.Column("tk_ip", sa.Unicode(length=128), nullable=True),
         sa.Column("tk_os", sa.Unicode(length=128), nullable=True),
         sa.Column(
@@ -40,6 +40,8 @@ def upgrade():
         ),
         sa.Column("last_interaction", sa.DateTime(timezone=True), nullable=True),
         sa.Column("disconnected", sa.DateTime(timezone=True), nullable=True),
+        sa.Column("hostname", sa.Unicode(length=128), nullable=True),
+        sa.Column("mac_address", sa.Unicode(length=128), nullable=True),
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_table(
@@ -56,7 +58,11 @@ def upgrade():
         sa.Column("directory_url", sa.Unicode(length=255), nullable=True),
         sa.Column(
             "directory_type",
-            sa.Enum("ActiveDirectory", name="directorytypes"),
+            sa.Enum("ActiveDirectory",
+                    "FreeIPA",
+                    "OpenLDAP",
+                    "ALD",
+                    name="directorytypes"),
             server_default="ActiveDirectory",
             nullable=False,
         ),
@@ -64,6 +70,7 @@ def upgrade():
         sa.Column("dc_str", sa.Unicode(length=255), nullable=True),
         sa.Column("service_username", sa.Unicode(length=150), nullable=True),
         sa.Column("service_password", sa.Unicode(length=1000), nullable=True),
+        sa.Column("sso", sa.Boolean(), nullable=False),
         sa.Column(
             "status",
             sa.Enum(
@@ -112,7 +119,7 @@ def upgrade():
         sa.Column("address", sa.Unicode(length=15), nullable=False),
         sa.Column("description", sa.Unicode(length=256), nullable=True),
         sa.Column("version", sa.Unicode(length=128), nullable=True),
-        sa.Column("token", sa.Unicode(length=1024), nullable=False),
+        sa.Column("token", sa.Unicode(length=2048), nullable=False),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("verbose_name"),
     )
@@ -184,6 +191,12 @@ def upgrade():
         sa.Column("by_count", sa.Boolean(), nullable=False),
         sa.Column("count", sa.Integer(), nullable=False),
         sa.Column("dir_path", sa.Unicode(length=128), nullable=False),
+        sa.Column("ru_msg_str", sa.Unicode(length=128), nullable=True),
+        sa.Column("ru_name_str", sa.Unicode(length=128), nullable=True),
+        sa.Column("ru_path_str", sa.Unicode(length=128), nullable=True),
+        sa.Column("en_msg_str", sa.Unicode(length=128), nullable=True),
+        sa.Column("en_name_str", sa.Unicode(length=128), nullable=True),
+        sa.Column("en_path_str", sa.Unicode(length=128), nullable=True),
         sa.Column("create_date", sa.DateTime(timezone=True), nullable=False),
         sa.PrimaryKeyConstraint("id"),
     )
@@ -223,15 +236,7 @@ def upgrade():
         ),
         sa.Column(
             "task_type",
-            sa.Enum(
-                "POOL_CREATE",
-                "POOL_EXPAND",
-                "POOL_DELETE",
-                "POOL_DECREASE",
-                "VM_PREPARE",
-                "VMS_BACKUP",
-                name="pooltasktype",
-            ),
+            sa.Unicode(length=256),
             nullable=False,
         ),
         sa.Column(
@@ -246,6 +251,7 @@ def upgrade():
         sa.Column("priority", sa.Integer(), nullable=False),
         sa.Column("progress", sa.Integer(), nullable=False),
         sa.Column("message", sa.Unicode(length=256), nullable=True),
+        sa.Column("creator", sa.Unicode(length=128), nullable=True),
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_index(op.f("ix_task_status"), "task", ["status"], unique=False)
@@ -255,9 +261,11 @@ def upgrade():
         sa.Column("id", postgresql.UUID(), nullable=False),
         sa.Column("username", sa.Unicode(length=128), nullable=False),
         sa.Column("password", sa.Unicode(length=128), nullable=False),
+        sa.Column("local_password", sa.Boolean(), nullable=False),
         sa.Column("email", sa.Unicode(length=256), nullable=True),
         sa.Column("last_name", sa.Unicode(length=128), nullable=True),
         sa.Column("first_name", sa.Unicode(length=32), nullable=True),
+        sa.Column("by_ad", sa.Boolean(), nullable=False),
         sa.Column(
             "date_joined",
             sa.DateTime(timezone=True),
@@ -272,6 +280,8 @@ def upgrade():
             nullable=True,
         ),
         sa.Column("is_superuser", sa.Boolean(), nullable=True),
+        sa.Column("two_factor", sa.Boolean(), nullable=False),
+        sa.Column("secret", sa.String(), nullable=True),
         sa.Column("is_active", sa.Boolean(), nullable=True),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("username"),
@@ -365,7 +375,11 @@ def upgrade():
         sa.Column(
             "permission",
             sa.Enum(
-                "USB_REDIR", "FOLDERS_REDIR", "SHARED_CLIPBOARD", name="tkpermission"
+                "USB_REDIR",
+                "FOLDERS_REDIR",
+                "SHARED_CLIPBOARD_CLIENT_TO_GUEST",
+                "SHARED_CLIPBOARD_GUEST_TO_CLIENT",
+                name="tkpermission"
             ),
             nullable=False,
         ),
@@ -387,6 +401,16 @@ def upgrade():
         sa.Column("id", postgresql.UUID(), nullable=False),
         sa.Column("verbose_name", sa.Unicode(length=128), nullable=False),
         sa.Column("resource_pool_id", postgresql.UUID(), nullable=True),
+        sa.Column("datapool_id", postgresql.UUID(), nullable=True),
+        sa.Column(
+            "pool_type",
+            sa.Enum(
+                "AUTOMATED",
+                "STATIC",
+                "GUEST",
+                "RDS",
+                name="pooltypes"),
+            nullable=False),
         sa.Column(
             "status",
             sa.Enum(
@@ -405,6 +429,24 @@ def upgrade():
         sa.Column("controller", postgresql.UUID(), nullable=False),
         sa.Column("keep_vms_on", sa.Boolean(), nullable=False),
         sa.Column(
+            "vm_action_upon_user_disconnect",
+            sa.Enum(
+                "NONE",
+                "RECREATE",
+                "SHUTDOWN",
+                "SHUTDOWN_FORCED",
+                "SUSPEND",
+                name="vmactionuponuserdisconnect",
+            ),
+            server_default="NONE",
+            nullable=False
+        ),
+        sa.Column("free_vm_from_user", sa.Boolean(), nullable=False),
+        sa.Column("vm_disconnect_action_timeout",
+                  sa.Integer(),
+                  server_default="60",
+                  nullable=False),
+        sa.Column(
             "connection_types",
             postgresql.ARRAY(
                 sa.Enum(
@@ -412,6 +454,7 @@ def upgrade():
                     "SPICE_DIRECT",
                     "RDP",
                     "NATIVE_RDP",
+                    "X2GO",
                     name="poolconnectiontypes",
                 )
             ),
@@ -427,28 +470,32 @@ def upgrade():
         op.f("ix_pool_connection_types"), "pool", ["connection_types"], unique=False
     )
     op.create_index(op.f("ix_pool_status"), "pool", ["status"], unique=False)
-    op.create_table(
-        "tk_connection_statistics",
-        sa.Column("id", postgresql.UUID(), nullable=False),
-        sa.Column("conn_id", postgresql.UUID(), nullable=False),
-        sa.Column("message", sa.Unicode(length=128), nullable=True),
-        sa.Column(
-            "created",
-            sa.DateTime(timezone=True),
-            server_default=sa.text("now()"),
-            nullable=False,
-        ),
-        sa.ForeignKeyConstraint(
-            ["conn_id"], ["active_tk_connection.id"], ondelete="CASCADE"
-        ),
-        sa.PrimaryKeyConstraint("id"),
-    )
-    op.create_index(
-        op.f("ix_tk_connection_statistics_conn_id"),
-        "tk_connection_statistics",
-        ["conn_id"],
-        unique=False,
-    )
+    op.create_table("rds_pool",
+                    sa.Column("id", postgresql.UUID(), nullable=False),
+                    sa.ForeignKeyConstraint(["id"], ["pool.id"], ondelete="CASCADE"),
+                    sa.PrimaryKeyConstraint("id"),
+                    sa.UniqueConstraint("id")
+                    )
+    op.create_table("tk_vm_connection",
+                    sa.Column("id", postgresql.UUID(), nullable=False),
+                    sa.Column("tk_connection_id", postgresql.UUID(), nullable=False),
+                    sa.Column("successful", sa.Boolean(), nullable=False),
+                    sa.Column("conn_error_str", sa.Unicode(), nullable=True),
+                    sa.Column("vm_id", postgresql.UUID(), nullable=False),
+                    sa.Column("connected_to_vm", sa.DateTime(timezone=True), server_default=sa.text("now()"),
+                              nullable=False),
+                    sa.Column("disconnected_from_vm", sa.DateTime(timezone=True), nullable=True),
+                    sa.Column("connection_type",
+                              postgresql.ENUM(name="poolconnectiontypes", create_type=False),
+                              nullable=True),
+                    sa.Column("is_connection_secure", sa.Boolean(), nullable=True),
+                    sa.Column("read_speed", sa.Integer(), nullable=True),
+                    sa.Column("write_speed", sa.Integer(), nullable=True),
+                    sa.Column("avg_rtt", sa.Float(), nullable=True),
+                    sa.Column("loss_percentage", sa.Integer(), nullable=True),
+                    sa.ForeignKeyConstraint(["tk_connection_id"], ["active_tk_connection.id"], ondelete="CASCADE"),
+                    sa.PrimaryKeyConstraint("id")
+                    )
     op.create_table(
         "user_groups",
         sa.Column("id", postgresql.UUID(), nullable=False),
@@ -499,7 +546,11 @@ def upgrade():
         sa.Column(
             "permission",
             sa.Enum(
-                "USB_REDIR", "FOLDERS_REDIR", "SHARED_CLIPBOARD", name="tkpermission"
+                "USB_REDIR",
+                "FOLDERS_REDIR",
+                "SHARED_CLIPBOARD_CLIENT_TO_GUEST",
+                "SHARED_CLIPBOARD_GUEST_TO_CLIENT",
+                name="tkpermission"
             ),
             nullable=False,
         ),
@@ -528,8 +579,12 @@ def upgrade():
         sa.Column("vm_name_template", sa.Unicode(length=100), nullable=True),
         sa.Column("os_type", sa.Unicode(length=100), nullable=True),
         sa.Column("create_thin_clones", sa.Boolean(), nullable=False),
-        sa.Column("prepare_vms", sa.Boolean(), nullable=False),
-        sa.Column("ad_cn_pattern", sa.Unicode(length=1000), nullable=True),
+        sa.Column("is_guest", sa.Boolean(), nullable=False),
+        sa.Column("enable_vms_remote_access", sa.Boolean(), nullable=False),
+        sa.Column("start_vms", sa.Boolean(), nullable=False),
+        sa.Column("set_vms_hostnames", sa.Boolean(), nullable=False),
+        sa.Column("include_vms_in_ad", sa.Boolean(), nullable=False),
+        sa.Column("ad_ou", sa.Unicode(length=1000), nullable=True),
         sa.ForeignKeyConstraint(["id"], ["pool.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("id"),
@@ -578,6 +633,7 @@ def upgrade():
     op.create_unique_constraint(None, "automated_pool", ["id"])
     op.create_unique_constraint(None, "pool", ["id"])
     op.create_unique_constraint(None, "static_pool", ["id"])
+    op.execute('CREATE EXTENSION IF NOT EXISTS "uuid-ossp";')
 
 
 def downgrade():
@@ -598,14 +654,7 @@ def downgrade():
     op.drop_table("user_jwtinfo")
     op.drop_index("ix_user_in_group", table_name="user_groups")
     op.drop_table("user_groups")
-    op.drop_index(
-        op.f("ix_tk_connection_statistics_conn_id"),
-        table_name="tk_connection_statistics",
-    )
-    op.drop_table("tk_connection_statistics")
     op.drop_index(op.f("ix_pool_status"), table_name="pool")
-    op.drop_index(op.f("ix_pool_connection_types"), table_name="pool")
-    op.drop_table("pool")
     op.drop_index(
         op.f("ix_group_tk_permission_permission"), table_name="group_tk_permission"
     )
@@ -634,16 +683,17 @@ def downgrade():
     op.drop_index(op.f("ix_entity_entity_type"), table_name="entity")
     op.drop_index("ix_entity_entity_object_entity_type", table_name="entity")
     op.drop_table("entity")
-    op.drop_index(op.f("ix_controller_status"), table_name="controller")
-    op.drop_index(op.f("ix_controller_address"), table_name="controller")
-    op.drop_table("controller")
     op.drop_index(
         op.f("ix_authentication_directory_status"),
         table_name="authentication_directory",
     )
     op.drop_table("authentication_directory")
+    op.drop_table("rds_pool")
+    op.drop_table("tk_vm_connection")
     op.drop_table("active_tk_connection")
-    # ### end Alembic commands ###
+    op.drop_index(op.f("ix_pool_connection_types"), table_name="pool")
+    op.drop_index(op.f("ix_controller_status"), table_name="controller")
+    op.drop_index(op.f("ix_controller_address"), table_name="controller")
     # Принудительно удаляем типы
     op.execute("DROP TYPE IF EXISTS connectiontypes CASCADE;")
     op.execute("DROP TYPE IF EXISTS directorytypes CASCADE;")
@@ -656,4 +706,10 @@ def downgrade():
     op.execute("DROP TYPE IF EXISTS tkpermission CASCADE;")
     op.execute("DROP TYPE IF EXISTS valuetypes CASCADE;")
     op.execute("DROP TYPE IF EXISTS pooltasktype CASCADE;")
+    op.execute("DROP TYPE IF EXISTS pooltypes CASCADE;")
     op.execute("DROP TYPE IF EXISTS role CASCADE;")
+    op.execute("DROP TYPE IF EXISTS vmactionuponuserdisconnect CASCADE;")
+    op.execute('CREATE EXTENSION IF NOT EXISTS "uuid-ossp";')
+    # Удаляем каскадно таблицы, которые не могут сами
+    op.execute("drop table if exists controller cascade;")
+    op.execute("drop table if exists pool cascade;")

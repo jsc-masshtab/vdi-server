@@ -11,6 +11,8 @@ ignore =
     A002,
     # A003 "id" is a python builtin, consider renaming the class attribute
     A003,
+    # B012 return/continue/break inside finally blocks cause exceptions to be silenced.
+    B012
 
     # Для докстрингов
     # D100 Missing docstring in public module

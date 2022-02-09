@@ -7,9 +7,8 @@ fi
 
 # add smolensk repo
 tee /etc/apt/sources.list <<EOF
-# deb cdrom:[OS Astra Linux 1.6 smolensk - amd64 DVD ]/ smolensk contrib main non-free
-deb file:///opt/main smolensk contrib main non-free
-deb file:///opt/devel smolensk contrib main non-free
+deb file:///opt/main 1.7_x86-64 contrib main non-free
+deb file:///opt/devel 1.7_x86-64 contrib main non-free
 EOF
 apt-get update
 if [ $? -ne 0 ]; then
@@ -17,7 +16,7 @@ if [ $? -ne 0 ]; then
 fi
 
 # install ansible
-apt-get install -y /media/cdrom/repo/pool/main/a/ansible/ansible_*.deb
+apt-get install -y ansible
 if [ $? -ne 0 ]; then
   echo "Ansible install error" && exit 1
 fi
@@ -25,6 +24,3 @@ fi
 # run ansible-playbook
 cd /media/cdrom/ansible
 ansible-playbook main.yml
-
-# rollback apache2ctl
-sed -i '/sleep 5/d' /usr/sbin/apache2ctl

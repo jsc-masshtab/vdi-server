@@ -5,7 +5,6 @@ from subprocess import Popen, TimeoutExpired
 import sys
 import os
 
-from async_generator import async_generator, yield_
 from graphene import Context
 
 from common.database import start_gino, stop_gino
@@ -54,15 +53,13 @@ def get_test_pool_name():
 
 
 @pytest.fixture
-@async_generator
 async def fixt_redis_client():
     redis_init()
-    await yield_()
+    yield
     await redis_deinit()
 
 
 @pytest.fixture
-@async_generator
 async def fixt_launch_workers(fixt_redis_client):
 
     await redis_flushall()
@@ -72,7 +69,7 @@ async def fixt_launch_workers(fixt_redis_client):
 
     pool_worker = Popen([sys.executable, pool_worker_path, "-do-not-resume-tasks"])
 
-    await yield_()
+    yield
 
     def stop_worker(worker):
         worker.terminate()
@@ -87,11 +84,10 @@ async def fixt_launch_workers(fixt_redis_client):
 
 
 @pytest.fixture
-@async_generator
 async def fixt_db(fixt_redis_client):
     """Actual fixture for requests working with db."""
     await start_gino()
-    await yield_()
+    yield
     await stop_gino()
 
 
@@ -124,8 +120,7 @@ async def fixt_auth_context():
     return await get_auth_context()
 
 
-@pytest.fixture
-@async_generator  # prepare_vms: false,
+@pytest.fixture # prepare_vms: false,
 async def fixt_create_automated_pool(fixt_controller):
     """Create an automated pool, yield, remove this pool."""
     # start resources_monitor to receive info  from controller. autopool creation doesn`t work without it
@@ -180,9 +175,7 @@ async def fixt_create_automated_pool(fixt_controller):
         status == TaskStatus.FINISHED.name
     )
 
-    await yield_(
-        {"id": pool_id, "is_pool_successfully_created": is_pool_successfully_created}
-    )
+    yield {"id": pool_id, "is_pool_successfully_created": is_pool_successfully_created}
 
     # remove pool
     qu = (
@@ -199,7 +192,6 @@ async def fixt_create_automated_pool(fixt_controller):
 
 
 @pytest.fixture
-@async_generator
 async def fixt_create_static_pool(fixt_controller):
     """Создается пул, пул удаляется."""
     pool_main_resources = await get_resources_for_pool_test()
@@ -234,7 +226,7 @@ async def fixt_create_static_pool(fixt_controller):
     context = await get_auth_context()
     pool_create_res = await execute_scheme(pool_schema, qu, context=context)
     pool_id = pool_create_res["addStaticPool"]["pool"]["pool_id"]
-    await yield_({"ok": pool_create_res["addStaticPool"]["ok"], "id": pool_id})
+    yield {"ok": pool_create_res["addStaticPool"]["ok"], "id": pool_id}
 
     # --- remove pool ---
     qu = (
@@ -251,7 +243,6 @@ async def fixt_create_static_pool(fixt_controller):
 
 
 @pytest.fixture
-@async_generator
 async def several_static_pools(fixt_controller, count: int = 5):
     """Создать несколько статических пулов."""
     pool_main_resources = await get_resources_for_pool_test()
@@ -288,7 +279,7 @@ async def several_static_pools(fixt_controller, count: int = 5):
         pool_create_res = await execute_scheme(pool_schema, qu, context=context)
         pools_list.append(pool_create_res["addStaticPool"]["pool"]["pool_id"])
     # Пулы созданы
-    await yield_({"pools": pools_list})
+    yield {"pools": pools_list}
     # Удаляем созданные пулы
     for pool_id in pools_list:
         qu = (
@@ -305,7 +296,6 @@ async def several_static_pools(fixt_controller, count: int = 5):
 
 
 @pytest.fixture
-@async_generator
 async def several_static_pools_with_user(fixt_controller,
                                          several_static_pools,
                                          fixt_user):
@@ -313,13 +303,12 @@ async def several_static_pools_with_user(fixt_controller,
     # Закрепляем 1 из пулов за пользователем
     pool = await Pool.query.gino.first()
     await pool.add_user(temporary_user_id, "system")
-    await yield_({"pool_with_user": pool.id_str})
+    yield {"pool_with_user": pool.id_str}
     # Открепляем пользователя от пула
     await pool.remove_users(creator="system", users_list=[temporary_user_id])
 
 
 @pytest.fixture
-@async_generator
 async def fixt_create_rds_pool(fixt_controller):
     """Создается пул, пул удаляется."""
     pool_main_resources = await get_resources_for_pool_test()
@@ -348,7 +337,7 @@ async def fixt_create_rds_pool(fixt_controller):
     context = await get_auth_context()
     pool_create_res = await execute_scheme(pool_schema, qu, context=context)
     pool_id = pool_create_res["addRdsPool"]["pool"]["pool_id"]
-    await yield_({"ok": pool_create_res["addRdsPool"]["ok"], "id": pool_id})
+    yield {"ok": pool_create_res["addRdsPool"]["ok"], "id": pool_id}
 
     # --- remove pool ---
     qu = (
@@ -365,11 +354,10 @@ async def fixt_create_rds_pool(fixt_controller):
 
 
 @pytest.fixture
-@async_generator
 async def fixt_veil_client():
 
     get_veil_client()
-    await yield_()
+    yield
     await stop_veil_client()
 
 
@@ -838,7 +826,6 @@ def fixt_group_role(request, event_loop):
 
 
 @pytest.fixture
-@async_generator
 async def fixt_controller(fixt_veil_client):
 
     controller_ip = "0.0.0.0"
@@ -869,7 +856,7 @@ async def fixt_controller(fixt_veil_client):
     context = await get_auth_context()
     executed = await execute_scheme(controller_schema, qu, context=context)
     controller_id = executed["addController"]["controller"]["id"]
-    await yield_({"controller_id": controller_id})
+    yield {"controller_id": controller_id}
 
     # remove controller
     qu = (
