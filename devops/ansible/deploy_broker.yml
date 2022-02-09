@@ -13,7 +13,7 @@
     - "vars/{{ ansible_os_family }}.yml"
   roles:
     - role: smolensk
-      when: ansible_os_family == "Astra Linux (Smolensk)"
+      when: ansible_os_family == "Astra Linux"
 
     - role: resolv_conf
     - role: timezone

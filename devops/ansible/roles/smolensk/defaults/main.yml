@@ -2,3 +2,4 @@
 
 smolensk_repo_main: "/opt/main"
 smolensk_repo_devel: "/opt/devel"
+smolensk_distr: "1.7_x86-64"

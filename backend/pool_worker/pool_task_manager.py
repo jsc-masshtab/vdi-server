@@ -227,7 +227,7 @@ class PoolTaskManager:
                 task_class = next(
                     task_class
                     for task_class in AbstractTask.__subclasses__()
-                    if getattr(task_class, "task_type").name == task_type
+                    if getattr(task_class, "task_type").name == task_type  # noqa B009
                 )
             except StopIteration:
                 raise RuntimeError("Task class not found. Wrong task type")

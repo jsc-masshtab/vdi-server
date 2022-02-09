@@ -2,7 +2,7 @@
 version: '3.7'
 services:
   vdi-test-postgres:
-    image: postgres:9.6
+    image: postgres:11
     container_name: vdi-test-postgres
     network_mode: "host"
     environment:
@@ -12,7 +12,7 @@ services:
     volumes:
       - ./postgres/:/docker-entrypoint-initdb.d/
   vdi-test-redis:
-    image: redis
+    image: redis:5
     container_name: vdi-test-redis
     network_mode: "host"
     logging:

@@ -48,10 +48,10 @@ pipeline {
     }
 
     parameters {
-        string(name: 'BRANCH',  defaultValue: 'dev',                                       description: 'branch')
-        choice(name: 'REPO',    choices: ['test', 'dev', 'prod-30', 'prod-31', 'prod-32'], description: 'repo for uploading')
-        string(name: 'VERSION', defaultValue: '3.2',                                       description: 'base version')
-        choice(name: 'AGENT',   choices: ['cloud-ubuntu-20', 'bld-agent'],                 description: 'jenkins build agent')
+        string(name: 'BRANCH',  defaultValue: 'dev',                               description: 'branch')
+        choice(name: 'REPO',    choices: ['dev', 'prod-30', 'prod-31', 'prod-32'], description: 'repo for uploading')
+        string(name: 'VERSION', defaultValue: '4.0.0',                             description: 'base version')
+        choice(name: 'AGENT',   choices: ['cloud-ubuntu-20', 'bld-agent'],         description: 'jenkins build agent')
     }
 
     stages {
@@ -139,7 +139,7 @@ pipeline {
                     done
 
                     # deploy new deb
-                    DISTR=smolensk
+                    DISTR=1.7_x86-64
                     DEB=$(ls -1 "${DEB_ROOT}/${PRJNAME}"/*.deb)
                     curl -sS -X POST -F file=@$DEB http://$APT_SRV:8008/api/files/veil-broker-${REPO}; echo ""
                     curl -sS -X POST http://$APT_SRV:8008/api/repos/veil-broker-${REPO}/file/veil-broker-${REPO}?forceReplace=1

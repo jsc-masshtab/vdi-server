@@ -14,7 +14,7 @@ pipeline {
         VEIL_ADDRESS = "192.168.11.102"
         VEIL_NODE_ID = "4c2d5d96-966e-4ca5-aee8-d9f6e226c053"
         VEIL_DATAPOOL_ID = "9e11d68f-2206-4726-a5ea-7bc20ca53ed3"
-        ASTRA_TEMPLATE_ID = "a1734d0b-e0f9-4e97-b5db-038bcc3186ba"
+        ASTRA_TEMPLATE_ID = "cc86b0f7-cf4a-456a-8e38-47e73fe77090"
         VM_NAME = "veil-broker-va-${VERSION}"
         VM_USERNAME = "astravdi"
         TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjozMywidXNlcm5hbWUiOiJhcGkiLCJleHAiOjE5NTA0MjMzMzcsInNzbyI6ZmFsc2UsIm9yaWdfaWF0IjoxNjM1OTI3MzM3fQ.u8QmqBzIk2XPy0yWzzqIkTxZN03iK4cf3J1UwUG5ZXk"
@@ -48,10 +48,10 @@ pipeline {
     }
 
     parameters {
-        string(name: 'BRANCH',  defaultValue: 'dev',                                       description: 'branch')
-        choice(name: 'REPO',    choices: ['test', 'dev', 'prod-30', 'prod-31', 'prod-32'], description: 'repo for uploading')
-        string(name: 'VERSION', defaultValue: '3.2',                                       description: 'base version')
-        choice(name: 'AGENT',   choices: ['cloud-ubuntu-20', 'bld-agent'],                 description: 'jenkins build agent')
+        string(name: 'BRANCH',  defaultValue: 'dev',                               description: 'branch')
+        choice(name: 'REPO',    choices: ['dev', 'prod-30', 'prod-31', 'prod-32'], description: 'repo for uploading')
+        string(name: 'VERSION', defaultValue: '4.0.0',                             description: 'base version')
+        choice(name: 'AGENT',   choices: ['cloud-ubuntu-20', 'bld-agent'],         description: 'jenkins build agent')
     }
 
     stages {

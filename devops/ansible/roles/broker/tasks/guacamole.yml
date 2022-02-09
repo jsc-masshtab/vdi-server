@@ -1,0 +1,8 @@
+---
+
+- name: Broker | Install guacamole server
+  apt:
+    name: "{{ item }}"
+    update_cache: yes
+    state: latest
+  loop: "{{ broker_guacamole_packages_list }}"

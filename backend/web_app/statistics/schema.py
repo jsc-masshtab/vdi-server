@@ -86,8 +86,7 @@ class PoolUsageStatsType(graphene.ObjectType):
             .select_from(TkVmConnection.join(Vm, TkVmConnection.vm_id == Vm.id)
                          .join(Pool, Pool.id == Vm.pool_id))\
             .where((TkVmConnection.connected_to_vm != None) &  # noqa
-                   (TkVmConnection.successful == False) & and_(*self._common_filters))\
-            .gino.scalar()
+                   (TkVmConnection.successful == False) & and_(*self._common_filters)).gino.scalar()  # noqa
 
         return conn_err_number
 

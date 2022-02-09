@@ -1,11 +1,13 @@
 # если появляется новый пакет в зависимостях его нужно как раньше добавить в Pipenv, затем выполнить
 # pipenv lock -r -d > dev-requirements.txt && pipenv lock -r > requirements.txt
 # docker system prune -a -f --volumes && docker-compose up
+#
+# guacamole port: 4822
 
 version: '3.7'
 services:
   vdi-postgres:
-    image: postgres:9.6
+    image: postgres:11
     container_name: vdi-postgres
     environment:
       - POSTGRES_DB=postgres
@@ -15,7 +17,7 @@ services:
       - ./postgres/:/docker-entrypoint-initdb.d/
     network_mode: "host"
   vdi-redis:
-    image: redis
+    image: redis:5
     container_name: vdi-redis
     command: redis-server --requirepass 4NZ7GpHn4IlshPhb --bind 0.0.0.0
     network_mode: "host"
@@ -83,6 +85,12 @@ services:
     volumes:
       - ../../frontend:/home/node/app/frontend
     command: sh -c "npm start --prefix /home/node/app/frontend/ -- --host=0.0.0.0 --disableHostCheck & npm run thin-client --prefix /home/node/app/frontend/ -- --host=0.0.0.0 --disableHostCheck"
+    network_mode: "host"
+    depends_on:
+      - vdi-tornado
+  vdi-guacamole:
+    image: guacamole/guacd:1.3.0
+    container_name: vdi-guacamole
     network_mode: "host"
     depends_on:
       - vdi-tornado
