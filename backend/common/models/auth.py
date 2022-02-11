@@ -29,7 +29,7 @@ from common.settings import (
 )
 from common.veil.auth import hashers
 from common.veil.auth.veil_pam import veil_auth_class
-from common.veil.veil_errors import PamError, SilentError, SimpleError
+from common.veil.veil_errors import MeaningError, PamError, SilentError, SimpleError
 from common.veil.veil_gino import (
     AbstractSortableStatusModel,
     EntityType,
@@ -523,7 +523,7 @@ class User(AbstractSortableStatusModel, VeilModel):
             username=username, password=password
         )
         if not result.success:
-            raise SimpleError(_local_("Invalid credentials. Check or create password for user {}.").format(username))
+            raise MeaningError(_local_("Invalid credentials. Check or create password for user {}.").format(username))
         return result.success
 
     async def pam_set_password(self, raw_password: str, creator):
