@@ -52,7 +52,10 @@ class ResourcesMonitorManager:
                 await asyncio.sleep(REDIS_TIMEOUT)
             except Exception as ex:
                 entity = {"entity_type": EntityType.SECURITY, "entity_uuid": None}
-                await system_logger.error("exception:" + str(ex), entity=entity)
+                if ex:
+                    await system_logger.error("exception:" + str(ex), entity=entity)
+                else:
+                    await system_logger.debug("exception in listen_for_messages.", entity=entity)
 
     async def start(self):
         """Start monitors."""

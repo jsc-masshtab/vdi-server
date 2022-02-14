@@ -21,7 +21,7 @@ app_services = OrderedDict([
     # external services
     ("apache2.service", _local_("Apache server.")),
     ("postgresql.service", _local_("Database.")),
-    ("postgresql@9.6-main.service", _local_("Database.")),
+    ("postgresql@11-main.service", _local_("Database.")),
     ("redis-server.service", "Redis."),
     # app services
     ("vdi-monitor_worker.service", _local_("Monitor worker.")),
@@ -276,9 +276,9 @@ class DoServiceAction(graphene.Mutation):
             )
 
         # Do action
-        # Особый случай для postgresql@9.6-main.service. Он находится под управлением postgresql.service и
+        # Особый случай для postgresql@11-main.service. Он находится под управлением postgresql.service и
         # именно с последним мы и выполняем действие
-        if service_name == "postgresql@9.6-main.service":
+        if service_name == "postgresql@11-main.service":
             parent_service_name = "postgresql.service"
         else:
             parent_service_name = service_name
