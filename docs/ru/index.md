@@ -6,7 +6,7 @@
 
 [:fontawesome-solid-plus-square: Создание ВМ в среде ECP VeiL](./broker/engineer_guide/create_domains.md){ .md-button }
 
-[:fontawesome-solid-window-maximize: Установка ОС Astra Linux](./broker/engineer_guide/install_os.md){ .md-button }
+[:fontawesome-solid-window-maximize: Установка ОС Astra Linux](./broker/engineer_guide/install_os/index.md){ .md-button }
 
 #### Установка
 

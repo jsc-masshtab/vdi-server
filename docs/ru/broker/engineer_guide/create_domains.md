@@ -6,8 +6,12 @@
 Дополнительную информацию смотрите в разделе руководства оператора **ECP VeiL** 
 [Создание ВМ](https://veil.mashtab.org/docs/latest/base/operator_guide/domains/create/).
 
-!!! note "Примечание" 
-    Для работы **VeiL Broker** можно воспользоваться готовой ВМ с ОС **Astra Linux Special Edition** версии **1.6** 
+!!! note "VeiL Broker 4.x" 
+    Для работы **VeiL Broker** версии **4.х** можно воспользоваться готовой ВМ с ОС **Astra Linux Special Edition** версии **1.7** 
+    релиз **Смоленск**, скачав ее [резервную копию](https://veil-update.mashtab.org/files/astra/astravdi-2022.02.18-14.27.32.tar.zst).
+
+!!! note "VeiL Broker 3.x" 
+    Для работы **VeiL Broker** версии **3.х** можно воспользоваться готовой ВМ с ОС **Astra Linux Special Edition** версии **1.6** 
     релиз **Смоленск**, скачав ее [резервную копию](https://veil-update.mashtab.org/files/astra/astravdi-2021.05.26-19.16.19.tar).
 
 На первом этапе необходимо задать следующие параметры:
@@ -37,7 +41,7 @@
      монтирование iso-образа установочного диска с ОС, нажав на кнопку **Монтировать образ**;
    - откроется окно **Монтирование iso-образа**, в котором необходимо выбрать тип хранилища, его наименование 
      и iso-образ установочного диска c 
-     [ОС Astra Linux Special Edition версии 1.6 релиз Смоленск](https://veil-update.mashtab.org/files/astra/smolensk/smolensk-1.6-20.06.2018_15.56.iso);
+     [ОС Astra Linux Special Edition версии 1.7 релиз Смоленск](https://veil-update.mashtab.org/files/astra/smolensk/smolensk-1.6-20.06.2018_15.56.iso) для **VeiL Broker** версии **4.Х** или [ОС Astra Linux Special Edition версии 1.6 релиз Смоленск](https://veil-update.mashtab.org/files/astra/smolensk/smolensk-1.6-20.06.2018_15.56.iso) для для **VeiL Broker** версии **3.Х**;
    - для сохранения изменений нажать кнопку **Монтировать**.
 
 На четвертом этапе в области отображения **Управление виртуальными интерфейсами** добавить 
@@ -64,4 +68,4 @@
 [Опции загрузки](https://veil.mashtab.org/docs/latest/base/operator_guide/domains/boot/).
 
 Этап создания ВМ окончен, переходите к следующему шагу - 
-[Установка ОС Astra Linux Special Edition версии 1.6 релиз Смоленск](../engineer_guide/install_os.md).
+[Установка и настройка ОС](../engineer_guide/install_os/index.md).

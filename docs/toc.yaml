@@ -110,13 +110,17 @@ nav:
       - Общие сведения: broker/engineer_guide/general_settings.md
       - Подготовка к работе: broker/engineer_guide/prepare.md
       - Создание ВМ в среде ECP VeiL: broker/engineer_guide/create_domains.md
-      - Установка и настройка ОС: broker/engineer_guide/install_os.md
+      - Установка и настройка ОС: 
+        - Установка и настройка ОС: broker/engineer_guide/install_os/index.md
+        - ОС Astra Linux Special Edition 1.6 релиз Смоленск: broker/engineer_guide/install_os/1-6.md
+        - ОС Astra Linux Special Edition 1.7 релиз Смоленск: broker/engineer_guide/install_os/1-7.md
       - Установка VeiL Broker: broker/engineer_guide/install.md
       - Установка антивирусного средства: broker/engineer_guide/install_kasper.md
       - Запуск и первоначальная настройка программы: broker/engineer_guide/first_steps.md
       - Регистрация лицензионного ключа через Web-интерфейс: broker/engineer_guide/registr_key.md
       - Сообщения системному программисту: broker/engineer_guide/messages.md
-      - Приложение. Установка ОС «ASTRA LINUX SPECIAL EDITION»: broker/engineer_guide/application.md
+      - Приложение. Установка ОС «ASTRA LINUX SPECIAL EDITION 1.6»: broker/engineer_guide/application1-6.md
+      - Приложение. Установка ОС «ASTRA LINUX SPECIAL EDITION 1.7»: broker/engineer_guide/application1-7.md
     - Руководство оператора:
       - Подготовка к работе: broker/operator_guide/prepare.md
       - Общие правила: broker/operator_guide/rules.md
