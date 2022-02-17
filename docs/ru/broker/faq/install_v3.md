@@ -1,13 +1,13 @@
-# Установка VeiL Broker 3.*
+# Установка VeiL Broker 3.*/4.*
 
 ## Подготовка к установке
 - [Требования к техническим средствам](../engineer_guide/hardware_requirements.md).
 - [Создание ВМ в среде ECP VeiL](../engineer_guide/create_domains.md).
-- [Установка ОС Astra Linux Special Edition версии 1.6 релиз Смоленск](../engineer_guide/install_os.md).
+- [Установка ОС Astra Linux Special Edition](../engineer_guide/install_os.md).
 - Описание прочих требований и спецификация доступны в разделах:
   [Подготовка сервера](../spec/domain-req.md) и [Перечень портов](../spec/ports_info.md).
 
-## Установка Virtual Appliance брокера (версия от 3.1.1)
+## Установка Virtual Appliance брокера (версия 3.1.1 и выше)
 
 !!! info "Virtual Appliance"
     Виртуальный аплайнс (Virtual Appliance, VA) **VA VeiL Broker** — это готовый образ виртуальной машины 
@@ -27,7 +27,7 @@
 8. Брокер готов к работе, дальнейшая настройка выполняется только в случае особой необходимости.
 
 !!! info "Логин/пароль ВМ"
-    Для работы в ВМ **VeiL_VDI** (**ОС Astra Linux Special Edition 1.6 - Смоленск**) по умолчанию используется пользователь 
+    Для работы в ВМ **VeiL_VDI** (**ОС Astra Linux Special Edition**) по умолчанию используется пользователь 
       **_astravdi_**, пароль **_Bazalt1!_**.
 
 ## Установка брокера вручную

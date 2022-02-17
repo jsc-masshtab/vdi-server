@@ -3,7 +3,7 @@
 
 echo "apache2.service loaded active running
 postgresql.service loaded active exited
-postgresql@9.6-main.service loaded active running
+postgresql@11-main.service loaded active running
 redis-server.service loaded active running
 vdi-monitor_worker.service loaded active running
 vdi-pool_worker.service loaded active running

@@ -14,7 +14,7 @@ from common.veil.auth.veil_jwt import (
     encode_jwt,
     extract_user_and_token_with_no_expire_check,
 )
-from common.veil.veil_errors import AssertError, SilentError, ValidationError
+from common.veil.veil_errors import AssertError, MeaningError, SilentError, ValidationError
 from common.veil.veil_gino import EntityType
 from common.veil.veil_handlers import BaseHttpHandler
 
@@ -97,6 +97,15 @@ class AuthHandler(BaseHttpHandler, ABC):
             entity = {"entity_type": EntityType.SECURITY, "entity_uuid": None}
             await system_logger.warning(
                 message=_local_("Authentication failed for user: {}.").format(self.args.get("username", "unknown")),
+                entity=entity, description=error_description
+            )
+            response = {"errors": [{"message": str(auth_error)}]}
+            self.set_status(200)
+        except MeaningError as auth_error:
+            error_description = "IP: {}.".format(self.remote_ip)
+            entity = {"entity_type": EntityType.SECURITY, "entity_uuid": None}
+            await system_logger.warning(
+                message=str(auth_error),
                 entity=entity, description=error_description
             )
             response = {"errors": [{"message": str(auth_error)}]}
