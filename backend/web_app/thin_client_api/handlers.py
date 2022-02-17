@@ -18,8 +18,8 @@ from yaaredis.exceptions import LockError as RedisLockError
 
 from common.languages import _local_
 from common.log.journal import system_logger
-from common.models.active_tk_connection import ActiveTkConnection, TkConnectionEvent
-from common.models.auth import User
+from common.models.active_tk_connection import ActiveTkConnection, TkConnectionEvent, TkConnectionEventOut
+from common.models.auth import Group, User
 from common.models.pool import AutomatedPool, Pool as PoolM, RdsPool
 from common.models.task import PoolTaskType, Task, TaskStatus
 from common.models.tk_vm_connection import TkVmConnection
@@ -195,7 +195,7 @@ class PoolGetVm(BaseHttpHandler):
         msg_dict = dict(
             msg_type=WsMessageType.DATA.value,
             resource=EVENTS_THIN_CLIENT_SUBSCRIPTION,
-            event="vm_preparation_progress",
+            event=TkConnectionEventOut.VM_PREPARATION_PROGRESS.value,
             user_id=str(self.user_id),
             progress=progress,
             msg=msg,
@@ -669,10 +669,25 @@ class ThinClientWsHandler(BaseWsHandler):
                                                                                   tk_conn_id=self.conn_id)
                                 if vm_conn:
                                     await self.write_msg(redis_message_data)
+
                             # Пересылем сообщения о событиях, связанных с ТК
-                            elif resource == EVENTS_THIN_CLIENT_SUBSCRIPTION and \
-                                redis_message_data_dict["user_id"] == str(self.user_id):  # noqa
-                                await self.write_msg(redis_message_data)
+                            elif resource == EVENTS_THIN_CLIENT_SUBSCRIPTION:
+                                event = redis_message_data_dict["event"]
+                                if event == TkConnectionEventOut.VM_PREPARATION_PROGRESS.value and \
+                                    redis_message_data_dict["user_id"] == str(self.user_id):  # noqa
+                                    await self.write_msg(redis_message_data)
+
+                                elif event == TkConnectionEventOut.POOL_ENTITLEMENT_CHANGED.value:
+                                    user_id = redis_message_data_dict.get("user_id")
+                                    group_id = redis_message_data_dict.get("group_id")
+                                    # Notify user if his entitlement changed directly
+                                    if user_id and user_id == str(self.user_id):
+                                        await self.write_msg(redis_message_data)
+                                    # Notify user if he is in the group
+                                    elif group_id:
+                                        belongs_to_group = await Group.user_belongs_to_group(self.user_id, group_id)
+                                        if belongs_to_group:
+                                            await self.write_msg(redis_message_data)
 
                         elif (
                             msg_type == WsMessageType.TEXT_MSG.value
