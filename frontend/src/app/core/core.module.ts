@@ -8,11 +8,7 @@ import { FooterComponent } from './components/footer/footer.component';
 import { HeaderUserComponent } from './components/header-user/header-user.component';
 import { MainMenuComponent } from './components/main-menu/main-menu.component';
 import { WaitComponent } from './components/wait/wait.component';
-
-
-
-
-
+import { FooterService } from './components/footer/footer.service';
 
 @NgModule({
   declarations: [
@@ -26,7 +22,9 @@ import { WaitComponent } from './components/wait/wait.component';
     AppRoutingModule,
     EventsModule,
   ],
-  providers: [],
+  providers: [
+    FooterService
+  ],
   exports: [
     WaitComponent,
     MainMenuComponent,
@@ -35,6 +33,4 @@ import { WaitComponent } from './components/wait/wait.component';
   ]
 
 })
-export class CoreModule {
-
-}
+export class CoreModule {}

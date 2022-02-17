@@ -1,12 +1,12 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { AfterViewInit, Component, OnDestroy, OnInit } from '@angular/core';
 import { Observable, Subscription } from 'rxjs';
-
 
 import { EventsService } from '@pages/log/events/all-events/events.service';
 import { ICopyrightData, LicenseService } from '@pages/settings/license/license.service';
 import { WebsocketService } from '@app/core/services/websock.service';
 
-
+import * as moment from 'moment-timezone';
+import { FooterService } from './footer.service';
 
 interface ICountEvents {
   warning: number;
@@ -19,8 +19,9 @@ interface ICountEvents {
   templateUrl: './footer.component.html',
   styleUrls: ['./footer.component.scss']
 })
-export class FooterComponent implements OnInit, OnDestroy {
+export class FooterComponent implements OnInit, OnDestroy, AfterViewInit {
 
+  public sub: Subscription;
   public socketSub: Subscription;
 
   public info$: Observable<ICopyrightData>;
@@ -31,9 +32,14 @@ export class FooterComponent implements OnInit, OnDestroy {
 
   public countEvents: ICountEvents;
 
+  time = '';
+  timezone = '';
+  updated_time;
+
   constructor(
     private licenseService: LicenseService,
     private eventsService: EventsService,
+    private footerService: FooterService,
     private ws: WebsocketService
   ) {}
 
@@ -52,6 +58,21 @@ export class FooterComponent implements OnInit, OnDestroy {
     });
 
     this.listenSockets();
+  }
+
+  ngAfterViewInit() {
+    if (this.sub) {
+      this.sub.unsubscribe();
+    }
+
+    this.sub = this.footerService.getTime().subscribe(res => {
+      this.updated_time = moment.tz(res.time, res.timezone);
+      this.timezone = res.timezone;
+
+      setInterval(() => {
+        this.time = this.updated_time.add(1, 's').format('DD.MM.YYYY HH:mm:ss');
+      }, 1000);
+    });
   }
 
   private listenSockets(): void {
