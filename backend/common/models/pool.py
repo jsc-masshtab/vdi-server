@@ -42,13 +42,14 @@ from common.models.vm import Vm as VmModel, VmActionUponUserDisconnect
 from common.settings import (
     DEFAULT_NAME,
     DOMAIN_CREATION_MAX_STEP,
+    INTERNAL_EVENTS_CHANNEL,
     POOL_MAX_CREATE_ATTEMPTS,
     VEIL_DEFAULT_VM_DISCONNECT_ACTION_TIMEOUT,
     VEIL_GUEST_AGENT_WIN_PATH,
     VEIL_MAX_IDS_LEN,
     VEIL_OPERATION_WAITING
 )
-from common.subscription_sources import POOLS_SUBSCRIPTION
+from common.subscription_sources import EVENTS_THIN_CLIENT_SUBSCRIPTION, POOLS_SUBSCRIPTION, WsMessageType
 from common.utils import extract_ordering_data
 from common.veil.veil_errors import (
     PoolCreationError,
@@ -58,7 +59,7 @@ from common.veil.veil_errors import (
 )
 from common.veil.veil_gino import EntityType, Status, VeilModel
 from common.veil.veil_graphene import VmState
-from common.veil.veil_redis import publish_data_in_internal_channel
+from common.veil.veil_redis import publish_data_in_internal_channel, publish_to_redis
 
 
 class Pool(VeilModel):
@@ -622,6 +623,10 @@ class Pool(VeilModel):
                     user=creator,
                     entity=self.entity,
                 )
+
+                # msg to clients
+                await Pool._notify_entitlement_changed(user_id=user_id, group_id=None, pool_id=self.id)
+
         except UniqueViolationError:
             raise SimpleError(
                 _local_("{} already has permission.").format(type(self).__name__),
@@ -637,6 +642,7 @@ class Pool(VeilModel):
             & (EntityModel.entity_uuid == self.id)  # noqa: W503
         )
 
+        ex_entitled_users = []
         for user_id in users_list:
             has_permission = await EntityOwnerModel.query.where(
                 (EntityOwnerModel.user_id == user_id)
@@ -651,6 +657,7 @@ class Pool(VeilModel):
                     user=creator,
                     entity=self.entity,
                 )
+                ex_entitled_users.append(user_id)
             else:
                 await system_logger.warning(
                     _local_("User {} has no direct right to pool {}.").format(
@@ -667,6 +674,11 @@ class Pool(VeilModel):
             (EntityOwnerModel.user_id.in_(users_list))
             & (EntityOwnerModel.entity_id == entity)  # noqa: W503
         ).gino.status()
+
+        # msg to clients
+        for user_id in ex_entitled_users:
+            await Pool._notify_entitlement_changed(user_id=user_id, group_id=None, pool_id=self.id)
+
         return operation_status
 
     async def add_group(self, group_id, creator):
@@ -687,6 +699,9 @@ class Pool(VeilModel):
                     user=creator,
                     entity=self.entity,
                 )
+
+                # msg to clients
+                await Pool._notify_entitlement_changed(user_id=None, group_id=group_id, pool_id=self.id)
         except UniqueViolationError:
             raise SimpleError(
                 _local_("Pool already has permission."), user=creator,
@@ -713,10 +728,15 @@ class Pool(VeilModel):
             (EntityModel.entity_type == self.entity_type)
             & (EntityModel.entity_uuid == self.id)  # noqa: W503
         )
-        return await EntityOwnerModel.delete.where(
+        ret = await EntityOwnerModel.delete.where(
             (EntityOwnerModel.group_id.in_(groups_list))
             & (EntityOwnerModel.entity_id == entity)  # noqa: W503
         ).gino.status()
+
+        for group_id in groups_list:
+            await Pool._notify_entitlement_changed(user_id=None, group_id=group_id, pool_id=self.id)
+
+        return ret
 
     async def free_assigned_vms(self, users_list: list):
         """Будут удалены все записи из EntityOwner соответствующие условию.
@@ -842,6 +862,19 @@ class Pool(VeilModel):
     @staticmethod
     async def delete_pool(pool, creator):
         return await pool.full_delete(creator)
+
+    @staticmethod
+    async def _notify_entitlement_changed(user_id=None, group_id=None, pool_id=None):
+        from common.models.active_tk_connection import TkConnectionEventOut
+        msg_dict = dict(
+            msg_type=WsMessageType.DATA.value,
+            resource=EVENTS_THIN_CLIENT_SUBSCRIPTION,
+            event=TkConnectionEventOut.POOL_ENTITLEMENT_CHANGED.value,
+            user_id=str(user_id) if user_id else None,
+            group_id=str(group_id) if group_id else None,
+            pool_id=str(pool_id) if pool_id else None
+        )
+        await publish_to_redis(INTERNAL_EVENTS_CHANNEL, json.dumps(msg_dict))
 
     @classmethod
     async def activate(cls, pool_id, creator="system"):
