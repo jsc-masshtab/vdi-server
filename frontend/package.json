@@ -43,6 +43,7 @@
     "graphql-tag": "^2.10.1",
     "graphql-typescript": "^0.3.0",
     "moment": "^2.29.1",
+    "moment-timezone": "^0.5.34",
     "rxjs": "~6.6.6",
     "tslib": "^2.3.0",
     "zone.js": "~0.10.2"
