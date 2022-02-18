@@ -8,7 +8,6 @@ import { FooterComponent } from './components/footer/footer.component';
 import { HeaderUserComponent } from './components/header-user/header-user.component';
 import { MainMenuComponent } from './components/main-menu/main-menu.component';
 import { WaitComponent } from './components/wait/wait.component';
-import { FooterService } from './components/footer/footer.service';
 
 @NgModule({
   declarations: [
@@ -21,9 +20,6 @@ import { FooterService } from './components/footer/footer.service';
     FontAwesomeModule,
     AppRoutingModule,
     EventsModule,
-  ],
-  providers: [
-    FooterService
   ],
   exports: [
     WaitComponent,

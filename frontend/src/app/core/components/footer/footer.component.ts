@@ -4,10 +4,9 @@ import { Observable, Subscription } from 'rxjs';
 import { EventsService } from '@pages/log/events/all-events/events.service';
 import { ICopyrightData, LicenseService } from '@pages/settings/license/license.service';
 import { WebsocketService } from '@app/core/services/websock.service';
+import { SystemService } from '@app/pages/settings/system/system.service';
 
 import * as moment from 'moment-timezone';
-import { FooterService } from './footer.service';
-import { SystemService } from '@app/pages/settings/system/system.service';
 import { map } from 'rxjs/operators';
 
 interface ICountEvents {
