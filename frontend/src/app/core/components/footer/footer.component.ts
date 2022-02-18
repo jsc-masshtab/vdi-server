@@ -7,6 +7,8 @@ import { WebsocketService } from '@app/core/services/websock.service';
 
 import * as moment from 'moment-timezone';
 import { FooterService } from './footer.service';
+import { SystemService } from '@app/pages/settings/system/system.service';
+import { map } from 'rxjs/operators';
 
 interface ICountEvents {
   warning: number;
@@ -39,7 +41,7 @@ export class FooterComponent implements OnInit, OnDestroy, AfterViewInit {
   constructor(
     private licenseService: LicenseService,
     private eventsService: EventsService,
-    private footerService: FooterService,
+    private systemService: SystemService,
     private ws: WebsocketService
   ) {}
 
@@ -65,14 +67,16 @@ export class FooterComponent implements OnInit, OnDestroy, AfterViewInit {
       this.sub.unsubscribe();
     }
 
-    this.sub = this.footerService.getTime().subscribe(res => {
-      this.updated_time = moment.tz(res.time, res.timezone);
-      this.timezone = res.timezone;
+    this.sub = this.systemService.getSystemInfo().valueChanges.pipe(map(data => data.data.system_info))
+      .subscribe(res => {
+      this.updated_time = moment.tz(res.local_time, res.time_zone);
+      this.timezone = res.time_zone;
 
       setInterval(() => {
         this.time = this.updated_time.add(1, 's').format('DD.MM.YYYY HH:mm:ss');
       }, 1000);
-    });
+      }
+    );
   }
 
   private listenSockets(): void {
