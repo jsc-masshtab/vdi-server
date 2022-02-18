@@ -18,6 +18,7 @@ from common.subscription_sources import (
     SubscriptionCmd,
     USERS_SUBSCRIPTION,
     VDI_FRONT_ALLOWED_SUBSCRIPTIONS_LIST,
+    WsEventToClient,
     WsMessageDirection,
     WsMessageType
 )
@@ -141,7 +142,11 @@ class VdiFrontWsHandler(BaseWsHandler):  # noqa
                                     await self.write_msg(redis_message_data)
                             # other resources
                             else:
-                                await self.write_msg(redis_message_data)
+                                event = redis_message_data_dict["event"]
+                                if event == WsEventToClient.CREATED.value or \
+                                    event == WsEventToClient.UPDATED.value or \
+                                     event == WsEventToClient.DELETED.value:  # noqa
+                                    await self.write_msg(redis_message_data)
 
                 except asyncio.CancelledError:
                     break

@@ -13,7 +13,7 @@ from common.models.auth import User
 from common.models.pool import Pool
 from common.models.tk_vm_connection import TkVmConnection
 from common.models.vm import Vm
-from common.subscription_sources import THIN_CLIENTS_SUBSCRIPTION
+from common.subscription_sources import THIN_CLIENTS_SUBSCRIPTION, WsEventToClient
 from common.veil.veil_gino import AbstractSortableStatusModel
 from common.veil.veil_redis import (
     publish_data_in_internal_channel
@@ -34,13 +34,6 @@ class TkConnectionEvent(Enum):
     CONNECTION_CLOSED = "connection_closed"  # Соединение с сервером VDI завершилось
     USER_GUI = "user_gui"  # Юзер нажал кнопку/кликнул
     NETWORK_STATS = "network_stats"  # Обновление сетевой статистики
-
-
-class TkConnectionEventOut(Enum):
-    """События, отправляемые тонкому клиенту."""
-
-    VM_PREPARATION_PROGRESS = "vm_preparation_progress"  # Прогресс подготовки ВМ перед выдачей клиенту
-    POOL_ENTITLEMENT_CHANGED = "pool_entitlement_changed"  # Измение прав на пользование пулом
 
 
 class ActiveTkConnection(db.Model, AbstractSortableStatusModel):
@@ -82,12 +75,12 @@ class ActiveTkConnection(db.Model, AbstractSortableStatusModel):
         if model:
             await model.update(**kwargs, data_received=func.now()).apply()
             await publish_data_in_internal_channel(THIN_CLIENTS_SUBSCRIPTION,
-                                                   "UPDATED",
+                                                   WsEventToClient.UPDATED.value,
                                                    model)
         else:
             model = await cls.create(**kwargs)
             await publish_data_in_internal_channel(THIN_CLIENTS_SUBSCRIPTION,
-                                                   "CREATED",
+                                                   WsEventToClient.CREATED.value,
                                                    model)
 
         if (
@@ -178,7 +171,7 @@ class ActiveTkConnection(db.Model, AbstractSortableStatusModel):
 
         # front ws notification
         additional_data = dict(tk_conn_event=tk_event_type, vm_id=str(vm_id))
-        await publish_data_in_internal_channel(THIN_CLIENTS_SUBSCRIPTION, "UPDATED", self,
+        await publish_data_in_internal_channel(THIN_CLIENTS_SUBSCRIPTION, WsEventToClient.UPDATED.value, self,
                                                additional_data)
 
     async def update_vm_data_on_error(self, vm_id, connection_type, conn_error_code, conn_error_str):
@@ -240,4 +233,5 @@ class ActiveTkConnection(db.Model, AbstractSortableStatusModel):
         # send event
         additional_data = dict(tk_conn_event=TkConnectionEvent.CONNECTION_CLOSED.value,
                                dead_connection_detected=dead_connection_detected)
-        await publish_data_in_internal_channel(THIN_CLIENTS_SUBSCRIPTION, "UPDATED", self, additional_data)
+        await publish_data_in_internal_channel(THIN_CLIENTS_SUBSCRIPTION, WsEventToClient.UPDATED.value,
+                                               self, additional_data)
