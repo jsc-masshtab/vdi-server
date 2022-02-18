@@ -10,7 +10,7 @@ from yaaredis.exceptions import ConnectionError, RedisError
 
 import common.settings as settings
 from common.languages import _local_
-from common.subscription_sources import VDI_TASKS_SUBSCRIPTION, WsMessageType
+from common.subscription_sources import VDI_TASKS_SUBSCRIPTION, WsEventToClient, WsMessageType
 from common.utils import gino_model_to_json_serializable_dict
 
 
@@ -274,7 +274,7 @@ async def a_redis_wait_for_task_completion(task_id):
 
                     if (
                         redis_data_dict["resource"] == VDI_TASKS_SUBSCRIPTION
-                        and redis_data_dict["event"] == "UPDATED"  # noqa: W503
+                        and redis_data_dict["event"] == WsEventToClient.UPDATED.value  # noqa: W503
                         and redis_data_dict["id"] == str(task_id)  # noqa: W503
                         and (  # noqa: W503
                             redis_data_dict["status"] == TaskStatus.CANCELLED.name

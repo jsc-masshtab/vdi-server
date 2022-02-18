@@ -12,7 +12,7 @@ from common.database import db
 from common.languages import _local_
 from common.log.journal import system_logger
 from common.models.pool import Pool as PoolModel
-from common.subscription_sources import CONTROLLERS_SUBSCRIPTION
+from common.subscription_sources import CONTROLLERS_SUBSCRIPTION, WsEventToClient
 from common.veil.auth.fernet_crypto import decrypt, encrypt
 from common.veil.veil_api import get_veil_client
 from common.veil.veil_errors import SimpleError, ValidationError
@@ -190,7 +190,7 @@ class Controller(AbstractSortableStatusModel, VeilModel):
 
         # Ws сообщение о создание
         await publish_data_in_internal_channel(controller.get_resource_type(),
-                                               "CREATED", controller)
+                                               WsEventToClient.CREATED.value, controller)
 
         # Возвращаем инстанс созданного контроллера
         return controller
@@ -238,7 +238,7 @@ class Controller(AbstractSortableStatusModel, VeilModel):
             controller_kwargs["token"] = "*" * 12
         # Протоколируем результат операции
         if controller_is_ok:
-            await publish_data_in_internal_channel(self.get_resource_type(), "UPDATED",
+            await publish_data_in_internal_channel(self.get_resource_type(), WsEventToClient.UPDATED.value,
                                                    self)
 
             msg = _local_("Controller {} has been successfully updated.").format(
@@ -280,8 +280,7 @@ class Controller(AbstractSortableStatusModel, VeilModel):
             entity=self.entity,
         )
         # Оповещаем об удалении контоллера
-        await publish_data_in_internal_channel(self.get_resource_type(), "DELETED",
-                                               self)
+        await publish_data_in_internal_channel(self.get_resource_type(), WsEventToClient.DELETED.value, self)
 
         return status
 

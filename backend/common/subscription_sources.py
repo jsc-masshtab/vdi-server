@@ -1,10 +1,6 @@
 # -*- coding: utf-8 -*-
 from enum import Enum
 
-# Подписка на события на vdi брокере, относящиеся напрямую к тонкому клиенту Выделено в отдельный тип
-# событий, так как они нужны только тонкому клиенту
-EVENTS_THIN_CLIENT_SUBSCRIPTION = "/events_thin_client/"
-
 # Подписка на события подключения/отключения тонких клиентов к vdi брокеру
 THIN_CLIENTS_SUBSCRIPTION = "/thin_clients/"
 USERS_SUBSCRIPTION = "/users/"
@@ -46,6 +42,14 @@ class WsMessageType(Enum):
     DATA = "data"
     TEXT_MSG = "text_msg"
     UPDATED = "UPDATED"
+
+
+class WsEventToClient(Enum):
+    CREATED = "CREATED"  # Создание сущности. Имя диктуется ws интерфейсом контроллера
+    UPDATED = "UPDATED"  # Обновление сущности. Имя диктуется ws интерфейсом контроллера
+    DELETED = "DELETED"  # Удаление сущности. Имя диктуется ws интерфейсом контроллера
+    VM_PREPARATION_PROGRESS = "vm_preparation_progress"  # Прогресс подготовки ВМ перед выдачей клиенту
+    POOL_ENTITLEMENT_CHANGED = "pool_entitlement_changed"  # Смена прав на пользование пулом
 
 
 class WsMessageDirection(Enum):

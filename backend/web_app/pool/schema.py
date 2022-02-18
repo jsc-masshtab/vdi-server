@@ -1455,6 +1455,7 @@ class PoolUserDropPermissionsMutation(graphene.Mutation):
                 await pool.free_assigned_vms(users)
 
         pool_record = await Pool.get_pool(pool.id)
+
         return PoolUserDropPermissionsMutation(
             ok=True, pool=pool_obj_to_type(pool_record)
         )
@@ -1477,6 +1478,7 @@ class PoolGroupAddPermissionsMutation(graphene.Mutation):
         await pool.add_groups(creator, groups)
 
         pool_record = await Pool.get_pool(pool.id)
+
         return PoolGroupAddPermissionsMutation(
             ok=True, pool=pool_obj_to_type(pool_record)
         )
@@ -1499,6 +1501,7 @@ class PoolGroupDropPermissionsMutation(graphene.Mutation):
         await pool.remove_groups(creator, groups)
 
         pool_record = await Pool.get_pool(pool.id)
+
         return PoolGroupDropPermissionsMutation(
             ok=True, pool=pool_obj_to_type(pool_record)
         )

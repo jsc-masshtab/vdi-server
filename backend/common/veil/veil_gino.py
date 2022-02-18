@@ -12,6 +12,7 @@ from sqlalchemy.sql.schema import Column
 from common.database import db
 from common.languages import _local_
 from common.settings import VEIL_OPERATION_WAITING
+from common.subscription_sources import WsEventToClient
 from common.veil.veil_redis import publish_data_in_internal_channel
 
 
@@ -297,7 +298,7 @@ class VeilModel(db.Model):
         await self.update(status=status).apply()
 
         additional_data = await self.additional_model_to_json_data()
-        await publish_data_in_internal_channel(self.get_resource_type(), "UPDATED",
+        await publish_data_in_internal_channel(self.get_resource_type(), WsEventToClient.UPDATED.value,
                                                self, additional_data)
 
 

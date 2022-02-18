@@ -9,7 +9,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
 
 from common.database import db
-from common.subscription_sources import VDI_TASKS_SUBSCRIPTION
+from common.subscription_sources import VDI_TASKS_SUBSCRIPTION, WsEventToClient
 from common.veil.veil_gino import AbstractSortableStatusModel
 from common.veil.veil_redis import publish_data_in_internal_channel
 
@@ -103,7 +103,7 @@ class Task(db.Model, AbstractSortableStatusModel):
             await self.update(resumable=False).apply()
 
         # publish task event
-        await publish_data_in_internal_channel(VDI_TASKS_SUBSCRIPTION, "UPDATED", self)
+        await publish_data_in_internal_channel(VDI_TASKS_SUBSCRIPTION, WsEventToClient.UPDATED.value, self)
 
     async def set_progress(self, progress: int):
 
@@ -113,13 +113,13 @@ class Task(db.Model, AbstractSortableStatusModel):
         await self.update(progress=progress).apply()
 
         # publish task event
-        await publish_data_in_internal_channel(VDI_TASKS_SUBSCRIPTION, "UPDATED", self)
+        await publish_data_in_internal_channel(VDI_TASKS_SUBSCRIPTION, WsEventToClient.UPDATED.value, self)
 
     @classmethod
     async def soft_create(cls, entity_id, task_type, creator=None):
         task = await Task.create(entity_id=entity_id, task_type=task_type, creator=creator)
 
-        await publish_data_in_internal_channel(VDI_TASKS_SUBSCRIPTION, "CREATED", task)
+        await publish_data_in_internal_channel(VDI_TASKS_SUBSCRIPTION, WsEventToClient.CREATED.value, task)
 
         return task
 
