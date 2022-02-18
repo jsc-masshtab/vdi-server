@@ -74,6 +74,7 @@ nav:
   - FAQ VeiL Broker:
     - Установка: broker/faq/install_v3.md
     - Обновление: broker/faq/update_v3.md
+    - Обновление VeiL Broker с 3.2.0 на 4.0.0: broker/faq/update_v4.md
     - Обновление  Veil Broker при отсутствии доступа в Интернет:
       - Общие сведения: broker/faq/repo_without_inet/index.md
       - Обновление с помощью установочного iso-образа: broker/faq/repo_without_inet/iso.md
