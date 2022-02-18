@@ -1037,6 +1037,13 @@ class Group(AbstractSortableStatusModel, VeilModel):
 
         return group_obj
 
+    @staticmethod
+    async def user_belongs_to_group(user_id, group_id):
+        """Check uf user belongs to group."""
+        rel = await UserGroup.query.where(
+            (UserGroup.user_id == user_id) & (UserGroup.group_id == group_id)).gino.first()
+        return bool(rel is not None)
+
     # permissions
     async def get_permissions(self):
         query = (

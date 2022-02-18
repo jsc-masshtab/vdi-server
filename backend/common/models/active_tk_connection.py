@@ -36,6 +36,13 @@ class TkConnectionEvent(Enum):
     NETWORK_STATS = "network_stats"  # Обновление сетевой статистики
 
 
+class TkConnectionEventOut(Enum):
+    """События, отправляемые тонкому клиенту."""
+
+    VM_PREPARATION_PROGRESS = "vm_preparation_progress"  # Прогресс подготовки ВМ перед выдачей клиенту
+    POOL_ENTITLEMENT_CHANGED = "pool_entitlement_changed"  # Измение прав на пользование пулом
+
+
 class ActiveTkConnection(db.Model, AbstractSortableStatusModel):
     """Таблица соединений тк по вебсокетам."""
 
