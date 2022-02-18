@@ -1,4 +1,4 @@
-# Установка VeiL Broker 3.*/4.*
+# Установка VeiL Broker версии 3.0 и выше
 
 ## Подготовка к установке
 - [Требования к техническим средствам](../engineer_guide/hardware_requirements.md).
