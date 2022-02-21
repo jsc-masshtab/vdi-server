@@ -25,9 +25,10 @@
 					<p class="field-name">Пароль</p>
 					<input type="password" placeholder="Введите пароль..." formControlName="password">
 				</label>
-				<label class="ldap-field login-field">
+
+				<label class="field login-field">
 					<vdi-checkbox-input formControlName='ldap'>LDAP</vdi-checkbox-input>
-					<span class="field" *ngIf="ldapToggleStatus && (settings$ | async)?.ldap as ldap" >
+					<span class="ldap-field" *ngIf="ldapToggleStatus && ldap" >
 						@{{ldap}}
 					</span>
 				</label>
