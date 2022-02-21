@@ -80,7 +80,12 @@ nav:
       - Обновление с помощью установочного iso-образа: broker/faq/repo_without_inet/iso.md
       - Обновление через виртуальный диск qcow2: broker/faq/repo_without_inet/qcow2.md
       - Обновление через создание локальной копии репозитория: broker/faq/repo_without_inet/local_repo.md
-    - Резервные копии: broker/faq/backup.md
+    - Резервное копирование БД:
+      - Общие сведения: broker/faq/backup_db/index.md
+      - VeiL Broker 3.2.0: broker/faq/backup_db/ver_3_2_0/creating_db.md
+      - VeiL Broker 3.*: broker/faq/backup_db/ver_3.md
+      - VeiL Broker 2.2.*: broker/faq/backup_db/ver_2_2/creating_db.md
+      - VeiL Broker 2.1.*: broker/faq/backup_db/ver_2_1/creating_db.md  
     - Службы системы: broker/faq/services.md
     - Протоколы удаленного подключения: broker/faq/remote_conn_protocols.md
     - Подготовка эталонного образа на основе Windows 8.1/10: broker/faq/rdp/example_template_win.md
