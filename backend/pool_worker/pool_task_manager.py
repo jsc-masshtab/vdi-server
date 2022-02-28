@@ -14,9 +14,9 @@ from common.log.journal import system_logger
 from common.models.pool import Pool
 from common.models.task import Task, TaskStatus
 from common.models.vm import Vm
-from common.settings import POOL_TASK_QUEUE, POOL_WORKER_CMD_QUEUE, REDIS_TIMEOUT
+from common.settings import POOL_TASK_QUEUE, POOL_WORKER_CMD_CHANNEL, REDIS_TIMEOUT
 from common.veil.veil_gino import EntityType
-from common.veil.veil_redis import PoolWorkerCmd, redis_blpop
+from common.veil.veil_redis import PoolWorkerCmd, redis_blpop, redis_get_subscriber
 
 from pool_worker.pool_tasks import AbstractTask
 from pool_worker.pool_tasks import *  # noqa
@@ -61,62 +61,66 @@ class PoolTaskManager:
             except asyncio.CancelledError:
                 raise
             except Exception as ex:
-                await system_logger.error(
-                    message=_local_("Can`t launch task."), description=str(ex)
-                )
+                await system_logger.error(message=_local_("Can`t launch task."), description=str(ex))
 
     async def listen_for_commands(self):
-        while True:
-            try:
-                # wait for message
-                redis_data = await redis_blpop(POOL_WORKER_CMD_QUEUE)
 
-                # get data from message
-                data_dict = json.loads(redis_data.decode())
-                command = data_dict["command"]
+        with redis_get_subscriber([POOL_WORKER_CMD_CHANNEL]) as subscriber:
 
-                await system_logger.debug("listen_for_commands: " + command)
+            while True:
+                try:
+                    # wait for message
+                    redis_message = await subscriber.get_msg()
+                    if redis_message["type"] != "message":
+                        continue
 
-                # cancel_tasks
-                if command == PoolWorkerCmd.CANCEL_TASK.name:
-                    if "task_ids" in data_dict and "cancel_all" in data_dict:
-                        task_ids = data_dict["task_ids"]  # list of id strings
-                        cancel_all = data_dict["cancel_all"]
-                        await self.cancel_tasks(task_ids, cancel_all)
+                    # get data from message
+                    redis_message_data = redis_message["data"].decode()
+                    data_dict = json.loads(redis_message_data)
+                    command = data_dict["command"]
 
-                    elif "controller_id" in data_dict and "resumable" in data_dict:
-                        controller_id = data_dict["controller_id"]
-                        resumable = data_dict["resumable"]
-                        await self.cancel_tasks_associated_with_controller(
-                            controller_id, resumable
+                    await system_logger.debug("listen_for_commands: " + command)
+
+                    # cancel_tasks
+                    if command == PoolWorkerCmd.CANCEL_TASK.name:
+                        if "task_ids" in data_dict and "cancel_all" in data_dict:
+                            task_ids = data_dict["task_ids"]  # list of id strings
+                            cancel_all = data_dict["cancel_all"]
+                            await self.cancel_tasks(task_ids, cancel_all)
+
+                        elif "controller_id" in data_dict and "resumable" in data_dict:
+                            controller_id = data_dict["controller_id"]
+                            resumable = data_dict["resumable"]
+                            await self.cancel_tasks_associated_with_controller(
+                                controller_id, resumable
+                            )
+
+                        elif "entity_id" in data_dict and "resumable" in data_dict:
+                            entity_id = data_dict["entity_id"]
+                            resumable = data_dict["resumable"]
+                            await self.cancel_tasks_associated_with_entity(
+                                entity_id, resumable
+                            )
+
+                    elif command == PoolWorkerCmd.RESUME_TASK.name:
+                        try:
+                            controller_id = data_dict["controller_id"]
+                        except KeyError:
+                            controller_id = None
+                        await self.resume_tasks(
+                            controller_id=controller_id, remove_unresumable_tasks=False
                         )
 
-                    elif "entity_id" in data_dict and "resumable" in data_dict:
-                        entity_id = data_dict["entity_id"]
-                        resumable = data_dict["resumable"]
-                        await self.cancel_tasks_associated_with_entity(
-                            entity_id, resumable
-                        )
-
-                elif command == PoolWorkerCmd.RESUME_TASK.name:
-                    try:
-                        controller_id = data_dict["controller_id"]
-                    except KeyError:
-                        controller_id = None
-                    await self.resume_tasks(
-                        controller_id=controller_id, remove_unresumable_tasks=False
+                except RedisError as ex:
+                    await system_logger.debug(message="Redis connection error.", description=str(ex))
+                    await asyncio.sleep(REDIS_TIMEOUT)
+                except asyncio.CancelledError:
+                    raise
+                except Exception as ex:
+                    entity = {"entity_type": EntityType.SECURITY, "entity_uuid": None}
+                    await system_logger.error(
+                        "listen_for_commands exception:" + str(ex), entity=entity
                     )
-
-            except RedisError as ex:
-                await system_logger.debug(message="Redis connection error.", description=str(ex))
-                await asyncio.sleep(REDIS_TIMEOUT)
-            except asyncio.CancelledError:
-                raise
-            except Exception as ex:
-                entity = {"entity_type": EntityType.SECURITY, "entity_uuid": None}
-                await system_logger.error(
-                    "listen_for_commands exception:" + str(ex), entity=entity
-                )
 
     async def sanitize_tasks(self):
         """Проверяем, присутствуют ли в бд задачи в статусе IN_PROGRESS, которые по факту не выполняются в воркере.
@@ -125,9 +129,10 @@ class PoolTaskManager:
         Но так как подобная ситуауция серьезно нарушит работу приложения, то реализуем эту предосторожность.
         """
         while True:
-            try:
-                await asyncio.sleep(60)
 
+            await asyncio.sleep(60)
+
+            try:
                 # Задачи в бд
                 tasks_in_progress_in_db = \
                     await Task.select("id").where(Task.status == TaskStatus.IN_PROGRESS).gino.all()

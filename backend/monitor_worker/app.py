@@ -4,6 +4,7 @@ import asyncio
 from common.database import start_gino, stop_gino
 from common.log.journal import system_logger
 from common.settings import DEBUG
+from common.single_instance_locker import SingleInstanceLocker
 from common.utils import init_exit_handler
 from common.veil.veil_redis import redis_deinit, redis_init
 
@@ -18,6 +19,9 @@ def main():
     loop.set_debug(DEBUG)  # debug mode
 
     redis_init()
+
+    single_instance_locker = SingleInstanceLocker("monitor_worker_instance_lock")
+    loop.run_until_complete(single_instance_locker.lock())
 
     # init gino
     loop.run_until_complete(start_gino())
@@ -34,6 +38,7 @@ def main():
     # free resources
     loop.run_until_complete(resources_monitor_manager.stop())
     loop.run_until_complete(stop_gino())
+    loop.run_until_complete(single_instance_locker.unlock())
     loop.run_until_complete(redis_deinit())
 
 

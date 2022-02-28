@@ -14,8 +14,6 @@ from tornado.web import Application
 
 from veil_api_client import DomainTcpUsb, VeilRetryConfiguration
 
-from yaaredis.exceptions import LockError as RedisLockError
-
 from common.languages import _local_
 from common.log.journal import system_logger
 from common.models.active_tk_connection import ActiveTkConnection, TkConnectionEvent
@@ -43,6 +41,7 @@ from common.veil.veil_redis import (
     publish_to_redis,
     redis_get_lock,
     redis_get_subscriber,
+    redis_release_lock_no_errors,
     request_to_execute_pool_task,
 )
 
@@ -114,7 +113,7 @@ class PoolGetVm(BaseHttpHandler):
                 # Critical section protected with redis lock https://aredis.readthedocs.io/en/latest/extra.html
                 # Блокировка необходима для попытки избежать назначение одной ВМ нескольким пользователям
                 # при одновременном запросе свободной ВМ от нескольких пользователей
-                vms_global_lock = redis_get_lock(name="pool_vms_lock_" + pool.verbose_name, timeout=5,
+                vms_global_lock = redis_get_lock(name="pool_vms_lock_" + pool.verbose_name, timeout=9,
                                                  blocking_timeout=10)
                 lock_acquired = await vms_global_lock.acquire()
                 if not lock_acquired:  # Не удалось получить лок
@@ -126,10 +125,7 @@ class PoolGetVm(BaseHttpHandler):
                     if vm:  # Machine found
                         await vm.add_user(user.id, creator="system")
                 finally:
-                    try:
-                        await vms_global_lock.release()
-                    except RedisLockError:  # Исключение будет, если лок уже был освобожден по таймауту
-                        pass
+                    await redis_release_lock_no_errors(vms_global_lock)
 
                 if vm:
                     await self._expand_pool_if_required(pool, expandable_pool)

@@ -15,12 +15,18 @@ from common.models.vm import Vm
 from common.utils import cancel_async_task
 from common.veil.veil_errors import PoolCreationError, VmCreationError
 from common.veil.veil_gino import EntityType, Status
+from common.veil.veil_redis import redis_get_lock, redis_release_lock_no_errors
 
-from pool_worker.pool_locks import pool_locks
 
 # Добавление задачи:
 # 1) В файле common/models/task.py в конец enum PoolTaskType добавить новое имя (MY_TASK например)
 # 2) В файле pool_worker/poll_tasks.py наследовать от AbstractTask и в методе do_task реализуем задачу MyTask.
+
+# Локи:
+# Лок пула используется для обеспечения работы над пулом только одной задачи единовременно.
+# Лок шаблона диктуется ограничением контролера (Единовременно из шаблона может создаваться только одна вм
+# и следовательно только один пул)
+# Обязательно соблюдать один и тот же порядок лока, иначе дед лок.
 
 
 class AbstractTask(ABC):
@@ -182,11 +188,8 @@ class InitPoolTask(AbstractTask):
         if not automated_pool:
             raise RuntimeError("InitPoolTask: AutomatedPool doesnt exist")
 
-        pool_lock = pool_locks.get_pool_lock(str(automated_pool.id))
-        template_lock = pool_locks.get_template_lock(str(automated_pool.template_id))
-
-        async with pool_lock:
-            async with template_lock:
+        async with redis_get_lock(str(automated_pool.id)):
+            async with redis_get_lock(str(automated_pool.template_id)):
                 # Добавляем машины
                 try:
                     pool = await Pool.get(self.task_model.entity_id)
@@ -236,16 +239,12 @@ class ExpandPoolTask(AbstractTask):
 
     task_type = PoolTaskType.POOL_EXPAND
 
-    def __init__(self, ignore_reserve_size=False, wait_for_lock=True):
+    def __init__(self, ignore_reserve_size=False):
         super().__init__()
 
         self.ignore_reserve_size = (
             ignore_reserve_size
         )  # расширение не смотря на достаточный резерв
-        self.wait_for_lock = (
-            wait_for_lock
-        )  # Если true ждем освобождения локов. Если false, то бросаем исключение, если
-        # локи заняты
 
     async def get_user_friendly_text(self):
         entity_name = await self._get_associated_entity_name()
@@ -257,20 +256,10 @@ class ExpandPoolTask(AbstractTask):
         if not automated_pool:
             raise RuntimeError("ExpandPoolTask: AutomatedPool doesnt exist")
 
-        pool_lock = pool_locks.get_pool_lock(str(automated_pool.id))
-        template_lock = pool_locks.get_template_lock(str(automated_pool.template_id))
-
-        # Проверяем залочены ли локи. Если залочены, то бросаем исключение.
-        # Экспериментально сделано опциональным (self.wait_for_lock)
-        if not self.wait_for_lock and (pool_lock.locked() or template_lock.locked()):
-            raise RuntimeError(
-                "ExpandPoolTask: Another task works on this pool or vm template is busy"
-            )
-
         vm_list = list()
 
-        async with pool_lock:
-            async with template_lock:
+        async with redis_get_lock(str(automated_pool.id)):
+            async with redis_get_lock(str(automated_pool.template_id)):
                 # Check that total_size is not reached
                 pool = await Pool.get(automated_pool.id)
                 vm_amount_in_pool = await pool.get_vm_amount()
@@ -330,14 +319,10 @@ class RecreationGuestVmTask(AbstractTask):
 
     task_type = PoolTaskType.VM_GUEST_RECREATION
 
-    def __init__(self, vm_id=None,
-                 wait_for_lock=True):
+    def __init__(self, vm_id=None):
         super().__init__()
 
         self.vm_id = vm_id
-        self.wait_for_lock = (
-            wait_for_lock
-        )  # Если true-ждем освобождения локов. Если false, то исключение-локи заняты
 
     async def get_user_friendly_text(self):
         entity_name = await self._get_associated_entity_name()
@@ -349,36 +334,25 @@ class RecreationGuestVmTask(AbstractTask):
         if not automated_pool and not automated_pool.is_guest:
             raise RuntimeError("RecreationGuestVmTask: GuestPool doesnt exist")
 
-        pool_lock = pool_locks.get_pool_lock(str(automated_pool.id))
-        template_lock = pool_locks.get_template_lock(str(automated_pool.template_id))
-
-        # Если залочены локи, то вызывается исключение.
-        if not self.wait_for_lock and (pool_lock.locked() or template_lock.locked()):
-            raise RuntimeError(
-                "RecreationGuestVmTask: Another task works on this pool or vm template is busy"
-            )
-
         vm_list = list()
 
-        async with pool_lock:
-            async with template_lock:
+        async with redis_get_lock(str(automated_pool.id)):
+            async with redis_get_lock(str(automated_pool.template_id)):
 
                 pool = await Pool.get(automated_pool.id)
 
                 # Удаление и добавление 1 ВМ.
                 try:
-                    vm_ids = list()
-                    vm_ids.append(self.task_model.entity_id)
-                    await pool.remove_vms(vm_ids)
-                    await vm.soft_delete(creator=self.task_model.creator,
-                                         remove_on_controller=True)
+                    await pool.remove_vms([self.task_model.entity_id])
+                    await vm.soft_delete(creator=self.task_model.creator, remove_on_controller=True)
                     vm_list = await automated_pool.add_vm(count=1)
                 except VmCreationError as vm_error:
                     await system_logger.error(
                         _local_("VM creating error."), description=vm_error
                     )
 
-            # Подготовка ВМ для подключения к ТК (под async with pool_lock)
+            # Подготовка ВМ для подключения к ТК
+            # TODO: убрать повтор кода
             try:
                 active_directory_object = await AuthenticationDirectory.query.where(
                     AuthenticationDirectory.status == Status.ACTIVE
@@ -422,12 +396,15 @@ class DecreasePoolTask(AbstractTask):
         if not automated_pool:
             raise RuntimeError("AutomatedPool doesnt exist")
 
-        pool_lock = pool_locks.get_pool_lock(str(automated_pool.id))
-        if pool_lock.locked():
+        # Нужно использовать либо контекстный менедженр, либо таймаут. Иначе есть опасность
+        # что лок останется залоченным
+        pool_lock = redis_get_lock(str(automated_pool.id), timeout=10, blocking_timeout=0.5)
+        lock_acquired = await pool_lock.acquire()
+        if not lock_acquired:
             raise RuntimeError("Another task works on this pool")
 
         # decrease total_size
-        async with pool_lock:
+        try:
             pool = await Pool.get(automated_pool.id)
             vm_amount = await pool.get_vm_amount()
             if self._new_total_size < vm_amount:
@@ -436,6 +413,8 @@ class DecreasePoolTask(AbstractTask):
                 )
 
             await automated_pool.update(total_size=self._new_total_size).apply()
+        finally:
+            await redis_release_lock_no_errors(pool_lock)
 
 
 class DeletePoolTask(AbstractTask):
@@ -459,8 +438,6 @@ class DeletePoolTask(AbstractTask):
         if not automated_pool:
             raise RuntimeError("DeletePoolTask: AutomatedPool doesnt exist")
 
-        pool_lock = pool_locks.get_pool_lock(str(automated_pool.id))
-
         # Нужно остановить таски связанные с пулом
         tasks_related_to_cur_pool = self._get_related_progressing_tasks()
         # Отменяем их
@@ -468,26 +445,16 @@ class DeletePoolTask(AbstractTask):
             await task.cancel()
 
         # Лочим
-        async with pool_lock:
-            template_id = automated_pool.template_id
+        async with redis_get_lock(str(automated_pool.id)):
             # удаляем пул
             pool = await Pool.get(automated_pool.id)
 
             is_deleted = await Pool.delete_pool(pool, "system")
             await system_logger.debug("is pool deleted: {}".format(is_deleted))
 
-            # убираем из памяти локи, если пул успешно удалился
-            if is_deleted:
-                await pool_locks.remove_pool_data(
-                    str(automated_pool.id), str(template_id)
-                )
-
 
 class PrepareVmTask(AbstractTask):
-    """Задача подготовки ВМ.
-
-    При удалении ВМ желательно учесть что эта задача может быть в процессе выполнения и сначала отменить ее.
-    """
+    """Задача подготовки ВМ."""
 
     task_type = PoolTaskType.VM_PREPARE
 
@@ -620,8 +587,7 @@ class RemoveVmsTask(AbstractTask):
         pool_type = pool.pool_type
 
         if pool_type == Pool.PoolTypes.AUTOMATED or pool_type == Pool.PoolTypes.GUEST:
-            pool_lock = pool_locks.get_pool_lock(str(pool.id))
-            async with pool_lock:
+            async with redis_get_lock(str(pool.id)):
                 await self.remove_vms(pool, remove_vms_on_controller=True)
         elif pool_type == Pool.PoolTypes.STATIC:
             await self.remove_vms(pool)

@@ -141,8 +141,8 @@ REDIS_RECONNECT_TIMEOUT = 5
 REDIS_EXPIRE_TIME = 600  # Время хранения кэша, сек.
 
 POOL_TASK_QUEUE = "POOL_TASK_QUEUE"  # Очередь задач воркера
-POOL_WORKER_CMD_QUEUE = (
-    "POOL_WORKER_CMD_QUEUE"
+POOL_WORKER_CMD_CHANNEL = (
+    "POOL_WORKER_CMD_CHANNEL"
 )  # Очередь для команд, которые принимаются пул воркером (Например,
 # команда на отмену задачи)
 
@@ -155,6 +155,7 @@ WS_MONITOR_CMD_QUEUE = (
 
 INTERNAL_EVENTS_CHANNEL = "INTERNAL_EVENTS_CHANNEL"  # Канал для внутренних событий vdi
 
+LOCK_TIMEOUT = 300  # Таймаут лока для недолгих операций
 
 # VM manager settings
 # -----------------------------

@@ -6,7 +6,7 @@ from enum import Enum
 from functools import wraps
 
 from yaaredis import StrictRedis
-from yaaredis.exceptions import ConnectionError, RedisError
+from yaaredis.exceptions import ConnectionError, LockError, RedisError
 
 import common.settings as settings
 from common.languages import _local_
@@ -129,7 +129,8 @@ async def redis_receiving_messages():
     await pubsub.subscribe(settings.INTERNAL_EVENTS_CHANNEL,
                            settings.WS_MONITOR_CHANNEL_OUT,
                            settings.REDIS_TEXT_MSG_CHANNEL,
-                           settings.REDIS_THIN_CLIENT_CMD_CHANNEL)
+                           settings.REDIS_THIN_CLIENT_CMD_CHANNEL,
+                           settings.POOL_WORKER_CMD_CHANNEL)
 
     while True:
         try:
@@ -189,8 +190,15 @@ async def redis_flushall():
     await A_REDIS_CLIENT.flushdb()
 
 
-def redis_get_lock(name, timeout, blocking_timeout):
+def redis_get_lock(name, timeout=None, blocking_timeout=None):
     return A_REDIS_CLIENT.lock(name=name, timeout=timeout, blocking_timeout=blocking_timeout)
+
+
+async def redis_release_lock_no_errors(redis_lock):
+    try:
+        await redis_lock.release()
+    except LockError:  # Исключение будет, если лок уже был освобожден по таймауту
+        pass
 
 
 def redis_error_handle(func):
@@ -351,7 +359,7 @@ async def send_cmd_to_cancel_tasks(task_ids: list, cancel_all=False):
         "task_ids": task_ids,
         "cancel_all": cancel_all,
     }
-    await A_REDIS_CLIENT.rpush(settings.POOL_WORKER_CMD_QUEUE, json.dumps(cmd_dict))
+    await publish_to_redis(settings.POOL_WORKER_CMD_CHANNEL, json.dumps(cmd_dict))
 
 
 async def send_cmd_to_cancel_tasks_associated_with_controller(
@@ -367,7 +375,7 @@ async def send_cmd_to_cancel_tasks_associated_with_controller(
         "controller_id": str(controller_id),
         "resumable": True,
     }
-    await A_REDIS_CLIENT.rpush(settings.POOL_WORKER_CMD_QUEUE, json.dumps(cmd_dict))
+    await publish_to_redis(settings.POOL_WORKER_CMD_CHANNEL, json.dumps(cmd_dict))
 
     #  Wait for result
     if wait_for_result:
@@ -389,7 +397,7 @@ async def send_cmd_to_cancel_tasks_associated_with_entity(entity_id):
         "entity_id": str(entity_id),
         "resumable": True,
     }
-    await A_REDIS_CLIENT.rpush(settings.POOL_WORKER_CMD_QUEUE, json.dumps(cmd_dict))
+    await publish_to_redis(settings.POOL_WORKER_CMD_CHANNEL, json.dumps(cmd_dict))
 
 
 async def send_cmd_to_resume_tasks_associated_with_controller(controller_id):
@@ -398,7 +406,7 @@ async def send_cmd_to_resume_tasks_associated_with_controller(controller_id):
         "command": PoolWorkerCmd.RESUME_TASK.name,
         "controller_id": str(controller_id),
     }
-    await A_REDIS_CLIENT.rpush(settings.POOL_WORKER_CMD_QUEUE, json.dumps(cmd_dict))
+    await publish_to_redis(settings.POOL_WORKER_CMD_CHANNEL, json.dumps(cmd_dict))
 
 
 async def send_cmd_to_ws_monitor(controller_id, ws_monitor_cmd: WsMonitorCmd):

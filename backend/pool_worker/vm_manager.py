@@ -20,7 +20,8 @@ from common.settings import (
 from common.subscription_sources import THIN_CLIENTS_SUBSCRIPTION, WsMessageType
 from common.utils import cancel_async_task
 from common.veil.veil_gino import EntityType, Status
-from common.veil.veil_redis import redis_get_subscriber, request_to_execute_pool_task, wait_for_task_result
+from common.veil.veil_redis import redis_get_subscriber, request_to_execute_pool_task, \
+    wait_for_task_result
 
 
 class VmManager:
@@ -46,9 +47,11 @@ class VmManager:
     async def _keep_vms_on_task(self):
         """Держим ВМ вкл, если ВМ находятся в пуле с флагом keep_vms_on, имеют назначенного юзера и в статусе ACTIVE."""
         while True:
+
+            await asyncio.sleep(VM_MANGER_DATA_QUERY_INTERVAL)
+
             try:
                 controllers = await Controller.get_objects()
-
                 for controller in controllers:
 
                     # Получить из бд машины имеющие пользователя и которые нужно держать включенными
@@ -109,14 +112,13 @@ class VmManager:
                     message=_local_("Keep vms on task error."), description=str(ex)
                 )
 
-            await asyncio.sleep(VM_MANGER_DATA_QUERY_INTERVAL)
-
     async def _synchronize_vm_data_task(self):
         """Если на контроллере меняется имя ВМ, то обновляем его на VDI."""
         with redis_get_subscriber([WS_MONITOR_CHANNEL_OUT]) as subscriber:
 
             while True:
                 try:
+
                     redis_message = await subscriber.get_msg()
 
                     if redis_message["type"] == "message":
@@ -224,6 +226,7 @@ class VmManager:
         with redis_get_subscriber([INTERNAL_EVENTS_CHANNEL]) as subscriber:
 
             while True:
+
                 try:
                     redis_message = await subscriber.get_msg()
                     if redis_message["type"] != "message":
