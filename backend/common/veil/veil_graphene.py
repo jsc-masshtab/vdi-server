@@ -48,4 +48,3 @@ class VeilShortEntityType(VeilResourceType):
 class VeilTagsType(VeilResourceType):
     verbose_name = graphene.Field(ShortString)
     colour = graphene.Field(ShortString)
-    slug = graphene.Field(ShortString)
