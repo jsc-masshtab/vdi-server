@@ -24,7 +24,8 @@ def context(f):
 
 
 def user_passes_test(test_func, exc=Unauthorized):  # noqa
-    """exc в GraphQl вернется с 200тым кодом.
+    """Exc в GraphQl вернется с 200тым кодом.
+
     https://github.com/graphql-python/graphene/issues/946
     """
 

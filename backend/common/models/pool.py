@@ -1155,7 +1155,7 @@ class Pool(VeilModel):
     @staticmethod
     async def tag_create(controller, verbose_name, creator):
         pool_tag = TagConfiguration(
-            verbose_name=verbose_name, slug=verbose_name, colour=Pool.pool_tag_colour()
+            verbose_name=verbose_name, colour=Pool.pool_tag_colour()
         )
         controller_client = controller.veil_client
         # Попытки повтора заблокированы намеренно
