@@ -109,6 +109,10 @@ async def redis_deinit():
     # во время разрушения объекта.
 
 
+def redis_get_client():
+    return A_REDIS_CLIENT
+
+
 def redis_get_subscriber(channels):
     return A_REDIS_CLIENT.create_subscriber(channels)
 
