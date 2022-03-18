@@ -1,0 +1,21 @@
+{
+    "/api": {
+      "target": "http://vdi-tornado:8888/",
+      "secure": false,
+      "pathRewrite": {"^/api" : ""}
+    },
+    "/ws": {
+      "target": "ws://vdi-tornado:8888/",
+      "secure": false,
+      "ws": true
+    },
+    "/websockify": {
+      "target": "ws://192.168.11.105",
+      "ws": true
+    },
+    "/global": {
+      "target": "http://192.168.14.77:10001",
+      "pathRewrite": {"^/global" : ""},
+      "secure": false
+    }
+  }
