@@ -12,12 +12,14 @@ pipeline {
         APT_SRV = "192.168.11.118"
         DATE = "${currentDate}"
         VEIL_ADDRESS = "192.168.11.102"
-        VEIL_NODE_ID = "4c2d5d96-966e-4ca5-aee8-d9f6e226c053"
-        VEIL_DATAPOOL_ID = "9e11d68f-2206-4726-a5ea-7bc20ca53ed3"
-        ASTRA_TEMPLATE_ID = "a1734d0b-e0f9-4e97-b5db-038bcc3186ba"
+        VEIL_NODE_ID = "de4a8586-db6d-480f-bc60-f5868e229191"
+        VEIL_DATAPOOL_ID = "57056701-cc41-474b-99a7-83f8e57bbc17"
+        ASTRA_TEMPLATE_ID = "f76da49a-01d4-4749-91d1-084c06b8b23c"
         VM_NAME = "veil-broker-va-${VERSION}"
         VM_USERNAME = "astravdi"
-        TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjozMywidXNlcm5hbWUiOiJhcGkiLCJleHAiOjE5NTA0MjMzMzcsInNzbyI6ZmFsc2UsIm9yaWdfaWF0IjoxNjM1OTI3MzM3fQ.u8QmqBzIk2XPy0yWzzqIkTxZN03iK4cf3J1UwUG5ZXk"
+        TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJ1c2VyX2lkIjo0LCJ1c2VybmFtZSI6ImFwaSIsImV4cCI6MTk2MTM5MzM1OCwic3NvIjpmYWxzZSwib3JpZ19pYXQiOjE2NDY4OTczNTh9.D6cxPDlPneURRLrKTpfsv_MTTvGxoDp9rJH-kokaweUr3eMarCZ7ZG0IpOaO5i5KBuf0q1es8q9HEpa8zhpZVOb2joNtTD5im9-NQO4ffZf_ZucQDzv7sZfTPTrMFBZA3WsEruAYSs1bI7yiemf5SvTurYYdyxNgWZBvXfbXpNeXT6YuNiwFKCDe69Cg65_2bee398vGW3lrNZajdiliJPawq9Q-OqqHnrkdwwyv4CzA9FQEs2FabwEqqZpyJyVni1DF9wS8U1MXsCKVoCOagZBvwrxvz5yeTMPKL_ozgbrWN_mSmmPMnBQGXCdGHSiagBU9f2MhY7Hpu-8SzXRSof7Qj-eHp03jDgAbfknuNtFMazHtE5hppQjQlkLEA0Di-7Mtq1Q1XDKRQ6d0LaAwbk098irPOfSU2GjdaHYfT0NA_PwBzDC-Ke8eQnFDygH6K3ezVfTgYgkRUZghpl-aLuN7SEYInJLM12jWTvh5IFcfDInpgasQDdaEjOH2li1rixpWWkTJu-xD-PNSysT2pSdlTLsqshmJL2B1ixrQVCcGemI3TqNj61CnMBi1aELzTycWWW6OuYAAvZXQ4K92npJr1YRHxAR6dLjQPJmHZr0J31Bph2bWUPYAV1Zp1kpkliRrY1vQJKxwqEg9hPxc3Q-z70gPCdQsGeQMkQqo3VI"
+        NEXUS_DOCKER_REGISTRY = "nexus.bazalt.team"
+        DOCKER_IMAGE_NAME = "${NEXUS_DOCKER_REGISTRY}/dwdraju/alpine-curl-jq"
     }
 
     post {
@@ -68,10 +70,16 @@ pipeline {
             }
         }
 
+        stage('prepare build image') {
+            steps {
+                sh 'docker pull $DOCKER_IMAGE_NAME:latest'
+            }
+        }
+
         stage ('Create vm from template') {
             agent {
                 docker {
-                    image "dwdraju/alpine-curl-jq"
+                    image "${DOCKER_IMAGE_NAME}"
                     args '-u root:root -v /nfs:/nfs'
                     reuseNode true
                     label "${AGENT}"
@@ -127,7 +135,7 @@ pipeline {
                     -H "Authorization: jwt ${TOKEN}" \
                     http://${VEIL_ADDRESS}/api/domains/${VM_ID}/start/
 
-                    sleep 120
+                    sleep 180
 
                     # Get VM ip address
                     VM_IP=$(curl -s -f -S -H "Content-Type: application/json" \
