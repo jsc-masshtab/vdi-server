@@ -1,0 +1,124 @@
+# если появляется новый пакет в зависимостях его нужно как раньше добавить в Pipenv, затем выполнить
+# pipenv lock -r -d > dev-requirements.txt && pipenv lock -r > requirements.txt
+# docker system prune -a -f --volumes && docker-compose up
+#
+# Запуск multiple-broker:
+# cd devops/docker
+# docker-compose -f multiple-docker-compose.yml up -d --scale vdi-tornado=1 --scale vdi-pool-worker=2 --scale vdi-monitor-worker=2 --scale vdi-angular=2 --scale vdi-guacamole=2
+# Веб-интерфейс будет доступен по: https://your_ip_address
+# P.S. --scale container_name=2 - количество реплик контейнера
+
+version: '3.7'
+services:
+  vdi-postgres:
+    image: postgres:11
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - ./postgres/:/docker-entrypoint-initdb.d/
+  vdi-redis:
+    image: redis:5
+    command: redis-server --requirepass 4NZ7GpHn4IlshPhb --bind 0.0.0.0
+    depends_on:
+      - vdi-postgres
+  vdi-migrations:
+    build:
+      context: ../../
+      dockerfile: ./devops/docker/python/Dockerfile
+    environment:
+      - PYTHONPATH=/opt/veil-vdi/app
+      - PYTHONDONTWRITEBYTECODE=1
+      - PYTHONPYCACHEPREFIX=/tmp
+    working_dir: /opt/veil-vdi/app
+    volumes:
+      - ../../backend:/opt/veil-vdi/app
+      - ./python/settings.containers.py:/opt/veil-vdi/app/common/settings.py
+    command: sh -c "cd common/migrations && alembic upgrade head && poweroff"
+    depends_on:
+      - vdi-postgres
+  vdi-tornado:
+    build:
+      context: ../../
+      dockerfile: ./devops/docker/python/Dockerfile
+    environment:
+      - PYTHONPATH=/opt/veil-vdi/app
+      - PYTHONDONTWRITEBYTECODE=1
+      - PYTHONPYCACHEPREFIX=/tmp
+    working_dir: /opt/veil-vdi/app
+    volumes:
+      - ../../backend:/opt/veil-vdi/app
+      - ./python/settings.containers.py:/opt/veil-vdi/app/common/settings.py
+      - ./python/app.containers.py:/opt/veil-vdi/app/web_app/app.py
+    command: sh -c "sleep 5 && pip install -U veil_api_client veil_aio_au && python web_app/app.py --logging=DEBUG"
+    extra_hosts:
+      - "ipa.bazalt.auth:192.168.14.83"
+    depends_on:
+      - vdi-postgres
+      - vdi-redis
+      - vdi-migrations
+    expose:
+      - "8888"
+  vdi-pool-worker:
+    build:
+      context: ../../
+      dockerfile: ./devops/docker/python/Dockerfile
+    environment:
+      - PYTHONPATH=/opt/veil-vdi/app
+      - PYTHONDONTWRITEBYTECODE=1
+      - PYTHONPYCACHEPREFIX=/tmp
+    working_dir: /opt/veil-vdi/app
+    volumes:
+      - ../../backend:/opt/veil-vdi/app
+      - ./python/settings.containers.py:/opt/veil-vdi/app/common/settings.py
+    command: sh -c "sleep 10 && pip install -U veil_api_client veil_aio_au && python pool_worker/app.py"
+    depends_on:
+      - vdi-tornado
+  vdi-monitor-worker:
+    build:
+      context: ../../
+      dockerfile: ./devops/docker/python/Dockerfile
+    environment:
+      - PYTHONPATH=/opt/veil-vdi/app
+      - PYTHONDONTWRITEBYTECODE=1
+      - PYTHONPYCACHEPREFIX=/tmp
+    working_dir: /opt/veil-vdi/app
+    volumes:
+      - ../../backend:/opt/veil-vdi/app
+      - ./python/settings.containers.py:/opt/veil-vdi/app/common/settings.py
+    command: sh -c "sleep 15 && pip install -U veil_api_client veil_aio_au && python monitor_worker/app.py"
+    depends_on:
+      - vdi-tornado
+      - vdi-pool-worker
+  vdi-angular:
+    build:
+      context: ../../
+      dockerfile: ./devops/docker/angular/Dockerfile
+    user: "node"
+    working_dir: /home/node/app
+    volumes:
+      - ../../frontend:/home/node/app/frontend
+      - ./angular/proxy.conf.containers.json:/home/node/app/frontend/src/proxy.conf.json
+    command: sh -c "npm start --prefix /home/node/app/frontend/ -- --host=0.0.0.0 --disableHostCheck & npm run thin-client --prefix /home/node/app/frontend/ -- --host=0.0.0.0 --disableHostCheck"
+    depends_on:
+      - vdi-tornado
+    expose:
+      - "4200"
+  vdi-guacamole:
+    image: guacamole/guacd:1.3.0
+    depends_on:
+      - vdi-tornado
+    expose:
+      - "4822"
+  vdi-nginx:
+    image: nginx:stable
+    volumes:
+      - ./nginx/vdi.conf:/etc/nginx/conf.d/vdi.conf
+      - ../../backend/common/veil_ssl/veil_default.crt:/etc/ssl/private/veil_default.crt
+      - ../../backend/common/veil_ssl/veil_default.key:/etc/ssl/private/veil_default.key
+    depends_on:
+      - vdi-angular
+    ports:
+      - "443:443"
+      - "80:80"
