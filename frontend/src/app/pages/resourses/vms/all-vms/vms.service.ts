@@ -95,7 +95,6 @@ export class VmsService {
                                     domain_tags {
                                         colour
                                         verbose_name
-                                        slug
                                     }
                                     parent_name
                                     resource_pool {
@@ -125,11 +124,10 @@ export class VmsService {
                           start_on_boot
                           address
                           status
-                          hostname
+                          hostnameß
                           domain_tags {
                               colour
-                              verbose_name
-                              slug
+                              verbose_nameß
                           }
                           parent_name
                           resource_pool {
