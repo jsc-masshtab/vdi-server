@@ -871,7 +871,6 @@ export class PoolDetailsService {
                                         domain_tags {
                                             colour
                                             verbose_name
-                                            slug
                                         }
                                         parent_name
                                         resource_pool {
