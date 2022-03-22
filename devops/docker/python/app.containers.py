@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import socket
 import ssl
 
 from tornado.httpserver import HTTPServer
@@ -134,7 +135,8 @@ async def startup_alerts(vdi_license):
     """Выводим сообщения только в первом процессе. Если task_id None, значит процесс 1, если > 0, значит больше 1."""
     if not task_id():
         await system_logger.info(
-            _local_("VDI broker started with {} worker(s).").format(options.workers)
+            _local_("{} instance(s) of VDI broker web application launched on {}.").format(options.workers,
+                                                                                           socket.gethostname())
         )
         # Проверка настроек
         if not AUTH_ENABLED:
@@ -142,8 +144,8 @@ async def startup_alerts(vdi_license):
         if vdi_license.expired:
             await system_logger.warning(
                 _local_(
-                    "The license is expired. Some functions will be blocked. Contact your dealer."
-                )
+                    "The license is expired on {}. Some functions will be blocked. Contact your dealer."
+                ).format(socket.gethostname())
             )
         if DEBUG:
             await system_logger.warning(_local_("DEBUG mode is enabled."))

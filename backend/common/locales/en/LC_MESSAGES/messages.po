@@ -1087,16 +1087,16 @@ msgid "VDI broker stopped."
 msgstr "VDI broker stopped."
 
 #: ../web_app/app.py:137
-msgid "VDI broker started with {} worker(s)."
-msgstr "VDI broker started with {} worker(s)."
+msgid "{} instance(s) of VDI broker web application launched on {}."
+msgstr "{} instance(s) of VDI broker web application launched on {}."
 
 #: ../web_app/app.py:141
 msgid "Authentication system is disabled."
 msgstr "Authentication system is disabled."
 
 #: ../web_app/app.py:145
-msgid "The license is expired. Some functions will be blocked. Contact your dealer."
-msgstr "The license is expired. Some functions will be blocked. Contact your dealer."
+msgid "The license is expired on {}. Some functions will be blocked. Contact your dealer."
+msgstr "The license is expired on {}. Some functions will be blocked. Contact your dealer."
 
 #: ../web_app/app.py:149
 msgid "DEBUG mode is enabled."
