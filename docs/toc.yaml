@@ -83,7 +83,12 @@ nav:
     - Резервные копии: broker/faq/backup.md
     - Службы системы: broker/faq/services.md
     - Протоколы удаленного подключения: broker/faq/remote_conn_protocols.md
-    - Подготовка эталонного образа на основе Windows 8.1/10: broker/faq/rdp/example_template_win.md
+    - Подготовка эталонного образа на основе Windows 8.1/10:
+      - Общие сведения: broker/faq/rdp/example_template_win/index.md
+      - Создание виртуальной машины и установка ОС: broker/faq/rdp/example_template_win/creating_vm.md
+      - Установка драйверов и дополнительного ПО: broker/faq/rdp/example_template_win/install_software.md
+#      - Оптимизация ОС c помощью VMware OS Optimization Tool: broker/faq/rdp/example_template_win/opti_tool.md
+      - Добавление пользователей в группу удалённых рабочих столов для подключения по RDP к ВМ: broker/faq/rdp/example_template_win/add_user.md
     - Работа по RDP с пулами ВРС: broker/faq/rdp/example_rdp.md
     - Настройка GPO через RDP для ВМ в домене MS AD: broker/faq/rdp/example_rdp_domain.md
     - nVidia Grid: broker/faq/vm/nvidia.md
