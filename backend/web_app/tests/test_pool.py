@@ -644,3 +644,90 @@ async def test_create_update_remove_rds_pool(fixt_db, fixt_create_rds_pool, fixt
     )
     executed = await execute_scheme(pool_schema, qu, context=fixt_auth_context)
     assert executed["updateRdsPool"]["ok"]
+
+
+@pytest.mark.asyncio
+async def test_vm_connection_data(
+    snapshot, fixt_launch_workers, fixt_db, fixt_create_static_pool, fixt_auth_context):  # noqa
+    """Add vm_connection_data, update this vm_connection_data, remove this vm_connection_data"""
+
+    pool_id = fixt_create_static_pool["id"]
+    pool = await Pool.get(pool_id)
+    vms = await pool.get_vms()
+    vm_id = vms[0].id
+
+    address = "192.168.6.6"
+    port = 6669
+    connection_type = "SPICE"
+    active = "true"
+
+    # Add
+    qu = """
+    mutation {
+      addVmConnectionData(vm_id:"%s", address:"%s", port:%s, connection_type:%s, active:%s){
+        ok
+        vm_connection_data {
+          id
+          address
+          port
+          connection_type
+          active
+        }
+      }  
+    }""" % (vm_id, address, port, connection_type, active)
+
+    executed = await execute_scheme(pool_schema, qu, context=fixt_auth_context)
+    vm_connection_data_id = executed["addVmConnectionData"]["vm_connection_data"]["id"]
+
+    assert vm_connection_data_id
+    assert executed["addVmConnectionData"]["ok"]
+    assert executed["addVmConnectionData"]["vm_connection_data"]["address"] == address
+    assert executed["addVmConnectionData"]["vm_connection_data"]["port"] == port
+    assert executed["addVmConnectionData"]["vm_connection_data"]["connection_type"] == "PoolConnectionTypes.SPICE"
+    assert executed["addVmConnectionData"]["vm_connection_data"]["active"]
+
+    # Update
+    new_address = "192.168.3.9"
+    new_port = 5642
+    new_active = "false"
+    qu = """
+    mutation {
+      updateVmConnectionData(id:"%s", address:"%s", port:%s, active:%s){
+        ok
+      }
+    }""" % (vm_connection_data_id, new_address, new_port, new_active)
+
+    executed = await execute_scheme(pool_schema, qu, context=fixt_auth_context)
+    assert executed["updateVmConnectionData"]["ok"]
+
+    # Request data
+    qu = """{
+      pool(pool_id:"%s") {
+        vms{
+          id
+          vm_connection_data_list{
+            id
+            address
+            port
+            connection_type
+            active
+          }
+          vm_connection_data_count
+        }
+      }
+    }""" % pool_id
+    executed = await execute_scheme(pool_schema, qu, context=fixt_auth_context)
+    assert executed["pool"]["vms"][0]["vm_connection_data_count"] == 1
+    assert executed["pool"]["vms"][0]["vm_connection_data_list"][0]["address"] == new_address
+    assert executed["pool"]["vms"][0]["vm_connection_data_list"][0]["port"] == new_port
+    assert not executed["pool"]["vms"][0]["vm_connection_data_list"][0]["active"]
+
+    # Delete
+    qu = """
+    mutation {
+      removeVmConnectionData(id:"%s"){
+        ok
+      }
+    }""" % vm_connection_data_id
+    executed = await execute_scheme(pool_schema, qu, context=fixt_auth_context)
+    assert executed["removeVmConnectionData"]["ok"]
