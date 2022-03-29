@@ -198,7 +198,6 @@ class EventQuery(graphene.ObjectType):
         entity_type=None,
         **kwargs
     ):
-        # TODO: refactor me
         filters = build_filters(
             event_type, start_date, end_date, user, read_by, entity_type
         )

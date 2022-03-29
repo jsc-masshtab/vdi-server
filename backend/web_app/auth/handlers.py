@@ -1,14 +1,16 @@
 # -*- coding: utf-8 -*-
 from abc import ABC
 
+from packaging import version
+
 from tornado.web import HTTPError
 
+from common import settings
 from common.languages import _local_
 from common.log.journal import system_logger
 from common.models.active_tk_connection import ActiveTkConnection
 from common.models.auth import User
 from common.models.authentication_directory import AuthenticationDirectory
-from common.settings import EXTERNAL_AUTH, LANGUAGE, LOCAL_AUTH, PAM_AUTH
 from common.veil.auth.auth_dir_utils import extract_domain_from_username
 from common.veil.auth.veil_jwt import (
     encode_jwt,
@@ -40,22 +42,22 @@ class AuthHandler(BaseHttpHandler, ABC):
                 raise ValidationError(_local_("Missing password."))
 
             # Updated 26.12.2020
-            if self.args.get("ldap") and EXTERNAL_AUTH:
+            if self.args.get("ldap") and settings.EXTERNAL_AUTH:
                 account_name = await AuthenticationDirectory.authenticate(
                     username, password
                 )
                 domain_name = await AuthenticationDirectory.get_domain_name(
                     self.args["username"]
                 )
-            elif self.args.get("ldap") and not EXTERNAL_AUTH:
+            elif self.args.get("ldap") and not settings.EXTERNAL_AUTH:
                 raise ValidationError(
                     _local_("External auth system is disabled. Check broker settings.")
                 )
-            elif PAM_AUTH and LOCAL_AUTH:
+            elif settings.PAM_AUTH and settings.LOCAL_AUTH:
                 raise ValidationError(
                     _local_("PAM or LOCAL auth only. Check broker settings.")
                 )
-            elif LOCAL_AUTH or PAM_AUTH:
+            elif settings.LOCAL_AUTH or settings.PAM_AUTH:
                 password_is_valid = await User.check_user(username, password)
                 account_name = username
                 domain_name = None
@@ -69,11 +71,9 @@ class AuthHandler(BaseHttpHandler, ABC):
             await User.check_2fa(username, two_factor_code)
 
             access_token = encode_jwt(account_name, domain=domain_name)
-
             if self.client_type == "thin-client":
-                thin_client_limit_exceeded = await ActiveTkConnection.thin_client_limit_exceeded()
-                if thin_client_limit_exceeded:
-                    raise RuntimeError(_local_("Thin client limit exceeded."))
+                await self._validate_desktop_thin_client_version()
+                await self._validate_thin_client_limit()
 
             await User.login(
                 username=account_name,
@@ -124,6 +124,26 @@ class AuthHandler(BaseHttpHandler, ABC):
 
         return error_message
 
+    async def _validate_desktop_thin_client_version(self):
+
+        base_error_msg = f"Minimum supported desktop client version is" \
+                         f" {settings.MINIMUM_SUPPORTED_DESKTOP_THIN_CLIENT_VERSION}"  # noqa
+
+        if "veil_connect_version" not in self.args:
+            raise RuntimeError(_local_(f"Missing VeiL Connect version. {base_error_msg}."))
+        else:
+            veil_connect_version = self.args["veil_connect_version"]
+            min_supported_version = settings.MINIMUM_SUPPORTED_DESKTOP_THIN_CLIENT_VERSION
+            if version.parse(veil_connect_version) < version.parse(min_supported_version):
+                raise RuntimeError(
+                    _local_(f"Version {veil_connect_version} is not supported. {base_error_msg}.")
+                )
+
+    async def _validate_thin_client_limit(self):
+        thin_client_limit_exceeded = await ActiveTkConnection.thin_client_limit_exceeded()
+        if thin_client_limit_exceeded:
+            raise RuntimeError(_local_("Thin client limit exceeded."))
+
 
 class LogoutHandler(BaseHttpHandler, ABC):
     async def post(self):
@@ -153,7 +173,7 @@ class SettingsHandler(BaseHttpHandler, ABC):
         except ImportError:
             from common.settings import BROKER_NAME
         auth_dir = await AuthenticationDirectory.get_objects(first=True)
-        data = {"language": LANGUAGE,
+        data = {"language": settings.LANGUAGE,
                 "broker_name": BROKER_NAME,
                 "sso": auth_dir.sso if auth_dir else False,
                 "ldap": auth_dir.dc_str if auth_dir else ""}
