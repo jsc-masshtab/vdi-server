@@ -25,9 +25,6 @@ from web_app.auth.license.utils import License
 class TkConnectionEvent(Enum):
     """События от ТК."""
 
-    VM_CHANGED = "vm_changed"  # ВМ изменилась (подключение/отключение). Outdated.
-    # Оставлено для поддержки тонких клиентов до версии 1.10.0 включительно
-
     VM_CONNECTED = "vm_connected"  # Клиент подключился к ВМ
     VM_DISCONNECTED = "vm_disconnected"  # Клиент отключился от ВМ
     VM_CONNECTION_ERROR = "vm_connection_error"  # Не удалось подключиться к ВМ

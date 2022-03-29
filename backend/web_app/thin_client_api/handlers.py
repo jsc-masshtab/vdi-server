@@ -587,21 +587,7 @@ class ThinClientWsHandler(BaseWsHandler):
                 event_type = recv_data_dict["event"]
                 tk_conn = await ActiveTkConnection.get(self.conn_id)
                 if tk_conn:
-                    if event_type == TkConnectionEvent.VM_CHANGED.value:  # юзер подключился/отключился от машины
-                        # Блок кода оставлен для поддержки старых версий ТК
-                        vm_id = recv_data_dict.get("vm_id")
-                        conn_type = recv_data_dict.get("connection_type")
-                        is_conn_secure = recv_data_dict.get("is_connection_secure")
-                        if vm_id:
-                            event_type = TkConnectionEvent.VM_CONNECTED.value
-                        else:
-                            vm_id = await tk_conn.get_last_connected_vm_id()
-                            event_type = TkConnectionEvent.VM_DISCONNECTED.value
-
-                        if vm_id:
-                            await tk_conn.update_vm_data(event_type, vm_id, conn_type, is_conn_secure)
-
-                    elif event_type == TkConnectionEvent.VM_CONNECTED.value or \
+                    if event_type == TkConnectionEvent.VM_CONNECTED.value or \
                         event_type == TkConnectionEvent.VM_DISCONNECTED.value:  # noqa
 
                         vm_id = recv_data_dict["vm_id"]
