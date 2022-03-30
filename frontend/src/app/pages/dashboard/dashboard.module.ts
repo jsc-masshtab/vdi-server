@@ -5,8 +5,7 @@ import { NgModule } from '@angular/core';
 import { MAT_DIALOG_DEFAULT_OPTIONS } from '@angular/material/dialog';
 import { Apollo } from 'apollo-angular';
 import { HttpLink } from 'apollo-angular/http'
-import { from, ApolloLink } from '@apollo/client';
-import { defaultDataIdFromObject, InMemoryCache } from '@apollo/client/core';
+import { defaultDataIdFromObject, InMemoryCache, from, ApolloLink } from '@apollo/client/core';
 import { onError } from "@apollo/client/link/error";
 import { environment } from 'environments/environment';
 import { throwError } from 'rxjs';

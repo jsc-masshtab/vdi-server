@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
-import { ApolloQueryResult } from 'apollo-client';
+import { ApolloQueryResult } from '@apollo/client/core';
 import { Subscription } from 'rxjs';
 import { SmtpConfirmModalComponent } from './confirm-modal/confirm-modal.component';
 

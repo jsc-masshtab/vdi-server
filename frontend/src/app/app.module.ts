@@ -39,7 +39,6 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 
 import { ApolloModule  } from 'apollo-angular';
-import { HttpLinkModule } from 'apollo-angular-link-http';
 
 import { ErrorsModule } from '@core/components/errors/errors.module';
 
@@ -61,7 +60,6 @@ import { AppComponent } from './app.component';
     AppRoutingModule,
     FontAwesomeModule,
     ApolloModule,
-    HttpLinkModule,
     HttpClientModule,
     LoginModule,
     DashboardModule,
