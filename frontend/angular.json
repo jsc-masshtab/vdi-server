@@ -23,7 +23,7 @@
               "qrcode",
               "file-saver"
             ],
-            "aot": false,
+            "aot": true,
             "outputPath": "dist/frontend",
             "index": "src/index.html",
             "main": "src/main.ts",
@@ -173,7 +173,6 @@
             "main": "projects/thin-client/src/main.ts",
             "polyfills": "projects/thin-client/src/polyfills.ts",
             "tsConfig": "projects/thin-client/tsconfig.app.json",
-            "aot": false,
             "assets": [
               "projects/thin-client/src/assets",
               "projects/thin-client/src/novnc",
