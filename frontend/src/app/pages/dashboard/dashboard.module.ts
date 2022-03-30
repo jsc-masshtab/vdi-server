@@ -4,10 +4,10 @@ import { HttpHeaders, HttpClientModule } from '@angular/common/http';
 import { NgModule } from '@angular/core';
 import { MAT_DIALOG_DEFAULT_OPTIONS } from '@angular/material/dialog';
 import { Apollo } from 'apollo-angular';
-import { HttpLink } from 'apollo-angular-link-http';
-import { defaultDataIdFromObject, InMemoryCache } from 'apollo-cache-inmemory';
-import { ApolloLink, from } from 'apollo-link';
-import { onError } from 'apollo-link-error';
+import { HttpLink } from 'apollo-angular/http'
+import { from, ApolloLink } from '@apollo/client';
+import { defaultDataIdFromObject, InMemoryCache } from '@apollo/client/core';
+import { onError } from "@apollo/client/link/error";
 import { environment } from 'environments/environment';
 import { throwError } from 'rxjs';
 
@@ -152,7 +152,6 @@ export class DashboardModule {
       }
 
     });
-
 
     this.apollo.create({
       link: from([errorLink, authMiddleware, link]),
