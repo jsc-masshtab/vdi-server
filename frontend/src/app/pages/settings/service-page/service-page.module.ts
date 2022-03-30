@@ -11,16 +11,13 @@ import { ServicePageComponent } from './service-page.component';
 import { ReactiveFormsModule } from '@angular/forms';
 
 @NgModule({
-  imports: [
-    CommonModule,
-    SharedModule,
-    FontAwesomeModule,
-    MatDialogModule,
-    ReactiveFormsModule
-  ],
-  entryComponents: [
-    ConfirmModalComponent
-  ],
-  declarations: [ServicePageComponent, ConfirmModalComponent, ServiceControlsComponent]
+    imports: [
+        CommonModule,
+        SharedModule,
+        FontAwesomeModule,
+        MatDialogModule,
+        ReactiveFormsModule
+    ],
+    declarations: [ServicePageComponent, ConfirmModalComponent, ServiceControlsComponent]
 })
 export class ServicePageModule { }

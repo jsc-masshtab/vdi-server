@@ -10,21 +10,17 @@ import { SmtpModalComponent } from './smtp-modal/smtp-modal.component';
 import { SmtpConfirmModalComponent } from './confirm-modal/confirm-modal.component';
 
 @NgModule({
-  imports: [
-    CommonModule,
-    SharedModule,
-    FontAwesomeModule,
-    MatDialogModule,
-    ReactiveFormsModule
-  ],
-  entryComponents: [
-    SmtpModalComponent,
-    SmtpConfirmModalComponent
-  ],
-  declarations: [
-    SmtpComponent, 
-    SmtpModalComponent, 
-    SmtpConfirmModalComponent
-  ]
+    imports: [
+        CommonModule,
+        SharedModule,
+        FontAwesomeModule,
+        MatDialogModule,
+        ReactiveFormsModule
+    ],
+    declarations: [
+        SmtpComponent,
+        SmtpModalComponent,
+        SmtpConfirmModalComponent
+    ]
 })
 export class SmtpModule { }
