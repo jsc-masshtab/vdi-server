@@ -51,7 +51,7 @@
   "devDependencies": {
     "@angular-devkit/build-angular": "^13.2.5",
     "@angular-eslint/eslint-plugin": "^2.0.2",
-    "@angular/cli": "^11.2.18",
+    "@angular/cli": "^12.2.16",
     "@angular/compiler-cli": "^13.3.0",
     "@angular/language-service": "~13.3.0",
     "@graphql-codegen/typescript-graphql-files-modules": "^1.0.2",
