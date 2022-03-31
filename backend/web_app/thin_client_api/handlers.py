@@ -22,6 +22,7 @@ from common.models.pool import AutomatedPool, Pool as PoolM, RdsPool
 from common.models.task import PoolTaskType, Task, TaskStatus
 from common.models.tk_vm_connection import TkVmConnection
 from common.models.vm import Vm
+from common.models.vm_connection_data import VmConnectionData
 from common.settings import (
     INTERNAL_EVENTS_CHANNEL,
     REDIS_TEXT_MSG_CHANNEL,
@@ -156,10 +157,9 @@ class PoolGetVm(BaseHttpHandler):
         # Определяем адрес и порт в зависимости от протокола
         await self._notify_vm_await_progress(progress=50, msg=_local_("Connection data resolving (address/port)."))
         veil_domain = await vm.vm_client
-        domain_info = await veil_domain.info()
         vm_controller = await vm.controller
-        is_ok, response, vm_address, vm_port, vm_token = await self._get_conn_data(remote_protocol, vm_controller,
-                                                                                   veil_domain, domain_info)
+        is_ok, response, vm_address, vm_port, vm_token = await self._get_conn_data(
+            vm, remote_protocol, vm_controller, veil_domain)
         if not is_ok:
             return await self.log_finish(response)
 
@@ -200,12 +200,28 @@ class PoolGetVm(BaseHttpHandler):
 
         await publish_to_redis(INTERNAL_EVENTS_CHANNEL, json.dumps(msg_dict))
 
-    async def _get_conn_data(self, remote_protocol, vm_controller, veil_domain, domain_info):
+    async def _get_conn_data(self, vm_model, remote_protocol, vm_controller, veil_domain):
+        """Return is_ok, response, vm_address, vm_port, vm_token."""
         # Проверяем наличие клиента у контроллера
         veil_client = vm_controller.veil_client
         if not veil_client:
             response = self.form_err_res(_local_("The remote controller is unavailable."))
             return False, response, None, None, None
+
+        # Запрашивает данные о ВМ с контроллера
+        domain_info = await veil_domain.info()
+
+        #  Для подключения по спайсу через web нужен токен
+        vm_token = None
+        if self._is_spice(remote_protocol):
+            spice = await veil_domain.spice_conn()
+            if spice and spice.valid:
+                vm_token = spice.token
+
+        # Возвращаем данные подключения из базы данных, если имеются
+        vm_connection_data = await VmConnectionData.get_with_params(vm_model.id, remote_protocol, True)
+        if vm_connection_data:
+            return True, None, vm_connection_data.address, vm_connection_data.port, vm_token
 
         if self._is_rdp(remote_protocol) or remote_protocol == PoolM.PoolConnectionTypes.X2GO.name:
 
@@ -229,13 +245,6 @@ class PoolGetVm(BaseHttpHandler):
         else:  # PoolM.PoolConnectionTypes.SPICE.name by default
             vm_address = vm_controller.address
             vm_port = veil_domain.remote_access_port
-
-        #  Для подключения по спайсу через web нужен токен
-        vm_token = None
-        if self._is_spice(remote_protocol):
-            spice = await veil_domain.spice_conn()
-            if spice and spice.valid:
-                vm_token = spice.token
 
         return True, None, vm_address, vm_port, vm_token
 
@@ -578,21 +587,7 @@ class ThinClientWsHandler(BaseWsHandler):
                 event_type = recv_data_dict["event"]
                 tk_conn = await ActiveTkConnection.get(self.conn_id)
                 if tk_conn:
-                    if event_type == TkConnectionEvent.VM_CHANGED.value:  # юзер подключился/отключился от машины
-                        # Блок кода оставлен для поддержки старых версий ТК
-                        vm_id = recv_data_dict.get("vm_id")
-                        conn_type = recv_data_dict.get("connection_type")
-                        is_conn_secure = recv_data_dict.get("is_connection_secure")
-                        if vm_id:
-                            event_type = TkConnectionEvent.VM_CONNECTED.value
-                        else:
-                            vm_id = await tk_conn.get_last_connected_vm_id()
-                            event_type = TkConnectionEvent.VM_DISCONNECTED.value
-
-                        if vm_id:
-                            await tk_conn.update_vm_data(event_type, vm_id, conn_type, is_conn_secure)
-
-                    elif event_type == TkConnectionEvent.VM_CONNECTED.value or \
+                    if event_type == TkConnectionEvent.VM_CONNECTED.value or \
                         event_type == TkConnectionEvent.VM_DISCONNECTED.value:  # noqa
 
                         vm_id = recv_data_dict["vm_id"]

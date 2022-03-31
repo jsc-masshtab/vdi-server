@@ -121,7 +121,6 @@ class MappingType(graphene.ObjectType):
         return await mapping.possible_groups
 
     async def resolve_status(self, _info):
-        # TODO: NotImplemented
         return Status.ACTIVE
 
 

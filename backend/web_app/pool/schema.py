@@ -17,12 +17,14 @@ from common.models.controller import Controller
 from common.models.pool import AutomatedPool, Pool, RdsPool, StaticPool
 from common.models.task import PoolTaskType, Task, TaskStatus
 from common.models.vm import Vm, VmActionUponUserDisconnect
+from common.models.vm_connection_data import VmConnectionData
 from common.settings import (
     DOMAIN_CREATION_MAX_STEP,
     POOL_MAX_SIZE,
     POOL_MIN_SIZE,
     VEIL_DEFAULT_VM_DISCONNECT_ACTION_TIMEOUT
 )
+from common.utils import convert_gino_model_to_graphene_type
 from common.veil.veil_decorators import administrator_required
 from common.veil.veil_errors import SilentError, SimpleError, ValidationError
 from common.veil.veil_gino import (
@@ -54,10 +56,9 @@ from web_app.journal.schema import EntityType as TypeEntity, EventType
 ConnectionTypesGraphene = graphene.Enum.from_enum(Pool.PoolConnectionTypes)
 VmActionUponUserDisconnectGraphene = graphene.Enum.from_enum(VmActionUponUserDisconnect)
 
-# TODO: отсутствует валидация входящих ресурсов вроде node_uid, cluster_uid и т.п. Ранее шла речь,
-#  о том, что мы будем кешированно хранить какие-то ресурсы полученные от ECP Veil. Возможно стоит
-#  обращаться к этому хранилищу для проверки корректности присланных ресурсов. Аналогичный принцип
-#  стоит применить и к статическим пулам (вместо похода на вейл для проверки присланных параметров).
+# TODO: отсутствует валидация входящих ресурсов вроде node_uid, cluster_uid и т.п.
+# TODO: разбить файл на несколько. В схеме должна быть только сшшивка в схему запросов и миграций,
+#  а все остальное в отдельных файлах по графен типам и миграциям
 
 
 class ControllerFetcher:
@@ -88,11 +89,24 @@ class VmBackupType(VeilResourceType):
 
 
 class VmConnectionType(VeilResourceType):
+    """Данные для подключения по спайс и VNC из вебки."""
+
     password = graphene.Field(ShortString)
     host = graphene.Field(ShortString)
     token = graphene.Field(ShortString)
     connection_url = graphene.Field(ShortString)
     connection_type = graphene.Field(ShortString)
+
+
+class VmConnectionDataTkType(VeilResourceType):
+    """Данные подключения к ВМ для тонкого клиента."""
+
+    id = graphene.UUID()
+    vm_id = graphene.UUID()
+    connection_type = graphene.Field(ShortString)
+    address = graphene.Field(ShortString)
+    port = graphene.Int()
+    active = graphene.Boolean()
 
 
 class VmType(VeilResourceType):
@@ -156,6 +170,13 @@ class VmType(VeilResourceType):
     event = graphene.Field(EventType, event_id=graphene.UUID())
     spice_connection = graphene.Field(VmConnectionType)
     vnc_connection = graphene.Field(VmConnectionType)
+
+    vm_connection_data_list = graphene.List(
+        VmConnectionDataTkType,
+        limit=graphene.Int(default_value=100),
+        offset=graphene.Int(default_value=0),
+    )
+    vm_connection_data_count = graphene.Int()
 
     async def resolve_user(self, _info):
         vm = await Vm.get(self.id)
@@ -253,6 +274,22 @@ class VmType(VeilResourceType):
                                         connection_url=vnc.connection_url,
                                         connection_type=vnc.connection_type)
             raise SimpleError(_local_("Missing connection vnc data."))
+
+    async def resolve_vm_connection_data_list(self, _info, limit, offset):
+        vm = await Vm.get(self.id)
+
+        query = VmConnectionData.get_vm_connection_data_list_query(vm.id)
+        vm_connection_data_list = await query.limit(limit).offset(offset).gino.all()
+
+        vm_connection_data_tk_type_list = [convert_gino_model_to_graphene_type(item, VmConnectionDataTkType)
+                                           for item in vm_connection_data_list]
+        return vm_connection_data_tk_type_list
+
+    async def resolve_vm_connection_data_count(self, _info):
+        vm = await Vm.get(self.id)
+        query = VmConnectionData.get_vm_connection_data_list_query(vm.id)
+        count = await db.select([db.func.count()]).select_from(query.alias()).gino.scalar()
+        return count
 
 
 class VmInput(graphene.InputObjectType):
@@ -449,6 +486,13 @@ class PoolValidator(MutationValidation):
             if not_allowed_types:
                 raise ValidationError(
                     _local_("Connection types {} are not supported.").format(str(not_allowed_types)))
+
+    @staticmethod
+    async def custom_validate_and_get_vm_connection_data(id_):
+        vm_connection_data = await VmConnectionData.get(id_)
+        if not vm_connection_data:
+            raise SimpleError(_local_(f"Vm connection data with id {id_} does not exist."))
+        return vm_connection_data
 
 
 class PoolGroupType(graphene.ObjectType):
@@ -1931,6 +1975,76 @@ class VmConvertToTemplate(graphene.Mutation, PoolValidator):
         return VmConvertToTemplate(ok=ok)
 
 
+class AddVmConnectionDataMutation(graphene.Mutation, PoolValidator):
+
+    class Arguments:
+        vm_id = graphene.UUID(required=True)
+        connection_type = ConnectionTypesGraphene(required=True)
+        address = ShortString(required=True)
+        port = graphene.Int(required=True)
+        active = graphene.Boolean(default_value=True, required=True)
+
+    ok = graphene.Boolean()
+    vm_connection_data = graphene.Field(VmConnectionDataTkType)
+
+    @classmethod
+    @administrator_required
+    async def mutate(cls, root, info, creator, **kwargs):
+        async with db.transaction():
+            # Проверяем существует ли уже адрес для пары vm_id<->connection_type
+            vm_id = kwargs["vm_id"]
+            connection_type = kwargs["connection_type"]
+            vm_connection_data = await VmConnectionData.get_with_params(vm_id=vm_id, connection_type=connection_type)
+            if vm_connection_data:
+                raise SimpleError(_local_(
+                    f"Vm connection data for vm_id {vm_id} and connection_type {connection_type} already exists."))
+
+            vm_connection_data_model = await VmConnectionData.soft_create(creator, **kwargs)
+            vm_connection_data_graphene_type = convert_gino_model_to_graphene_type(
+                vm_connection_data_model, VmConnectionDataTkType)
+
+        return dict(ok=True, vm_connection_data=vm_connection_data_graphene_type)
+
+
+class UpdateVmConnectionDataMutation(graphene.Mutation, PoolValidator):
+
+    class Arguments:
+        id = graphene.UUID(required=True)  # vm_connection_data record id
+        address = ShortString()
+        port = graphene.Int()
+        active = graphene.Boolean()
+
+    ok = graphene.Boolean()
+
+    @classmethod
+    @administrator_required
+    async def mutate(cls, root, info, id, creator, **kwargs):
+        if len(kwargs) == 0:
+            return dict(ok=False)
+
+        async with db.transaction():
+            vm_connection_data = await cls.custom_validate_and_get_vm_connection_data(id)
+            await vm_connection_data.soft_update(creator, **kwargs)
+
+        return dict(ok=True)
+
+
+class RemoveVmConnectionDataMutation(graphene.Mutation, PoolValidator):
+
+    class Arguments:
+        id = graphene.UUID(required=True)  # vm_connection_data record id
+
+    ok = graphene.Boolean()
+
+    @classmethod
+    @administrator_required
+    async def mutate(cls, root, info, id, creator):
+        vm_connection_data = await cls.custom_validate_and_get_vm_connection_data(id)
+        await vm_connection_data.soft_delete(creator)
+
+        return dict(ok=True)
+
+
 # --- --- --- --- ---
 # Schema concatenation
 class PoolMutations(graphene.ObjectType):
@@ -1969,6 +2083,10 @@ class PoolMutations(graphene.ObjectType):
     changeTemplate = TemplateChange.Field()
     convertToTemplate = VmConvertToTemplate.Field()
     reserveVm = ReserveVm.Field()
+
+    addVmConnectionData = AddVmConnectionDataMutation.Field()
+    updateVmConnectionData = UpdateVmConnectionDataMutation.Field()
+    removeVmConnectionData = RemoveVmConnectionDataMutation.Field()
 
 
 pool_schema = graphene.Schema(

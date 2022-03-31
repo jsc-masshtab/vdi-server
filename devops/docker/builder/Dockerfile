@@ -16,5 +16,6 @@ RUN curl -sL https://deb.nodesource.com/setup_10.x | bash - && \
 
 # install pip-deps
 RUN /usr/bin/python3 -m pip --no-cache-dir install 'pip==21.3.1' --force-reinstall && \
-    /usr/bin/python3 -m pip --no-cache-dir install 'tornado==6.1' 'virtualenv==16.7.12' 'mkdocs==1.2.3' \
-    'mkdocs-material==7.3.6' 'pymdown-extensions==9.1' 'mkdocs-print-site-plugin==2.1' --force-reinstall
+    /usr/bin/python3 -m pip --no-cache-dir install 'tornado==6.1' 'virtualenv==16.7.12' \
+    'Jinja2==3.0.0' 'mkdocs==1.2.3' 'mkdocs-material==7.3.6' 'pymdown-extensions==9.1' \
+    'mkdocs-print-site-plugin==2.1' --force-reinstall
