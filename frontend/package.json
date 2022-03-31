@@ -1,6 +1,6 @@
 {
   "name": "frontend",
-  "version": "5.0.0",
+  "version": "4.0.0",
   "scripts": {
     "ng": "ng",
     "start": "ng serve --watch=true",
@@ -72,5 +72,9 @@
   },
   "peerDependencies": {
     "@types/node": "^12.11.1"
+  },
+  "engines" : { 
+    "npm" : ">=7.0.0",
+    "node" : ">=16.0.0"
   }
 }
