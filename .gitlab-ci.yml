@@ -37,7 +37,7 @@ NPM lint:
     - ls
   script:
     - ng --version
-    - npm run lint
+    - npm run eslint
     - npm run build -- --prod
   only:
     changes:

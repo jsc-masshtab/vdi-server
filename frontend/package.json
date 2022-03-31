@@ -1,9 +1,9 @@
 {
   "name": "frontend",
-  "version": "0.0.0",
+  "version": "5.0.0",
   "scripts": {
     "ng": "ng",
-    "start": "ng serve --watch=true --port=42011",
+    "start": "ng serve --watch=true",
     "thin-client": "ng serve --watch=true --project=thin-client --port=4201",
     "build": "ng build",
     "test": "ng test",
@@ -28,15 +28,18 @@
     "@apollo/client": "^3.5.10",
     "@auth0/angular-jwt": "^5.0.1",
     "@fortawesome/angular-fontawesome": "^0.10.2",
-    "@fortawesome/fontawesome-svg-core": "^1.2.17",
+    "@fortawesome/fontawesome-svg-core": "^1.2.36",
     "@fortawesome/free-regular-svg-icons": "^5.9.0",
     "@fortawesome/free-solid-svg-icons": "^5.8.1",
     "@techiediaries/ngx-qrcode": "^9.1.0",
     "@types/async": "^2.0.31",
+    "@types/graphql": "^14.5.0",
+    "@types/ws": "^8.5.3",
     "apollo-angular": "^3.0.0",
     "core-js": "^2.5.4",
     "file-saver": "^2.0.5",
     "graphql": "^16.3.0",
+    "graphql-subscriptions": "^2.0.0",
     "moment": "^2.29.1",
     "moment-timezone": "^0.5.34",
     "rxjs": "~6.6.6",
@@ -45,6 +48,7 @@
   },
   "devDependencies": {
     "@angular-devkit/build-angular": "^13.2.5",
+    "@angular-eslint/eslint-plugin": "^13.1.0",
     "@angular/cli": "^13.3.0",
     "@angular/compiler-cli": "^13.3.0",
     "@angular/language-service": "~13.3.0",
@@ -64,7 +68,6 @@
     "karma-jasmine-html-reporter": "~1.7.0",
     "protractor": "~7.0.0",
     "ts-node": "~7.0.0",
-    "tslint": "~6.1.0",
     "typescript": "~4.6.3"
   },
   "peerDependencies": {

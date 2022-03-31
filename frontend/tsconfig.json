@@ -16,16 +16,17 @@
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "importHelpers": true,
-    "target": "es5",
+    "target": "es2017",
     "typeRoots": [
       "node_modules/@types",
       "src/app/shared/types"
     ],
     "downlevelIteration": true,
     "lib": [
-      "es2017",
+      "es2020",
       "dom",
-      "esnext.asynciterable"
+      "esnext.asynciterable",
+      "esnext"
     ],
      /* Additional Checks */
      "noUnusedLocals": true,
