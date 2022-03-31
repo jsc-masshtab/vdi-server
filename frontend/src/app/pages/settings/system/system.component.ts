@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { ApolloQueryResult } from 'apollo-client';
+import { ApolloQueryResult } from '@apollo/client/core';
 
 import { DetailsMove } from '@shared/classes/details-move';
 import { INetwork, ISystemData, ISystemResponse, SystemMapper } from './system.mapper';

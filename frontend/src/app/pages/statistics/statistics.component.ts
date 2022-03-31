@@ -1,6 +1,6 @@
 import {  Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { FormControl } from '@angular/forms';
-import { ApolloQueryResult } from 'apollo-client';
+import { ApolloQueryResult } from '@apollo/client/core';
 import { ApiResponse, IDate, StatisticsService } from './statistics.service';
 import { saveAs } from 'file-saver'
 

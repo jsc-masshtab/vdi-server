@@ -10,7 +10,7 @@ const routes: Routes = [
 ];
 
 @NgModule({
-  imports: [RouterModule.forRoot(routes, { useHash: true })], // <-- debugging purposes only { enableTracing: true }
+  imports: [RouterModule.forRoot(routes, { useHash: true, relativeLinkResolution: 'legacy' })], // <-- debugging purposes only { enableTracing: true }
   exports: [RouterModule]
 })
 

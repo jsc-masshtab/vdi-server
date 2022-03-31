@@ -20,10 +20,11 @@
             "allowedCommonJsDependencies": [
               "graphql-tag",
               "zen-observable",
+              "moment-timezone",
               "qrcode",
               "file-saver"
             ],
-            "aot": false,
+            "aot": true,
             "outputPath": "dist/frontend",
             "index": "src/index.html",
             "main": "src/main.ts",
@@ -52,7 +53,6 @@
               "optimization": true,
               "outputHashing": "all",
               "sourceMap": false,
-              "extractCss": true,
               "namedChunks": false,
               "aot": true,
               "extractLicenses": true,
@@ -61,7 +61,7 @@
               "budgets": [
                 {
                   "type": "initial",
-                  "maximumWarning": "2mb",
+                  "maximumWarning": "3mb",
                   "maximumError": "5mb"
                 },
                 {
@@ -174,7 +174,6 @@
             "main": "projects/thin-client/src/main.ts",
             "polyfills": "projects/thin-client/src/polyfills.ts",
             "tsConfig": "projects/thin-client/tsconfig.app.json",
-            "aot": false,
             "assets": [
               "projects/thin-client/src/assets",
               "projects/thin-client/src/novnc",
@@ -198,16 +197,15 @@
               "optimization": true,
               "outputHashing": "all",
               "sourceMap": false,
-              "extractCss": true,
               "namedChunks": false,
-              "aot":true,
+              "aot": true,
               "extractLicenses": true,
               "vendorChunk": false,
               "buildOptimizer": true,
               "budgets": [
                 {
                   "type": "initial",
-                  "maximumWarning": "2mb",
+                  "maximumWarning": "3mb",
                   "maximumError": "5mb"
                 },
                 {

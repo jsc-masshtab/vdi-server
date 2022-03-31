@@ -12,6 +12,10 @@ module.exports = {
     "eslint-plugin-import",
     "@angular-eslint/eslint-plugin",
     "@typescript-eslint",
+    "security"
+  ],
+  extends: [
+    "plugin:security/recommended"
   ],
   rules: {
     "@angular-eslint/component-class-suffix": "error",

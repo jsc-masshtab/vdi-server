@@ -13,7 +13,6 @@ import {
   faFire, 
   faPauseCircle, 
   faPlay, faPlayCircle, faPowerOff, faSignOutAlt, faSpinner, faStopCircle, faSyncAlt, faTimesCircle, faTv, faUndo, faUserCircle, faEdit} from '@fortawesome/free-solid-svg-icons';
-import { library } from '@fortawesome/fontawesome-svg-core';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 import { AppRoutingModule } from './app-routing.module';
@@ -25,6 +24,7 @@ import { DashboardModule } from './pages/dashboard/dashboard.module';
 import { ErrorsModule } from './core/errors/errors.module';
 import { ErrorsService } from './core/errors/errors.service';
 import { CoreModule } from './core/core.module';
+import { FaIconLibrary } from '@fortawesome/angular-fontawesome';
 
 
 @NgModule({
@@ -53,8 +53,8 @@ import { CoreModule } from './core/core.module';
   bootstrap: [AppComponent]
 })
 export class AppModule {
-  constructor() {
-    library.add(
+  constructor(library: FaIconLibrary) {
+    library.addIcons(
       faCommentDots,
       faPlay, 
       faUserCircle, 
