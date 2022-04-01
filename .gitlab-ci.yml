@@ -26,7 +26,7 @@ Python lint:
       - merge_requests
 
 NPM lint:
-  image: alexsuch/angular-cli:latest
+  image: alexsuch/angular-cli:13.2.5
   stage: lint
   tags:
     - docker
