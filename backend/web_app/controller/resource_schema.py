@@ -8,55 +8,26 @@ import graphene
 
 from veil_api_client import VeilRestPaginator
 
+from yaaredis.exceptions import SerializeError
+
 from common.graphene_utils import ShortString
 from common.languages import _local_
 from common.log.journal import system_logger
-from common.models.controller import Controller
+from common.models.controller import Controller, ControllerFetcher
 from common.models.pool import Pool
 from common.models.vm import Vm
 from common.utils import Cache
 from common.veil.veil_decorators import administrator_required
 from common.veil.veil_errors import SilentError, SimpleError
-from common.veil.veil_gino import StatusGraphene
 from common.veil.veil_graphene import (
-    VeilResourceType,
-    VeilShortEntityType,
-    VeilTagsType,
-    VmState,
+    VeilResourceType
 )
 
-from web_app.controller.schema import ControllerFetcher, ControllerType
-
-
-# Cluster
-class ResourceClusterType(VeilResourceType):
-    """Описание сущности кластера."""
-
-    id = graphene.UUID()
-    verbose_name = graphene.Field(ShortString)
-    status = StatusGraphene()
-    tags = graphene.List(ShortString)
-    hints = graphene.Int()
-    built_in = graphene.Boolean()
-    cluster_fs_configured = graphene.Boolean()
-    controller = graphene.Field(VeilShortEntityType)
-    anti_affinity_enabled = graphene.Boolean()
-    datacenter = graphene.Field(VeilShortEntityType)
-    ha_autoselect = graphene.Boolean()
-    quorum = graphene.Boolean()
-    drs_strategy = graphene.Boolean()
-    cpu_count = graphene.Int()
-    cluster_fs_type = graphene.Field(ShortString)
-    ha_timeout = graphene.Int()
-    drs_check_timeout = graphene.Int()
-    drs_deviation_limit = graphene.Float()
-    nodes = graphene.List(VeilShortEntityType)
-    nodes_count = graphene.Int()
-    memory_count = graphene.Int()
-    description = graphene.Field(ShortString)
-    ha_retrycount = graphene.Int()
-    drs_mode = graphene.Field(ShortString)
-    drs_metrics_strategy = graphene.Field(ShortString)
+from web_app.cluster_type import ClusterType
+from web_app.controller.schema import ControllerType
+from web_app.data_pool_type import DataPoolType
+from web_app.node_type import NodeType
+from web_app.vm_type import VmType
 
 
 # Resource pool
@@ -74,113 +45,6 @@ class ResourcePoolType(VeilResourceType):
     controller = graphene.Field(ControllerType)
 
 
-# Node aka Server
-class ResourceNodeType(VeilResourceType):
-    """Описание ноды на ECP VeiL."""
-
-    id = graphene.UUID()
-    verbose_name = graphene.Field(ShortString)
-    status = StatusGraphene()
-    domains_count = graphene.Int()
-    management_ip = graphene.Field(ShortString)
-    domains_on_count = graphene.Int()
-    datacenter_name = graphene.Field(ShortString)
-    cluster = graphene.Field(VeilShortEntityType)
-    memory_count = graphene.Int()
-    datacenter_id = graphene.UUID()
-    built_in = graphene.Boolean()
-    cpu_count = graphene.Int()
-    hints = graphene.Int()
-    tags = graphene.List(ShortString)
-    controller = graphene.Field(VeilShortEntityType)
-    version = graphene.Field(ShortString)
-    ksm_pages_to_scan = graphene.Int()
-    ballooning = graphene.Boolean()
-    cluster_name = graphene.Field(ShortString)
-    description = graphene.Field(ShortString)
-    node_plus_controller_installation = graphene.Boolean()
-    heartbeat_type = graphene.Field(ShortString)
-    ipmi_username = graphene.Field(ShortString)
-    ksm_merge_across_nodes = graphene.Int()
-    datacenter_name = graphene.Field(ShortString)
-    fencing_type = graphene.Field(ShortString)
-    ksm_enable = graphene.Int()
-    ksm_sleep_time = graphene.Int()
-
-
-# Datapool
-class ResourceDataPoolType(VeilResourceType):
-    """Описание пула-данных на ECP VeiL."""
-
-    id = graphene.UUID()
-    verbose_name = graphene.Field(ShortString)
-    description = graphene.Field(ShortString)
-    status = StatusGraphene()
-    controller = graphene.Field(VeilShortEntityType)
-    tags = graphene.List(ShortString)
-    hints = graphene.Int()
-    built_in = graphene.Boolean()
-    free_space = graphene.Int()
-    used_space = graphene.Int()
-    vdisk_count = graphene.Int()
-    type = graphene.Field(ShortString)
-    file_count = graphene.Int()
-    size = graphene.Int()
-    iso_count = graphene.Int()
-    nodes_connected = graphene.List(VeilShortEntityType)
-    zfs_pool = graphene.UUID()
-    shared_storage = graphene.Field(VeilShortEntityType)
-    cluster_storage = graphene.Field(VeilShortEntityType)
-    lun = graphene.JSONString()
-    options = graphene.JSONString()
-
-
-# VM aka Domain
-class ResourceVmType(VeilResourceType):
-    """Описание ВМ на ECP VeiL."""
-
-    id = graphene.UUID()
-    verbose_name = graphene.Field(ShortString)
-    status = StatusGraphene()
-    controller = graphene.Field(VeilShortEntityType)
-    resource_pool = graphene.Field(VeilShortEntityType)
-    memory_count = graphene.Int()
-    cpu_count = graphene.Int()
-    template = graphene.Boolean()
-    tags = graphene.List(ShortString)
-    hints = graphene.Int()
-    user_power_state = VmState()
-    safety = graphene.Boolean()
-    boot_type = graphene.Field(ShortString)
-    start_on_boot = graphene.Boolean()
-    cloud_init = graphene.Boolean()
-    disastery_enabled = graphene.Boolean()
-    thin = graphene.Boolean()
-    ha_retrycount = graphene.Boolean()
-    ha_timeout = graphene.Int()
-    ha_enabled = graphene.Boolean()
-    clean_type = graphene.Field(ShortString)
-    machine = graphene.Field(ShortString)
-    graphics_password = graphene.Field(ShortString)
-    remote_access = graphene.Boolean()
-    bootmenu_timeout = graphene.Int()
-    os_type = graphene.Field(ShortString)
-    cpu_type = graphene.Field(ShortString)
-    description = graphene.Field(ShortString)
-    guest_agent = graphene.Boolean()
-    os_version = graphene.Field(ShortString)
-    spice_stream = graphene.Boolean()
-    tablet = graphene.Boolean()
-    parent = graphene.Field(VeilShortEntityType)
-    parent_name = graphene.Field(ShortString)
-    hostname = graphene.Field(ShortString)
-    address = graphene.List(ShortString)
-    domain_tags = graphene.List(VeilTagsType)
-
-    # название пула, в котором ВМ из локальной БД
-    pool_name = graphene.Field(ShortString)
-
-
 # Query
 class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
     """Данные для вкладки Ресурсы.
@@ -189,13 +53,13 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
     """
 
     cluster = graphene.Field(
-        ResourceClusterType,
+        ClusterType,
         cluster_id=graphene.UUID(),
         controller_id=graphene.UUID(),
         refresh=graphene.Boolean(default_value=False)
     )
     clusters = graphene.List(
-        ResourceClusterType,
+        ClusterType,
         ordering=ShortString(),
         limit=graphene.Int(default_value=100),
         offset=graphene.Int(default_value=0),
@@ -217,13 +81,13 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
     )
 
     node = graphene.Field(
-        ResourceNodeType,
+        NodeType,
         node_id=graphene.UUID(),
         controller_id=graphene.UUID(),
         refresh=graphene.Boolean(default_value=False)
     )
     nodes = graphene.List(
-        ResourceNodeType,
+        NodeType,
         ordering=ShortString(),
         limit=graphene.Int(default_value=100),
         offset=graphene.Int(default_value=0),
@@ -231,13 +95,13 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
     )
 
     datapool = graphene.Field(
-        ResourceDataPoolType,
+        DataPoolType,
         datapool_id=graphene.UUID(),
         controller_id=graphene.UUID(),
         refresh=graphene.Boolean(default_value=False)
     )
     datapools = graphene.List(
-        ResourceDataPoolType,
+        DataPoolType,
         ordering=ShortString(),
         limit=graphene.Int(default_value=100),
         offset=graphene.Int(default_value=0),
@@ -245,19 +109,19 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
     )
 
     template = graphene.Field(
-        ResourceVmType,
+        VmType,
         template_id=graphene.UUID(),
         controller_id=graphene.UUID(),
         refresh=graphene.Boolean(default_value=False)
     )
     vm = graphene.Field(
-        ResourceVmType,
+        VmType,
         vm_id=graphene.UUID(),
         controller_id=graphene.UUID(),
         refresh=graphene.Boolean(default_value=False)
     )
     templates = graphene.List(
-        ResourceVmType,
+        VmType,
         ordering=ShortString(),
         limit=graphene.Int(default_value=100),
         offset=graphene.Int(default_value=0),
@@ -389,7 +253,7 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
             await cache.set(
                 key=cache_key, value=resource_data, param=cache_params, expire_time=expire_time
             )
-        return ResourceClusterType(**resource_data)
+        return ClusterType(**resource_data)
 
     @classmethod
     @administrator_required
@@ -409,13 +273,13 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
                 limit=limit,
                 offset=offset,
                 resource_type="cluster",
-                resource_type_class=ResourceClusterType,
+                resource_type_class=ClusterType,
                 ordering=ordering
             )
 
         veil_clusters_list = list()
         for resource_data in cacheable_clusters_list:
-            veil_clusters_list.append(ResourceClusterType(**resource_data))
+            veil_clusters_list.append(ClusterType(**resource_data))
         return veil_clusters_list
 
     # Пулы ресурсов
@@ -482,7 +346,7 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
                 key=cache_key, value=resource_data, param=cache_params, expire_time=expire_time
             )
         resource_data["cpu_count"] = resource_data["cpu_topology"]["cpu_count"]
-        return ResourceNodeType(**resource_data)
+        return NodeType(**resource_data)
 
     @classmethod
     @administrator_required
@@ -502,13 +366,13 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
                 limit=limit,
                 offset=offset,
                 resource_type="node",
-                resource_type_class=ResourceNodeType,
+                resource_type_class=NodeType,
                 ordering=ordering
             )
 
         veil_nodes_list = list()
         for resource_data in cacheable_nodes_list:
-            veil_nodes_list.append(ResourceNodeType(**resource_data))
+            veil_nodes_list.append(NodeType(**resource_data))
         return veil_nodes_list
 
     # Пулы данных
@@ -528,7 +392,7 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
             await cache.set(
                 key=cache_key, value=resource_data, param=cache_params, expire_time=expire_time
             )
-        return ResourceDataPoolType(**resource_data)
+        return DataPoolType(**resource_data)
 
     @classmethod
     @administrator_required
@@ -548,13 +412,13 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
                 limit=limit,
                 offset=offset,
                 resource_type="datapool",
-                resource_type_class=ResourceDataPoolType,
+                resource_type_class=DataPoolType,
                 ordering=ordering
             )
 
         veil_datapools_list = list()
         for resource_data in cacheable_datapools_list:
-            veil_datapools_list.append(ResourceDataPoolType(**resource_data))
+            veil_datapools_list.append(DataPoolType(**resource_data))
         return veil_datapools_list
 
     # Виртуальные машины и шаблоны
@@ -596,7 +460,7 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
         if veil_domain.powered:
             resource_data["hostname"] = veil_domain.hostname
             resource_data["address"] = veil_domain.guest_agent.ipv4 if veil_domain.guest_agent else None
-        return ResourceVmType(**resource_data)
+        return VmType(**resource_data)
 
     @classmethod
     @administrator_required
@@ -611,7 +475,7 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
         return await cls.domain_info(domain_id=template_id, controller_id=controller_id, refresh=refresh)
 
     @classmethod
-    async def domain_list(cls, limit, offset, ordering, template: bool, refresh: bool):
+    async def domain_list(cls, limit, offset, ordering, template, refresh: bool):
         if template == 0:
             cache_key = "vms_list_cache"
         else:
@@ -645,15 +509,18 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
                 domains.sort(key=lambda data: data["pool_name"], reverse=True)
 
             cacheable_domain_list = await Cache.get_cacheable_resources(
-                domains, ResourceVmType
+                domains, VmType
             )
-            await cache.set(
-                key=cache_key, value=cacheable_domain_list, expire_time=expire_time
-            )
+            try:
+                await cache.set(
+                    key=cache_key, value=cacheable_domain_list, expire_time=expire_time
+                )
+            except SerializeError:
+                pass
 
         domain_list = list()
         for resource_data in cacheable_domain_list:
-            domain_list.append(ResourceVmType(**resource_data))
+            domain_list.append(VmType(**resource_data))
         return domain_list
 
     @classmethod

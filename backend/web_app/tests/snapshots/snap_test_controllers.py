@@ -48,10 +48,10 @@ snapshots['test_resolve_controller 1'] = {
         'description': 'controller_added_during_test',
         'nodes': [
             {
-                'cpu_count': '24',
+                'cpu_count': 24,
                 'id': '39d23118-d37a-454d-a74d-899d1bf2065f',
                 'management_ip': '192.168.11.111',
-                'memory_count': '32021',
+                'memory_count': 32021,
                 'status': 'ACTIVE',
                 'verbose_name': '192.168.11.111'
             }
