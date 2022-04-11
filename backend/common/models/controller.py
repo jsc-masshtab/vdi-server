@@ -365,3 +365,18 @@ class Controller(AbstractSortableStatusModel, VeilModel):
 
     def get_resource_type(self):
         return CONTROLLERS_SUBSCRIPTION
+
+
+class ControllerFetcher:
+    @staticmethod
+    async def fetch_by_id(id_):
+        """Возваращает инстанс объекта, если он есть."""
+        controller = await Controller.get(id_)
+        if not controller:
+            raise SimpleError(_local_("No such controller."))
+        return controller
+
+    @staticmethod
+    async def fetch_all(status=Status.ACTIVE):
+        """Возвращает все записи контроллеров в определенном статусе."""
+        return await Controller.query.where(Controller.status == status).gino.all()

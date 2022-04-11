@@ -14,6 +14,7 @@ from common.graphene_utils import ShortString
 from common.languages import _local_
 from common.log.journal import system_logger
 from common.models.auth import Entity
+from common.models.controller import ControllerFetcher
 from common.models.event import Event, EventReadByUser, JournalSettings
 from common.settings import DEFAULT_NAME
 from common.utils import extract_ordering_data
@@ -22,7 +23,6 @@ from common.veil.veil_errors import SimpleError
 from common.veil.veil_graphene import VeilEventTypeEnum, VeilResourceType
 
 from web_app.auth.user_schema import User, UserType
-from web_app.controller.schema import ControllerFetcher
 
 
 def build_filters(
