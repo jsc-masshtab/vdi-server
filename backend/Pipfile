@@ -25,6 +25,7 @@ gino-tornado = "==0.1.*"
 graphene = "==2.1.*"
 graphene_tornado = "==2.6.*"
 ldap3 = "==2.9.*"  # ldap integration
+packaging = "==21.3.*"
 psycopg2-binary = "==2.8.*"  # alembic migrations
 pyjwt = "==1.7.*"  # JWTTokens
 pymemcache = "==3.5.*"
