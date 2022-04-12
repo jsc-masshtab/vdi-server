@@ -8,6 +8,9 @@
 # Веб-интерфейс будет доступен по: https://your_ip_address
 # P.S. --scale container_name=2 - количество реплик контейнера
 
+# Stop:
+# docker kill $(docker ps -q)
+
 version: '3.7'
 services:
   vdi-postgres:
@@ -31,10 +34,10 @@ services:
       - PYTHONPATH=/opt/veil-vdi/app
       - PYTHONDONTWRITEBYTECODE=1
       - PYTHONPYCACHEPREFIX=/tmp
+      - VDI_BROKER_DB_HOST=vdi-postgres
     working_dir: /opt/veil-vdi/app
     volumes:
       - ../../backend:/opt/veil-vdi/app
-      - ./python/settings.containers.py:/opt/veil-vdi/app/common/settings.py
     command: sh -c "cd common/migrations && alembic upgrade head && poweroff"
     depends_on:
       - vdi-postgres
@@ -46,12 +49,12 @@ services:
       - PYTHONPATH=/opt/veil-vdi/app
       - PYTHONDONTWRITEBYTECODE=1
       - PYTHONPYCACHEPREFIX=/tmp
+      - VDI_BROKER_DB_HOST=vdi-postgres
+      - VDI_BROKER_REDIS_HOST=vdi-redis
     working_dir: /opt/veil-vdi/app
     volumes:
       - ../../backend:/opt/veil-vdi/app
-      - ./python/settings.containers.py:/opt/veil-vdi/app/common/settings.py
-      - ./python/app.containers.py:/opt/veil-vdi/app/web_app/app.py
-    command: sh -c "sleep 5 && pip install -U veil_api_client veil_aio_au && python web_app/app.py --logging=DEBUG"
+    command: sh -c "sleep 5 && pip install -U veil_api_client veil_aio_au && python web_app/app.py --logging=DEBUG --address=0.0.0.0"
     extra_hosts:
       - "ipa.bazalt.auth:192.168.14.83"
     depends_on:
@@ -68,10 +71,11 @@ services:
       - PYTHONPATH=/opt/veil-vdi/app
       - PYTHONDONTWRITEBYTECODE=1
       - PYTHONPYCACHEPREFIX=/tmp
+      - VDI_BROKER_DB_HOST=vdi-postgres
+      - VDI_BROKER_REDIS_HOST=vdi-redis
     working_dir: /opt/veil-vdi/app
     volumes:
       - ../../backend:/opt/veil-vdi/app
-      - ./python/settings.containers.py:/opt/veil-vdi/app/common/settings.py
     command: sh -c "sleep 10 && pip install -U veil_api_client veil_aio_au && python pool_worker/app.py"
     depends_on:
       - vdi-tornado
@@ -83,10 +87,11 @@ services:
       - PYTHONPATH=/opt/veil-vdi/app
       - PYTHONDONTWRITEBYTECODE=1
       - PYTHONPYCACHEPREFIX=/tmp
+      - VDI_BROKER_DB_HOST=vdi-postgres
+      - VDI_BROKER_REDIS_HOST=vdi-redis
     working_dir: /opt/veil-vdi/app
     volumes:
       - ../../backend:/opt/veil-vdi/app
-      - ./python/settings.containers.py:/opt/veil-vdi/app/common/settings.py
     command: sh -c "sleep 15 && pip install -U veil_api_client veil_aio_au && python monitor_worker/app.py"
     depends_on:
       - vdi-tornado

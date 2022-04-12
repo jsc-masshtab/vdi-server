@@ -153,7 +153,9 @@ async def startup_alerts(vdi_license):
 
 async def startup_server():
     """Запуск брокера."""
+    # Парсинг аргументов
     options.parse_command_line()
+
     # signals
     init_signals(exit_handler)
     app = make_app()
