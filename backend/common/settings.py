@@ -2,6 +2,7 @@
 """Project settings."""
 import os
 
+
 SETTINGS_PATH = os.path.dirname(__file__)
 
 # Crypto settings
@@ -13,7 +14,7 @@ FERNET_KEY = b"LRzSxWyxqKD4p2BR11-nVmghV67AVmQ4CxYi__S_OH8="
 # Database settings
 # -----------------------------
 
-DB_HOST = "localhost"
+DB_HOST = os.getenv("VDI_BROKER_DB_HOST", "localhost")
 DB_PORT = 5432
 DB_NAME = "vdi"
 DB_USER = "postgres"
@@ -124,7 +125,7 @@ SSL_CRT_FPATH = os.path.join(SETTINGS_PATH, "veil_ssl/veil_default.crt")
 
 # Redis settings
 # -----------------------------
-REDIS_HOST = "localhost"
+REDIS_HOST = os.getenv("VDI_BROKER_REDIS_HOST", "localhost")
 REDIS_PORT = 6379
 REDIS_DB = 0
 REDIS_PASSWORD = "4NZ7GpHn4IlshPhb"
@@ -167,7 +168,3 @@ try:
     from .local_settings import *  # noqa
 except ImportError:
     pass
-
-REDIS_URL = "redis://:{}@{}:{}/{}".format(
-    REDIS_PASSWORD, REDIS_HOST, REDIS_PORT, REDIS_DB
-)
