@@ -256,8 +256,7 @@ class PoolGetVm(BaseHttpHandler):
             if not veil_domain:
                 raise client_exceptions.ServerDisconnectedError()
             await veil_domain.info()
-            if not veil_domain.powered:
-                await vm.start()
+            await vm.start()
             if self._is_spice(remote_protocol) and not veil_domain.remote_access:
                 await veil_domain.enable_remote_access()
 
