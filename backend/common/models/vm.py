@@ -453,49 +453,22 @@ class Vm(VeilModel):
                     vm_controller.verbose_name
                 )
             )
-        # Получаем сущность Domain для запросов к VeiL ECP
+        # Получаем сущность Domain для http запросов к VeiL ECP
         vm_client = vm_controller.veil_client.domain(domain_id)
         # Параметры создания ВМ
-        # Legacy для пулов без датапулов
-        node_id = None
         if create_thin_clones:
-            if datapool_id:
-                veil_response = await vm_controller.veil_client.data_pool().list()
-                for data in veil_response.response:
-                    resource = data.public_attrs
-                    node_id = resource["nodes_connected"][0]["id"]
-                vm_configuration = DomainConfiguration(
-                    verbose_name=verbose_name,
-                    node=node_id,
-                    datapool=datapool_id,
-                    parent=domain_id,
-                    count=count,
-                )
-            else:
-                vm_configuration = DomainConfiguration(
-                    verbose_name=verbose_name,
-                    resource_pool=resource_pool_id,
-                    parent=domain_id,
-                    count=count,
-                )
+            vm_configuration = DomainConfiguration(
+                verbose_name=verbose_name,
+                resource_pool=resource_pool_id,
+                parent=domain_id,
+                count=count,
+            )
         else:
-            if datapool_id:
-                veil_response = await vm_controller.veil_client.data_pool().list()
-                for data in veil_response.response:
-                    resource = data.public_attrs
-                    node_id = resource["nodes_connected"][0]["id"]
-                vm_configuration = DomainCloneConfiguration(
-                    verbose_name=verbose_name,
-                    node=node_id,
-                    datapool=datapool_id,
-                    count=count
-                )
-            else:
-                vm_configuration = DomainCloneConfiguration(
-                    verbose_name=verbose_name,
-                    resource_pool=resource_pool_id,
-                    count=count
-                )
+            vm_configuration = DomainCloneConfiguration(
+                verbose_name=verbose_name,
+                resource_pool=resource_pool_id,
+                count=count
+            )
         # попытка создать ВМ
         inner_retry_count = 0
         while inner_retry_count < VEIL_MAX_VM_CREATE_ATTEMPTS:
