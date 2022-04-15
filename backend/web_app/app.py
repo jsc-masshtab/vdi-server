@@ -23,7 +23,7 @@ from common.settings import (
     WS_PING_TIMEOUT,
 )
 from common.utils import init_signals
-from common.veil.veil_api import get_veil_client, stop_veil_client
+from common.veil.veil_api import get_veil_client_singleton, stop_veil_client
 from common.veil.veil_handlers import VdiTornadoGraphQLHandler
 from common.veil.veil_redis import redis_deinit, redis_init
 
@@ -163,7 +163,7 @@ async def startup_server():
     # Инициализация редис
     redis_init()
     # Инициализация клиента
-    get_veil_client()
+    get_veil_client_singleton()
     # Запуск tornado
     if options.ssl:
         ssl_options = make_ssl()

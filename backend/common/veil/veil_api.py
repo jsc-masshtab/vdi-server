@@ -226,7 +226,11 @@ class VdiVeilClientSingleton(VeilClientSingleton):
                 retry_opts=retry_opts,
                 url_max_length=VEIL_MAX_URL_LEN,
             )
+
             self.__client_instances[server_address] = instance
+        else:
+            # Update token
+            self.__client_instances[server_address].token = token
         return self.__client_instances[server_address]
 
     async def remove_client(self, server_address: str) -> None:
@@ -248,15 +252,15 @@ retry_configuration = VeilRetryConfiguration(
     timeout_increase_step=10,
     num_of_attempts=3,
 )
-veil_client = VdiVeilClientSingleton(retry_opts=retry_configuration)
+veil_client_singleton = VdiVeilClientSingleton(retry_opts=retry_configuration)
 
 
-def get_veil_client() -> VeilClientSingleton:
-    return veil_client
+def get_veil_client_singleton() -> VeilClientSingleton:
+    return veil_client_singleton
 
 
 async def stop_veil_client():
-    instances = veil_client.instances
+    instances = veil_client_singleton.instances
     for instance in instances:
         await instances[instance].close()
 
