@@ -117,8 +117,8 @@ class AbstractTask(ABC):
             await self.task_model.set_status(TaskStatus.FAILED, message + " " + str(ex))
 
             description = str(ex)
-            # asyncio.TimeoutError считается ожидаемым исключением, поэтому traceback не требуется
-            if not isinstance(ex, asyncio.TimeoutError):
+            # asyncio.TimeoutError и PoolCreationError считаются ожидаемым исключением, поэтому traceback не требуется
+            if not isinstance(ex, asyncio.TimeoutError) and not isinstance(ex, PoolCreationError):
                 tb = traceback.format_exc()
                 description += (" " + tb)
             await system_logger.warning(message=message,

@@ -48,11 +48,11 @@ pipeline {
     }
 
     parameters {
-        string(    name: 'BRANCH',      defaultValue: 'dev',                               description: 'branch')
-        choice(    name: 'REPO',        choices: ['dev', 'prod-30', 'prod-31', 'prod-32'], description: 'repo for uploading')
-        string(    name: 'VERSION',     defaultValue: '4.0.0',                             description: 'base version')
-        choice(    name: 'AGENT',       choices: ['cloud-ubuntu-20', 'bld-agent'],         description: 'jenkins build agent')
-        string(    name: 'BROKER_NAME', defaultValue: 'VeiL VDI',                          description: 'broker name')
+        string(    name: 'BRANCH',      defaultValue: 'dev',                                          description: 'branch')
+        choice(    name: 'REPO',        choices: ['dev', 'prod-30', 'prod-31', 'prod-32', 'prod-40'], description: 'repo for uploading')
+        string(    name: 'VERSION',     defaultValue: '4.0.0',                                        description: 'base version')
+        choice(    name: 'AGENT',       choices: ['cloud-ubuntu-20', 'bld-agent'],                    description: 'jenkins build agent')
+        string(    name: 'BROKER_NAME', defaultValue: 'VeiL VDI',                                     description: 'broker name')
     }
 
     stages {

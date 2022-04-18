@@ -9,7 +9,7 @@ from veil_api_client import VeilRestPaginator
 
 from common.graphene_utils import ShortString
 from common.languages import _local_
-from common.models.controller import Controller
+from common.models.controller import Controller, ControllerFetcher
 from common.models.pool import Pool
 from common.models.vm import Vm
 from common.veil.veil_decorators import administrator_required
@@ -22,6 +22,10 @@ from common.veil.veil_graphene import (
     VmState
 )
 from common.veil.veil_validators import MutationValidation
+
+from web_app.cluster_type import ClusterType
+from web_app.data_pool_type import DataPoolType
+from web_app.node_type import NodeType
 
 
 class ControllerValidator(MutationValidation):
@@ -69,21 +73,6 @@ class ControllerValidator(MutationValidation):
         return value
 
 
-class ControllerFetcher:
-    @staticmethod
-    async def fetch_by_id(id_):
-        """Возваращает инстанс объекта, если он есть."""
-        controller = await Controller.get(id_)
-        if not controller:
-            raise SimpleError(_local_("No such controller."))
-        return controller
-
-    @staticmethod
-    async def fetch_all(status=Status.ACTIVE):
-        """Возвращает все записи контроллеров в определенном статусе."""
-        return await Controller.query.where(Controller.status == status).gino.all()
-
-
 class ControllerPoolType(graphene.ObjectType):
     """Сокращенное описание Pool."""
 
@@ -106,22 +95,6 @@ class VeilEventType(VeilResourceType):
     user = graphene.Field(ShortString)
 
 
-class ControllerClusterType(VeilResourceType):
-    """Сокращенное описание VeiL Cluster.
-
-    Вынесен в отдельный тип для явного сокращения возможных полей.
-    """
-
-    id = graphene.UUID()
-    verbose_name = graphene.Field(ShortString)
-    description = graphene.Field(ShortString)
-    nodes_count = graphene.Int()
-    status = StatusGraphene()
-    cpu_count = graphene.Int()
-    memory_count = graphene.Int()
-    tags = graphene.List(ShortString)
-
-
 class ControllerResourcePoolType(VeilResourceType):
     """Сокращенное описание VeiL Resource Pool.
 
@@ -134,45 +107,6 @@ class ControllerResourcePoolType(VeilResourceType):
     domains_count = graphene.Int()
     memory_limit = graphene.Int()
     cpu_limit = graphene.Int()
-
-
-class ControllerNodeType(VeilResourceType):
-    """Сокращенное описание VeiL Node.
-
-    Вынесен в отдельный тип для явного сокращения возможных полей.
-    """
-
-    id = graphene.UUID()
-    verbose_name = graphene.Field(ShortString)
-    status = StatusGraphene()
-    cpu_count = graphene.Field(ShortString)
-    memory_count = graphene.Field(ShortString)
-    management_ip = graphene.Field(ShortString)
-
-    # Маловероятно что это нужно
-    # cluster = graphene.JSONString()
-    # Это вообще непонятно зачем
-    # resources_usage = graphene.Field(ResourcesUsageType)
-    # datacenter = graphene.Field(DatacenterType)
-    # veil_info = graphene.Field(ShortString)
-    # veil_info_json = graphene.Field(ShortString)
-
-
-class ControllerDataPoolType(VeilResourceType):
-    """Сокращенное описание VeiL DataPool."""
-
-    id = graphene.UUID()
-    verbose_name = graphene.Field(ShortString)
-    used_space = graphene.Int()
-    free_space = graphene.Int()
-    size = graphene.Int()
-    status = StatusGraphene()
-    type = graphene.Field(ShortString)
-    vdisk_count = graphene.Int()
-    tags = graphene.List(ShortString)
-    hints = graphene.Int()
-    file_count = graphene.Int()
-    iso_count = graphene.Int()
 
 
 class ControllerVmType(VeilResourceType):
@@ -201,7 +135,7 @@ class ControllerType(graphene.ObjectType, ControllerFetcher):
     # Новые поля
     pools = graphene.List(ControllerPoolType)
     clusters = graphene.List(
-        ControllerClusterType,
+        ClusterType,
         ordering=ShortString(),
         limit=graphene.Int(default_value=100),
         offset=graphene.Int(default_value=0),
@@ -214,7 +148,7 @@ class ControllerType(graphene.ObjectType, ControllerFetcher):
         offset=graphene.Int(default_value=0),
     )
     nodes = graphene.List(
-        ControllerNodeType,
+        NodeType,
         cluster_id=graphene.UUID(),
         resource_pool_id=graphene.UUID(),
         ordering=ShortString(),
@@ -222,7 +156,7 @@ class ControllerType(graphene.ObjectType, ControllerFetcher):
         offset=graphene.Int(default_value=0),
     )
     data_pools = graphene.List(
-        ControllerDataPoolType,
+        DataPoolType,
         cluster_id=graphene.UUID(),
         node_id=graphene.UUID(),
         resource_pool_id=graphene.UUID(),
@@ -274,7 +208,7 @@ class ControllerType(graphene.ObjectType, ControllerFetcher):
         paginator = VeilRestPaginator(ordering=ordering, limit=limit, offset=offset)
         veil_response = await controller.veil_client.cluster().list(paginator=paginator)
         return [
-            ControllerClusterType(**resource_data)
+            ClusterType(**resource_data)
             for resource_data in veil_response.paginator_results
         ]
 
@@ -314,7 +248,7 @@ class ControllerType(graphene.ObjectType, ControllerFetcher):
             cluster_id=cluster_id, resource_pool_id=resource_pool_id
         ).list(paginator=paginator)
         return [
-            ControllerNodeType(**resource_data)
+            NodeType(**resource_data)
             for resource_data in veil_response.paginator_results
         ]
 
@@ -338,7 +272,7 @@ class ControllerType(graphene.ObjectType, ControllerFetcher):
             cluster_id=cluster_id, resource_pool_id=resource_pool_id, node_id=node_id
         ).list(paginator=paginator)
         return [
-            ControllerDataPoolType(**resource_data)
+            DataPoolType(**resource_data)
             for resource_data in veil_response.paginator_results
         ]
 

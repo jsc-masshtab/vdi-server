@@ -14,7 +14,7 @@ from common.log.journal import system_logger
 from common.models.pool import Pool as PoolModel
 from common.subscription_sources import CONTROLLERS_SUBSCRIPTION, WsEventToClient
 from common.veil.auth.fernet_crypto import decrypt, encrypt
-from common.veil.veil_api import get_veil_client
+from common.veil.veil_api import get_veil_client_singleton
 from common.veil.veil_errors import SimpleError, ValidationError
 from common.veil.veil_gino import (
     AbstractSortableStatusModel,
@@ -69,9 +69,10 @@ class Controller(AbstractSortableStatusModel, VeilModel):
         """Клиент не сломанного контроллера."""
         if self.stopped:
             return
-        veil_client = get_veil_client()
+
+        veil_api_singleton = get_veil_client_singleton()
         token = decrypt(self.token)
-        return veil_client.add_client(server_address=self.address, token=token)
+        return veil_api_singleton.add_client(server_address=self.address, token=token)
 
     @property
     def controller_client(self):
@@ -85,7 +86,7 @@ class Controller(AbstractSortableStatusModel, VeilModel):
 
     async def remove_client(self):
         """Удаляет клиент из синглтона."""
-        veil_api_singleton = get_veil_client()
+        veil_api_singleton = get_veil_client_singleton()
         await veil_api_singleton.remove_client(self.address)
 
     @property
@@ -109,9 +110,9 @@ class Controller(AbstractSortableStatusModel, VeilModel):
         """Проверяем доступность контроллера независимо от его статуса."""
         try:
             await self.remove_client()
-            veil_client = get_veil_client()
+            veil_api_singleton = get_veil_client_singleton()
             token = decrypt(self.token)
-            client = veil_client.add_client(
+            client = veil_api_singleton.add_client(
                 server_address=self.address, token=token
             )
             is_ok = await client.controller(
@@ -365,3 +366,18 @@ class Controller(AbstractSortableStatusModel, VeilModel):
 
     def get_resource_type(self):
         return CONTROLLERS_SUBSCRIPTION
+
+
+class ControllerFetcher:
+    @staticmethod
+    async def fetch_by_id(id_):
+        """Возваращает инстанс объекта, если он есть."""
+        controller = await Controller.get(id_)
+        if not controller:
+            raise SimpleError(_local_("No such controller."))
+        return controller
+
+    @staticmethod
+    async def fetch_all(status=Status.ACTIVE):
+        """Возвращает все записи контроллеров в определенном статусе."""
+        return await Controller.query.where(Controller.status == status).gino.all()

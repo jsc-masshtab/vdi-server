@@ -10,7 +10,7 @@ from graphene import Context
 from common.database import start_gino, stop_gino
 from common.veil.veil_gino import Role
 from common.veil.auth.veil_jwt import encode_jwt
-from common.veil.veil_api import get_veil_client, stop_veil_client
+from common.veil.veil_api import get_veil_client_singleton, stop_veil_client
 from common.veil.veil_redis import redis_flushall, wait_for_task_result
 
 from common.models.controller import Controller
@@ -356,7 +356,7 @@ async def fixt_create_rds_pool(fixt_controller):
 @pytest.fixture
 async def fixt_veil_client():
 
-    get_veil_client()
+    get_veil_client_singleton()
     yield
     await stop_veil_client()
 

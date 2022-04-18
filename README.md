@@ -22,5 +22,5 @@ alembic merge heads
 ### Docs
     https://veil.mashtab.org/vdi-docs/
     
-### Running docker with a db and frontend for local development:
+### Running docker with db and frontend for local development:
     cd devops/docker && docker-compose up
