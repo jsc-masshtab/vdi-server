@@ -3,7 +3,7 @@ import { waitForAsync, ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatDialog } from '@angular/material/dialog';
 import { RouterTestingModule } from '@angular/router/testing';
 
-import { WebsocketService } from '../../shared/classes/websock.service';
+import { WebsocketService } from '../core/services/websock.service';
 import { DashboardComponent } from './dashboard.component';
 
 describe('DashboardComponent', () => {

@@ -1,20 +1,24 @@
 .control-panel {
     display: flex;
     align-items: center;
-    box-shadow: inset 0px -1px 0px 0px #e8e8e8;
-    width: 100%;
+    width: calc(100% - 4px);
     height: 45px;
     min-height: 45px;
     padding: 2px;
     background-color: white;
-    font-size: 12px;
     padding-left: 14px;
     padding-right: 8px;
-    color: rgba(0,0,0,0.55);
+    color: rgba(0, 0, 0, 0.55);
+    margin: 0 2px;
+    border-radius: 0 0 6px 6px;
+    border: 1px solid #e0e0e0;
+    border-top: 0;
 
     .crumb {
         display: flex;
         align-items: center;
+        white-space: nowrap;
+
     }
 
     .crumb-name {
@@ -24,8 +28,9 @@
 
     .control-btns {
         font-size: 13px;
-        height: 38px;
+        height: 35px;
         display: flex;
+        align-items: center;
 
         button, label {
             display: flex;
@@ -38,13 +43,14 @@
             padding-right: 14px;
             background-color: transparent;
             border: 1px solid transparent;
-            border-left: 1px solid rgba(0,0,0,0.2);
-            border-radius: 2px;
-            color: rgba(0,0,0,0.55);
+            border: 1px solid rgb(0 0 0 / 10%);
+            border-radius: 4px;
+            color: rgba(0, 0, 0, 0.55);
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
             transition: all 200ms;
+            margin: 2px;
 
             &:hover {
                 transition: all 200ms;

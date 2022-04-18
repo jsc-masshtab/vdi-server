@@ -34,7 +34,7 @@ export class RemoveGroupComponent implements OnDestroy {
       this.waitService.setWait(true);
       this.service.removeGroup(this.data.id, this.groups).pipe(takeUntil(this.destroy)).subscribe((res) => {
         if (res) {
-          this.service.getPool(this.data.id, this.data.typePool).refetch();
+          this.service.getPool(this.data.id).refetch();
           this.waitService.setWait(false);
           this.dialogRef.close();
         }

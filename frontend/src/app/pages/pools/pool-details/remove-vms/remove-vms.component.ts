@@ -63,7 +63,7 @@ export class RemoveVMStaticPoolComponent implements OnDestroy {
 
     this.poolService[method](this.data.idPool, selectedVms).pipe(takeUntil(this.destroy)).subscribe((res) => {
       if (res) {
-        setTimeout( () => this.poolService.getPool(this.data.idPool, this.data.typePool).refetch(), 500)
+        setTimeout( () => this.poolService.getPool(this.data.idPool).refetch(), 500)
 
         this.waitService.setWait(false);
         this.dialogRef.close();

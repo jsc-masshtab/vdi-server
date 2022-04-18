@@ -3,7 +3,7 @@ import { NgModule } from '@angular/core';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 
 import { SharedModule } from '../../../shared/shared.module';
-import { DashboardRoutingModule } from '../../dashboard/dashboard-routing.module';
+import { DashboardRoutingModule } from '../../../dashboard/dashboard-routing.module';
 import { DatapoolsModule } from '../datapools/datapools.module';
 import { NodesModule } from '../nodes/nodes.module';
 import { TemplatesModule } from '../templates/templates.module';

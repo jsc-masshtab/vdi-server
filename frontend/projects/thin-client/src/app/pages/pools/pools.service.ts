@@ -60,7 +60,7 @@ export class PoolsService {
    }
 
    public getPoolDetail(id: string): Observable<IResponse<IPoolDetail>> {
-      return this.http.post<IResponse<IPoolDetail>>(`${this.url}/${id}`, {});
+      return this.http.post<IResponse<IPoolDetail>>(`${this.url}/${id}/`, {});
    }
 
    public manageVM( body: {id: string, action: VMActions, force?: boolean} ): Observable<IResponse<string>> {

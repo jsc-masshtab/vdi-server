@@ -42,7 +42,7 @@ export class RemoveUsersPoolComponent  implements OnInit, OnDestroy {
       this.waitService.setWait(true);
       this.poolService.removeUserEntitlementsFromPool(this.data.idPool, this.idUsers).pipe(takeUntil(this.destroy)).subscribe((res) => {
         if (res) {
-          this.poolService.getPool(this.data.idPool, this.data.typePool).refetch();
+          this.poolService.getPool(this.data.idPool).refetch();
           this.waitService.setWait(false);
           this.dialogRef.close();
         }

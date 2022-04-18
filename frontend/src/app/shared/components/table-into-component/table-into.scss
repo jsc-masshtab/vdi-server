@@ -3,19 +3,34 @@
     display: flex;
     flex-direction: column;
     font-size: 13px;
-    background: #FFF;
+    background: #ffffff;
     width: 100%;
+    max-width: fit-content;
+    min-width: 450px;
+    border: 1px solid #dedede;
+    padding: 2px 4px;
+    margin: 4px;
+    border-radius: 4px;
+    box-shadow: 0px 0px 12px -6px #e6e6e6;
 }
 
 .table-area-object {
     display: flex;
     align-items: center;
-    border-bottom: 1px solid rgba(0,0,0,0.1);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
     color: rgba(0, 0, 0, 0.6);
     cursor: default;
-    min-height: 25px;
+    min-height: 22px;
     padding: 3px;
+    margin: 1px;
     flex-shrink: 0;
+
+    &:hover {
+        background-color: #efefef;
+        color: black;
+        border-color: transparent;
+        border-radius: 3px;
+    }
 
     &:last-child {
         border-bottom: 0;
@@ -23,55 +38,67 @@
 }
 
 .table-area-title {
-    padding-left: 15px;
-    min-width: 25%;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    flex-basis: 250px;
-    flex-grow: 1;
+    white-space: nowrap;
+    flex-direction: row-reverse;
+    padding-left: 3px;
     
     > span {
         padding-right: 15px;
+        font-size: 12px;
     }
 }
 
 .table-area-value {
     font-weight: bold;
-    margin-left: 10px;
-    width: 75%;
-    padding-right: 5px;
-    word-break: break-all;
+    width: 100%;
+    justify-content: flex-end;
+    display: flex;
+    padding-right: 3px;
+
+    > span {
+        padding: 3px;
+    }
 }
 
 .edit-button {
     border: none;
     outline: none;
     color: white;
-    background-color: #95b8b9;
-    border: 1px solid rgba(0,0,0,0.1);
+    background-color: #bf8fa7;
+    border: 1px solid rgba(0, 0, 0, 0.1);
     border-radius: 3px;
     transition: all 200ms;
     cursor: pointer;
-    box-shadow: 0px 0px 0px 3px white;
-    height: 23px;
-    margin-right: 10px;
+    box-shadow: 0px 0px 0px 1px white;
+    height: 20px;
+    width: 20px;
+    align-items: center;
+    justify-content: center;
+    display: flex;
+    margin-right: 8px;
 
     &:hover {
-        background-color: #c9d9e6;
-        color: rgba(0,0,0,0.7);
+        background-color: #859eb1;
+        color: rgb(255 255 255 / 70%);
     }
 }
 
 .table-group {
     flex-wrap: wrap;
 
+    &:hover {
+        background-color: white;
+    }
+
     > .table-area-title {
-        padding: 10px 15px;
         justify-content: unset;
     }
 
     > .table-area-value {
         width: 100%;
+        justify-content: flex-start;
     }
 }

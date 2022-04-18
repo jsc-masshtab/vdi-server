@@ -14,6 +14,7 @@
     position: relative;
     cursor: pointer;
     background: linear-gradient(to right, #282828 0%, #3f606b 120%);
+    border-radius: 0 0px 8px 0;
 
     .name-block {
         width: 140px;
@@ -34,7 +35,7 @@
 
     .header-user-menu {
         position: absolute;
-        top: 50px;
+        top: 44px;
         background: #282828;
         width: 100%;
         color: #FFF;
@@ -53,7 +54,7 @@
             border-radius: 6px;
             border-top-left-radius: 0;
             border-bottom-right-radius: 0;
+            border-top: 1px solid #595959;
         }
     }
-
 }

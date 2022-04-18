@@ -6,7 +6,7 @@ import { HostListener, ElementRef, Directive } from '@angular/core';
 export class DetailsMove  {
 
   public pageHeightMinNumber: number = 315;
-  public pageHeightMin: string = '315px';
+  public pageHeightMin: string = 'auto';
   public pageHeightMax: string = '100%';
   public pageHeight: string = '100%';
   public pageRollup: boolean = false;

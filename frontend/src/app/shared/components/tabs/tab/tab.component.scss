@@ -5,15 +5,25 @@
         color: rgba(0,0,0,0.5);
         align-items: center;
         display: flex;
-        border-bottom: 1px solid #e8e8e8;
         padding: 6px;
     }
 
     &-body {
-        height: 100%;
-        width: 100%;
-        background-color: white;
-        border-left: 1px solid #e8e8e8;
+        position: relative;
+        
+        height: calc(100% - 30px);
+        width: calc(100% - 8px);
+
+        border: 1px solid #e8e8e8;
+        margin: 2px;
+        border-radius: 4px;
         overflow-y: auto;
+
+        background-color: #f5f5f5;
+        background-image: linear-gradient(to right bottom, rgba(255, 255, 255, 0) 8px, #fff 9px, rgba(255, 255, 255, 0) 10px), linear-gradient(to left bottom, rgba(255, 255, 255, 0) 8px, #fff 9px, rgba(255, 255, 255, 0) 10px);
+        background-repeat: repeat;
+        background-size: 12px 14px, 12px 14px, 12px 11px;
+        background-position: 0 0, 0 0, 0 20px;
+        border-radius: 4px;
     }
 }

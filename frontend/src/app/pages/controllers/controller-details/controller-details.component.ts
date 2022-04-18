@@ -1,4 +1,3 @@
-
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import {FormControl} from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
@@ -14,12 +13,10 @@ import { IEditFormObj } from '@shared/types';
 import { ControllersService } from '../all-controllers/controllers.service';
 import { RemoveControllerComponent } from '../remove-controller/remove-controller.component';
 
-
 @Component({
   selector: 'vdi-controller-details',
   templateUrl: './controller-details.component.html'
 })
-
 
 export class ControllerDetailsComponent implements OnInit, OnDestroy {
   private subController: Subscription;
@@ -125,17 +122,24 @@ export class ControllerDetailsComponent implements OnInit, OnDestroy {
     if (this.subController) {
       this.subController.unsubscribe();
     }
+
     this.host = false;
+    
     this.subController = this.controllerService.getController(this.idController).pipe(map((data: any) => data.data['controller']))
       .subscribe( (data) => {
         this.controller = data;
         this.host = true;
+
+        if (this.controller.status === 'SERVICE') {
+          this.is_service.setValue(true)
+        } else {
+          this.is_service.setValue(false)
+        }
       },
       () => {
         this.host = true;
       });
   }
-
 
   public toggleService(e) {
 

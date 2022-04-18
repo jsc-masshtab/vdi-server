@@ -74,7 +74,6 @@ module.exports = {
     "@typescript-eslint/prefer-for-of": "off",
     "@typescript-eslint/prefer-function-type": "error",
     "@typescript-eslint/prefer-namespace-keyword": "error",
-    "@typescript-eslint/quotes": ["error", "single"],
     "@typescript-eslint/semi": ["off", null],
     "@typescript-eslint/triple-slash-reference": [
       "error",
@@ -147,5 +146,7 @@ module.exports = {
     ],
     "use-isnan": "error",
     "valid-typeof": "off",
+    'no-unused-vars': 'off',
+    '@typescript-eslint/no-unused-vars': ['error', { 'varsIgnorePattern': '^_', "argsIgnorePattern": "^_" }]
   },
 };

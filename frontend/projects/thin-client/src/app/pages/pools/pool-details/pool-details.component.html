@@ -1,26 +1,39 @@
 <div class="details-wrap">
-
     <div class="details-header">
-        <div class="title"><fa-icon [icon]="['fas','desktop']" size="s" ></fa-icon><span class="name">Пул <span *ngIf="host">{{pool.vmVerboseName}}</span></span></div>
+        <div class="title">
+            <fa-icon [icon]="['fas','desktop']" size="s" ></fa-icon>
+            <span class="name">Пул <span *ngIf="host">{{pool.vmVerboseName}}</span></span>
+        </div>
+
         <div class="btns-part">
-            <button class="btn-close" (click)="close()"><fa-icon [icon]="['fas','times-circle']"></fa-icon></button>
+            <button class="btn-close" (click)="close()">
+                <fa-icon [icon]="['fas','times-circle']"></fa-icon>
+            </button>
         </div>
     </div>
+
     <div class="details-control-panel">
+
         <vdi-button-refresh (clickRefresh)="getPool()"></vdi-button-refresh>
+
         <mat-form-field class="connections-field">
             <mat-label>Тип подключения</mat-label>
+
             <mat-select [formControl]="connectionControl">
-              <mat-option *ngFor="let connectionType of connectionTypes" [value]="connectionType">
-                {{connectionType}}
-              </mat-option>
+                <mat-option *ngFor="let connectionType of connectionTypes" [value]="connectionType">
+                    {{connectionType}}
+                </mat-option>
             </mat-select>
-          </mat-form-field>
+        </mat-form-field>
+
         <button  (click)="clickConnect()" title="Подключиться" class="btn-control connect">
             <fa-icon [icon]="['fas','play']" size="xs"></fa-icon>
             <span class="name">Подключиться</span>
         </button>
-        <vdi-checkbox-input [(ngModel)]='isFullscreenActive'>Полноэкранный режим</vdi-checkbox-input>
+
+        <div class="control">
+            <vdi-checkbox-input [(ngModel)]='isFullscreenActive'>Полноэкранный режим</vdi-checkbox-input>
+        </div>
     </div>
    
     <div class="details-row">
@@ -28,6 +41,7 @@
             <vdi-tab title="Информация о пулах рабочих столов" iconName="chart-bar">
                 <vdi-table-into [item]="pool" [collection]="collectionDetails"></vdi-table-into>
             </vdi-tab>
+            
             <vdi-tab title="Диалоги" iconName="comment-dots" [notifications]="notifications">
                 <tc-messenger ></tc-messenger>
             </vdi-tab>

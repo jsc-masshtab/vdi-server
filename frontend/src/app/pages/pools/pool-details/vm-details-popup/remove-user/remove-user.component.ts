@@ -1,9 +1,8 @@
 import { Component, Inject, OnInit } from '@angular/core';
 import { MatDialog, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { FormControl } from '@angular/forms';
-
-import { WaitService } from '../../../../../core/components/wait/wait.service';
-import { PoolDetailsService } from '../../pool-details.service';
+import { WaitService } from '@core/components/wait/wait.service';
+import { VmDetailsPopupService } from '../vm-details-popup.service';
 
 @Component({
   selector: 'vdi-remove-user-vm',
@@ -19,7 +18,7 @@ export class RemoveUserVmComponent implements OnInit {
 
   constructor(
     private waitService: WaitService,
-    private poolService: PoolDetailsService,
+    private service: VmDetailsPopupService,
     public dialog: MatDialog,
     @Inject(MAT_DIALOG_DATA) public data,
   ) {}
@@ -35,9 +34,9 @@ export class RemoveUserVmComponent implements OnInit {
 
     if (users.length) {
       this.waitService.setWait(true);
-      this.poolService.freeVmFromUser(this.data.vm.id, users).subscribe((res) => {
+      this.service.freeVmFromUser(this.data.vm.id, users).subscribe((res) => {
         if (res) {
-          this.poolService.getPool(this.data.idPool, this.data.typePool).refetch()
+          this.service.getVm().refetch()
           this.waitService.setWait(false);
           this.dialog.closeAll();
         }

@@ -2,7 +2,7 @@
     display: flex;
     height: 100%;
     width: 100%;
-    background: #FFF;
+    background-color: #fafafa;
 }
 
 .nav-tabs {
@@ -11,9 +11,14 @@
     flex-direction: column;
     background-color: white;
     overflow-y: auto;
-    border-right: 1px solid #e8e8e8;
+    border: 1px solid #e8e8e8;
     transition: all 150ms;
-    height: 100%;
+    max-height: 100%;
+    height: -moz-fit-content;
+    height: fit-content;
+    padding: 2px;
+    border-radius: 4px;
+    margin: 2px;
 
     > li {
         display: flex;
@@ -74,4 +79,20 @@
     width: 100%;
     background-color: #fafafa;
     padding-left: 6px;
+}
+
+@media all and (max-width: 980px) { 
+    .nav-tabs { 
+        width: 50px !important; 
+        min-width: 45px;
+    }
+    
+    .nav-tabs > li {
+        justify-content: center;
+        align-items: center;
+
+        > span { 
+            display: none;
+        }
+    }
 }

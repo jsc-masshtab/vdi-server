@@ -2,8 +2,8 @@ import { Component, Inject, OnInit } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialog } from '@angular/material/dialog';
 import { FormControl } from '@angular/forms';
 
-import { WaitService } from '../../../../../core/components/wait/wait.service';
-import { PoolDetailsService } from '../../pool-details.service';
+import { WaitService } from '@core/components/wait/wait.service';
+import { VmDetailsPopupService } from '../vm-details-popup.service';
 
 @Component({
   selector: 'vdi-add-user-vm',
@@ -19,7 +19,7 @@ export class AddUserVmComponent implements OnInit {
 
   constructor(
     private waitService: WaitService,
-    private poolService: PoolDetailsService,
+    private service: VmDetailsPopupService,
     @Inject(MAT_DIALOG_DATA) public data,
     public dialog: MatDialog
   ) {}
@@ -37,9 +37,9 @@ export class AddUserVmComponent implements OnInit {
 
     if (users.length) {
       this.waitService.setWait(true);
-      this.poolService.assignVmToUser(this.data.vm.id, users).subscribe((res) => {
+      this.service.assignVmToUser(this.data.vm.id, users).subscribe((res) => {
         if (res) {
-          this.poolService.getPool(this.data.idPool, this.data.typePool).refetch()
+          this.service.getVm().refetch()
           this.waitService.setWait(false);
           this.dialog.closeAll();
         }

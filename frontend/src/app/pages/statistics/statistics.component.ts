@@ -45,8 +45,9 @@ export class StatisticsComponent implements OnInit {
       this.disableLinks()
       
       let iframe = document.createElement('iframe');
-      iframe.width = '100%';
       iframe.height = '100%';
+      iframe.classList.add('iframe-view');
+      
       iframe.srcdoc = this.report;
       
       this.myDiv.nativeElement.innerHTML = '';
@@ -64,6 +65,10 @@ export class StatisticsComponent implements OnInit {
   } 
 
   private disableLinks(): void {
-    this.report += '<style type="text/css">a { pointer-events: none;}</style>'    
+    this.report += `
+      <style type="text/css">
+        a { pointer-events: none; }
+        body { background-color: rgb(255 255 255 / 70%); }
+      </style>`;
   }
 }

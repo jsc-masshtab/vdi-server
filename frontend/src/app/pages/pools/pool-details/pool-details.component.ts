@@ -20,617 +20,20 @@ import { RemoveVMStaticPoolComponent } from './remove-vms/remove-vms.component';
 import { VmDetalsPopupComponent } from './vm-details-popup/vm-details-popup.component';
 import { PoolAddComponent } from '../add-pool/add-pool.component';
 import { VmActionComponent } from './vm-action/vm-action.component';
-
+import { PoolCollections } from './collections';
 
 @Component({
   selector: 'vdi-pool-details',
   templateUrl: './pool-details.component.html'
 })
 
-export class PoolDetailsComponent implements OnInit, OnDestroy {
+export class PoolDetailsComponent extends PoolCollections implements OnInit, OnDestroy {
 
   public host: boolean = false;
   public poolSettings;
-  user_power_state = new FormControl('all');
+  public user_power_state = new FormControl('all');
 
   public pool: IPool;
-
-  public collectionDetailsStatic: any[] = [
-    {
-      title: 'Название',
-      property: 'verbose_name',
-      type: 'string',
-      edit: 'changeName'
-    },
-    {
-      title: 'Тип',
-      property: 'pool_type',
-      type: 'pool_type'
-    },
-    {
-      title: 'Тип подключения пула',
-      property: 'assigned_connection_types',
-      type: 'string',
-      edit: 'changeConnectionType'
-    },
-    {
-      title: 'Контроллер',
-      property: 'controller',
-      property_lv2: 'verbose_name'
-    },
-    {
-      title: 'Адрес контроллера',
-      property: 'controller',
-      property_lv2: 'address'
-    },
-    {
-      title: 'Пул ресурсов',
-      property: 'resource_pool',
-      property_lv2: 'verbose_name',
-    },
-    {
-      title: 'Действия над ВМ после отключения пользователя',
-      edit: 'manageVm',
-      group: [
-        {
-          title: 'Освобождать ВМ от пользователя',
-          property: 'free_vm_from_user',
-          type: {
-            typeDepend: 'boolean',
-            propertyDepend: ['Да', 'Нет']
-          }
-        },
-        {
-          title: 'Действие',
-          property: 'vm_action_upon_user_disconnect',
-          type: 'vmAction'
-        },
-        {
-          title: 'Таймаут',
-          property: 'vm_disconnect_action_timeout',
-          type: 'vm_disconnect_action_timeout'
-        }
-      ]
-    },
-    {
-      title: 'Всего ВМ',
-      property: 'vms',
-      type: 'array-length'
-    },
-    {
-      title: 'Пользователи',
-      property: 'users',
-      type: 'array-length'
-    },
-    {
-      title: 'Статус',
-      property: 'status',
-      type: 'string'
-    },
-  ];
-
-  public collectionDetailsRds: any[] = [
-    {
-      title: 'Название',
-      property: 'verbose_name',
-      type: 'string',
-      edit: 'changeName'
-    },
-    {
-      title: 'Тип',
-      property: 'pool_type',
-      type: 'pool_type'
-    },
-    {
-      title: 'Тип подключения пула',
-      property: 'assigned_connection_types',
-      type: 'string',
-      edit: 'changeConnectionType'
-    },
-    {
-      title: 'Контроллер',
-      property: 'controller',
-      property_lv2: 'verbose_name'
-    },
-    {
-      title: 'Адрес контроллера',
-      property: 'controller',
-      property_lv2: 'address'
-    },
-    {
-      title: 'Пул ресурсов',
-      property: 'resource_pool',
-      property_lv2: 'verbose_name',
-    },
-    {
-      title: 'Всего ВМ',
-      property: 'vms',
-      type: 'array-length'
-    },
-    {
-      title: 'Пользователи',
-      property: 'users',
-      type: 'array-length'
-    },
-    {
-      title: 'Статус',
-      property: 'status',
-      type: 'string'
-    },
-  ];
-
-  public collectionDetailsAutomated: any[] = [
-    {
-      title: 'Название',
-      property: 'verbose_name',
-      type: 'string',
-      edit: 'changeName'
-    },
-    {
-      title: 'Тип',
-      property: 'pool_type',
-      type: 'pool_type'
-    },
-    {
-      title: 'Тип подключения пула',
-      property: 'assigned_connection_types',
-      type: 'string',
-      edit: 'changeConnectionType'
-    },
-    {
-      title: 'Контроллер',
-      property: 'controller',
-      property_lv2: 'verbose_name'
-    },
-    {
-      title: 'Адрес контроллера',
-      property: 'controller',
-      property_lv2: 'address'
-    },
-    {
-      title: 'Тонкие клоны',
-      property: 'create_thin_clones',
-      type: {
-        typeDepend: 'boolean',
-        propertyDepend: ['Создаются', 'Не создаются']
-      },
-      edit: 'changeAutomatedPoolCreate_thin_clones'
-    },
-    {
-      title: 'Держать ВМ с пользователями включенными',
-      property: 'keep_vms_on',
-      type: {
-        typeDepend: 'boolean',
-        propertyDepend: ['Да', 'Нет']
-      },
-      edit: 'changeAutomatedPoolKeep_vms_on'
-    },
-    {
-      title: 'Действия над ВМ после отключения пользователя',
-      edit: 'manageVm',
-      group: [
-        {
-          title: 'Освобождать ВМ от пользователя',
-          property: 'free_vm_from_user',
-          type: {
-            typeDepend: 'boolean',
-            propertyDepend: ['Да', 'Нет']
-          }
-        },
-        {
-          title: 'Действие',
-          property: 'vm_action_upon_user_disconnect',
-          type: 'vmAction'
-        },
-        {
-          title: 'Таймаут',
-          property: 'vm_disconnect_action_timeout',
-          type: 'vm_disconnect_action_timeout'
-        }
-      ]
-    },
-    {
-      title: 'Пул ресурсов',
-      property: 'resource_pool',
-      property_lv2: 'verbose_name'
-    },
-    {
-      title: 'Пул данных',
-      property: 'datapool',
-      property_lv2: 'verbose_name'
-    },
-    {
-      title: 'Шаблон ВМ',
-      property: 'template',
-      property_lv2: 'verbose_name'
-    },
-    {
-      title: 'Начальное количество ВМ',
-      property: 'initial_size',
-      type: 'string'
-    },
-    {
-      title: 'Шаг расширения пула',
-      property: 'increase_step',
-      type: 'string',
-      edit: 'changeAutomatedPoolIncreaseStep'
-    },
-    {
-      title: 'Максимальное количество создаваемых ВМ',
-      // Максимальное количество ВМ в пуле -  c тонкого клиента вм будут создаваться
-      // с каждым подключ. пользователем даже,если рес-сы закончатся
-      property: 'total_size',
-      type: 'string',
-      edit: 'changeMaxAutomatedPool'
-    },
-    {
-      title: 'Пороговое количество свободных ВМ',
-      property: 'reserve_size',
-      type: 'string',
-      edit: 'changeAutomatedPoolReserveSize'
-    },
-    {
-      title: 'Количество доступных ВМ',
-      property: 'vms',
-      type: 'array-length'
-    },
-    {
-      title: 'Шаблон для имени ВМ',
-      property: 'vm_name_template',
-      type: 'string',
-      edit: 'changeTemplateForVmAutomatedPool'
-    },
-    {
-      title: 'Подготавливать ВМ',
-      edit: 'changeAutomatedPoolPrepare_vms',
-      group: [
-        {
-          title: 'Включать удаленный доступ на ВМ',
-          property: 'enable_vms_remote_access',
-          type: {
-            typeDepend: 'boolean',
-            propertyDepend: ['Да', 'Нет']
-          }
-        },
-        {
-          title: 'Включать ВМ',
-          property: 'start_vms',
-          type: {
-            typeDepend: 'boolean',
-            propertyDepend: ['Да', 'Нет']
-          }
-        },
-        {
-          title: 'Задавать hostname ВМ',
-          property: 'set_vms_hostnames',
-          type: {
-            typeDepend: 'boolean',
-            propertyDepend: ['Да', 'Нет']
-          }
-        },
-        {
-          title: 'Вводить ВМ в домен',
-          property: 'include_vms_in_ad',
-          type: {
-            typeDepend: 'boolean',
-            propertyDepend: ['Да', 'Нет']
-          }
-        }
-      ]
-    },
-    {
-      title: 'Наименование организационной единицы для добавления ВМ в AD',
-      property: 'ad_ou',
-      type: 'string',
-      edit: 'changeAdCnPatternForGroupAutomatedPool'
-    },
-    {
-      title: 'Пользователи',
-      property: 'users',
-      type: 'array-length'
-    },
-    {
-      title: 'Статус',
-      property: 'status',
-      type: 'string'
-    }
-  ];
-
-  public collectionDetailsGuest: any[] = [
-    {
-      title: 'Название',
-      property: 'verbose_name',
-      type: 'string',
-      edit: 'changeName'
-    },
-    {
-      title: 'Тип',
-      property: 'pool_type',
-      type: 'pool_type'
-    },
-    {
-      title: 'Тип подключения пула',
-      property: 'assigned_connection_types',
-      type: 'string',
-      edit: 'changeConnectionType'
-    },
-    {
-      title: 'Контроллер',
-      property: 'controller',
-      property_lv2: 'verbose_name'
-    },
-    {
-      title: 'Адрес контроллера',
-      property: 'controller',
-      property_lv2: 'address'
-    },
-    {
-      title: 'Тонкие клоны',
-      property: 'create_thin_clones',
-      type: {
-        typeDepend: 'boolean',
-        propertyDepend: ['Создаются', 'Не создаются']
-      }
-    },
-    {
-      title: 'Держать ВМ с пользователями включенными',
-      property: 'keep_vms_on',
-      type: {
-        typeDepend: 'boolean',
-        propertyDepend: ['Да', 'Нет']
-      },
-      edit: 'changeAutomatedPoolKeep_vms_on'
-    },
-    {
-      title: 'Время жизни ВМ после потери связи',
-      property: 'vm_disconnect_action_timeout',
-      type: 'vm_disconnect_action_timeout',
-      edit: 'changeGuestPoolWaitingTime'
-    },
-    {
-      title: 'Пул ресурсов',
-      property: 'resource_pool',
-      property_lv2: 'verbose_name'
-    },
-    {
-      title: 'Пул данных',
-      property: 'datapool',
-      property_lv2: 'verbose_name'
-    },
-    {
-      title: 'Шаблон ВМ',
-      property: 'template',
-      property_lv2: 'verbose_name'
-    },
-    {
-      title: 'Начальное количество ВМ',
-      property: 'initial_size',
-      type: 'string'
-    },
-    {
-      title: 'Шаг расширения пула',
-      property: 'increase_step',
-      type: 'string',
-      edit: 'changeAutomatedPoolIncreaseStep'
-    },
-    {
-      title: 'Максимальное количество создаваемых ВМ',
-      property: 'total_size',
-      type: 'string',
-      edit: 'changeMaxAutomatedPool'
-    },
-    {
-      title: 'Пороговое количество свободных ВМ',
-      property: 'reserve_size',
-      type: 'string',
-      edit: 'changeAutomatedPoolReserveSize'
-    },
-    {
-      title: 'Количество доступных ВМ',
-      property: 'vms',
-      type: 'array-length'
-    },
-    {
-      title: 'Шаблон для имени ВМ',
-      property: 'vm_name_template',
-      type: 'string',
-      edit: 'changeTemplateForVmAutomatedPool'
-    },
-    {
-      title: 'Подготавливать ВМ',
-      group: [
-        {
-          title: 'Включать удаленный доступ на ВМ',
-          property: 'enable_vms_remote_access',
-          type: {
-            typeDepend: 'boolean',
-            propertyDepend: ['Да', 'Нет']
-          }
-        },
-        {
-          title: 'Включать ВМ',
-          property: 'start_vms',
-          type: {
-            typeDepend: 'boolean',
-            propertyDepend: ['Да', 'Нет']
-          }
-        }
-      ]
-    },
-    {
-      title: 'Пользователи',
-      property: 'users',
-      type: 'array-length'
-    },
-    {
-      title: 'Статус',
-      property: 'status',
-      type: 'string'
-    }
-  ];
-
-  public collectionVmsAutomated: any[] = [
-    {
-      title: 'Название',
-      property: 'verbose_name',
-      class: 'name-start',
-      icon: 'desktop',
-      type: 'string',
-      sort: true
-    },
-    {
-      title: 'Шаблон',
-      property: 'parent_name',
-      type: 'string',
-      sort: true
-    },
-    // {
-    //   title: 'Принадлежность',
-    //   property: 'in_domain',
-    //   type: {
-    //     typeDepend: 'boolean',
-    //     propertyDepend: ['В домене', 'Не в домене']
-    //   }
-    // },
-    {
-      title: 'Пользователи',
-      property: 'assigned_users',
-      type: 'users-array'
-    },
-    {
-      title: 'Статус',
-      property: 'status',
-      sort: true
-    },
-    {
-      title: 'Гостевой агент',
-      property: 'qemu_state',
-      type: 'string',
-      sort: true
-    }
-  ];
-
-  public collectionVmsGuest: any[] = [
-    {
-      title: 'Название',
-      property: 'verbose_name',
-      class: 'name-start',
-      icon: 'desktop',
-      type: 'string',
-      sort: true
-    },
-    {
-      title: 'Шаблон',
-      property: 'parent_name',
-      type: 'string',
-      sort: true
-    },
-    {
-      title: 'Пользователи',
-      property: 'assigned_users',
-      type: 'users-array'
-    },
-    {
-      title: 'Статус',
-      property: 'status',
-      sort: true
-    },
-    {
-      title: 'Гостевой агент',
-      property: 'qemu_state',
-      type: 'string',
-      sort: true
-    }
-  ];
-
-  public collectionVmsStatic: any[] = [
-    {
-      title: 'Название',
-      property: 'verbose_name',
-      class: 'name-start',
-      icon: 'desktop',
-      type: 'string',
-      sort: true
-    },
-    // {
-    //   title: 'Принадлежность',
-    //   property: 'in_domain',
-    //   type: {
-    //     typeDepend: 'boolean',
-    //     propertyDepend: ['В домене', 'Не в домене']
-    //   }
-    // },
-    {
-      title: 'Пользователи',
-      property: 'assigned_users',
-      type: 'users-array'
-    },
-    {
-      title: 'Статус',
-      property: 'status',
-      sort: true
-    },
-    {
-      title: 'Гостевой агент',
-      property: 'qemu_state',
-      type: 'string',
-      sort: true
-    }
-  ];
-
-  public collectionVmsRds: any[] = [
-    {
-      title: 'Название',
-      property: 'verbose_name',
-      class: 'name-start',
-      icon: 'desktop',
-      type: 'string',
-      sort: true
-    },
-    {
-      title: 'Статус',
-      property: 'status',
-      sort: true
-    },
-    {
-      title: 'Гостевой агент',
-      property: 'qemu_state',
-      type: 'string',
-      sort: true
-    }
-  ];
-
-  public collectionUsers: any[] = [
-    {
-      title: 'Имя пользователя',
-      property: 'username',
-      class: 'name-start',
-      icon: 'user',
-      type: 'string',
-      sort: true
-    }
-  ];
-
-  public collectionEventVm: any[] = [
-    {
-      title: 'Событие',
-      property: 'msg',
-      class: 'name-start',
-      icon: 'comment',
-      type: 'string'
-    }
-  ];
-
-  public collectionGroups: object[] = [
-    {
-      title: 'Название группы',
-      type: 'string',
-      property: 'verbose_name',
-      class: 'name-start',
-      icon: 'users-cog',
-      sort: true
-    }
-  ];
 
   private idPool: string;
   public  typePool: string;
@@ -640,47 +43,47 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
   public eventCreatedVm: object[] = [];
   private subPool: Subscription;
 
-  constructor(private activatedRoute: ActivatedRoute,
-              private router: Router,
-              private poolService: PoolDetailsService,
-              public  dialog: MatDialog) {}
+  constructor(
+    private activatedRoute: ActivatedRoute,
+    private router: Router,
+    private poolService: PoolDetailsService,
+    public dialog: MatDialog
+  ){
+    super();
+  }
 
   ngOnInit() {
     this.activatedRoute.paramMap.subscribe((param: ParamMap) => {
+      
       this.typePool = param.get('type');
       this.idPool = param.get('id');
+
       if (this.sub_ws_create_pool) {
         this.sub_ws_create_pool.unsubscribe();
         this.eventCreatedVm = []; // т.к. при переходе на другой из списка,компонент  doesn't destroy
         this.menuActive = 'info'; // у стат. пула нет 'event-vm'
       }
+
       this.getPool();
-      // this.getMsgCreatePool();
+
       this.user_power_state.valueChanges.subscribe(() => {
         this.getPool();
       });
     });
   }
 
-  // private getMsgCreatePool(): void {
-  //   this.sub_ws_create_pool = this.ws.getMsgCreateVMPoll().pipe(
-  //                                                                 skip(1),
-  //                                                                 map(msg => JSON.parse(msg)),
-  //                                                                 filter((msg: object) => msg['pool_id'] === this.idPool),
-  //                                                                 catchError(() => of('error')) // complete()
-  //                                                                 )
-  //   .subscribe((msg: object | 'error') => {
-  //     if (msg !== 'error') {
-  //       this.eventCreatedVm.push(msg);
-  //     }
-  //   },
-  //   (error) => console.log(error, 'error'),
-  //   () =>  console.log( 'complete'));
-  // }
+  routeTo(route: string): void {
+    this.menuActive = route;
+  }
+
+  close(): void {
+    this.router.navigateByUrl('pages/pools');
+  }
+
   sortVms(param) {
     let output_param = param.nameSort;
     this.poolService.orderingVms.nameSort = output_param;
-    this.poolService.getPool(this.idPool, this.typePool).refetch().then(data => {
+    this.poolService.getPool(this.idPool).refetch().then(data => {
       this.pool = data.data['pool'];
     });
   }
@@ -688,7 +91,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
   sortUsers(param) {
     let output_param = param.nameSort;
     this.poolService.orderingUsers.nameSort = output_param;
-    this.poolService.getPool(this.idPool, this.typePool).refetch().then(data => {
+    this.poolService.getPool(this.idPool).refetch().then(data => {
       this.pool = data.data['pool'];
     });
   }
@@ -696,7 +99,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
   sortGroups(param) {
     let output_param = param.nameSort;
     this.poolService.orderingGroups.nameSort = output_param;
-    this.poolService.getPool(this.idPool, this.typePool).refetch().then(data => {
+    this.poolService.getPool(this.idPool).refetch().then(data => {
       this.pool = data.data['pool'];
     });
   }
@@ -715,7 +118,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
     }
 
     this.host = false;
-    this.subPool = this.poolService.getPool(this.idPool, this.typePool)
+    this.subPool = this.poolService.getPool(this.idPool)
       .valueChanges.pipe(map((data: any) => data.data['pool']))
       .subscribe((data) => {
         this.pool = data;
@@ -798,22 +201,6 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
     });
   }
 
-  // public prepareVM(): void {
-  //   this.dialog.open(PrepareVmPoolComponent, {
-  //     disableClose: true,
-  //     width: '500px',
-  //     data: {
-  //       idPool: this.idPool,
-  //       namePool: this.pool.verbose_name,
-  //       idCluster: this.pool.cluster_id,
-  //       idNode: this.pool.node_id,
-  //       idController: this.pool.controller.id,
-  //       vms: this.pool.vms,
-  //       typePool: this.typePool
-  //     }
-  //   });
-  // }
-
   public removeVM(): void {
     this.dialog.open(RemoveVMStaticPoolComponent, {
       disableClose: true,
@@ -851,8 +238,10 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
   public clickVm(vmActive: IPoolVms): void  {
     this.dialog.open(VmDetalsPopupComponent, {
       disableClose: true,
-      width: '90vw',
-      height: '90vh',
+      width: '99vw',
+      height: '99vh',
+      maxHeight: '980px',
+      maxWidth: '1400px',
       data: {
         typePool: this.typePool,
         usersPool: this.pool.users,
@@ -890,8 +279,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
     });
   }
 
-// @ts-ignore: Unreachable code error
-  private changeName(): void {
+  public changeName(): void {
     this.dialog.open(FormForEditComponent, {
       disableClose: true,
       width: '500px',
@@ -927,8 +315,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
     });
   }
 
-  // @ts-ignore: Unreachable code error
-  private changeConnectionType(): void {
+  public changeConnectionType(): void {
     this.dialog.open(FormForEditComponent, {
       disableClose: true,
       width: '500px',
@@ -966,8 +353,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
     });
   }
 
-  // @ts-ignore: Unreachable code error
-  private changeMaxAutomatedPool(): void {
+  public changeMaxAutomatedPool(): void {
     this.dialog.open(FormForEditComponent, {
       disableClose: true,
       width: '500px',
@@ -1003,8 +389,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
     });
   }
 
-  // @ts-ignore: Unreachable code error
-  private changeAutomatedPoolIncreaseStep(): void {
+  public changeAutomatedPoolIncreaseStep(): void {
     this.dialog.open(FormForEditComponent, {
       disableClose: true,
       width: '500px',
@@ -1040,8 +425,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
     });
   }
 
-   // @ts-ignore: Unreachable code error
-  private changeAutomatedPoolReserveSize(): void {
+  public changeAutomatedPoolReserveSize(): void {
     this.dialog.open(FormForEditComponent, {
       disableClose: true,
       width: '500px',
@@ -1077,8 +461,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
     });
   }
 
-  // @ts-ignore: Unreachable code error
-  private changeGuestPoolWaitingTime(): void {
+  public changeGuestPoolWaitingTime(): void {
     this.dialog.open(FormForEditComponent, {
       disableClose: true,
       width: '500px',
@@ -1114,8 +497,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
     });
   }
 
-  // @ts-ignore: Unreachable code error
-  private changeTemplateForVmAutomatedPool(): void {
+  public changeTemplateForVmAutomatedPool(): void {
     this.dialog.open(FormForEditComponent, {
       disableClose: true,
       width: '500px',
@@ -1152,8 +534,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
     });
   }
 
-  // @ts-ignore: Unreachable code error
-  private changeAutomatedPoolCreate_thin_clones(): void {
+  public changeAutomatedPoolCreate_thin_clones(): void {
     this.dialog.open(FormForEditComponent, {
       disableClose: true,
       width: '500px',
@@ -1190,8 +571,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
     });
   }
 
-  // @ts-ignore: Unreachable code error
-  private changeAutomatedPoolPrepare_vms(): void {
+  public changeAutomatedPoolPrepare_vms(): void {
     this.dialog.open(FormForEditComponent, {
       disableClose: true,
       width: '500px',
@@ -1261,8 +641,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
     });
   }
 
-  // @ts-ignore: Unreachable code error
-  private changeAutomatedPoolKeep_vms_on(): void {
+  public changeAutomatedPoolKeep_vms_on(): void {
     this.dialog.open(FormForEditComponent, {
       disableClose: true,
       width: '500px',
@@ -1299,8 +678,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
     });
   }
 
-  // @ts-ignore: Unreachable code error
-  private changeAdCnPatternForGroupAutomatedPool(): void {
+  public changeAdCnPatternForGroupAutomatedPool(): void {
     this.dialog.open(FormForEditComponent, {
       disableClose: true,
       width: '500px',
@@ -1338,8 +716,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
     });
   }
 
-  // @ts-ignore: Unreachable code error
-  private manageVm(): void {
+  public manageVm(): void {
 
     this.dialog.open(VmActionComponent, {
       disableClose: true,
@@ -1352,14 +729,6 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
         poolType: this.pool.pool_type.toLowerCase(),
       }
     });
-  }
-
-  public routeTo(route: string): void {
-    this.menuActive = route;
-  }
-
-  public close(): void  {
-    this.router.navigateByUrl('pages/pools');
   }
 
   public addGroup() {
@@ -1387,6 +756,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       }
     });
   }
+  
   public copyPool(): void {
     this.poolService.copyPool(this.idPool).subscribe((res) => {
        this.poolSettings = JSON.parse(res.data.copyDynamicPool.pool_settings);
@@ -1401,8 +771,8 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
   }
 
   public converData(): void {
-
   }
+
   ngOnDestroy() {
     if (this.sub_ws_create_pool) {
       this.sub_ws_create_pool.unsubscribe();

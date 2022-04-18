@@ -34,7 +34,7 @@ export class ConvertToTemaplteComponent {
 
     this.vmDetailsPopupService.convertToTemplate(this.data.vm_id, data).subscribe((res) => {
       if (res) {
-        this.poolService.getPool(this.data.pool.idPool, this.data.pool.typePool).refetch();
+        this.poolService.getPool(this.data.pool.idPool).refetch();
         this.waitService.setWait(false);
         this.dialog.closeAll();
       }

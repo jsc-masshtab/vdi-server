@@ -5,7 +5,7 @@ import { NgModule } from '@angular/core';
 import { MAT_DIALOG_DEFAULT_OPTIONS } from '@angular/material/dialog';
 import { Apollo } from 'apollo-angular';
 import { HttpLink } from 'apollo-angular/http'
-import { defaultDataIdFromObject, InMemoryCache, from, ApolloLink } from '@apollo/client/core';
+import { InMemoryCache, from, ApolloLink } from '@apollo/client/core';
 import { onError } from '@apollo/client/link/error';
 import { environment } from 'environments/environment';
 import { throwError } from 'rxjs';
@@ -14,32 +14,31 @@ import { ErrorsService } from '@core/components/errors/errors.service';
 import { WaitService } from '@core/components/wait/wait.service';
 import { CoreModule } from '@core/core.module';
 
-import { ControllersModule } from '../controllers/controllers.module';
-import { EventsModule } from '../log/events/events.module';
-import { LogSettingModule } from '../log/log-setting/log-setting.module';
-import { TasksModule } from '../log/tasks/tasks.module';
-import { VeilEventsModule } from '../log/veil-events/veil-events.module';
-import { AuthStorageService } from '../login/authStorage.service';
-import { PoolsModule } from '../pools/pools.module';
-import { ClustersModule } from '../resourses/clusters/clusters.module';
-import { DatapoolsModule } from '../resourses/datapools/datapools.module';
-import { NodesModule } from '../resourses/nodes/nodes.module';
-import { ResourcePoolsModule } from '../resourses/resource_pools/resource_pools.module';
-import { TemplatesModule } from '../resourses/templates/templates.module';
-import { VmsModule } from '../resourses/vms/vms.module';
-import { AuthenticationDirectoryModule } from '../settings/auth-directory/auth-directory.module';
-import { GroupsModule } from '../settings/groups/groups.module';
-import { LicenseModule } from '../settings/license/license.module';
-import { ServicePageModule } from '../settings/service-page/service-page.module';
-import { UsersModule } from '../settings/users/users.module';
-import { ThinClientsModule } from '../thin-clients/thin-clients.module';
+import { ControllersModule } from '@pages/controllers/controllers.module';
+import { EventsModule } from '@pages/log/events/events.module';
+import { LogSettingModule } from '@pages/log/log-setting/log-setting.module';
+import { TasksModule } from '@pages/log/tasks/tasks.module';
+import { VeilEventsModule } from '@pages/log/veil-events/veil-events.module';
+import { AuthStorageService } from '@pages/login/authStorage.service';
+import { PoolsModule } from '@pages/pools/pools.module';
+import { ClustersModule } from '@pages/resourses/clusters/clusters.module';
+import { DatapoolsModule } from '@pages/resourses/datapools/datapools.module';
+import { NodesModule } from '@pages/resourses/nodes/nodes.module';
+import { ResourcePoolsModule } from '@pages/resourses/resource_pools/resource_pools.module';
+import { TemplatesModule } from '@pages/resourses/templates/templates.module';
+import { VmsModule } from '@pages/resourses/vms/vms.module';
+import { AuthenticationDirectoryModule } from '@pages/settings/auth-directory/auth-directory.module';
+import { GroupsModule } from '@pages/settings/groups/groups.module';
+import { LicenseModule } from '@pages/settings/license/license.module';
+import { ServicePageModule } from '@pages/settings/service-page/service-page.module';
+import { UsersModule } from '@pages/settings/users/users.module';
+import { ThinClientsModule } from '@pages/thin-clients/thin-clients.module';
 import { DashboardRoutingModule } from './dashboard-routing.module';
 import { DashboardComponent } from './dashboard.component';
-import { SystemModule } from '../settings/system/system.module';
-import { SmtpModule } from '../settings/smtp/smtp.module';
-import { CacheModule } from '../settings/cache/cache.module';
-import { StatisticsModule } from '../statistics/statistics.module';
-
+import { SystemModule } from '@pages/settings/system/system.module';
+import { SmtpModule } from '@pages/settings/smtp/smtp.module';
+import { CacheModule } from '@pages/settings/cache/cache.module';
+import { StatisticsModule } from '@pages/statistics/statistics.module';
 
 @NgModule({
   declarations: [
@@ -79,16 +78,14 @@ import { StatisticsModule } from '../statistics/statistics.module';
     ]
 })
 
-
 export class DashboardModule {
-
-
-  constructor(private apollo: Apollo,
-              private httpLink: HttpLink,
-              private errorService: ErrorsService,
-              private waitService: WaitService,
-              private authStorageService: AuthStorageService
-            ) {
+  constructor(
+    private apollo: Apollo,
+    private httpLink: HttpLink,
+    private errorService: ErrorsService,
+    private waitService: WaitService,
+    private authStorageService: AuthStorageService
+  ){
 
     const url = environment.api;
 
@@ -101,6 +98,15 @@ export class DashboardModule {
         headers: new HttpHeaders().set('Authorization', `jwt ${this.authStorageService.getItemStorage('token')}`)
                   .set('Client-Type', 'angular-web')
       });
+      return forward(operation);
+    });
+
+    const cleanTypeName = new ApolloLink((operation, forward) => {
+      if (operation.variables) {
+        const omitTypename = (key, value) => (key === '__typename' ? undefined : value);
+        operation.variables = JSON.parse(JSON.stringify(operation.variables), omitTypename);
+      }
+
       return forward(operation);
     });
 
@@ -119,12 +125,9 @@ export class DashboardModule {
       }
 
       if (networkError) {
-        console.error(networkError, 'networkError');
 
         if (networkError['error'] && networkError['error']['errors']) {
-          networkError['error']['errors'].forEach(er => {
-            console.warn(er.message);
-          });
+          this.errorService.setError(networkError['error']['errors']);
         }
 
         this.waitService.setWait(false);
@@ -134,8 +137,6 @@ export class DashboardModule {
             this.errorService.setError(networkError['error']['errors']);
           }
         }
-
-        this.errorService.setError(networkError['message']);
       }
 
       if (operation.variables.method === 'POST') {
@@ -153,11 +154,25 @@ export class DashboardModule {
     });
 
     this.apollo.create({
-      link: from([errorLink, authMiddleware, link]),
-      cache: new InMemoryCache({ addTypename: false, dataIdFromObject: object => defaultDataIdFromObject(object) }),
+      link: from([errorLink, authMiddleware, cleanTypeName, link]),
+      cache: new InMemoryCache(
+        {
+          typePolicies: {
+            Query: {
+              merge: true
+            },
+            PoolType: {
+              merge: true
+            },
+            SysInfoGrapheneType: {
+              merge: true
+            }
+          }
+        }
+      ),
       defaultOptions: {
         watchQuery: {
-          fetchPolicy: 'network-only', // обойдет кеш и напрямую отправит запрос на сервер.
+          fetchPolicy: 'network-only',
           errorPolicy: 'all'
         },
         query: {
@@ -165,6 +180,7 @@ export class DashboardModule {
           errorPolicy: 'all'
         },
         mutate: {
+          fetchPolicy: 'network-only',
           errorPolicy: 'all'
         }
       }

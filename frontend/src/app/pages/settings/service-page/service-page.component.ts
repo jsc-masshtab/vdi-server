@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { ApolloQueryResult } from '@apollo/client/core';
+import { DetailsMove } from '@app/shared/classes/details-move';
 
 import { WaitService } from '@core/components/wait/wait.service';
 
@@ -28,11 +29,13 @@ export type modalData = {
   templateUrl: './service-page.component.html',
   styleUrls: ['./service-page.component.scss']
 })
-export class ServicePageComponent implements OnInit {
+export class ServicePageComponent extends DetailsMove implements OnInit {
 
   public services: IQueryService[];
 
-  constructor(private servicePageService: ServicePageService, private waitService: WaitService, private dialog: MatDialog) { }
+  constructor(private servicePageService: ServicePageService, private waitService: WaitService, private dialog: MatDialog) {
+    super();
+  }
 
   public ngOnInit(): void {
 

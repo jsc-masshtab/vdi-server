@@ -1,7 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { ApolloQueryResult } from '@apollo/client/core';
 
 import { DetailsMove } from '@shared/classes/details-move';
+import { Subscription } from 'rxjs';
 import { INetwork, ISystemData, ISystemResponse, SystemMapper } from './system.mapper';
 import { SystemService } from './system.service';
 
@@ -13,10 +14,15 @@ import { SystemService } from './system.service';
 
 
 export class SystemComponent extends DetailsMove implements OnInit {
+
+  private sub: Subscription;
+
   public tabs: string[] = ['Время', 'Интерфейсы'];
   public activeTab: string = this.tabs[0];
   public networksList: INetwork[] = [];
   public dateInfo: Pick<ISystemData, 'timezone' | 'localTime'>;
+
+  @ViewChild('view', { static: true }) view: ElementRef;
   
   public readonly intoCollection: ReadonlyArray<object> = [
     {
@@ -47,6 +53,10 @@ export class SystemComponent extends DetailsMove implements OnInit {
     super()
   }
 
+  public onResize(): void {
+    super.onResize(this.view);
+  }
+
   public ngOnInit(): void {
     this.getSystemInfo();
   }
@@ -56,12 +66,24 @@ export class SystemComponent extends DetailsMove implements OnInit {
   }
 
   public getSystemInfo(): void {
-    this.systemService.getSystemInfo().valueChanges.subscribe((res: ApolloQueryResult<ISystemResponse>) => {
+
+    if (this.sub) {
+      this.sub.unsubscribe();  
+    }
+
+    this.sub = this.systemService.getSystemInfo().valueChanges.subscribe((res: ApolloQueryResult<ISystemResponse>) => {
+
       const mapper = new SystemMapper();
       const result = mapper.serverModelToClientModel(res.data.system_info);      
 
-      this.dateInfo = {timezone: result.timezone, localTime: result.localTime};
-      this.networksList = result.networksList.map( (item: INetwork) => ({ name: item.name, ip: item.ip}));
+      this.dateInfo = {
+        timezone: result.timezone,
+        localTime: result.localTime
+      };
+
+      this.networksList = result.networksList.map((item: INetwork) => ({ name: item.name, ip: item.ip }));
+      
+      this.sub.unsubscribe();
     });
   }
 }

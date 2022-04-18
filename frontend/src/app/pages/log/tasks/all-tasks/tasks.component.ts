@@ -77,6 +77,7 @@ export class TasksComponent implements OnInit, OnDestroy {
   ) { }
 
   ngOnInit() {
+    console.log('sdfgsdfgsdf')
     this.refresh();
     this.listenSockets();
 
@@ -149,7 +150,7 @@ export class TasksComponent implements OnInit, OnDestroy {
   public openTaskDetails(task: any): void {
     this.dialog.open(InfoTaskComponent, {
       disableClose: true,
-      width: '700px',
+
       data: {
         task: { ...task }
       }

@@ -199,7 +199,6 @@ export class EventsComponent implements OnInit, OnDestroy {
   public openEventDetails(event: Event): void {
     this.dialog.open(InfoEventComponent, {
       disableClose: true,
-      width: '700px',
       data: {
         event
       }
@@ -209,7 +208,6 @@ export class EventsComponent implements OnInit, OnDestroy {
   public openExports(): void {
     this.dialog.open(AddExportComponent, {
       disableClose: true,
-      width: '700px',
       data: {
         queryset: this.queryset
       }

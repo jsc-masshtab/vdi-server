@@ -1,0 +1,63 @@
+<div class="form">
+
+  <div class="form-header">
+    <h1>Добавление адреса подключения к ВМ</h1>
+    <button [mat-dialog-close]="true" class="form-close">
+      <fa-icon [icon]="['fas','times-circle']"></fa-icon>
+    </button>
+  </div>
+
+  <ng-template #errorTemp>
+    <div class="error">Поле обязательно для заполения</div>
+  </ng-template>
+
+  <div class="form-fields" [formGroup]="form">
+    <label class="field">
+      <mat-form-field>
+        <mat-label>Выберите тип подключения</mat-label>
+    
+        <mat-select formControlName="connection_type">
+          <mat-option [value]="type" *ngFor="let type of connection_types">
+            {{ type }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+    
+      <ng-container *ngIf="form.hasError('required', 'connection_type') && checkValid">
+        <ng-container *ngTemplateOutlet="errorTemp"></ng-container>
+      </ng-container>
+    </label>
+
+    <label class="field">
+      <p class="field-name">Адрес</p>
+      <input type="text" placeholder="..." formControlName="address">
+
+      <ng-container *ngIf="form.hasError('required', 'address') && checkValid">
+        <ng-container *ngTemplateOutlet="errorTemp"></ng-container>
+      </ng-container>
+    </label>
+
+    <label class="field">
+      <p class="field-name">Порт</p>
+      <input type="number" placeholder="..." formControlName="port" min="1" max="65535">
+    
+      <ng-container *ngIf="form.hasError('required', 'port') && checkValid">
+        <ng-container *ngTemplateOutlet="errorTemp"></ng-container>
+      </ng-container>
+    </label>
+
+    <label class="field-inline">
+      <mat-checkbox [color]="'warn'" formControlName="active"></mat-checkbox>
+      <p class="description">Статус:</p>
+    </label>
+
+    
+  </div>
+
+  <div class="form-actions">
+    <button (click)="send()" class="form-btn">
+      <fa-icon [icon]="['fas','plus-circle']" size="xs"></fa-icon><span class="action-name">Добавить</span>
+    </button>
+  </div>
+
+</div>

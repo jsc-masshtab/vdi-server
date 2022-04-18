@@ -13,19 +13,20 @@
 
 
 <div class="components-info" #view>
-  <vdi-tabs>
-
-    <vdi-tab title="Время" iconName="clock">
-      <vdi-table-into
-        [item]="dateInfo"
-        [collection]="intoCollection">
-      </vdi-table-into>
-    </vdi-tab>
-    <vdi-tab title="Интерфейсы" iconName="chart-bar">
-      <div class="component-list" [class.page-wrap]="pageRollup&&!pageShow" [class.page-rollup]="pageRollup" [style.height]="pageHeight">
-        <vdi-table-component  [data]="networksList" [collection]="tableCollection" cursor="true" ></vdi-table-component>
-      </div>
-    </vdi-tab>
-  </vdi-tabs>
-
+  <div class="component-details" [style.height]="'100%'" [style.maxHeight]="'fit-content'">
+    <vdi-tabs>
+      <vdi-tab title="Время" iconName="clock">
+        <vdi-table-into
+          [item]="dateInfo"
+          [collection]="intoCollection">
+        </vdi-table-into>
+      </vdi-tab>
+      
+      <vdi-tab title="Интерфейсы" iconName="chart-bar">
+        <div class="component-list" [class.page-wrap]="pageRollup&&!pageShow" [class.page-rollup]="pageRollup" [style.height]="pageHeight">
+          <vdi-table-component  [data]="networksList" [collection]="tableCollection" cursor="true" ></vdi-table-component>
+        </div>
+      </vdi-tab>
+    </vdi-tabs>
+  </div>
 </div>

@@ -1,15 +1,13 @@
 .checkbox-bg {
-    display: inline-block;
+    display: inline-flex;
     align-items: center;
-    padding: 10px 0 !important;
-    justify-content: flex-start !important;
 
     > label {
         margin: 0;
     }
 
     .toggle-btn {
-        display: inline-block;
+        display: inline-flex;
         min-width: 36px;
         max-width: 36px;
         height: 18px;
@@ -20,7 +18,7 @@
         transition: background-color .15s ease-in-out;
         margin: 0px;
         padding: 0;
-        top: 4px;
+
         &::before { 
             content: "";
             width: 16px;

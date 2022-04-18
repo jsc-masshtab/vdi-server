@@ -44,6 +44,17 @@ export class MainMenuComponent {
           let clickedManage2 = event.urlAfterRedirects.split('/')[3] || null;
 
           if (clickedManage1) {
+
+            if (clickedManage1 === 'controllers') {
+              this.clickedManage = 'controllers';
+              return;
+            }
+
+            if (clickedManage1 === 'pools') {
+              this.clickedManage = 'pools';
+              return;
+            }
+
             if (clickedManage1 === 'resourses') {
               this.toggleResourse = true;
             }
@@ -60,13 +71,8 @@ export class MainMenuComponent {
               this.toggleLog = true;
             }
 
-            if (clickedManage1 === 'controllers') {
-              this.clickedManage = 'controllers';
-              return;
-            }
-
-            if (clickedManage1 === 'pools') {
-              this.clickedManage = 'pools';
+            if (clickedManage1 === 'statistics') {
+              this.clickedManage = 'statistics';
               return;
             }
           }

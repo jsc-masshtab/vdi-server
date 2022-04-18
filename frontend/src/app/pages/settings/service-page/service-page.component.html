@@ -9,35 +9,38 @@
 </div>
 
 <div class="components-info" #view>
-  <div class="table">
-    <div class="table-header">
-      <div class="table-heading">
-        Название
-      </div>
-      <div class="table-heading">
-        Статус
-      </div>
-      <div class="table-heading">
-        Управление
-      </div>
-    </div>
-    <div class="table-body">
-      <div class="table-row" *ngFor="let service of services">
-        <div class="table-col">
-          <fa-icon [icon]="['fas','tv']" class="icon" size="xs"></fa-icon>
-          <span>
-            {{service.serviceName}}
-          </span>
+  <div class="component-details">
+    <div class="table">
+      <div class="table-header">
+        <div class="table-heading">
+          Название
         </div>
-        <div class="table-col">
-          <span>
-            {{service.status}}
-          </span>
+        <div class="table-heading">
+          Статус
         </div>
-        <div class="table-col controls">
-          <vdi-service-controls [service]="service" (clickControls)="clickControls($event)" ></vdi-service-controls>
+        <div class="table-heading">
+          Управление
+        </div>
+      </div>
+      <div class="table-body">
+        <div class="table-row" *ngFor="let service of services">
+          <div class="table-col">
+            <fa-icon [icon]="['fas','tv']" class="icon" size="xs"></fa-icon>
+            <span>
+              {{service.serviceName}}
+            </span>
+          </div>
+          <div class="table-col">
+            <span>
+              {{service.status}}
+            </span>
+          </div>
+          <div class="table-col controls">
+            <vdi-service-controls [service]="service" (clickControls)="clickControls($event)"></vdi-service-controls>
+          </div>
         </div>
       </div>
     </div>
   </div>
+  
 </div>
