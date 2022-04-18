@@ -84,7 +84,7 @@ export class VmDetalsPopupComponent extends VmCollections implements OnInit, OnD
       this.show = true;
       this.waitService.setWait(false);
 
-      if (this.data.vm.status == 'RESERVED') {
+      if (this.data.vm.status === 'RESERVED') {
         this.vm_status.setValue(true);
       } else {
         this.vm_status.setValue(false);

@@ -130,7 +130,7 @@ export class ControllerDetailsComponent implements OnInit, OnDestroy {
         this.controller = data;
         this.host = true;
 
-        if (this.controller.status == 'SERVICE') {
+        if (this.controller.status === 'SERVICE') {
           this.is_service.setValue(true)
         } else {
           this.is_service.setValue(false)
