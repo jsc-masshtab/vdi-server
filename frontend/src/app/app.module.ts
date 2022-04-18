@@ -41,7 +41,7 @@ import { ApolloModule  } from 'apollo-angular';
 
 import { ErrorsModule } from '@core/components/errors/errors.module';
 
-import { DashboardModule } from '@pages/dashboard/dashboard.module';
+import { DashboardModule } from './dashboard/dashboard.module';
 import { AuthInterceptor } from '@pages/login/auth.Interceptor.http';
 import { AuthStorageService } from '@pages/login/authStorage.service';
 import { LoginModule } from '@pages/login/login.module';

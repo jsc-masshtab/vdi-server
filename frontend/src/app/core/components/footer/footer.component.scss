@@ -1,14 +1,22 @@
+:host {
+    background-color: #fafafa;
+    border-radius: 4px;
+    margin: 0 3px;
+}
+
 .log {
     display: flex;
     flex-direction: column;
     height: 250px;
 
     &-header {
-        background-color: white;
+        background-color: #505050;
         display: flex;
-        border-top: 1px solid gainsboro;
         align-items: center;
         justify-content: space-between;
+        color: #beced1;
+        margin: 2px;
+        border-radius: 4px;
         
         > span {
             padding: 10px;
@@ -52,6 +60,8 @@ footer {
     overflow: hidden;
     width: 100%;
     min-width: 320px;
+    white-space: nowrap;
+    border-radius: 4px;
 
     .footer-log {
         position: relative;
@@ -91,6 +101,8 @@ footer {
     .license {
         display: flex;
         color: black;
+        width: 100%;
+        overflow: hidden;
 
         > span {
             display: flex;
@@ -107,18 +119,17 @@ footer {
     }
 
     .copyright {
-        display: flex;
+       display: flex;
         align-items: center;
-        margin-left: auto;
-        font-size: 13px;   
-        min-width: 230px;
+        margin-left: 60px;
+        font-size: 13px;
         white-space: nowrap;
         height: 100%;
         padding: 6px;
         padding-right: 25px;
         background-color: #3f606b;
         position: relative;
-        color: rgba(255,255,255,0.9);
+        color: rgba(255, 255, 255, 0.9);
         z-index: 0;
 
         &::after {

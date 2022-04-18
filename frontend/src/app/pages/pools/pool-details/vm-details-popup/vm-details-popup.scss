@@ -1,0 +1,25 @@
+.toggle {
+  width: 200px;
+  height: 30px;
+}
+
+.manage-vm-controls {
+  background-color: #f5f5f5;
+  margin: 1px;
+  border-radius: 6px;
+  border: 1px solid #e2e2e2;
+
+  > button {
+    border-color: transparent;
+    padding: 10px;
+
+    &:hover {
+      border: 1px solid rgba(0,0,0,0.2);
+    }
+  }
+}
+
+.flex-column {
+  display: flex;
+  flex-direction: column;
+}

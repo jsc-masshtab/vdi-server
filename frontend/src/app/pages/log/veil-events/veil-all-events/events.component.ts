@@ -158,7 +158,6 @@ export class VeilEventsComponent implements OnInit, OnDestroy {
   public openEventDetails(event: Event): void {
     this.dialog.open(VeilInfoEventComponent, {
       disableClose: true,
-      width: '700px',
       data: {
         event
       }

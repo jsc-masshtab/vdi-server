@@ -6,10 +6,12 @@
     color:rgba(0, 0, 0, 0.7);
     border: 1px solid #282828;
     box-shadow: 2px 3px 75px 1px rgba(0, 0, 0, 0.2);
+    border-radius: 6px;
+    overflow: hidden;
 
     .form-header {
         height: 30px;
-        background: #081c2d;
+        background: #193c48;
         color: #FFF;
         display: flex;
         align-items: center;
@@ -18,11 +20,12 @@
         padding-right: 4px;
         border: 1px solid #e8e8e8;
         border-bottom: none;
+        border-radius: 6px;
     }
 
     button.form-close {
         display: flex;
-        width: 25px;
+        width: 20px;
         height: 20px;
         justify-content: center;
         align-items: center;
@@ -53,7 +56,7 @@
     }
 
     .form-fields {
-        padding: 12px 7px;
+        padding: 6px;
         display: flex;
         flex-direction: column;
     }
@@ -96,7 +99,7 @@
     }
 
     .field {
-        margin-bottom: 15px;
+        margin-bottom: 10px;
         display: block;
 
         &:last-child {
@@ -108,7 +111,7 @@
             border: 1px solid #e8e8e8;
             width: 100%;
             border: none;
-            border: 1px solid rgba(17, 17, 17, 0.3);
+            border: 1px solid rgb(17 17 17 / 9%);
             border-radius: 2px;
             color: rgba(0,0,0,0.7);
             padding-left: 12px;
@@ -152,6 +155,8 @@
 
     .field-name {
         margin-bottom: 9px;
+        color: grey;
+        font-size: 12px;
     }
 
     .description {
@@ -170,7 +175,13 @@
 
     .form-actions {
         display: flex;
-        justify-content: space-between;
+        justify-content: flex-end;
+        padding: 1px;
+        border-top: 1px solid #ededed;
+        border-left: 1px solid #ededed;
+        border-radius: 8px;
+        margin-left: 50px;
+        background-color: #fbfbfb;
     }
 
     .field-table {
@@ -179,14 +190,15 @@
 
     .form-btn {
         background-color: #fff;
-        width: 100%;
-        height: 35px;
         font-size: 13px;
         border: 1px solid #e8e8e8;
         border-radius: 2px;
         color: black;
         cursor: pointer;
         transition: all 200ms;
+        padding: 10px 22px;
+        margin: 2px;
+        border-radius: 4px;
 
         .action-name {
             margin-left: 3px;
@@ -198,9 +210,9 @@
             transition: all 200ms;
         }
 
-        &:active {
-            padding: 0px; // против смещения текста в firefox
-        }
+        // &:active {
+        //     padding: 0px; // против смещения текста в firefox
+        // }
 
         &.width-between {
             width: 49.9%;
@@ -340,6 +352,9 @@ label {
 .error {
     margin-top: 5px;
     color: #DD2C00;
+    display: flex;
+    justify-content: flex-end;
+    font-size: 12px;
 }
 
 .cursorDefault {

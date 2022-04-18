@@ -29,10 +29,10 @@ import { AddUserVmComponent } from './pool-details/vm-details-popup/add-user/add
 import { ConvertToTemaplteComponent } from './pool-details/vm-details-popup/convert-to-template/convert-to-template.component';
 import { InfoBackupComponent } from './pool-details/vm-details-popup/info-backup/info-backup.component';
 import { RemoveUserVmComponent } from './pool-details/vm-details-popup/remove-user/remove-user.component';
-import { SpiceComponent } from './pool-details/vm-details-popup/spice/spice.component';
 import { VmDetalsPopupComponent } from './pool-details/vm-details-popup/vm-details-popup.component';
 import { VmDetailsPopupService } from './pool-details/vm-details-popup/vm-details-popup.service';
 import { VmActionComponent } from './pool-details/vm-action/vm-action.component';
+import { AddVmConnectionComponent } from './pool-details/vm-details-popup/add-vm-connection/add-vm-connection.component';
 
 @NgModule({
   declarations: [
@@ -51,9 +51,9 @@ import { VmActionComponent } from './pool-details/vm-action/vm-action.component'
     RemoveGroupComponent,
     AddGropComponent,
     InfoBackupComponent,
-    SpiceComponent,
     ConvertToTemaplteComponent,
-    VmActionComponent
+    VmActionComponent,
+    AddVmConnectionComponent
   ],
   imports: [
     SharedModule,

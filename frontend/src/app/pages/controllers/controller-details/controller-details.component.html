@@ -18,16 +18,21 @@
             <fa-icon *ngIf="tested && !connected" class="ad-status ad-failed" [icon]="['fas','times-circle']" size="xs"></fa-icon>
 
             <span class="ad-status-text" [class.ad-success]="connected" [class.ad-failed]="!connected" *ngIf="tested">{{ connected ? 'Успешно' : 'Нет соединения' }}</span>
-          </button>
+        </button>
 
-        <div class="toggle" title="Включенный сервисный режим деактивирует контроллер, все операции с контроллером становятся неактивными">
+        <!-- <div class="toggle" title="Включенный сервисный режим деактивирует контроллер, все операции с контроллером становятся неактивными">
           <label class="switch">
             <input type="checkbox" (click)="toggleService($event)" [checked]="controller?.status == 'SERVICE'">
             <span class="slider"></span>
             <span class="slider-name" *ngIf="controller?.status != 'SERVICE'">Включить сервисный режим</span>
             <span class="slider-name" *ngIf="controller?.status == 'SERVICE'">Сервисный режим</span>
           </label>
+        </div> -->
+        
+        <div class="control">
+            <vdi-checkbox-input [formControl]='is_service' (click)="toggleService($event)">Сервисный режим</vdi-checkbox-input>
         </div>
+        
     </div>
 
     <div class="details-row">

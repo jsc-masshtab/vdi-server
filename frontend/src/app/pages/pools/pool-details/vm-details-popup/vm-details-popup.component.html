@@ -1,117 +1,183 @@
 <div class="details-popup">
+
   <div class="details-header">
-    <div class="title"><fa-icon [icon]="['fas','desktop']" size="s" ></fa-icon><span class="name">Виртуальная машина <span>{{data?.vm?.verbose_name}}</span></span></div>
-      <div class="btns-part">
-        <button [mat-dialog-close]="true" class="btn-close-popup"><fa-icon [icon]="['fas','times-circle']"></fa-icon></button>
-      </div>
+    <div class="title">
+      <fa-icon [icon]="['fas','desktop']" size="s" ></fa-icon>
+      <span class="name">Виртуальная машина <span>{{data?.vm?.verbose_name}}</span></span>
+    </div>
+
+    <div class="btns-part">
+      <button [mat-dialog-close]="true" class="btn-close-popup"><fa-icon [icon]="['fas','times-circle']"></fa-icon></button>
+    </div>
   </div>
 
   <div class="details-control-panel">
-    <vdi-button-refresh (clickRefresh)="refresh()" ></vdi-button-refresh>
+    <vdi-button-refresh (clickRefresh)="refresh()"></vdi-button-refresh>
 
-    <button *ngIf="data?.typePool !== 'rds'" (click)="addUser()" title="Назначить пользователя" class="btn-control"><fa-icon [icon]="['fas','plus-circle']"></fa-icon><fa-icon [icon]="['fas','user']"></fa-icon></button>
-    <button *ngIf="data?.username" (click)="removeUser()" title="Освободить от пользователя" class="btn-control"><fa-icon [icon]="['fas','trash-alt']"></fa-icon><fa-icon [icon]="['fas','user']"></fa-icon></button>
+    <ng-container *ngIf="menuActive === 'info' || menuActive === 'spice' || menuActive === 'vnc'">
+      <div class="manage-vm-controls">
+        <button *ngIf="data?.vm?.user_power_state === 'OFF' || data?.vm?.user_power_state === 'SUSPENDED'" (click)="action('start')" class="btn-control" title="Запуск">
+          <fa-icon [icon]="['fas','play-circle']"></fa-icon>
+        </button>
+        
+        <button *ngIf="data?.vm?.user_power_state === 'ON'" (click)="action('suspend')" class="btn-control" title="Приостановить">
+          <fa-icon [icon]="['fas','pause-circle']"></fa-icon>
+        </button>
+        
+        <button *ngIf="data?.vm?.user_power_state === 'ON' || data?.vm?.user_power_state === 'SUSPENDED'" (click)="action('shutdown')" class="btn-control" title="Выключение">
+          <fa-icon [icon]="['fas','stop-circle']"></fa-icon>
+        </button>
+        
+        <button (click)="action('reboot')" class="btn-control" title="Перезагрузка">
+          <fa-icon [icon]="['fas','undo']"></fa-icon>
+        </button>
+        
+        <button (click)="action('shutdown-force')" class="btn-control" title="Отключение питания">
+          <fa-icon [icon]="['fas','power-off']"></fa-icon>
+        </button>
+        
+        <button (click)="action('reboot-force')" class="btn-control" title="Горячая перезагрузка">
+          <fa-icon [icon]="['fas','fire']"></fa-icon>
+        </button>
+      </div>
+    </ng-container>
 
-    <button [mat-dialog-close]="true" *ngIf="data?.typePool != 'static'" (click)="prepareVM()" title="Подготовить ВМ" class="btn-control">
-      <fa-icon [icon]="['fas','suitcase']"></fa-icon><fa-icon [icon]="['fas','desktop']"></fa-icon>
-    </button>
+    <ng-container *ngIf="menuActive === 'info'">
+    
+      <div class="control">
+        <vdi-checkbox-input [formControl]='vm_status' (click)="toggleReserve($event)">Зарезервировано</vdi-checkbox-input>
+      </div>
+      
+      <button [mat-dialog-close]="true" *ngIf="data?.typePool != 'static'" (click)="prepareVM()" title="Подготовить ВМ" class="btn-control">
+        <fa-icon [icon]="['fas','suitcase']"></fa-icon>
+        <fa-icon [icon]="['fas','desktop']"></fa-icon>
+      </button>
 
-    <button (click)="action('start')" class="btn-control" title="Запуск">
-      <fa-icon [icon]="['fas','play-circle']"></fa-icon>
-    </button>
+      <button (click)="test()" title="Проверить нахождение в домене" class="btn-control">
+        <fa-icon [class.rotation]="testing" [icon]="['fas','sync-alt']" size="xs"></fa-icon>
 
-    <button (click)="action('suspend')" class="btn-control" title="Приостановить">
-      <fa-icon [icon]="['fas','pause-circle']"></fa-icon>
-    </button>
+        <span class="name">Проверка нахождения в домене</span>
+      
+        <fa-icon *ngIf="tested && connected" class="ad-status ad-success" [icon]="['fas','check']"></fa-icon>
+        <fa-icon *ngIf="tested && !connected" class="ad-status ad-failed" [icon]="['fas','times-circle']"></fa-icon>
+      
+        <span class="ad-status-text" [class.ad-success]="connected" [class.ad-failed]="!connected" *ngIf="tested">{{ connected ? 'В домене' : 'Не в домене' }}</span>
+      </button>
+      
+      <button (click)="attachVeilUtils()" title="Монтировать образ VeiL utils" class="btn-control">
+        <fa-icon [icon]="['fas','plus-circle']" size="xs"></fa-icon>
+        <span class="name">Монтировать образ VeiL utils</span>
+      </button>
+      
+      <button *ngIf="data?.vm?.thin" (click)="changeTemplate()" title="Обновление шаблона и его тонких клонов"
+        class="btn-control">
+        <fa-icon [icon]="['fas','share-alt']" size="xs"></fa-icon>
+        <span class="name">Изменить шаблон</span>
+      </button>
+      
+      <button (click)="convertToTemplate()" title="Преобразование ВМ в шаблон" class="btn-control">
+        <fa-icon [icon]="['fas','wrench']" size="xs"></fa-icon>
+        <span class="name">Преобразовать в шаблон</span>
+      </button>
+      
+    </ng-container>
 
-    <button (click)="action('shutdown')" class="btn-control" title="Выключение">
-      <fa-icon [icon]="['fas','stop-circle']"></fa-icon>
-    </button>
+    <ng-container *ngIf="menuActive === 'connection'">
+      <button (click)="addVmConnection()" title="Добавить адрес подключения" class="btn-control">
+        <fa-icon [icon]="['fas','plus-circle']" size="xs"></fa-icon>
+        <span class="name">Добавить адрес</span>
+      </button>
+    </ng-container>
 
-    <button (click)="action('reboot')" class="btn-control" title="Перезагрузка">
-      <fa-icon [icon]="['fas','undo']"></fa-icon>
-    </button>
+    <ng-container *ngIf="menuActive === 'users'">
+      <button *ngIf="data?.typePool !== 'rds'" (click)="addUser()" title="Назначить пользователя" class="btn-control">
+        <fa-icon [icon]="['fas','plus-circle']" size="xs"></fa-icon>
+        <span class="name">Назначить пользователя</span>
+      </button>
 
-    <button (click)="action('shutdown-force')" class="btn-control" title="Отключение питания">
-      <fa-icon [icon]="['fas','power-off']"></fa-icon>
-    </button>
+      <button *ngIf="data?.username" (click)="removeUser()" title="Освободить от пользователя" class="btn-control">
+        <fa-icon [icon]="['fas','trash-alt']" size="xs"></fa-icon>
+        <span class="name">Освободить от пользователя</span>
+      </button>
+    </ng-container>
 
-    <button (click)="action('reboot-force')" class="btn-control" title="Горячая перезагрузка">
-      <fa-icon [icon]="['fas','fire']"></fa-icon>
-    </button>
-
-    <button *ngIf="data?.typePool != 'guest'" (click)="action('backup')" class="btn-control" title="Создать резервную копию">
-      <fa-icon [icon]="['fas','clone']"></fa-icon>
-    </button>
-
-    <button (click)="test()" title="Проверить нахождение в домене" class="btn-control">
-      <fa-icon [class.rotation]="testing" [icon]="['fas','sync-alt']"></fa-icon><span class="name"> </span><fa-icon [icon]="['fas','folder']"></fa-icon>
-
-      <fa-icon *ngIf="tested && connected" class="ad-status ad-success" [icon]="['fas','check']"></fa-icon>
-      <fa-icon *ngIf="tested && !connected" class="ad-status ad-failed" [icon]="['fas','times-circle']"></fa-icon>
-
-      <span class="ad-status-text" [class.ad-success]="connected" [class.ad-failed]="!connected" *ngIf="tested">{{ connected ? 'В домене' : 'Не в домене' }}</span>
-    </button>
-
-    <button (click)="attachVeilUtils()" title="Монтировать образ VeiL utils" class="btn-control">
-      <fa-icon [icon]="['fas','plus-circle']" size="xs"></fa-icon>
-      <span class="name">Монтировать образ VeiL utils</span>
-    </button>
-
-    <button *ngIf="data?.vm?.thin" (click)="changeTemplate()" title="Обновление шаблона и его тонких клонов" class="btn-control">
-      <fa-icon [icon]="['fas','share-alt']" size="xs"></fa-icon>
-      <span class="name">Изменить шаблон</span>
-    </button>
-
-    <button (click)="convertToTemplate()" title="Преобразование ВМ в шаблон" class="btn-control">
-      <fa-icon [icon]="['fas','wrench']" size="xs"></fa-icon>
-      <span class="name">Преобразовать в шаблон</span>
-    </button>
-
-    <div class="toggle" title="ВМ в статусе 'зарезервировано' не будут выдаваться пользователям">
-      <label class="switch">
-        <input type="checkbox" (click)="toggleReserve($event)" [checked]="data?.vm?.status == 'RESERVED'">
-        <span class="slider"></span>
-        <span class="slider-name" *ngIf="data?.vm?.status != 'RESERVED'">Зарезервировать ВМ</span>
-        <span class="slider-name" *ngIf="data?.vm?.status == 'RESERVED'">ВМ зарезервирована</span>
-      </label>
-    </div>
+    <ng-container *ngIf="menuActive === 'backups'">
+      <button *ngIf="data?.typePool != 'guest'" (click)="action('backup')" class="btn-control" title="Создать резервную копию">
+        <fa-icon [icon]="['fas','clone']" size="xs"></fa-icon>
+        <span class="name">Создать резервную копию</span>
+      </button>
+    </ng-container>
   </div>
 
   <div class="details-row">
 
     <ul class="details-menu">
-      <li (click)="routeTo('info')" [class.active]="menuActive === 'info'" title="Информация"> <fa-icon [icon]="['fas','chart-bar']"></fa-icon><span class="name">Информация</span></li>
-      <li *ngIf="data?.vm?.spice_connection" (click)="routeTo('spice')" [class.active]="menuActive === 'spice'" title="Spice"> <fa-icon [icon]="['fas','terminal']"></fa-icon><span class="name">SPICE-консоль</span></li>
-      <li *ngIf="data?.vm?.vnc_connection" (click)="routeTo('vnc')" [class.active]="menuActive === 'vnc'" title="Spice"> <fa-icon [icon]="['fas','terminal']"></fa-icon><span class="name">VNC-консоль</span></li>
-      <li *ngIf="data?.typePool != 'guest'" (click)="routeTo('backups')" [class.active]="menuActive === 'backups'" title="Резервные копии"> <fa-icon [icon]="['fas','clone']"></fa-icon><span class="name">Резервные копии</span></li>
-      <li (click)="routeTo('events')" [class.active]="menuActive === 'events'" title="События"> <fa-icon [icon]="['fas','comment']"></fa-icon><span class="name">События</span></li>
+      <li (click)="routeTo('info')" [class.active]="menuActive === 'info'" title="Информация">
+        <fa-icon [icon]="['fas','chart-bar']"></fa-icon>
+        <span class="name">Информация</span>
+      </li>
+
+      <li (click)="routeTo('connection')" [class.active]="menuActive === 'connection'" title="Адреса подключения">
+        <fa-icon [icon]="['fas','cog']"></fa-icon>
+        <span class="name">Адреса подключения</span>
+      </li>
+
+      <li (click)="routeTo('spice')" [class.active]="menuActive === 'spice'" title="Spice">
+        <fa-icon [icon]="['fas','terminal']"></fa-icon>
+        <span class="name">SPICE-консоль</span>
+      </li>
+
+      <li (click)="routeTo('vnc')" [class.active]="menuActive === 'vnc'" title="Spice">
+        <fa-icon [icon]="['fas','terminal']"></fa-icon>
+        <span class="name">VNC-консоль</span>
+      </li>
+
+      <li *ngIf="data?.typePool != 'guest'" (click)="routeTo('backups')" [class.active]="menuActive === 'backups'" title="Резервные копии">
+        <fa-icon [icon]="['fas','clone']"></fa-icon>
+        <span class="name">Резервные копии</span>
+      </li>
+
+      <li (click)="routeTo('users')" [class.active]="menuActive === 'users'" title="Пользователи ВМ">
+        <fa-icon [icon]="['fas','user']"></fa-icon>
+        <span class="name">Пользователи</span>
+      </li>
+
+      <li (click)="routeTo('events')" [class.active]="menuActive === 'events'" title="События">
+        <fa-icon [icon]="['fas','comment']"></fa-icon>
+        <span class="name">События</span>
+      </li>
     </ul>
 
     <div class="details-slide">
       <div class="details-slide-header">
-        <ng-container *ngIf="menuActive === 'info'">Информация о вм</ng-container>
+        <ng-container *ngIf="menuActive === 'info'">Информация о ВМ</ng-container>
+        <ng-container *ngIf="menuActive === 'connection'">Адреса подключения ВМ</ng-container>
         <ng-container *ngIf="menuActive === 'spice' && show">SPICE-консоль</ng-container>
         <ng-container *ngIf="menuActive === 'vnc' && show">VNC-консоль</ng-container>
-        <ng-container *ngIf="menuActive === 'backups'">Резервные копии вм</ng-container>
-        <ng-container *ngIf="menuActive === 'events'">События вм</ng-container>
+        <ng-container *ngIf="menuActive === 'backups'">Резервные копии ВМ</ng-container>
+        <ng-container *ngIf="menuActive === 'users'">Пользователи ВМ</ng-container>
+        <ng-container *ngIf="menuActive === 'events'">События ВМ</ng-container>
       </div>
 
-      <div class="details-slide-into">
+      <div class="details-slide-into flex-column">
+
         <ng-container *ngIf="menuActive === 'info'">
-            <vdi-table-into *ngIf="data?.typePool === 'automated'" [item]="data?.vm" [collection]="collectionIntoVmAutomated"></vdi-table-into>
-            <vdi-table-into *ngIf="data?.typePool === 'guest'" [item]="data?.vm" [collection]="collectionIntoVmGuest"></vdi-table-into>
-            <vdi-table-into *ngIf="data?.typePool === 'static'" [item]="data?.vm" [collection]="collectionIntoVmStatic"></vdi-table-into>
-            <vdi-table-into *ngIf="data?.typePool === 'rds'" [item]="data?.vm" [collection]="collectionIntoVmRds"></vdi-table-into>
+          <vdi-table-into *ngIf="data?.typePool === 'automated'" [item]="data?.vm" [collection]="collectionIntoVmAutomated"></vdi-table-into>
+          <vdi-table-into *ngIf="data?.typePool === 'guest'" [item]="data?.vm" [collection]="collectionIntoVmGuest"></vdi-table-into>
+          <vdi-table-into *ngIf="data?.typePool === 'static'" [item]="data?.vm" [collection]="collectionIntoVmStatic"></vdi-table-into>
+          <vdi-table-into *ngIf="data?.typePool === 'rds'" [item]="data?.vm" [collection]="collectionIntoVmRds"></vdi-table-into>
         </ng-container>
 
-         <ng-container *ngIf="menuActive === 'backups'">
-          <vdi-table-component cursor="true" [data]="data?.vm?.backups" [collection]="collectionBackups" (clickRowData)="clickRow($event)"></vdi-table-component>
-        </ng-container>
-
-        <ng-container *ngIf="menuActive === 'events'">
-          <vdi-table-component cursor="true" class="table-paginator" [height]="'calc(100% - 30px)'" [data]="data?.vm?.events" [collection]="collectionEvents" (clickRowData)="clickEvent($event)"></vdi-table-component>
-          <vdi-pagination [count]="data?.vm?.count" [offset]="offset" (action)="toPage($event)"></vdi-pagination>
+        <ng-container *ngIf="menuActive === 'connection'">
+          <vdi-table-component cursor="true" 
+            class="table-paginator" 
+            [height]="'calc(100% - 30px)'" 
+            [data]="data?.vm?.vm_connection_data_list"
+            [collection]="collectionVmConnections" 
+            (clickRowData)="openEditConnections($event)"
+            (actions)="tableActions($event)">
+          </vdi-table-component>
+          <vdi-pagination [count]="data?.vm?.vm_connection_data_count" [offset]="offset" (action)="toConnectionPage($event)"></vdi-pagination>
         </ng-container>
 
         <ng-container *ngIf="menuActive === 'spice' && show">
@@ -121,6 +187,35 @@
         <ng-container  *ngIf="menuActive === 'vnc' && show">
           <iframe *ngIf="vnc" [src]="vnc" width="100%" height="100%"></iframe>
         </ng-container>
+
+        <ng-container *ngIf="menuActive === 'backups'">
+          <vdi-table-component 
+            cursor="true" 
+            [data]="data?.vm?.backups" 
+            [collection]="collectionBackups"
+            (clickRowData)="openBackupDetails($event)">
+          </vdi-table-component>
+        </ng-container>
+
+        <ng-container *ngIf="menuActive === 'users'">
+          <vdi-table-component  
+            [data]="data?.vm?.assigned_users" 
+            [collection]="collectionUsers">
+          </vdi-table-component>
+        </ng-container>
+        
+        <ng-container *ngIf="menuActive === 'events'">
+          <vdi-table-component 
+            cursor="true" 
+            class="table-paginator" 
+            [height]="'calc(100% - 30px)'" 
+            [data]="data?.vm?.events"
+            [collection]="collectionEvents" 
+            (clickRowData)="openEventDetails($event)">
+          </vdi-table-component>
+          <vdi-pagination [count]="data?.vm?.count" [offset]="offset" (action)="toEventsPage($event)"></vdi-pagination>
+        </ng-container>
+
       </div>
     </div>
   </div>

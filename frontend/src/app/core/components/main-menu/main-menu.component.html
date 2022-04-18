@@ -2,7 +2,7 @@
 <div class="top-menu">
   <a class="top-menu-item" (click)="routeTo('controllers')" (keydown.enter)="routeTo('controllers')"
     [class.clicked-link]="clickedManage == 'controllers'" tabindex="0">
-    <fa-icon title="Контроллеры" [icon]="['fas','server']" size="s" [style.color]="'rgb(255, 235, 205)'"></fa-icon>
+    <fa-icon title="Контроллеры" [icon]="['fas','server']" size="s" [style.color]="'rgb(204 187 162)'"></fa-icon>
     <span>Контроллеры</span>
   </a>
 
@@ -61,7 +61,7 @@
   </a>
 
   <a class="top-menu-item item-tree"  [@fadeInOut] *ngIf="toggleResourse"  (click)="routeTo('resourses/templates')" (keydown.enter)="routeTo('resourses/templates')" [class.clicked-link]="clickedManage == 'templates'"  tabindex="0">
-    <fa-icon title="Шаблоны" [icon]="['fas','tv']" size="s" [style.color]="'rgb(255, 248, 220)'"></fa-icon>
+    <fa-icon title="Шаблоны" [icon]="['fas','tv']" size="s" [style.color]="'rgb(204 187 162)'"></fa-icon>
     <span>Шаблоны</span>
   </a>
 
@@ -71,7 +71,7 @@
   </a>
 
   <a class="top-menu-item item-hat" (click)="settingToggle()"  tabindex="0" (keydown.enter)="settingToggle()" [@fadeInOut]>
-    <fa-icon  title="Настройки" [icon]="['fas','cog']" size="s" [style.color]="'rgb(255, 235, 205)'"></fa-icon>
+    <fa-icon  title="Настройки" [icon]="['fas','cog']" size="s" [style.color]="'rgb(204 187 162)'"></fa-icon>
     <span>Настройки</span>
     <span class="icon-arrow">
       <fa-icon [icon]="['fas','chevron-up']" size="xs" *ngIf="toggleSetting"></fa-icon>
@@ -80,17 +80,17 @@
   </a>
 
   <a class="top-menu-item item-tree" [@fadeInOut] *ngIf="toggleSetting" (click)="routeTo('settings/license')" (keydown.enter)="routeTo('settings/license')" [class.clicked-link]="clickedManage =='license'"  tabindex="0">
-    <fa-icon title="Лицензирование" [icon]="['fas','id-card']" size="s" [style.color]="'rgb(255, 235, 205)'"></fa-icon>
+    <fa-icon title="Лицензирование" [icon]="['fas','id-card']" size="s" [style.color]="'rgb(204 187 162)'"></fa-icon>
     <span>Лицензирование</span>
   </a>
 
   <a class="top-menu-item item-tree" [@fadeInOut] *ngIf="toggleSetting" (click)="routeTo('settings/groups')" (keydown.enter)="routeTo('settings/groups')" [class.clicked-link]="clickedManage =='groups'"  tabindex="0">
-    <fa-icon title="Пользователи" [icon]="['fas','users-cog']" size="s" [style.color]="'rgb(255, 235, 205)'"></fa-icon>
+    <fa-icon title="Пользователи" [icon]="['fas','users-cog']" size="s" [style.color]="'rgb(204 187 162)'"></fa-icon>
     <span>Группы</span>
   </a>
 
   <a class="top-menu-item item-tree" [@fadeInOut] *ngIf="toggleSetting" (click)="routeTo('settings/users')" (keydown.enter)="routeTo('settings/users')" [class.clicked-link]="clickedManage =='users'"  tabindex="0">
-    <fa-icon title="Пользователи" [icon]="['fas','users']" size="s" [style.color]="'rgb(255, 235, 205)'"></fa-icon>
+    <fa-icon title="Пользователи" [icon]="['fas','users']" size="s" [style.color]="'rgb(204 187 162)'"></fa-icon>
     <span>Пользователи</span>
   </a>
 
@@ -101,7 +101,7 @@
     (keydown.enter)="routeTo('settings/auth-directory')"
     [class.clicked-link]="clickedManage =='auth-directory'"
     tabindex="0">
-    <fa-icon [icon]="['fas','address-card']" size="s" [style.color]="'rgb(255, 235, 205)'"></fa-icon>
+    <fa-icon [icon]="['fas','address-card']" size="s" [style.color]="'rgb(204 187 162)'"></fa-icon>
     <span>Службы каталогов</span>
   </a>
 
@@ -112,7 +112,7 @@
   (keydown.enter)="routeTo('settings/system')"
   [class.clicked-link]="clickedManage =='system'"
   tabindex="0">
-    <fa-icon title="Система" [icon]="['fas','sliders-h']" size="s" [style.color]="'rgb(255, 235, 205)'"></fa-icon>
+    <fa-icon title="Система" [icon]="['fas','sliders-h']" size="s" [style.color]="'rgb(204 187 162)'"></fa-icon>
   <span>Система</span>
 </a>
 
@@ -123,7 +123,7 @@
     (keydown.enter)="routeTo('settings/services')"
     [class.clicked-link]="clickedManage =='services'"
     tabindex="0">
-    <fa-icon [icon]="['fas','cogs']" size="s" [style.color]="'rgb(255, 235, 205)'"></fa-icon>
+    <fa-icon [icon]="['fas','cogs']" size="s" [style.color]="'rgb(204 187 162)'"></fa-icon>
     <span>Сервисы</span>
   </a>
 
@@ -134,7 +134,7 @@
     (keydown.enter)="routeTo('settings/cache')"
     [class.clicked-link]="clickedManage =='cache'"
     tabindex="0">
-    <fa-icon [icon]="['fas','folder']" size="s" [style.color]="'rgb(255, 235, 205)'"></fa-icon>
+    <fa-icon [icon]="['fas','folder']" size="s" [style.color]="'rgb(204 187 162)'"></fa-icon>
     <span>Кэширование</span>
   </a>
 
@@ -145,7 +145,7 @@
     (keydown.enter)="routeTo('settings/smtp')"
     [class.clicked-link]="clickedManage =='smtp'"
     tabindex="0">
-    <fa-icon [icon]="['fas','envelope']" size="s" [style.color]="'rgb(255, 235, 205)'"></fa-icon>
+    <fa-icon [icon]="['fas','envelope']" size="s" [style.color]="'rgb(204 187 162)'"></fa-icon>
     <span>SMTP</span>
   </a>
 

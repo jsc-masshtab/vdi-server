@@ -11,8 +11,6 @@ import { IParams } from '@shared/types';
 import { PoolAddComponent } from '../add-pool/add-pool.component';
 import { PoolsService } from './pools.service';
 
-
-
 @Component({
   selector: 'vdi-pools',
   templateUrl: './pools.component.html',

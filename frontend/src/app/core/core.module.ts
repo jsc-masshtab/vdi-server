@@ -8,6 +8,7 @@ import { FooterComponent } from './components/footer/footer.component';
 import { HeaderUserComponent } from './components/header-user/header-user.component';
 import { MainMenuComponent } from './components/main-menu/main-menu.component';
 import { WaitComponent } from './components/wait/wait.component';
+import { TasksModule } from '@app/pages/log/tasks/tasks.module';
 
 @NgModule({
   declarations: [
@@ -20,6 +21,7 @@ import { WaitComponent } from './components/wait/wait.component';
     FontAwesomeModule,
     AppRoutingModule,
     EventsModule,
+    TasksModule
   ],
   exports: [
     WaitComponent,

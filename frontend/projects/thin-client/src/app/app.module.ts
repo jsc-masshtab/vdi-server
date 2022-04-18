@@ -12,7 +12,7 @@ import {
   faExclamationTriangle, 
   faFire, 
   faPauseCircle, 
-  faPlay, faPlayCircle, faPowerOff, faSignOutAlt, faSpinner, faStopCircle, faSyncAlt, faTimesCircle, faTv, faUndo, faUserCircle, faEdit} from '@fortawesome/free-solid-svg-icons';
+  faPlay, faPlayCircle, faPowerOff, faSignOutAlt, faSpinner, faStopCircle, faSyncAlt, faTimesCircle, faTv, faUndo, faUserCircle, faEdit, faHeartbeat} from '@fortawesome/free-solid-svg-icons';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 import { AppRoutingModule } from './app-routing.module';
@@ -76,7 +76,8 @@ export class AppModule {
       faExclamationTriangle,
       faFire,
       faPowerOff,
-      faEdit
+      faEdit,
+      faHeartbeat
       )
   }
  }

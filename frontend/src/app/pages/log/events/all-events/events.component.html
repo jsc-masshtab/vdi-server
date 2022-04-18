@@ -4,7 +4,9 @@
         <fa-icon [icon]="['fas','comment']"></fa-icon>
         <span class="crumb-name">События</span>
     </div>
+
     <vdi-button-refresh (clickRefresh)="refresh()" ></vdi-button-refresh>
+
     <div class="control-btns" [style.height]="'unset'">
         <button type="button" class="ctrl-btn" (click)="openExports()">
             <fa-icon [icon]="['fas','plus-circle']"></fa-icon>
@@ -12,12 +14,15 @@
         </button>
     </div>
 
-    <span><pre>Диапазон с  </pre></span>
+    <span [style.margin]="'10px'"><pre>Диапазон с</pre></span>
+
     <input [matDatepicker]="start_picker" [formControl]="start_date">
+
     <mat-datepicker-toggle [for]="start_picker"></mat-datepicker-toggle>
     <mat-datepicker #start_picker></mat-datepicker>
 
-    <span><pre>по   </pre></span>
+    <span [style.margin]="'10px'"><pre>по</pre></span>
+
     <input [matDatepicker]="end_picker" [formControl]="end_date">
     <mat-datepicker-toggle [for]="end_picker"></mat-datepicker-toggle>
     <mat-datepicker #end_picker></mat-datepicker>

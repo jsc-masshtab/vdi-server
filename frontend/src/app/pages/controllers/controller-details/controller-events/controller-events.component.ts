@@ -118,7 +118,6 @@ export class ControllerEventsComponent implements OnInit, OnDestroy {
   public openEventDetails(event: Event): void {
     this.dialog.open(InfoEventComponent, {
       disableClose: true,
-      width: '700px',
       data: {
         event
       }

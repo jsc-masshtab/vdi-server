@@ -32,12 +32,14 @@ export class TableComponentComponent implements OnInit, OnChanges {
   @Input() data: object[] = [];
   @Input() collection: ICollection[] = [];
   @Input() cursor: boolean = false;
+
+  @Output() actions: EventEmitter<object> = new EventEmitter<object>();
   @Output() clickRowData: EventEmitter<object> = new EventEmitter<object>();
   @Output() sortListNow: EventEmitter<object> = new EventEmitter<object>();
 
-  @HostBinding('style.height') @Input() height = '100%'
+  @HostBinding('style.height') @Input() height = 'fit-content';
 
-  public exist_keys: string[] = []
+  public exist_keys: string[] = [];
 
   public titleSort: string;
   public orderingSort: string;
@@ -57,6 +59,11 @@ export class TableComponentComponent implements OnInit, OnChanges {
 
   checkLength(array) {
     return array ? [...array].length : 0
+  }
+
+  public action(event, name, item, collection) {
+    event.stopPropagation();
+    this.actions.emit({ name, item, collection });
   }
 
   public clickRow(item: object) {
@@ -89,12 +96,18 @@ export class TableComponentComponent implements OnInit, OnChanges {
     this.titleSort = `Нажмите для сортировки по полю ${activeEl.title}`;
   }
 
-  isExist(key) {
-    if (key === 'index-array') {
-      return true;
+  isExist(obj) {
+    if (obj.property) {
+      const key = obj.property;
+
+      if (key === 'index-array') {
+        return true;
+      }
+
+      return this.exist_keys.includes(key);
     }
 
-    return this.exist_keys.includes(key);
+    return true;
   }
 
   parseNothing(obj, item) {

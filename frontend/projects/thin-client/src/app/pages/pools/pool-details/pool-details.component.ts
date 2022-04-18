@@ -59,7 +59,6 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
       property: 'permissions',
       type: 'array'
     },
-    
   ];
 
   public  menuActive: string = 'info';
@@ -84,6 +83,7 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
         this.close();
       }
     });
+    
     this.listenSockets()
 
   }
@@ -95,14 +95,21 @@ export class PoolDetailsComponent implements OnInit, OnDestroy {
 
     this.waitService.setWait(true);   
     this.host = false;
-    this.subPool$ = this.poolService.getPoolDetail(this.idPool).subscribe((res) => {
-        if (res.data){
-          this.pool =  PoolDetailMapper.transformToClient(res.data);
-          this.host = true;
-          this.ws.init(this.pool.vmId);
-        }   
-        this.waitService.setWait(false);
-      })
+
+    this.subPool$ = this.poolService.getPoolDetail(this.idPool).subscribe((res: any) => {
+      if (res.data){
+        this.pool =  PoolDetailMapper.transformToClient(res.data);
+        this.host = true;
+        this.ws.init(this.pool.vmId);
+      }  
+      
+      if (res.errors) {
+        this.close();
+      }
+
+      this.waitService.setWait(false);
+
+    })
   }
 
   public routeTo(route: string): void {

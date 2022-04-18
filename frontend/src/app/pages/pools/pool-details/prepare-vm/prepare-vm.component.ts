@@ -43,7 +43,7 @@ export class PrepareVmPoolComponent implements OnInit, OnDestroy {
     this.waitService.setWait(true);
     this.poolService.prepareVm(this.vmId).pipe(takeUntil(this.destroy)).subscribe((res) => {
       if (res) {
-        this.poolService.getPool(this.data.idPool, this.data.typePool).refetch();
+        this.poolService.getPool(this.data.idPool).refetch();
         this.waitService.setWait(false);
         this.dialogRef.close();
       }

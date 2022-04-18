@@ -1,18 +1,22 @@
-import { Component, Inject, OnInit } from '@angular/core';
+import { Component, Inject, OnDestroy, OnInit } from '@angular/core';
+import { FormControl } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialog } from '@angular/material/dialog';
 import { DomSanitizer } from '@angular/platform-browser';
 
 import { WaitService } from '@core/components/wait/wait.service';
 
 import { YesNoFormComponent } from '@shared/forms-dinamic/yes-no-form/yes-no-form.component';
+import { Subscription } from 'rxjs';
 
 
 import { InfoEventComponent } from '../../../log/events/info-event/info-event.component';
-import { PoolDetailsService } from '../pool-details.service';
 import { AddUserVmComponent } from './add-user/add-user.component';
+import { AddVmConnectionComponent } from './add-vm-connection/add-vm-connection.component';
+import { VmCollections } from './collections';
 import { ConvertToTemaplteComponent } from './convert-to-template/convert-to-template.component';
 import { InfoBackupComponent } from './info-backup/info-backup.component';
 import { RemoveUserVmComponent } from './remove-user/remove-user.component';
+import { VmDetailsPopupService } from './vm-details-popup.service';
 
 interface Backup {
   backup: {
@@ -22,720 +26,99 @@ interface Backup {
 
 @Component({
   selector: 'vdi-details-popup',
-  templateUrl: './vm-details-popup.component.html'
+  templateUrl: './vm-details-popup.component.html',
+  styleUrls: ['./vm-details-popup.scss']
 })
 
-export class VmDetalsPopupComponent implements OnInit {
+export class VmDetalsPopupComponent extends VmCollections implements OnInit, OnDestroy {
 
-  public offset = 0;
+  private sub: Subscription;
+
+  public show: boolean = false;
 
   public menuActive: string = 'info';
+
   public testing: boolean = false;
   public tested: boolean = false;
   public connected: boolean = false;
   
-  public collectionIntoVmAutomated: any[] = [
-    {
-      title: 'Название',
-      property: 'verbose_name',
-      type: 'string'
-    },
-    {
-      title: 'Описание',
-      property: 'description',
-      type: 'string'
-    },
-    {
-      title: 'Состояние',
-      property: 'user_power_state',
-      type: 'string'
-    },
-    {
-      title: 'IP адрес',
-      property: 'address',
-      type: 'array'
-    },
-    {
-      title: 'Имя хоста',
-      property: 'hostname',
-      type: 'string'
-    },
-    {
-      title: 'Процессоры',
-      property: 'cpu_count',
-      type: 'string'
-    },
-    {
-      title: 'Оперативная память',
-      property: 'memory_count',
-      type: 'bites',
-      delimiter: 'Мб'
-    },
-    {
-      title: 'Операционная система',
-      property: 'os_type',
-      type: 'string'
-    },
-    {
-      title: 'Версия операционной системы',
-      property: 'os_version',
-      type: 'string'
-    },
-    {
-      title: 'Шаблон',
-      property: 'parent_name',
-      type: 'string'
-    },
-    {
-      title: 'Пул ресурсов',
-      property: 'resource_pool',
-      property_lv2: 'verbose_name',
-      type: 'string'
-    },
-    {
-      property: 'tablet',
-      title: 'Режим планшета',
-      type: {
-        typeDepend: 'boolean',
-        propertyDepend: ['Включено', 'Выключено']
-      }
-    },
-    {
-      property: 'spice_stream',
-      title: 'SPICE потоки',
-      type: {
-        typeDepend: 'boolean',
-        propertyDepend: ['Включено', 'Выключено']
-      }
-    },
-    {
-      property: 'ha_enabled',
-      title: 'Высокая доступность',
-      type: {
-        typeDepend: 'boolean',
-        propertyDepend: ['Включено', 'Выключено']
-      }
-    },
-    {
-      property: 'disastery_enabled',
-      title: 'Катастрофоустойчивость',
-      type: {
-        typeDepend: 'boolean',
-        propertyDepend: ['Включено', 'Выключено']
-      }
-    },
-    {
-      property: 'guest_agent',
-      title: 'Гостевой агент',
-      type: {
-        typeDepend: 'boolean',
-        propertyDepend: ['Включено', 'Выключено']
-      }
-    },
-    {
-      property: 'remote_access',
-      title: 'Удаленный доступ',
-      type: {
-        typeDepend: 'boolean',
-        propertyDepend: ['Включено', 'Выключено']
-      }
-    },
-    {
-      property: 'start_on_boot',
-      title: 'Автоматический запуск ВМ',
-      type: {
-        typeDepend: 'boolean',
-        propertyDepend: ['Включено', 'Выключено']
-      }
-    },
-    {
-      title: 'Тип загрузочного меню',
-      property: 'boot_type',
-      type: 'string'
-    },
-    {
-      title: 'Статус',
-      property: 'status',
-      type: 'string'
-    },
-    {
-      title: 'Тэги',
-      property: 'domain_tags',
-      type: {
-        typeDepend: 'tags_array'
-      }
-    }
-  ];
-
-  public collectionIntoVmGuest: any[] = [
-    {
-      title: 'Название',
-      property: 'verbose_name',
-      type: 'string'
-    },
-    {
-      title: 'Описание',
-      property: 'description',
-      type: 'string'
-    },
-    {
-      title: 'Состояние',
-      property: 'user_power_state',
-      type: 'string'
-    },
-    {
-      title: 'IP адрес',
-      property: 'address',
-      type: 'array'
-    },
-    {
-      title: 'Имя хоста',
-      property: 'hostname',
-      type: 'string'
-    },
-    {
-      title: 'Процессоры',
-      property: 'cpu_count',
-      type: 'string'
-    },
-    {
-      title: 'Оперативная память',
-      property: 'memory_count',
-      type: 'bites',
-      delimiter: 'Мб'
-    },
-    {
-      title: 'Операционная система',
-      property: 'os_type',
-      type: 'string'
-    },
-    {
-      title: 'Версия операционной системы',
-      property: 'os_version',
-      type: 'string'
-    },
-    {
-      title: 'Шаблон',
-      property: 'parent_name',
-      type: 'string'
-    },
-    {
-      title: 'Пул ресурсов',
-      property: 'resource_pool',
-      property_lv2: 'verbose_name',
-      type: 'string'
-    },
-    {
-      property: 'tablet',
-      title: 'Режим планшета',
-      type: {
-        typeDepend: 'boolean',
-        propertyDepend: ['Включено', 'Выключено']
-      }
-    },
-    {
-      property: 'spice_stream',
-      title: 'SPICE потоки',
-      type: {
-        typeDepend: 'boolean',
-        propertyDepend: ['Включено', 'Выключено']
-      }
-    },
-    {
-      property: 'ha_enabled',
-      title: 'Высокая доступность',
-      type: {
-        typeDepend: 'boolean',
-        propertyDepend: ['Включено', 'Выключено']
-      }
-    },
-    {
-      property: 'disastery_enabled',
-      title: 'Катастрофоустойчивость',
-      type: {
-        typeDepend: 'boolean',
-        propertyDepend: ['Включено', 'Выключено']
-      }
-    },
-    {
-      property: 'guest_agent',
-      title: 'Гостевой агент',
-      type: {
-        typeDepend: 'boolean',
-        propertyDepend: ['Включено', 'Выключено']
-      }
-    },
-    {
-      property: 'remote_access',
-      title: 'Удаленный доступ',
-      type: {
-        typeDepend: 'boolean',
-        propertyDepend: ['Включено', 'Выключено']
-      }
-    },
-    {
-      property: 'start_on_boot',
-      title: 'Автоматический запуск ВМ',
-      type: {
-        typeDepend: 'boolean',
-        propertyDepend: ['Включено', 'Выключено']
-      }
-    },
-    {
-      title: 'Тип загрузочного меню',
-      property: 'boot_type',
-      type: 'string'
-    },
-    {
-      title: 'Статус',
-      property: 'status',
-      type: 'string'
-    },
-    {
-      title: 'Тэги',
-      property: 'domain_tags',
-      type: {
-        typeDepend: 'tags_array'
-      }
-    }
-  ];
-
-  public collectionIntoVmStatic: any[] = [
-    {
-      title: 'Название',
-      property: 'verbose_name',
-      type: 'string'
-    },
-    {
-      title: 'Описание',
-      property: 'description',
-      type: 'string'
-    },
-    {
-      title: 'Состояние',
-      property: 'user_power_state',
-      type: 'string'
-    },
-    {
-      title: 'IP адрес',
-      property: 'address',
-      type: 'array'
-    },
-    {
-      title: 'Имя хоста',
-      property: 'hostname',
-      type: 'string'
-    },
-    {
-      title: 'Процессоры',
-      property: 'cpu_count',
-      type: 'string'
-    },
-    {
-      title: 'Оперативная память',
-      property: 'memory_count',
-      type: 'bites',
-      delimiter: 'Мб'
-    },
-    {
-      title: 'Операционная система',
-      property: 'os_type',
-      type: 'string'
-    },
-    {
-      title: 'Версия операционной системы',
-      property: 'os_version',
-      type: 'string'
-    },
-    {
-      title: 'Шаблон',
-      property: 'parent_name',
-      type: 'string'
-    },
-    {
-      title: 'Пул ресурсов',
-      property: 'resource_pool',
-      property_lv2: 'verbose_name',
-      type: 'string'
-    },
-    {
-      property: 'tablet',
-      title: 'Режим планшета',
-      type: {
-        typeDepend: 'boolean',
-        propertyDepend: ['Включено', 'Выключено']
-      }
-    },
-    {
-      property: 'spice_stream',
-      title: 'SPICE потоки',
-      type: {
-        typeDepend: 'boolean',
-        propertyDepend: ['Включено', 'Выключено']
-      }
-    },
-    {
-      property: 'ha_enabled',
-      title: 'Высокая доступность',
-      type: {
-        typeDepend: 'boolean',
-        propertyDepend: ['Включено', 'Выключено']
-      }
-    },
-    {
-      property: 'disastery_enabled',
-      title: 'Катастрофоустойчивость',
-      type: {
-        typeDepend: 'boolean',
-        propertyDepend: ['Включено', 'Выключено']
-      }
-    },
-    {
-      property: 'guest_agent',
-      title: 'Гостевой агент',
-      type: {
-        typeDepend: 'boolean',
-        propertyDepend: ['Включено', 'Выключено']
-      }
-    },
-    {
-      property: 'remote_access',
-      title: 'Удаленный доступ',
-      type: {
-        typeDepend: 'boolean',
-        propertyDepend: ['Включено', 'Выключено']
-      }
-    },
-    {
-      property: 'start_on_boot',
-      title: 'Автоматический запуск ВМ',
-      type: {
-        typeDepend: 'boolean',
-        propertyDepend: ['Включено', 'Выключено']
-      }
-    },
-    {
-      title: 'Тип загрузочного меню',
-      property: 'boot_type',
-      type: 'string'
-    },
-    {
-      title: 'Статус',
-      property: 'status',
-      type: 'string'
-    },
-    {
-      title: 'Тэги',
-      property: 'domain_tags',
-      type: {
-        typeDepend: 'tags_array'
-      }
-    }
-  ];
-
-  public collectionIntoVmRds: any[] = [
-    {
-      title: 'Название',
-      property: 'verbose_name',
-      type: 'string'
-    },
-    {
-      title: 'Описание',
-      property: 'description',
-      type: 'string'
-    },
-    {
-      title: 'Состояние',
-      property: 'user_power_state',
-      type: 'string'
-    },
-    {
-      title: 'IP адрес',
-      property: 'address',
-      type: 'array'
-    },
-    {
-      title: 'Имя хоста',
-      property: 'hostname',
-      type: 'string'
-    },
-    {
-      title: 'Процессоры',
-      property: 'cpu_count',
-      type: 'string'
-    },
-    {
-      title: 'Оперативная память',
-      property: 'memory_count',
-      type: 'bites',
-      delimiter: 'Мб'
-    },
-    {
-      title: 'Операционная система',
-      property: 'os_type',
-      type: 'string'
-    },
-    {
-      title: 'Версия операционной системы',
-      property: 'os_version',
-      type: 'string'
-    },
-    {
-      title: 'Шаблон',
-      property: 'parent_name',
-      type: 'string'
-    },
-    {
-      title: 'Пул ресурсов',
-      property: 'resource_pool',
-      property_lv2: 'verbose_name',
-      type: 'string'
-    },
-    {
-      property: 'tablet',
-      title: 'Режим планшета',
-      type: {
-        typeDepend: 'boolean',
-        propertyDepend: ['Включено', 'Выключено']
-      }
-    },
-    {
-      property: 'spice_stream',
-      title: 'SPICE потоки',
-      type: {
-        typeDepend: 'boolean',
-        propertyDepend: ['Включено', 'Выключено']
-      }
-    },
-    {
-      property: 'ha_enabled',
-      title: 'Высокая доступность',
-      type: {
-        typeDepend: 'boolean',
-        propertyDepend: ['Включено', 'Выключено']
-      }
-    },
-    {
-      property: 'disastery_enabled',
-      title: 'Катастрофоустойчивость',
-      type: {
-        typeDepend: 'boolean',
-        propertyDepend: ['Включено', 'Выключено']
-      }
-    },
-    {
-      property: 'guest_agent',
-      title: 'Гостевой агент',
-      type: {
-        typeDepend: 'boolean',
-        propertyDepend: ['Включено', 'Выключено']
-      }
-    },
-    {
-      property: 'remote_access',
-      title: 'Удаленный доступ',
-      type: {
-        typeDepend: 'boolean',
-        propertyDepend: ['Включено', 'Выключено']
-      }
-    },
-    {
-      property: 'start_on_boot',
-      title: 'Автоматический запуск ВМ',
-      type: {
-        typeDepend: 'boolean',
-        propertyDepend: ['Включено', 'Выключено']
-      }
-    },
-    {
-      title: 'Тип загрузочного меню',
-      property: 'boot_type',
-      type: 'string'
-    },
-    {
-      title: 'Статус',
-      property: 'status',
-      type: 'string'
-    },
-    {
-      title: 'Тэги',
-      property: 'domain_tags',
-      type: {
-        typeDepend: 'tags_array'
-      }
-    }
-  ];
-
-  public collectionEvents: object[] = [
-    {
-      title: 'Сообщение',
-      property: 'message',
-      class: 'name-start',
-      type: 'string',
-      icon: 'comment'
-    },
-    {
-      title: 'Cоздатель',
-      property: 'user',
-      type: 'string',
-      class: 'name-end',
-      // sort: true
-    },
-    {
-      title: 'Дата создания',
-      property: 'created',
-      type: 'time',
-      class: 'name-end',
-      // sort: true
-    }
-  ];
-
-  public collectionBackups: object[] = [
-    {
-      title: 'Название',
-      property: 'filename',
-      class: 'name-start',
-      type: 'string',
-      icon: 'file-archive'
-    },
-    {
-      title: 'Пул данных',
-      property: 'datapool',
-      property_lv2: 'verbose_name',
-      type: 'string'
-    },
-    {
-      title: 'Тип',
-      property: 'assignment_type',
-      type: 'string'
-    },
-    {
-      title: 'Размер',
-      property: 'size',
-      type: 'bites'
-    },
-    {
-      title: 'Статус',
-      property: 'status',
-      type: 'string'
-    },
-  ];
-
   public vnc: any;
   public spice: any;
-  public show: boolean = false;
+
+  public offset = 0;
+
+  vm_status = new FormControl(false);
 
   constructor(
     public dialog: MatDialog,
     private sanitizer: DomSanitizer,
     private waitService: WaitService,
     @Inject(MAT_DIALOG_DATA) public data: any,
-    private service: PoolDetailsService
+    private service: VmDetailsPopupService
   ) {
+    super();
     this.waitService.setWait(true);
   }
 
-  ngOnInit() {
-    this.service.getVm(this.data.idPool, this.data.vmActive, this.data.controller_id).valueChanges.subscribe((res) => {
-      this.data = { ...this.data, vm: res.data.pool.vm }
-      this.show = true;
-      this.waitService.setWait(false);
-    })
+  ngOnInit(): void {
+    this.refresh();
   }
 
-  public refresh() {
+  public tableActions(action): void {
+    this[action.name](action.item);
+  }
+
+  public refresh(): void {
     this.show = false;
     this.waitService.setWait(true);
-    this.service.getVm(this.data.idPool, this.data.vmActive, this.data.controller_id).refetch();
-  }
 
-  public addUser() {
-    this.dialog.open(AddUserVmComponent, {
-      disableClose: true,
-      width: '500px',
-      data: this.data
-    });
-  }
+    if (this.sub) {
+     this.sub.unsubscribe()
+    }
 
-  public removeUser() {
-    this.dialog.open(RemoveUserVmComponent, {
-      disableClose: true,
-      width: '500px',
-      data: this.data
-    });
-  }
+    this.sub = this.service.getVm(this.data.idPool, this.data.vmActive, this.data.controller_id).valueChanges.subscribe((res) => {
+      this.data = { ...this.data, vm: res.data.pool.vm }
 
-  public clickRow(backup): void {
-    this.openBackupDetails(backup);
-  }
+      this.service.updateEntity(this.data);
+      
+      this.show = true;
+      this.waitService.setWait(false);
 
-  public clickEvent(event): void {
-    this.openEventDetails(event);
-  }
-
-  public openEventDetails(event: Event): void {
-    this.dialog.open(InfoEventComponent, {
-      disableClose: true,
-      width: '700px',
-      data: {
-        event
+      if (this.data.vm.status == 'RESERVED') {
+        this.vm_status.setValue(true);
+      } else {
+        this.vm_status.setValue(false);
       }
     });
-  }
-
-  public openBackupDetails(backup: Backup): void {
-    this.dialog.open(InfoBackupComponent, {
-      disableClose: true,
-      width: '700px',
-      data: {
-        backup
-      }
-    });
-  }
-
-  public test(): void {
-    this.testing = true;
-    this.service.testDomainVm(
-        this.data.vm.id
-      )
-      .subscribe((data) => {
-        if (data) {
-          setTimeout(() => {
-            this.testing = false;
-            this.tested = true;
-            this.connected = data.data.testDomainVm.ok;
-          }, 1000);
-
-          setTimeout(() => {
-            this.tested = false;
-          }, 5000);
-        } else {
-          this.testing = false;
-          this.tested = false;
-        }
-      });
   }
 
   public routeTo(route: string): void {
+
+    this.offset = 0;
+
     if (route === 'vnc') {
       this.show = false;
-      this.waitService.setWait(true)
+      this.waitService.setWait(true);
 
-      this.service.getVnc(this.data.idPool, this.data.vmActive, this.data.controller_id).valueChanges.subscribe((res) => {
-        const vnc: any = res.data.pool.vm.vnc_connection
-        const prot = window.location.protocol;
+      this.service.getVnc().result().then((res) => {
 
-        let port = 80;
+        if (res.data.pool.vm.vnc_connection) {
+          
+          const vnc: any = res.data.pool.vm.vnc_connection
+          const prot = window.location.protocol;
 
-        if (prot === 'https:') {
-          port = 443;
+          let port = 80;
+
+          if (prot === 'https:') {
+            port = 443;
+          }
+
+          if (vnc.port) {
+            port = vnc.port;
+          }
+
+          this.vnc = this.sanitizer.bypassSecurityTrustResourceUrl(`novnc/vnc.html?host=${vnc.host}&port=${port}&password=${vnc.password}&path=websockify?token=${vnc.token}`);
         }
-
-        if (vnc.port) {
-          port = vnc.port;
-        }
-
-        this.vnc = this.sanitizer.bypassSecurityTrustResourceUrl(`novnc/vnc.html?host=${vnc.host}&port=${port}&password=${vnc.password}&path=websockify?token=${vnc.token}`);
 
         this.show = true;
         this.waitService.setWait(false)
@@ -746,10 +129,11 @@ export class VmDetalsPopupComponent implements OnInit {
       this.show = false;
       this.waitService.setWait(true)
 
-      this.service.getSpice(this.data.idPool, this.data.vmActive, this.data.controller_id).valueChanges.subscribe((res) => {
-        const spice: any = res.data.pool.vm.spice_connection
-
-        this.spice = this.sanitizer.bypassSecurityTrustResourceUrl(spice.connection_url);
+      this.service.getSpice().result().then((res) => {
+        if (res.data.pool.vm.spice_connection) {
+          const spice: any = res.data.pool.vm.spice_connection
+          this.spice = this.sanitizer.bypassSecurityTrustResourceUrl(spice.connection_url);
+        }
 
         this.show = true;
         this.waitService.setWait(false)
@@ -759,7 +143,37 @@ export class VmDetalsPopupComponent implements OnInit {
     this.menuActive = route;
   }
 
-  public action(type) {
+  /* Info */
+
+  public test(): void {
+
+    this.testing = true;
+
+    this.service.testDomainVm(this.data.vm.id).subscribe((data: any) => {
+
+      if (data.data) {
+        setTimeout(() => {
+          this.testing = false;
+          this.tested = true;
+          this.connected = data.data.testDomainVm.ok;
+        }, 1000);
+
+        setTimeout(() => {
+          this.tested = false;
+        }, 5000);
+      }
+    
+      if (data.errors) {
+        this.testing = false;
+        this.tested = false;
+      }
+    }, () => {
+      this.testing = false;
+      this.tested = false;
+    });
+  }
+
+  public action(type): void {
     if (type === 'start') {
       this.dialog.open(YesNoFormComponent, {
         disableClose: true,
@@ -776,9 +190,13 @@ export class VmDetalsPopupComponent implements OnInit {
             body: {
               vm_id: this.data.vm.id
             }
+          },
+          update: {
+            method: 'getVm',
+            refetch: true
           }
         }
-      })
+      });
     }
 
     if (type === 'suspend') {
@@ -797,9 +215,13 @@ export class VmDetalsPopupComponent implements OnInit {
             body: {
               vm_id: this.data.vm.id
             }
+          },
+          update: {
+            method: 'getVm',
+            refetch: true
           }
         }
-      })
+      });
     }
 
     if (type === 'shutdown') {
@@ -819,9 +241,13 @@ export class VmDetalsPopupComponent implements OnInit {
               vm_id: this.data.vm.id,
               force: false
             }
+          },
+          update: {
+            method: 'getVm',
+            refetch: true
           }
         }
-      })
+      });
     }
 
     if (type === 'reboot') {
@@ -841,9 +267,13 @@ export class VmDetalsPopupComponent implements OnInit {
               vm_id: this.data.vm.id,
               force: false
             }
+          },
+          update: {
+            method: 'getVm',
+            refetch: true
           }
         }
-      })
+      });
     }
 
     if (type === 'shutdown-force') {
@@ -863,9 +293,13 @@ export class VmDetalsPopupComponent implements OnInit {
               vm_id: this.data.vm.id,
               force: true
             }
+          },
+          update: {
+            method: 'getVm',
+            refetch: true
           }
         }
-      })
+      });
     }
 
     if (type === 'reboot-force') {
@@ -885,9 +319,13 @@ export class VmDetalsPopupComponent implements OnInit {
               vm_id: this.data.vm.id,
               force: true
             }
+          },
+          update: {
+            method: 'getVm',
+            refetch: true
           }
         }
-      })
+      });
     }
 
     if (type === 'backup') {
@@ -907,13 +345,17 @@ export class VmDetalsPopupComponent implements OnInit {
               vm_id: this.data.vm.id,
               force: true
             }
+          },
+          update: {
+            method: 'getVm',
+            refetch: true
           }
         }
-      })
+      });
     }
   }
 
-  public prepareVM() {
+  public prepareVM(): void {
     if (this.data.typePool === 'automated' || this.data.typePool === 'guest') {
       this.dialog.open(YesNoFormComponent, {
         disableClose: true,
@@ -930,13 +372,17 @@ export class VmDetalsPopupComponent implements OnInit {
             body: {
               vm: this.data.vm.id
             }
+          },
+          update: {
+            method: 'getVm',
+            refetch: true
           }
         }
-      })
+      });
     }
   }
 
-  public attachVeilUtils() {
+  public attachVeilUtils(): void {
     this.dialog.open(YesNoFormComponent, {
       disableClose: true,
       width: '500px',
@@ -953,37 +399,40 @@ export class VmDetalsPopupComponent implements OnInit {
             id: this.data.vm.id,
             controller_id: this.data.vm.controller.id
           }
+        },
+        update: {
+          method: 'getVm',
+          refetch: true
         }
       }
-    })
+    });
   }
 
-  public changeTemplate() {
+  public changeTemplate(): void {
     this.dialog.open(YesNoFormComponent, {
-        disableClose: true,
-        width: '500px',
-        data: {
-          form: {
-            header: 'Подтверждение действия',
-            question: `Перенести настройки тонкого клона ${this.data.vm.verbose_name} в шаблон ${this.data.vm.parent_name}?`,
-            error: 'Внесенные в шаблон настройки применятся ко всем клонам',
-            button: 'Выполнить'
-          },
-          request: {
-            service: this.service,
-            action: 'changeTemplate',
-            body: {
-              id: this.data.vm.id,
-              controller_id: this.data.vm.controller.id
-            }
+      disableClose: true,
+      width: '500px',
+      data: {
+        form: {
+          header: 'Подтверждение действия',
+          question: `Перенести настройки тонкого клона ${this.data.vm.verbose_name} в шаблон ${this.data.vm.parent_name}?`,
+          error: 'Внесенные в шаблон настройки применятся ко всем клонам',
+          button: 'Выполнить'
+        },
+        request: {
+          service: this.service,
+          action: 'changeTemplate',
+          body: {
+            id: this.data.vm.id,
+            controller_id: this.data.vm.controller.id
           }
+        },
+        update: {
+          method: 'getVm',
+          refetch: true
         }
-      })
-  }
-
-  public toPage(message: any): void {
-    this.offset = message.offset;
-    this.service.getPool(this.data.idPool, this.data.typePool).refetch();
+      }
+    });
   }
 
   public convertToTemplate(): void {
@@ -999,7 +448,7 @@ export class VmDetalsPopupComponent implements OnInit {
     });
   }
 
-  public toggleReserve(e) {
+  public toggleReserve(e): void {
 
     e.preventDefault();
 
@@ -1010,7 +459,7 @@ export class VmDetalsPopupComponent implements OnInit {
     }
   }
 
-  public reserveVm() {
+  public reserveVm(): void {
     this.dialog.open(YesNoFormComponent, {
       disableClose: true,
       width: '500px',
@@ -1027,15 +476,16 @@ export class VmDetalsPopupComponent implements OnInit {
             vm_id: this.data.vm.id,
             reserve: true,
           }
+        },
+        update: {
+          method: 'getVm',
+          refetch: true
         }
       }
-    }).afterClosed().subscribe(() => {
-      this.service.getPool(this.data.idPool, this.data.typePool).refetch();
-      this.service.getVm(this.data.idPool, this.data.vm.id, this.data.controller_id).refetch();
-    })
+    });
   }
 
-  public activateVm() {
+  public activateVm(): void {
     this.dialog.open(YesNoFormComponent, {
       disableClose: true,
       width: '500px',
@@ -1052,11 +502,107 @@ export class VmDetalsPopupComponent implements OnInit {
             vm_id: this.data.vm.id,
             reserve: false,
           }
+        },
+        update: {
+          method: 'getVm',
+          refetch: true
         }
       }
-    }).afterClosed().subscribe(() => {
-      this.service.getPool(this.data.idPool, this.data.typePool).refetch();
-      this.service.getVm(this.data.idPool, this.data.vm.id, this.data.controller_id).refetch();
-    })
+    });
+  }
+
+  /* Connections */
+
+  public addVmConnection(): void {
+    this.dialog.open(AddVmConnectionComponent, {
+      disableClose: true,
+      width: '500px',
+      data: this.data
+    });
+  }
+
+  public removeVmConnection(item: any): void {
+    this.dialog.open(YesNoFormComponent, {
+      disableClose: true,
+      width: '500px',
+      data: {
+        form: {
+          header: 'Подтверждение действия',
+          question: `Удалить адрес подключения для ${item.connection_type}?`,
+          button: 'Выполнить'
+        },
+        request: {
+          service: this.service,
+          action: 'removeVmConnectionData',
+          body: {
+            id: item.id
+          }
+        },
+        update: {
+          method: 'getVm',
+          refetch: true
+        }
+      }
+    });
+  }
+
+  public openEditConnections(e): void {
+    console.log(e)
+  }
+
+  public toConnectionPage(message: any): void {
+    this.offset = message.offset;
+    this.service.getVm(this.data.idPool, this.data.vmActive, this.data.controller_id, this.offset).refetch();
+  }
+
+  /* Users */
+
+  public addUser(): void {
+    this.dialog.open(AddUserVmComponent, {
+      disableClose: true,
+      width: '500px',
+      data: this.data
+    });
+  }
+
+  public removeUser(): void {
+    this.dialog.open(RemoveUserVmComponent, {
+      disableClose: true,
+      width: '500px',
+      data: this.data
+    });
+  }
+  
+  /* Backups */
+
+  public openBackupDetails(backup: Backup): void {
+    this.dialog.open(InfoBackupComponent, {
+      disableClose: true,
+      data: {
+        backup
+      }
+    });
+  }
+  
+  /* Events */
+
+  public openEventDetails(event: Event): void {
+    this.dialog.open(InfoEventComponent, {
+      disableClose: true,
+      data: {
+        event
+      }
+    });
+  }
+  
+  public toEventsPage(message: any): void {
+    this.offset = message.offset;
+    this.service.getVm(this.data.idPool, this.data.vmActive, this.data.controller_id, this.offset).refetch();
+  }
+
+  ngOnDestroy(): void {
+    if (this.sub) {
+      this.sub.unsubscribe();
+    }
   }
 }

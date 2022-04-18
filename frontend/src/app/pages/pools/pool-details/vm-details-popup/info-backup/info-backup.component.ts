@@ -58,7 +58,6 @@ export class InfoBackupComponent {
   public openRestoreBackup(): void {
     this.dialog.open(YesNoFormComponent, {
       disableClose: true,
-      width: '700px',
       data: {
         form: {
           header: 'Подтверждение действия',

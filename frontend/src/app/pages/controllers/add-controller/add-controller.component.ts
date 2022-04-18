@@ -49,8 +49,7 @@ export class AddControllerComponent implements OnInit, OnDestroy {
             this.dialogRef.close();
           });
         }
-      }, er => {
-          console.log(er)
+        
       });
     }
   }

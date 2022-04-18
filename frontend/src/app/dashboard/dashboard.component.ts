@@ -4,7 +4,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { WebsocketService } from '@app/core/services/websock.service';
 import { Observable } from 'rxjs';
 
-import { ISettings, LoginService } from '../login/login.service';
+import { ISettings, LoginService } from '@pages/login/login.service';
 
 @Component({
   selector: 'vdi-dashboard',

@@ -31,7 +31,11 @@ export class YesNoFormComponent implements OnInit {
 
       if (this.data.update) {
         if (this.data.update.refetch) {
-          request.service[this.data.update.method](...this.data.update.params).refetch();
+          if (this.data.update.params) {
+            request.service[this.data.update.method](...this.data.update.params).refetch();
+          } else {
+            request.service[this.data.update.method]().refetch();
+          }  
         }
       }
 

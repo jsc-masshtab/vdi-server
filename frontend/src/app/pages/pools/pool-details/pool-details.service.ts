@@ -59,154 +59,110 @@ export class PoolDetailsService {
         });
     }
 
-    public getPool(pool_id: string | number, type: string): QueryRef<any, any> {
+    public getPool(pool_id: string | number): QueryRef<any, any> {
 
-        if (type === 'automated' || type === 'guest') {
-            return this.service.watchQuery({
-                query: gql`  query pools($pool_id: ShortString, $ordering_vms: ShortString, $ordering_users: ShortString, $ordering_groups: ShortString) {
-                                pool(pool_id: $pool_id) {
-                                    pool_id
-                                    verbose_name
-                                    pool_type
-                                    vms(ordering: $ordering_vms) {
-                                        id
-                                        verbose_name
-                                        user {
-                                            username
-                                        }
-                                        user_power_state
-                                        node {
-                                            id
-                                            verbose_name
-                                        }
-                                        qemu_state
-                                        assigned_users {
-                                          username
-                                        }
-                                        status
-                                        parent_name
-                                    }
-                                    controller {
-                                        id
-                                        address
-                                        verbose_name
-                                    }
-                                    initial_size
-                                    reserve_size
-                                    total_size
-                                    increase_step
-                                    vm_disconnect_action_timeout
-                                    vm_name_template
-                                    ad_ou
-                                    users(ordering: $ordering_users) {
-                                        id
-                                        username
-                                    }
-                                    resource_pool {
-                                        verbose_name
-                                    }
-                                    datapool {
-                                        verbose_name
-                                    }
-                                    template {
-                                        verbose_name
-                                    }
-                                    create_thin_clones
-                                    enable_vms_remote_access
-                                    start_vms
-                                    set_vms_hostnames
-                                    include_vms_in_ad
-                                    keep_vms_on
-                                    free_vm_from_user
-                                    assigned_groups(ordering: $ordering_groups) {
-                                        id
-                                        verbose_name
-                                    }
-                                    possible_groups{
-                                        id
-                                        verbose_name
-                                    }
-                                    assigned_connection_types
-                                    status
-                                    vm_action_upon_user_disconnect
-                                    vm_disconnect_action_timeout
-                                }
-                            }`,
-                variables: {
-                    method: 'GET',
-                    pool_id,
-                    ordering_vms: this.orderingVms.nameSort,
-                    ordering_users: this.orderingUsers.nameSort,
-                    ordering_groups: this.orderingGroups.nameSort
-                }
-            });
-        }
+        return this.service.watchQuery({
+            query: gql` query 
+                pools(
+                    $pool_id: ShortString, 
+                    $ordering_vms: ShortString, 
+                    $ordering_users: ShortString, 
+                    $ordering_groups: ShortString
+                ){
+                    pool(
+                        pool_id: $pool_id
+                    ){
+                        vms(
+                            ordering: $ordering_vms
+                        ){
+                            id
+                            verbose_name
+                            user {
+                                username
+                            }
+                            user_power_state
+                            node {
+                                id
+                                verbose_name
+                            }
+                            qemu_state
+                            assigned_users {
+                                username
+                            }
+                            status
+                            parent_name
+                        }
 
-        if (type === 'static' || type === 'rds') {
-            return this.service.watchQuery({
-                query: gql`  query pools($pool_id: ShortString, $ordering_vms: ShortString, $ordering_users: ShortString, $ordering_groups: ShortString) {
-                                pool(pool_id: $pool_id) {
-                                    verbose_name
-                                    pool_type
-                                    vms(ordering: $ordering_vms) {
-                                        verbose_name
-                                        id
-                                        user {
-                                            username
-                                        }
-                                        user_power_state
-                                        node {
-                                            id
-                                            verbose_name
-                                        }
-                                        qemu_state
-                                        status
-                                        assigned_users {
-                                            id
-                                            username
-                                        }
-                                        parent_name
-                                        controller {
-                                            id
-                                        }
-                                    }
-                                    controller {
-                                        id
-                                        address
-                                        verbose_name
-                                    }
-                                    resource_pool_id
-                                    users(ordering: $ordering_users) {
-                                        id
-                                        username
-                                    }
-                                    resource_pool {
-                                        verbose_name
-                                    }
-                                    assigned_groups(ordering: $ordering_groups) {
-                                        id
-                                        verbose_name
-                                    }
-                                    possible_groups{
-                                        id
-                                        verbose_name
-                                    }
-                                    free_vm_from_user
-                                    vm_action_upon_user_disconnect
-                                    vm_disconnect_action_timeout
-                                    assigned_connection_types
-                                    status
-                                }
-                            }`,
-                variables: {
-                    method: 'GET',
-                    pool_id,
-                    ordering_vms: this.orderingVms.nameSort,
-                    ordering_users: this.orderingUsers.nameSort,
-                    ordering_groups: this.orderingGroups.nameSort
-                }
-            });
-        }
+                        controller {
+                            id
+                            address
+                            verbose_name
+                        }
+                        
+                        users(ordering: $ordering_users) {
+                            id
+                            username
+                        }
+
+                        resource_pool {
+                            verbose_name
+                        }
+
+                        datapool {
+                            verbose_name
+                        }
+
+                        template {
+                            verbose_name
+                        }
+
+
+                        assigned_groups(ordering: $ordering_groups) {
+                            id
+                            verbose_name
+                        }
+
+                        possible_groups{
+                            id
+                            verbose_name
+                        }
+
+                        pool_id
+                        verbose_name
+                        pool_type
+                        resource_pool_id
+
+                        initial_size
+                        reserve_size
+                        total_size
+                        increase_step
+                        vm_disconnect_action_timeout
+                        vm_name_template
+                        ad_ou
+
+                        create_thin_clones
+                        enable_vms_remote_access
+                        start_vms
+                        set_vms_hostnames
+                        include_vms_in_ad
+                        keep_vms_on
+                        free_vm_from_user
+
+                        assigned_connection_types
+                        
+                        vm_action_upon_user_disconnect
+
+                        status
+                    }
+                }`,
+            variables: {
+                method: 'GET',
+                pool_id,
+                ordering_vms: this.orderingVms.nameSort,
+                ordering_users: this.orderingUsers.nameSort,
+                ordering_groups: this.orderingGroups.nameSort
+            }
+        });
     }
 
     // +,-,get вм в стат. пуле
@@ -502,45 +458,6 @@ export class PoolDetailsService {
         }
     }
 
-    // назначение пользователя вм
-
-    public assignVmToUser(vm_id: string, users: [string]) {
-        return this.service.mutate<any>({
-            mutation: gql`
-                mutation pools($vm_id: ID!,$users: [UUID!]) {
-                    assignVmToUser(vm_id: $vm_id, users: $users) {
-                        ok
-                    }
-                }
-            `,
-            variables: {
-                method: 'POST',
-                vm_id,
-                users
-            }
-        });
-    }
-
-    // отлучить пользователя вм
-
-    public freeVmFromUser(vm_id: string, users: [string]) {
-        return this.service.mutate<any>({
-            mutation: gql`
-                mutation pools($vm_id: ID!,$users: [UUID!]) {
-                    freeVmFromUser(vm_id: $vm_id, users: $users) {
-                        ok
-                    }
-                }
-            `,
-            variables: {
-                method: 'POST',
-                vm_id,
-                users
-            }
-        });
-    }
-
-    //
 
     public addGrop(id, groups) {
         return this.service.mutate<any>({
@@ -665,374 +582,20 @@ export class PoolDetailsService {
         });
     }
 
-    public startVm(data) {
+
+    public copyPool(pool_id: string) {
         return this.service.mutate<any>({
             mutation: gql`
-                mutation pools(
-                    $vm_id: UUID!
-                ){
-                    startVm(
-                        vm_id: $vm_id
-                    ){
-                        ok
+                mutation pools($pool_id: UUID!) {
+                    copyDynamicPool(pool_id: $pool_id) {
+                        pool_settings
                     }
                 }
             `,
             variables: {
                 method: 'POST',
-                ...data
+                pool_id
             }
-        });
-    }
-
-    public suspendVm(data) {
-        return this.service.mutate<any>({
-            mutation: gql`
-                mutation pools(
-                    $vm_id: UUID!
-                ){
-                    suspendVm(
-                        vm_id: $vm_id
-                    ){
-                        ok
-                    }
-                }
-            `,
-            variables: {
-                method: 'POST',
-                ...data
-            }
-        });
-    }
-
-    public shutdownVm(data) {
-        return this.service.mutate<any>({
-            mutation: gql`
-                mutation pools(
-                    $vm_id: UUID!,
-                    $force: Boolean
-                ){
-                    shutdownVm(
-                        force: $force,
-                        vm_id: $vm_id
-                    ){
-                        ok
-                    }
-                }
-            `,
-            variables: {
-                method: 'POST',
-                ...data
-            }
-        });
-    }
-
-    public rebootVm(data) {
-        return this.service.mutate<any>({
-            mutation: gql`
-                mutation pools(
-                    $vm_id: UUID!,
-                    $force: Boolean
-                ){
-                    rebootVm(
-                        force: $force,
-                        vm_id: $vm_id
-                    ){
-                        ok
-                    }
-                }
-            `,
-            variables: {
-                method: 'POST',
-                ...data
-            }
-        });
-    }
-
-    public backupVm(data) {
-        return this.service.mutate<any>({
-            mutation: gql`
-                mutation pools(
-                    $vm_id: UUID!
-                ){
-                    backupVm(
-                        vm_id: $vm_id
-                    ){
-                        ok
-                    }
-                }
-            `,
-            variables: {
-                method: 'POST',
-                ...data
-            }
-        });
-    }
-
-    public restoreBackupVm(data) {
-        return this.service.mutate<any>({
-            mutation: gql`
-                mutation pools(
-                    $vm_id: UUID!
-                    $file_id: UUID!
-                    $node_id: UUID!
-                    $datapool_id: UUID
-                ){
-                    restoreBackupVm(
-                        vm_id: $vm_id
-                        file_id: $file_id
-                        node_id: $node_id
-                        datapool_id: $datapool_id
-                    ){
-                        ok
-                    }
-                }
-            `,
-            variables: {
-                method: 'POST',
-                ...data
-            }
-        });
-    }
-
-    public testDomainVm(vm_id: string) {
-        return this.service.mutate<any>({
-            mutation: gql`
-                mutation pools(
-                    $vm_id: UUID!
-                ){
-                    testDomainVm(vm_id: $vm_id) {
-                        ok
-                    }
-                }
-            `,
-            variables: {
-                method: 'POST',
-                vm_id
-            }
-        });
-    }
-
-    public attachVeilUtils(data) {
-        return this.service.mutate<any>({
-            mutation: gql` mutation pools($id: UUID!, $controller_id: UUID!) {
-                            attachVeilUtilsVm(vm_id: $id, controller_id: $controller_id) {
-                                ok
-                            }
-                        }
-                    `,
-            variables: {
-                method: 'POST',
-                ...data
-            }
-        });
-    }
-
-    public changeTemplate(data) {
-        return this.service.mutate<any>({
-            mutation: gql` mutation pools($id: UUID!, $controller_id: UUID!) {
-                            changeTemplate(vm_id: $id, controller_id: $controller_id) {
-                                ok
-                            }
-                        }
-                    `,
-            variables: {
-                method: 'POST',
-                ...data
-            }
-        });
-    }
-
-    public getVm(pool_id: string, vm_id: string, controller_address: string, offset = 0): QueryRef<any, any> {
-        return  this.service.watchQuery({
-            query: gql` query pools($pool_id: ShortString, $vm_id: UUID, $controller_address: UUID, $offset: Int) {
-                                pool(pool_id: $pool_id) {
-                                    vm(vm_id: $vm_id, controller_id: $controller_address) {
-                                        id
-                                        verbose_name
-                                        description
-                                        os_type
-                                        os_version
-                                        cpu_count
-                                        memory_count
-                                        tablet
-                                        ha_enabled
-                                        disastery_enabled
-                                        guest_agent
-                                        remote_access
-                                        spice_stream
-                                        user_power_state
-                                        boot_type
-                                        thin
-                                        start_on_boot
-                                        address
-                                        status
-                                        hostname
-                                        domain_tags {
-                                            colour
-                                            verbose_name
-                                        }
-                                        parent_name
-                                        resource_pool {
-                                            id
-                                            verbose_name
-                                        }
-                                        controller {
-                                            id
-                                            verbose_name
-                                        }
-                                        node {
-                                                id
-                                                verbose_name
-                                        }
-                                        assigned_users {
-                                                id
-                                                username
-                                            }
-                                        events(offset: $offset) {
-                                            id
-                                            event_type
-                                            message
-                                            description
-                                            created
-                                            user
-                                            read_by {
-                                                id
-                                                username
-                                            }
-                                        }
-                                        spice_connection {
-                                            password
-                                            host
-                                            token
-                                            connection_url
-                                            connection_type
-                                        }
-                                        vnc_connection {
-                                            password
-                                            host
-                                            token
-                                            connection_url
-                                            connection_type
-                                        }
-                                        count
-                                        controller {
-                                            id
-                                        }
-                                        backups {
-                                            file_id
-                                            vm_id
-                                            filename
-                                            datapool {
-                                                id
-                                                verbose_name
-                                            }
-                                            node {
-                                                id
-                                                verbose_name
-                                            }
-                                            assignment_type
-                                            size
-                                            status
-                                        }
-                                    }
-                                }
-                        }
-                    `,
-            variables: {
-                method: 'GET',
-                pool_id,
-                vm_id,
-                controller_address,
-                offset
-            }
-        });
-    }
-
-    public getSpice(pool_id: string, vm_id: string, controller_address: string): QueryRef<any, any> {
-        return this.service.watchQuery({
-            query: gql`
-                query pools($pool_id: ShortString, $vm_id: UUID, $controller_address: UUID) {
-                    pool(pool_id: $pool_id) {
-                        vm(vm_id: $vm_id, controller_id: $controller_address) {
-                            id
-                            spice_connection {
-                                password
-                                host
-                                token
-                                connection_url
-                                connection_type
-                            }
-                        }
-                    }
-                }
-            `,
-            variables: {
-                method: 'GET',
-                pool_id,
-                vm_id,
-                controller_address
-            }
-        });
-    }
-
-    public getVnc(pool_id: string, vm_id: string, controller_address: string): QueryRef<any, any> {
-        return this.service.watchQuery({
-            query: gql`
-                query pools($pool_id: ShortString, $vm_id: UUID, $controller_address: UUID) {
-                    pool(pool_id: $pool_id) {
-                        vm(vm_id: $vm_id, controller_id: $controller_address) {
-                            id
-                            vnc_connection {
-                                password
-                                host
-                                token
-                                connection_url
-                                connection_type
-                            }
-                        }
-                    }
-                }
-            `,
-            variables: {
-                method: 'GET',
-                pool_id,
-                vm_id,
-                controller_address
-            }
-        });
-    }
-
-
-  public reserveVm(params: any) {
-    return this.service.mutate<any>({
-      mutation: gql`
-        mutation pools($vm_id: UUID!, $reserve: Boolean!) {
-            reserveVm(vm_id: $vm_id, reserve: $reserve){
-            ok
-          }
-        }
-      `,
-      variables: {
-        method: 'POST',
-        ...params
-      }
-    });
-  }
-
-  public copyPool(pool_id: string) {
-    return this.service.mutate<any>({
-        mutation: gql`
-            mutation pools($pool_id: UUID!) {
-                copyDynamicPool(pool_id: $pool_id) {
-                    pool_settings
-                }
-            }
-        `,
-        variables: {
-            method: 'POST',
-            pool_id
-        }
         })
     }
 }

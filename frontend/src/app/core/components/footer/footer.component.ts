@@ -68,12 +68,15 @@ export class FooterComponent implements OnInit, OnDestroy, AfterViewInit {
 
     this.sub = this.systemService.getSystemInfo().valueChanges.pipe(map(data => data.data.system_info))
       .subscribe(res => {
-      this.updated_time = moment.tz(res.local_time, res.time_zone);
+
+      this.updated_time = moment(res.local_time);
       this.timezone = res.time_zone;
 
       setInterval(() => {
         this.time = this.updated_time.add(1, 's').format('DD.MM.YYYY HH:mm:ss');
       }, 1000);
+        
+        this.sub.unsubscribe();
       }
     );
   }
