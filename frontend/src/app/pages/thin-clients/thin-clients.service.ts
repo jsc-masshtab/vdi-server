@@ -59,6 +59,40 @@ export class ThinClientsService {
     });
   }
 
+  public getThinClient(queryset: any = {}): QueryRef<any, any> {
+    return this.service.watchQuery({
+      query: gql`
+        query thin_clients($conn_id: UUID) {
+          thin_client(conn_id: $conn_id){
+            conn_id
+            user_name
+            veil_connect_version
+            vm_name
+            tk_ip
+            tk_os
+            connected
+            disconnected
+            data_received
+            last_interaction
+            is_afk
+            connection_type
+            is_connection_secure
+            read_speed
+            write_speed
+            avg_rtt
+            loss_percentage
+            mac_address
+            hostname
+          }
+        }
+      `,
+      variables: {
+        method: 'GET',
+        ...queryset
+      }
+    });
+  }
+
   public getThinClientStatistic(queryset: any = {}): QueryRef<any, any> {
     return this.service.watchQuery({
       query: gql`

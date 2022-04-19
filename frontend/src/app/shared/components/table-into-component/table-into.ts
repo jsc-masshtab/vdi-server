@@ -12,6 +12,7 @@ import { ISmtpSettings } from '@pages/settings/smtp/smtp.service';
 })
 export class TableIntoComponent  {
 
+  @Input() header: string;
   @Input() item: ISmtpSettings | any = {};
   @Input() collection: object[] = [];
   @Output() action: EventEmitter<object> = new EventEmitter<object>();

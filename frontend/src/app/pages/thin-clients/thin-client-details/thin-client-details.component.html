@@ -1,4 +1,4 @@
-<div class="details-wrap">
+<div class="details-wrap" *ngIf="host">
 
   <div class="details-header">
     <div class="title">
@@ -16,6 +16,9 @@
   </div>
 
   <div class="details-control-panel">
+
+    <vdi-button-refresh (clickRefresh)="getThinClient()" ></vdi-button-refresh>
+
     <button class="btn-control" type="button" (click)="disconnect()">
       <fa-icon [icon]="['fas','power-off']"></fa-icon>
       <span class="name">Отключить клиент</span>
@@ -40,12 +43,21 @@
       </div>
 
       <div class="details-slide-into">
-        <vdi-table-into
-          *ngIf="menuActive === 'info'"
-          [item]="entity"
-          [collection]="collection"
-          (edit)="edit($event)">
-        </vdi-table-into>
+        <ng-container *ngIf="menuActive === 'info'">
+          <vdi-table-into
+            [header]="'Общее'"
+            [item]="entity"
+            [collection]="collection"
+            (edit)="edit($event)">
+          </vdi-table-into>
+
+          <vdi-table-into
+            [header]="'Подключение к ВМ'"
+            [item]="entity"
+            [collection]="vm_collection"
+            (edit)="edit($event)">
+          </vdi-table-into>
+        </ng-container>
 
         <ng-container *ngIf="menuActive === 'messenger'">
           <div class="messenger-container">

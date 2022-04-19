@@ -11,7 +11,9 @@
         </div>
     </div>
     <div class="details-control-panel">
+
         <vdi-button-refresh (clickRefresh)="getPool()" ></vdi-button-refresh>
+        
         <ng-container *ngIf="menuActive === 'info' && (pool?.pool_type == 'AUTOMATED' || pool?.pool_type == 'GUEST')">
             <button (click)="expandPool()"  title="Расширить пул" class="btn-control">
                 <fa-icon [icon]="['fas','expand']" size="xs"></fa-icon>

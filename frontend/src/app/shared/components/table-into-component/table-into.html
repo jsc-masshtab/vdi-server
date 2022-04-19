@@ -1,4 +1,9 @@
 <div class="table-area">
+
+  <div *ngIf="header" class="table-area-header">
+    <span>{{ header }}</span>
+  </div>
+
   <div *ngFor="let obj of collection" class="table-area-object" [class.table-group]="obj.group">   <!--строка-->
 
       <div class="table-area-title">
@@ -43,9 +48,7 @@
             <span *ngIf="obj.type === 'level'">{{ lvlDescription }}</span>
             <span *ngIf="obj.type === 'pool_type'">{{ item[obj.property] | poolType }}</span>
             <span *ngIf="obj.type === 'task_type'">{{ item[obj.property] | taskType }}</span>
-            <span *ngIf="obj.type === 'boolean'">
-              {{ item[obj.property] ? "вкл" : "выкл"}}
-            </span>
+            <span *ngIf="obj.type === 'boolean'">{{ item[obj.property] ? "вкл" : "выкл"}}</span>
             <span *ngIf="obj.type === 'vmAction'">{{ actionName }}</span>
 
             <ng-container *ngIf="obj.type === 'array'">
