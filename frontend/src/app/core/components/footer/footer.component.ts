@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Observable, Subscription } from 'rxjs';
 
 import { EventsService } from '@pages/log/events/all-events/events.service';
@@ -6,7 +6,6 @@ import { ICopyrightData, LicenseService } from '@pages/settings/license/license.
 import { WebsocketService } from '@app/core/services/websock.service';
 import { SystemService } from '@app/pages/settings/system/system.service';
 
-import * as moment from 'moment-timezone';
 import { map } from 'rxjs/operators';
 
 interface ICountEvents {
@@ -20,7 +19,7 @@ interface ICountEvents {
   templateUrl: './footer.component.html',
   styleUrls: ['./footer.component.scss']
 })
-export class FooterComponent implements OnInit, OnDestroy, AfterViewInit {
+export class FooterComponent implements OnInit, OnDestroy {
 
   public sub: Subscription;
   public socketSub: Subscription;
@@ -33,9 +32,10 @@ export class FooterComponent implements OnInit, OnDestroy, AfterViewInit {
 
   public countEvents: ICountEvents;
 
-  time = '';
+  time: Date;
   timezone = '';
-  updated_time;
+
+  interval: any;
 
   constructor(
     private licenseService: LicenseService,
@@ -59,9 +59,10 @@ export class FooterComponent implements OnInit, OnDestroy, AfterViewInit {
     });
 
     this.listenSockets();
+    this.getSystemInfo();
   }
 
-  ngAfterViewInit() {
+  getSystemInfo() {
     if (this.sub) {
       this.sub.unsubscribe();
     }
@@ -69,14 +70,16 @@ export class FooterComponent implements OnInit, OnDestroy, AfterViewInit {
     this.sub = this.systemService.getSystemInfo().valueChanges.pipe(map(data => data.data.system_info))
       .subscribe(res => {
 
-      this.updated_time = moment(res.local_time);
-      this.timezone = res.time_zone;
+        this.time = new Date(res.local_time);
+        this.timezone = res.time_zone;
 
-      setInterval(() => {
-        this.time = this.updated_time.add(1, 's').format('DD.MM.YYYY HH:mm:ss');
-      }, 1000);
-        
-        this.sub.unsubscribe();
+        if (this.interval) {
+          clearInterval(this.interval);
+        }
+
+        this.interval = setInterval(() => {
+          this.time = new Date(this.time.setSeconds(this.time.getSeconds() + 1));
+        }, 1000);    
       }
     );
   }
@@ -122,8 +125,16 @@ export class FooterComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   public ngOnDestroy(): void {
+    if (this.sub) {
+      this.sub.unsubscribe();
+    }
+    
     if (this.socketSub) {
       this.socketSub.unsubscribe();
+    }
+
+    if (this.interval) {
+      clearInterval(this.interval);
     }
   }
 }

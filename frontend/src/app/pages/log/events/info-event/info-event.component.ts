@@ -35,7 +35,7 @@ export class InfoEventComponent {
       type: 'string'
     },
     {
-      title: 'Пользователь',
+      title: 'Инициатор',
       property: 'user',
       type: 'string'
     },

@@ -1,5 +1,5 @@
 import { Component, Inject, OnInit } from '@angular/core';
-import { MatDialog, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { FormControl } from '@angular/forms';
 import { WaitService } from '@core/components/wait/wait.service';
 import { VmDetailsPopupService } from '../vm-details-popup.service';
@@ -21,6 +21,7 @@ export class RemoveUserVmComponent implements OnInit {
     private service: VmDetailsPopupService,
     public dialog: MatDialog,
     @Inject(MAT_DIALOG_DATA) public data,
+    private dialogRef: MatDialogRef<RemoveUserVmComponent>,
   ) {}
 
   ngOnInit() {
@@ -36,9 +37,9 @@ export class RemoveUserVmComponent implements OnInit {
       this.waitService.setWait(true);
       this.service.freeVmFromUser(this.data.vm.id, users).subscribe((res) => {
         if (res) {
-          this.service.getVm().refetch()
+          this.service.getVm().refetch();
           this.waitService.setWait(false);
-          this.dialog.closeAll();
+          this.dialogRef.close();
         }
       });
     } else {

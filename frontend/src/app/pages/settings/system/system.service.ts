@@ -28,7 +28,8 @@ export class SystemService {
       `,
       variables: {
         method: 'GET'
-      }
+      },
+      pollInterval: 60000
     });
   }
 }

@@ -111,7 +111,12 @@ export class ThinClientsComponent extends DetailsMove implements OnInit, OnDestr
 
     this.socketSub = this.ws.stream('/thin_clients/').subscribe((message: any) => {
       if (message['msg_type'] === 'data') {
+        
         this.refresh();
+
+        if (message.tk_conn_event === 'connection_closed') {
+          this.router.navigate(['/pages/clients/session/']);
+        }
       }
     });
   }

@@ -1,3 +1,7 @@
+:host {
+    display: inline-flex;
+    position: relative;
+}
 
 .table-area {
     display: flex;
@@ -9,9 +13,20 @@
     min-width: 450px;
     border: 1px solid #dedede;
     padding: 2px 4px;
-    margin: 4px;
+    margin: 2px 0 0 2px;
     border-radius: 4px;
     box-shadow: 0px 0px 12px -6px #e6e6e6;
+}
+
+.table-area-header {
+    position: relative;
+    padding: 8px 10px;
+    background-color: #e5eff3;
+    border-radius: 4px;
+    margin-top: 2px;
+    color: #7e858c;
+    font-weight: 600;
+    font-size: 12px;
 }
 
 .table-area-object {
@@ -60,6 +75,12 @@
 
     > span {
         padding: 3px;
+    }
+
+    .table-area-unit {
+        padding-left: 0;
+        position: relative;
+        left: -2px;
     }
 }
 

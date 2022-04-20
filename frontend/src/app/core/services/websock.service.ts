@@ -88,7 +88,7 @@ export class WebsocketService {
   }
 
   private onListenMessage(event: MessageEvent): void {
-    console.info('%c[WS] Message', 'color: #9a6f0f', event.data);
+    console.info('%c[WS] Message', 'color: #9a6f0f', JSON.parse(event.data));
 
     if (this.isJsonString(event.data)) {
       const message = JSON.parse(event.data);

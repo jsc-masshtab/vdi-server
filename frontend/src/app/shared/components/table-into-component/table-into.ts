@@ -12,6 +12,7 @@ import { ISmtpSettings } from '@pages/settings/smtp/smtp.service';
 })
 export class TableIntoComponent  {
 
+  @Input() header: string;
   @Input() item: ISmtpSettings | any = {};
   @Input() collection: object[] = [];
   @Output() action: EventEmitter<object> = new EventEmitter<object>();
@@ -45,16 +46,20 @@ export class TableIntoComponent  {
   }
 
   formatBytes(bytes, delimiter = 'Байт', decimals = 3) {
-    if (bytes === 0) { return '0 Байт'; }
+    if (bytes) {
+      if (bytes === 0) { return '0 Байт'; }
 
-    const k = 1024;
-    const dm = decimals < 0 ? 0 : decimals;
-    const sizes = ['Байт', 'Кб', 'Мб', 'Гб', 'Тб', 'Пб', 'Эб', 'Зб', 'Йб'];
+      const k = 1024;
+      const dm = decimals < 0 ? 0 : decimals;
+      const sizes = ['Байт', 'Кб', 'Мб', 'Гб', 'Тб', 'Пб', 'Эб', 'Зб', 'Йб'];
 
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    const def = sizes.findIndex(size => size === delimiter);
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      const def = sizes.findIndex(size => size === delimiter);
 
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i + def];
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i + def];
+    } else {
+      return '--';
+    }
   }
  
   public get lvlDescription(): string {

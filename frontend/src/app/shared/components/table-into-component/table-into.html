@@ -1,4 +1,9 @@
 <div class="table-area">
+
+  <div *ngIf="header" class="table-area-header">
+    <span>{{ header }}</span>
+  </div>
+
   <div *ngFor="let obj of collection" class="table-area-object" [class.table-group]="obj.group">   <!--строка-->
 
       <div class="table-area-title">
@@ -33,7 +38,9 @@
           <ng-container *ngIf="item[obj.property] || !!item[obj.property] === false && obj.type; else nothing">
             <span *ngIf="obj.type === 'string'">{{ item[obj.property] ? item[obj.property] : "--" }} </span>
 
-            <span *ngIf="obj.type === 'metric'">{{ item[obj.property] }} {{ obj.unit }}</span>
+            <span *ngIf="obj.type === 'number'">{{ item[obj.property] ? (item[obj.property] | number : '1.2-2') : 0 }} </span>
+
+            <span *ngIf="obj.type === 'metric'">{{ formatBytes(item[obj.property], obj.delimiter) }}</span>
 
             <span *ngIf="obj.type === 'bites'">{{ formatBytes(item[obj.property], obj.delimiter) }}</span>
 
@@ -43,10 +50,10 @@
             <span *ngIf="obj.type === 'level'">{{ lvlDescription }}</span>
             <span *ngIf="obj.type === 'pool_type'">{{ item[obj.property] | poolType }}</span>
             <span *ngIf="obj.type === 'task_type'">{{ item[obj.property] | taskType }}</span>
-            <span *ngIf="obj.type === 'boolean'">
-              {{ item[obj.property] ? "вкл" : "выкл"}}
-            </span>
+            <span *ngIf="obj.type === 'boolean'">{{ item[obj.property] ? "вкл" : "выкл"}}</span>
             <span *ngIf="obj.type === 'vmAction'">{{ actionName }}</span>
+
+            <span *ngIf="obj.unit && item[obj.property]" class="table-area-unit">{{ obj.unit }}</span>
 
             <ng-container *ngIf="obj.type === 'array'">
               <ul *ngIf="checkLength(item[obj.property]) > 0; else nothing">
@@ -54,7 +61,7 @@
               </ul>
             </ng-container>
 
-            <span *ngIf="obj.type === 'time'">{{item[obj.property] | date:'dd.MM.yyyy hh:mm:ss 	ZZZZZ'}}</span>
+            <span *ngIf="obj.type === 'time'">{{ (item[obj.property] | date:'dd.MM.yyyy HH:mm:ss 	ZZZZZ') || '--' }}</span>
 
             <ng-container *ngIf="obj.type.typeDepend === 'propertyInObjectsInArray'">
               <ng-container *ngIf="item[obj.property]?.length; else nothing">
@@ -66,8 +73,13 @@
             </ng-container>
 
             <ng-container *ngIf="obj.type.typeDepend === 'boolean'">
-              <ng-container *ngIf="item[obj.property]">{{ obj.type.propertyDepend[0] }}</ng-container>
-              <ng-container *ngIf="!item[obj.property]">{{ obj.type.propertyDepend[1] }}</ng-container>
+              <ng-container *ngIf="item[obj.property] === false">
+                <span>{{ obj.type.propertyDepend[0] }}</span>
+              </ng-container>
+
+              <ng-container *ngIf="item[obj.property] === true">
+                <span>{{ obj.type.propertyDepend[1] }}</span>
+              </ng-container>
             </ng-container>
 
             <ng-container *ngIf="obj.type.typeDepend === 'tags_array'">
@@ -88,10 +100,10 @@
 
       <ng-template #nothing>
         <div *ngIf="!item; else noitem" class="table-area-value">
-          {{ parseNothing(obj, item) }}
+          <span>{{ parseNothing(obj, item) || '--' }}</span>
         </div>
         <ng-template #noitem>
-          {{ parseNothing(obj, item) }}
+          <span>{{ parseNothing(obj, item) || '--' }}</span>
         </ng-template>
       </ng-template>
 
