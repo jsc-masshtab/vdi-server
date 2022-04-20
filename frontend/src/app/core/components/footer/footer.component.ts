@@ -125,6 +125,10 @@ export class FooterComponent implements OnInit, OnDestroy {
   }
 
   public ngOnDestroy(): void {
+    if (this.sub) {
+      this.sub.unsubscribe();
+    }
+    
     if (this.socketSub) {
       this.socketSub.unsubscribe();
     }

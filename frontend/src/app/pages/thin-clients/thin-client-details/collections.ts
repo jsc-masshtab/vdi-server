@@ -6,6 +6,16 @@ export class ThinClientColections {
       type: 'string'
     },
     {
+      title: 'Mac адрес',
+      property: 'mac_address',
+      type: 'string'
+    },
+    {
+      title: 'Имя хоста',
+      property: 'hostname',
+      type: 'string'
+    },
+    {
       title: 'Операционная система',
       property: 'tk_os',
       type: 'string'
@@ -26,11 +36,6 @@ export class ThinClientColections {
       type: 'time'
     },
     {
-      title: 'Время отключения',
-      property: 'disconnected',
-      type: 'time'
-    },
-    {
       title: 'Время получения данных',
       property: 'data_received',
       type: 'time'
@@ -41,22 +46,17 @@ export class ThinClientColections {
       type: 'time'
     },
     {
+      title: 'Время отключения',
+      property: 'disconnected',
+      type: 'time'
+    },
+    {
       title: 'Статус активности',
       property: 'is_afk',
       type: {
         typeDepend: 'boolean',
         propertyDepend: ['Не активен', 'Активен']
       }
-    },
-    {
-      title: 'Mac адрес',
-      property: 'mac_address',
-      type: 'string'
-    },
-    {
-      title: 'Имя хоста',
-      property: 'hostname',
-      type: 'string'
     }
   ];
 
