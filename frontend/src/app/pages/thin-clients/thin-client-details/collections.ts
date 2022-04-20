@@ -76,31 +76,32 @@ export class ThinClientColections {
       property: 'is_connection_secure',
       type: {
         typeDepend: 'boolean',
-        propertyDepend: ['да', 'нет']
+        propertyDepend: ['да', '--']
       }
     },
     {
       title: 'Скорость получения данных',
       property: 'read_speed',
       type: 'metric',
-      unit: 'байт/сек'
+      unit: '/с'
     },
     {
       title: 'Скорость отправки данных',
       property: 'write_speed',
       type: 'metric',
-      unit: 'байт/сек'
+      unit: '/с'
     },
     {
       title: 'Средний RTT',
       property: 'avg_rtt',
-      type: 'metric',
-      unit: 'мсек'
+      type: 'number',
+      unit: 'мс'
     },
     {
       title: 'Процент сетевых потерь',
       property: 'loss_percentage',
-      type: 'string'
+      type: 'number',
+      unit: '%'
     }
   ]
 }

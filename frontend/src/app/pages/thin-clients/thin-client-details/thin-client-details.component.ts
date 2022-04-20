@@ -137,6 +137,10 @@ export class ThinClientDetailsComponent extends ThinClientColections implements 
   }
 
   ngOnDestroy(): void {
+    if (this.sub) {
+      this.sub.unsubscribe();
+    }
+    
     if (this.socketSub) {
       this.socketSub.unsubscribe();
     }

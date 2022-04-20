@@ -90,7 +90,8 @@ export class ThinClientsService {
       variables: {
         method: 'GET',
         ...queryset
-      }
+      },
+      pollInterval: 10000
     });
   }
 
