@@ -159,7 +159,13 @@ export class DashboardModule {
         {
           typePolicies: {
             Query: {
-              merge: true
+              fields: {
+                thin_clients: {
+                  merge( _ = [], incoming: any[]) {
+                    return [...incoming];
+                  }
+                }
+              }
             },
             PoolType: {
               merge: true
@@ -172,15 +178,15 @@ export class DashboardModule {
       ),
       defaultOptions: {
         watchQuery: {
-          fetchPolicy: 'network-only',
-          errorPolicy: 'all'
+          fetchPolicy: 'cache-and-network',
+          nextFetchPolicy: "cache-first",
+          errorPolicy: 'ignore',
         },
         query: {
           fetchPolicy: 'network-only',
-          errorPolicy: 'all'
+          errorPolicy: 'all',
         },
         mutate: {
-          fetchPolicy: 'network-only',
           errorPolicy: 'all'
         }
       }

@@ -78,6 +78,7 @@ export class ThinClientDetailsComponent extends ThinClientColections implements 
 
     this.socketSub = this.ws.stream('/users/').subscribe((message: any) => {
       if (message.msg_type === 'text_msg' && message.sender_id === this.entity.user_id) {
+
         this.messages.push({
           sender: message.sender_name,
           self: false,

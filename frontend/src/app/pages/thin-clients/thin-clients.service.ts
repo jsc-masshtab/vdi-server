@@ -66,6 +66,7 @@ export class ThinClientsService {
           thin_client(conn_id: $conn_id){
             conn_id
             user_name
+            user_id
             veil_connect_version
             vm_name
             tk_ip

@@ -7,6 +7,7 @@ import { WaitService } from '@core/components/wait/wait.service';
 
 import { YesNoFormComponent } from '@shared/forms-dinamic/yes-no-form/yes-no-form.component';
 import { Subscription } from 'rxjs';
+import { map } from 'rxjs/operators';
 
 
 import { InfoEventComponent } from '../../../log/events/info-event/info-event.component';
@@ -73,11 +74,14 @@ export class VmDetalsPopupComponent extends VmCollections implements OnInit, OnD
     this.waitService.setWait(true);
 
     if (this.sub) {
-     this.sub.unsubscribe()
+      this.sub.unsubscribe();
     }
 
-    this.sub = this.service.getVm(this.data.idPool, this.data.vmActive, this.data.controller_id).valueChanges.subscribe((res) => {
-      this.data = { ...this.data, vm: res.data.pool.vm }
+    this.sub = this.service.getVm(this.data.idPool, this.data.vmActive, this.data.controller_id)
+    .valueChanges.pipe(map((data: any) => data.data['pool']))
+    .subscribe((res) => {
+
+      this.data = { ...this.data, vm: res.vm }
 
       this.service.updateEntity(this.data);
       

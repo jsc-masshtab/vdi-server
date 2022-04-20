@@ -57,7 +57,7 @@
               </ul>
             </ng-container>
 
-            <span *ngIf="obj.type === 'time'">{{item[obj.property] | date:'dd.MM.yyyy hh:mm:ss 	ZZZZZ'}}</span>
+            <span *ngIf="obj.type === 'time'">{{item[obj.property] | date:'dd.MM.yyyy HH:mm:ss 	ZZZZZ'}}</span>
 
             <ng-container *ngIf="obj.type.typeDepend === 'propertyInObjectsInArray'">
               <ng-container *ngIf="item[obj.property]?.length; else nothing">
