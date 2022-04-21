@@ -110,8 +110,12 @@ nav:
       - Расчет CPU: broker/faq/sizing/cpu.md
       - Расчет объема RAM: broker/faq/sizing/ram.md
       - Расчет СХД: broker/faq/sizing/hdd.md
+      - Расчет сети: broker/faq/sizing/network.md
       - Требования к GPU: broker/faq/sizing/grid.md
       - Пример расчета количества ВМ на сервер: broker/faq/sizing/example.md
+    - Архитектура VeiL VDI: 
+      - Компоненты VeiL VDI: broker/faq/arch/index.md
+      - Взаимодействие продуктов VeiL VDI: broker/faq/arch/interaction.md
   - VeiL Broker:
     - Руководство системного программиста:
       - Аннотация: broker/engineer_guide/annotate.md
