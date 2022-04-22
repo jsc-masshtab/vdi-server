@@ -31,7 +31,6 @@
 
 .table-area-object {
     display: flex;
-    align-items: center;
     border-bottom: 1px solid rgba(0, 0, 0, 0.1);
     color: rgba(0, 0, 0, 0.6);
     cursor: default;
@@ -52,12 +51,17 @@
     }
 }
 
+.table-area-line {
+    position: relative;
+    display: flex;
+    width: 100%;
+}
+
 .table-area-title {
     display: flex;
     justify-content: space-between;
     align-items: center;
     white-space: nowrap;
-    flex-direction: row-reverse;
     padding-left: 3px;
     
     > span {
@@ -87,19 +91,17 @@
 .edit-button {
     border: none;
     outline: none;
-    color: white;
-    background-color: #bf8fa7;
-    border: 1px solid rgba(0, 0, 0, 0.1);
+    color: #a7bcbc;
+    background-color: transparent;
     border-radius: 3px;
     transition: all 200ms;
     cursor: pointer;
-    box-shadow: 0px 0px 0px 1px white;
     height: 20px;
     width: 20px;
     align-items: center;
     justify-content: center;
     display: flex;
-    margin-right: 8px;
+    margin-left: 4px;
 
     &:hover {
         background-color: #859eb1;
@@ -108,7 +110,15 @@
 }
 
 .table-group {
-    flex-wrap: wrap;
+    flex-direction: column;
+
+   
+
+    
+}
+
+.no-bottom-border {
+    border-bottom: 0;
 
     &:hover {
         background-color: white;

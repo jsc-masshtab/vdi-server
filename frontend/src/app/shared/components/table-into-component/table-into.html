@@ -4,13 +4,10 @@
     <span>{{ header }}</span>
   </div>
 
-  <div *ngFor="let obj of collection" class="table-area-object" [class.table-group]="obj.group">   <!--строка-->
-
+  <div *ngFor="let obj of collection" class="table-area-object" [class.no-bottom-border]="obj.group">   <!--строка-->
+    <div class="table-area-line" [class.table-group]="obj.group">
       <div class="table-area-title">
         <span>{{ obj.title }}</span>
-        <button *ngIf="obj.edit && item" (click)="actionEditField(obj.edit, obj)" class="edit-button">
-          <fa-icon [icon]="['fas','edit']" size="xs"></fa-icon>
-        </button>
       </div>
 
       <div class="table-area-value" *ngIf="item; else nothing">
@@ -73,13 +70,20 @@
             </ng-container>
 
             <ng-container *ngIf="obj.type.typeDepend === 'boolean'">
-              <ng-container *ngIf="item[obj.property] === false">
-                <span>{{ obj.type.propertyDepend[0] }}</span>
+              <ng-container *ngIf="item[obj.property] !== null">
+                <ng-container *ngIf="item[obj.property] === true">
+                  <span>{{ obj.type.propertyDepend[0] }}</span>
+                </ng-container>
+                
+                <ng-container *ngIf="item[obj.property] === false">
+                  <span>{{ obj.type.propertyDepend[1] }}</span>
+                </ng-container>
               </ng-container>
 
-              <ng-container *ngIf="item[obj.property] === true">
-                <span>{{ obj.type.propertyDepend[1] }}</span>
+              <ng-container *ngIf="item[obj.property] === null">
+                <span>--</span>
               </ng-container>
+              
             </ng-container>
 
             <ng-container *ngIf="obj.type.typeDepend === 'tags_array'">
@@ -97,15 +101,20 @@
           <vdi-table-into [item]="item" [collection]="obj.group" (edit)="edit.emit($event)" (action)="action.emit($event)"></vdi-table-into>
         </ng-container>
       </div>
+    </div>
 
-      <ng-template #nothing>
-        <div *ngIf="!item; else noitem" class="table-area-value">
-          <span>{{ parseNothing(obj, item) || '--' }}</span>
-        </div>
-        <ng-template #noitem>
-          <span>{{ parseNothing(obj, item) || '--' }}</span>
-        </ng-template>
+    <button *ngIf="obj.edit && item" (click)="actionEditField(obj.edit, obj)" class="edit-button">
+      <fa-icon [icon]="['fas','edit']" size="xs"></fa-icon>
+    </button>
+
+    <ng-template #nothing>
+      <div *ngIf="!item; else noitem" class="table-area-value">
+        <span>{{ parseNothing(obj, item) || '--' }}</span>
+      </div>
+      <ng-template #noitem>
+        <span>{{ parseNothing(obj, item) || '--' }}</span>
       </ng-template>
+    </ng-template>
 
   </div>
 </div>
