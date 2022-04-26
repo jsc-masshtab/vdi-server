@@ -322,7 +322,7 @@ async def fixt_create_rds_pool(fixt_controller):
               addRdsPool(verbose_name: "%s",
               controller_id: "%s",
               resource_pool_id:"%s",
-              rds_vm:{id: "%s", verbose_name: "rds_server"},
+              rds_vms:[{id: "%s", verbose_name: "rds_server"}],
               connection_types:[NATIVE_RDP, RDP]){
          ok
          pool{pool_id}

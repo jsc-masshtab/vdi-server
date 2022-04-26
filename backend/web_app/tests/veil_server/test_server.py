@@ -89,6 +89,10 @@ class VeilTestServer:
         self.app.add_routes([web.post(self.base_url + "domains/{domain_id}/detach-usb/",
                                       self.detach_usb)])
 
+        # QEMU guest-exec
+        self.app.add_routes([web.post(self.base_url + "domains/{domain_id}/guest-command/",
+                                      self.guest_command)])
+
     def start(self):
 
         web.run_app(self.app, port=443, ssl_context=self.ssl_context)
@@ -2074,6 +2078,30 @@ class VeilTestServer:
         # print('!!!detach_usb', flush=True)
         res_dict = {}
         return web.Response(text=json.dumps(res_dict), content_type="application/json", status=202)
+
+    async def guest_command(self, request):
+        request_json = await request.json()
+
+        qemu_cmd = request_json["qemu_cmd"]
+        fargs = request_json["fargs"]
+
+        res_dict = {}
+        if qemu_cmd == "guest-exec":
+
+            # Mock wscript.exe call
+            path = fargs.get("path")
+            if path == "wscript.exe":
+                res_dict = {
+                    "guest-exec": {
+                        "out-data": """
+                            {
+                                "farmlist": []
+                            }
+                        """
+                    }
+                }
+
+        return web.Response(text=json.dumps(res_dict), content_type="application/json", status=200)
 
 
 if __name__ == "__main__":

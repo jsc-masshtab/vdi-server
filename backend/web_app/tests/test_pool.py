@@ -632,6 +632,7 @@ async def test_create_update_remove_rds_pool(fixt_db, fixt_create_rds_pool, fixt
     assert fixt_create_rds_pool["ok"]
     pool_id = fixt_create_rds_pool["id"]
 
+    # Update
     new_pool_name = "test-pool-{}".format(str(uuid.uuid4())[:7])
     qu = """
     mutation {
@@ -644,6 +645,56 @@ async def test_create_update_remove_rds_pool(fixt_db, fixt_create_rds_pool, fixt
     )
     executed = await execute_scheme(pool_schema, qu, context=fixt_auth_context)
     assert executed["updateRdsPool"]["ok"]
+
+
+@pytest.mark.asyncio
+async def test_add_remove_vm_to_rds_pool(
+    fixt_launch_workers,
+    fixt_db,
+    fixt_create_rds_pool,
+    fixt_auth_context
+):  # noqa
+    """Create update remove RDS pool"""
+
+    assert fixt_create_rds_pool["ok"]
+    pool_id = fixt_create_rds_pool["id"]
+
+    # Add VM
+    added_vm_id = uuid.uuid4()
+    added_vm_verbose_name = "added_rds_vm"
+    qu = """
+      mutation {
+                addVmsToRdsPool(pool_id: "%s", vms: [{id: "%s", verbose_name: "%s"}]){
+                    ok
+                  }
+                }""" % (
+        pool_id,
+        added_vm_id,
+        added_vm_verbose_name,
+    )
+    executed = await execute_scheme(pool_schema, qu, context=fixt_auth_context)
+    assert executed["addVmsToRdsPool"]["ok"]
+
+    # Remove VM
+    qu = """
+      mutation {
+        removeVmsFromRdsPool(pool_id: "%s", vm_ids: ["%s"]){
+          ok
+          task_id
+        }
+      }""" % (
+        pool_id,
+        added_vm_id,
+    )
+    executed = await execute_scheme(pool_schema, qu, context=fixt_auth_context)
+
+    # Проверить успешно ли стартовала задача
+    assert executed["removeVmsFromRdsPool"]["ok"]
+
+    # Дожидаемся завершения задачи
+    task_id = executed["removeVmsFromRdsPool"]["task_id"]
+    status = await wait_for_task_result(task_id, 15)
+    assert (status is not None) and (status == TaskStatus.FINISHED.name)
 
 
 @pytest.mark.asyncio

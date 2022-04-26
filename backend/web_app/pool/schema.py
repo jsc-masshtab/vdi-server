@@ -727,7 +727,7 @@ class CreateStaticPoolMutation(graphene.Mutation, PoolValidator, ControllerFetch
 
 
 class CreateRdsPoolMutation(graphene.Mutation, PoolValidator, ControllerFetcher):
-    """Создание RDS пула. Пул состоит из одной машины - Сервера RDS.
+    """Создание RDS пула. Пул включает в себя RDS брокеры соединений.
 
     Конкретные права определяются уже внутри RDS
     """
@@ -735,12 +735,13 @@ class CreateRdsPoolMutation(graphene.Mutation, PoolValidator, ControllerFetcher)
     class Arguments:
         controller_id = graphene.UUID(required=True)
         resource_pool_id = graphene.UUID(required=True)
-        rds_vm = VmInput(required=True)
         verbose_name = ShortString(required=True)
         connection_types = graphene.List(
             graphene.NonNull(ConnectionTypesGraphene),
             default_value=[Pool.PoolConnectionTypes.RDP.value],
         )
+        rds_vm = VmInput()
+        rds_vms = graphene.List(graphene.NonNull(VmInput))
 
     pool = graphene.Field(lambda: PoolType)
     ok = graphene.Boolean()
@@ -748,19 +749,23 @@ class CreateRdsPoolMutation(graphene.Mutation, PoolValidator, ControllerFetcher)
     @classmethod
     @administrator_required
     async def mutate(cls, root, info, creator, controller_id,
-                     resource_pool_id, rds_vm, verbose_name, connection_types):
+                     resource_pool_id, verbose_name, connection_types, rds_vm=None, rds_vms=None):
 
+        # validation
         await cls.validate(verbose_name=verbose_name)
         await cls.custom_validate_connection_types(connection_types, Pool.PoolTypes.RDS)
+        entity = {"entity_type": EntityType.POOL, "entity_uuid": None}
+        if not rds_vm and not rds_vms:
+            raise SimpleError(_local_("rds_vm or rds_vms must be specified"), entity=entity)
+        veil_vm_data = rds_vms if rds_vms else [rds_vm]
 
         # Create pool
         pool = await RdsPool.soft_create(
             controller_id=controller_id,
-            rds_id=rds_vm.id,
-            rds_verbose_name=rds_vm.verbose_name,
-            verbose_name=verbose_name,
             resource_pool_id=resource_pool_id,
+            veil_vm_data=veil_vm_data,
             connection_types=set(connection_types),
+            verbose_name=verbose_name,
             creator=creator,
         )
 
@@ -770,10 +775,9 @@ class CreateRdsPoolMutation(graphene.Mutation, PoolValidator, ControllerFetcher)
         }
 
 
-class AddVmsToStaticPoolMutation(graphene.Mutation):
+class AddVmsToPoolMutation(graphene.Mutation):
     class Arguments:
         pool_id = graphene.ID(required=True)
-        # vm_ids = graphene.List(graphene.UUID, required=True)
         vms = graphene.NonNull(graphene.List(graphene.NonNull(VmInput)))
 
     ok = graphene.Boolean()
@@ -1825,7 +1829,7 @@ class PoolMutations(graphene.ObjectType):
     addDynamicPool = CreateAutomatedPoolMutation.Field()
     addStaticPool = CreateStaticPoolMutation.Field()
     addRdsPool = CreateRdsPoolMutation.Field()
-    addVmsToStaticPool = AddVmsToStaticPoolMutation.Field()
+    addVmsToStaticPool = AddVmsToPoolMutation.Field()
     removeVmsFromStaticPool = RemoveVmsFromPoolMutation.Field()
     removeVmsFromDynamicPool = RemoveVmsFromPoolMutation.Field()
     removePool = DeletePoolMutation.Field()
@@ -1833,6 +1837,8 @@ class PoolMutations(graphene.ObjectType):
     copyDynamicPool = CopyAutomatedPoolMutation.Field()
     updateStaticPool = UpdateStaticPoolMutation.Field()
     updateRdsPool = UpdateRdsPoolMutation.Field()
+    addVmsToRdsPool = AddVmsToPoolMutation.Field()
+    removeVmsFromRdsPool = RemoveVmsFromPoolMutation.Field()
     expandPool = ExpandPoolMutation.Field()
     clearPool = ClearPoolMutation.Field()
 

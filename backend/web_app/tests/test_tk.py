@@ -38,6 +38,7 @@ from web_app.tests.fixtures import (
     get_auth_context,  # noqa: F401
     several_static_pools,  # noqa: F401
     several_static_pools_with_user,  # noqa: F401
+    fixt_create_rds_pool,  # noqa: F401
 )
 
 from common.subscription_sources import EVENTS_SUBSCRIPTION, WsMessageType
@@ -376,6 +377,24 @@ class TestPoolVm(VdiHttpTestCase):
         assert vm_verbose_name == "alt_linux"
         password = response_dict["data"]["password"]
         assert password == "1"
+
+    @pytest.mark.usefixtures("fixt_db", "fixt_user", "fixt_create_rds_pool")
+    @gen_test(timeout=20)
+    async def test_user_get_broker_from_rds_pool(self):
+        pool = await Pool.query.where(Pool.pool_type == Pool.PoolTypes.RDS).gino.first()
+        get_vm_url = self.API_URL.format(pool_id=pool.id_str)
+        auth_headers = await self.do_login_and_get_auth_headers(username="test_user")
+        body = """{
+            "remote_protocol":"RDP"
+        }"""
+        # Получаем
+        response_dict = await self.get_response(
+            body=body,
+            url=get_vm_url,
+            headers=auth_headers,
+        )
+        print("response_dict: ", response_dict, flush=True)
+        assert response_dict["data"]["pool_type"] == Pool.PoolTypes.RDS.value
 
     @pytest.mark.usefixtures("fixt_db", "fixt_user", "several_static_pools_with_user")
     @gen_test(timeout=20)
