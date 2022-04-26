@@ -1332,8 +1332,8 @@ class RdsPool(db.Model):
         return True
 
     @classmethod
-    async def soft_create(cls, creator, controller_id, resource_pool_id, rds_id,
-                          rds_verbose_name, connection_types, verbose_name):
+    async def soft_create(cls, creator, controller_id, resource_pool_id, veil_vm_data,
+                          connection_types, verbose_name):
 
         async with db.transaction():
             # Создаем пул
@@ -1349,13 +1349,14 @@ class RdsPool(db.Model):
             )
             pool = await super().create(id=base_pool.id)
 
-            await VmModel.create(
-                id=rds_id,
-                verbose_name=rds_verbose_name,
-                pool_id=pool.id,
-                template_id=None,
-                created_by_vdi=False,
-            )
+            for vm_type in veil_vm_data:
+                await VmModel.create(
+                    id=vm_type.id,
+                    verbose_name=vm_type.verbose_name,
+                    pool_id=pool.id,
+                    template_id=None,
+                    created_by_vdi=False,
+                )
 
             # log
             await system_logger.info(
@@ -1373,20 +1374,14 @@ class RdsPool(db.Model):
                 Pool.PoolConnectionTypes.NATIVE_RDP.name]
 
     @staticmethod
-    async def get_farm_list(pool_id, user_name):
+    async def get_farm_list(vm, user_name):
         """Получить с RDS Сервера список коллекций приложений, которые доступны пользователю.
 
         Приложение доступно, если оно опубликовано на ферме и у юзера есть право на пользование фермой.
         Запускаемый скрипт проходится по всем фермам, смотрит доступны ли они указанному юзеру,
         забирает списки приложений
         """
-        pool = await Pool.get(pool_id)
-        controller = await pool.controller_obj
-        controller_client = controller.veil_client
-
-        vms = await pool.get_vms()
-        domain_veil_api = controller_client.domain(
-            domain_id=str(vms[0].id))  # В пуле только одна ВМ - RDS
+        veil_domain_client = await vm.vm_client
 
         qemu_guest_command = {"path": "wscript.exe",
                               "arg": [VEIL_GUEST_AGENT_WIN_PATH + "vbs.vbs",
@@ -1398,19 +1393,21 @@ class RdsPool(db.Model):
 
         stdout_farms_data = ""
         try:
-            response = await domain_veil_api.guest_command(qemu_cmd="guest-exec",
-                                                           f_args=qemu_guest_command)
+            response = await veil_domain_client.guest_command(qemu_cmd="guest-exec",
+                                                              f_args=qemu_guest_command,
+                                                              timeout=55)
             # Ошибка запуска скриптка
             if response.status_code == 400:
                 errors = response.data["errors"]
                 raise RuntimeError(errors)
 
             # ошибки выполнения скрипта
-            stderr_farms_data = response.data["guest-exec"]["err-data"]
-            stderr_farms_data = stderr_farms_data.strip()
-            stderr_farms_data = stderr_farms_data.strip("\r\n")
+            stderr_farms_data = response.data["guest-exec"].get("err-data")
             if stderr_farms_data:
-                raise RuntimeError(stderr_farms_data)
+                stderr_farms_data = stderr_farms_data.strip()
+                stderr_farms_data = stderr_farms_data.strip("\r\n")
+                if stderr_farms_data:
+                    raise RuntimeError(stderr_farms_data)
 
             stdout_farms_data = response.data["guest-exec"]["out-data"]
             farm_data_dict = json.loads(stdout_farms_data)

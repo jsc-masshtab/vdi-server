@@ -589,10 +589,8 @@ class RemoveVmsTask(AbstractTask):
         if pool_type == Pool.PoolTypes.AUTOMATED or pool_type == Pool.PoolTypes.GUEST:
             async with redis_get_lock(str(pool.id)):
                 await self.remove_vms(pool, remove_vms_on_controller=True)
-        elif pool_type == Pool.PoolTypes.STATIC:
-            await self.remove_vms(pool)
         else:
-            raise RuntimeError(_local_("Unsupported pool type."))
+            await self.remove_vms(pool)
 
     async def remove_vms(self, pool, remove_vms_on_controller=False):
         await pool.remove_vms(self._vm_ids, self.task_model.creator)

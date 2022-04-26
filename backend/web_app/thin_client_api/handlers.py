@@ -40,6 +40,7 @@ from common.veil.veil_handlers import BaseHttpHandler, BaseWsHandler
 from common.veil.veil_redis import (
     ThinClientCmd,
     publish_to_redis,
+    redis_get_client,
     redis_get_lock,
     redis_get_subscriber,
     redis_release_lock_no_errors,
@@ -76,40 +77,57 @@ class PoolGetVm(BaseHttpHandler):
     ):
         super().__init__(application, request, **kwargs)
         self.user_id = None
-        self.request_id = None
-        self.client_time_zone = None
-        self.client_os = None
+        self.remote_protocol = None
+        self.pool_type = None
 
     async def post(self, pool_id):
-        remote_protocol = self.args.get("remote_protocol", PoolM.PoolConnectionTypes.SPICE.name)
-        self.request_id = self.args.get("request_id")
-        self.client_time_zone = self.args.get("time_zone")
-        self.client_os = self.args.get("os")
+        self.remote_protocol = self.args.get("remote_protocol", PoolM.PoolConnectionTypes.SPICE.name)
 
         user = await self.get_user_model_instance()
         self.user_id = user.id
         pool = await PoolM.get(pool_id)
         # Some checks
-        is_ok, response = await self._start_validate(pool, remote_protocol)
+        is_ok, response = await self._start_validate(pool)
         if not is_ok:
             return await self.log_finish(response)
 
-        pool_type = pool.pool_type
-        expandable_pool = False  # В данный момент расширится может автоматический (гостевой пул)
-        if pool_type == PoolM.PoolTypes.AUTOMATED or pool_type == PoolM.PoolTypes.GUEST:
-            auto_pool = await AutomatedPool.get(pool.id)
-            expandable_pool = True
+        self.pool_type = pool.pool_type
+        farm_list = []  # Farm applications list. For RDS pool only
 
-        vm = await pool.get_vm(user_id=user.id)
-        if not vm:  # ВМ для пользователя не присутствует
-            await self._notify_vm_await_progress(progress=10, msg=_local_("Looking for machine."))
+        # Get vm
+        if self.pool_type == PoolM.PoolTypes.RDS:
 
-            if pool_type == PoolM.PoolTypes.RDS:
-                # В случае RDS пула выдаем общий для всех RDS Сервер
-                vms = await pool.get_vms()
-                vm = vms[0]
-                await vm.add_user(user.id, creator="system")
-            else:
+            # В случае RDS пула выдаем общий для всех RDS Connection Broker
+            await self._notify_vm_await_progress(progress=10, msg=_local_("Looking for active RDS Connection Broker."))
+
+            vm_connection_data = await self._get_rds_connection_broker(pool)
+            if not vm_connection_data:
+                response = self.form_err_res(_local_("No active Remote Desktop Connection Broker found."))
+                return await self.log_finish(response)
+
+            vm = await Vm.get(vm_connection_data["vm_id"])  # noqa
+            veil_domain = await vm.vm_client
+            vm_controller = await vm.controller
+
+            # Get applications list
+            await self._notify_vm_await_progress(progress=30, msg=_local_("Fetching published applications data."))
+            try:
+                farm_list = await RdsPool.get_farm_list(vm, user.username)
+            except (KeyError, IndexError, RuntimeError) as ex:
+                response = self.form_err_res(
+                    _local_("Unable to get list of published applications. {}.").format(str(ex)))
+                return await self.log_finish(response)
+        else:
+            # Выдаем имеющуюся ВМ, либо назначаем одну из свободных
+            expandable_pool = False  # В данный момент расширится может автоматический (и гостевой) пул
+            if self.pool_type == PoolM.PoolTypes.AUTOMATED or self.pool_type == PoolM.PoolTypes.GUEST:
+                auto_pool = await AutomatedPool.get(pool.id)
+                expandable_pool = True
+
+            vm = await pool.get_vm(user_id=user.id)
+            if not vm:  # ВМ для пользователя не присутствует
+                await self._notify_vm_await_progress(progress=10, msg=_local_("Looking for machine."))
+
                 # Если у пользователя нет VM в пуле, то нужно попытаться назначить ему свободную VM.
                 # Critical section protected with redis lock https://aredis.readthedocs.io/en/latest/extra.html
                 # Блокировка необходима для попытки избежать назначение одной ВМ нескольким пользователям
@@ -139,55 +157,50 @@ class PoolGetVm(BaseHttpHandler):
                     response = self.form_err_res(_local_("The pool doesn`t have free machines."), "003")
                     return await self.log_finish(response)
 
-        else:  # Даже если у пользователя есть ВМ, то попробовать расшириться все равно нужно
-            await self._expand_pool_if_required(pool, expandable_pool)
+            else:  # Даже если у пользователя есть ВМ, то попробовать расшириться все равно нужно
+                await self._expand_pool_if_required(pool, expandable_pool)
 
-        #  Включение ВМ и включение удаленного доступа, если спайс
-        await self._notify_vm_await_progress(progress=30, msg=_local_("Machine is being prepared."))
-        is_ok, response = await self._prepare_vm_if_required(vm, pool_type, remote_protocol)
-        if not is_ok:
-            return await self.log_finish(response)
-        await system_logger.info(
-            _local_("User {} connected to pool {}.").format(user.username, pool.verbose_name),
-            entity=pool.entity,
-            user=user.username,
-        )
+            # Включение ВМ и включение удаленного доступа, если спайс
+            await self._notify_vm_await_progress(progress=30, msg=_local_("Machine is being prepared."))
+            is_ok, response = await self._prepare_vm_if_required(vm)
+            if not is_ok:
+                return await self.log_finish(response)
 
-        # Актуализируем данные для подключения
-        # Определяем адрес и порт в зависимости от протокола
-        await self._notify_vm_await_progress(progress=50, msg=_local_("Connection data resolving (address/port)."))
-        veil_domain = await vm.vm_client
-        vm_controller = await vm.controller
-        is_ok, response, vm_address, vm_port, vm_token = await self._get_conn_data(
-            vm, remote_protocol, vm_controller, veil_domain)
-        if not is_ok:
-            return await self.log_finish(response)
+            # Актуализируем данные для подключения
+            # Определяем адрес и порт в зависимости от протокола
+            await self._notify_vm_await_progress(progress=50, msg=_local_("Connection data resolving (address/port)."))
+            veil_domain = await vm.vm_client
+            vm_controller = await vm.controller
+            is_ok, response, vm_connection_data = await self._get_conn_data(vm, vm_controller, veil_domain)
+            if not is_ok:
+                return await self.log_finish(response)
 
+        # Form response msg
         permissions = await user.get_permissions()
-        try:
-            farm_list = await RdsPool.get_farm_list(pool.id, user.username) \
-                if pool_type == PoolM.PoolTypes.RDS else []
-        except (KeyError, IndexError, RuntimeError) as ex:
-            response = self.form_err_res(_local_("Unable to get list of published applications. {}.").format(str(ex)))
-            return await self.log_finish(response)
         response = {
             "data": dict(
-                host=vm_address,
-                port=vm_port,
-                token=vm_token,
+                host=vm_connection_data.get("address"),
+                port=vm_connection_data.get("port"),
+                token=vm_connection_data.get("token"),
                 password=veil_domain.graphics_password,
                 vm_verbose_name=veil_domain.verbose_name,
                 vm_controller_address=vm_controller.address,
                 vm_id=str(vm.id),
                 permissions=[permission.value for permission in permissions],
                 farm_list=farm_list,
-                pool_type=pool_type.name
+                pool_type=self.pool_type.name
             )
         }
+
+        await system_logger.info(
+            _local_("User {} connected to pool {}.").format(user.username, pool.verbose_name),
+            entity=pool.entity, user=user.username,
+        )
         return await self.log_finish(response)
 
     async def _notify_vm_await_progress(self, progress: int, msg: str = None):
         """Отправить клиенту сообщение о прогрессе подготовки ВМ перед выдачей."""
+        request_id = self.args.get("request_id")
         msg_dict = dict(
             msg_type=WsMessageType.DATA.value,
             resource="/domains/",
@@ -195,37 +208,108 @@ class PoolGetVm(BaseHttpHandler):
             user_id=str(self.user_id),
             progress=progress,
             msg=msg,
-            request_id=int(self.request_id) if self.request_id else 0
+            request_id=int(request_id) if request_id else 0
         )
 
         await publish_to_redis(INTERNAL_EVENTS_CHANNEL, json.dumps(msg_dict))
 
-    async def _get_conn_data(self, vm_model, remote_protocol, vm_controller, veil_domain):
+    async def _get_rds_connection_broker(self, pool):
+        """Return data of one of active RDS Connection Brokers (RDCB)."""
+        cache_expire_time = 60
+        lock_timeout = 120
+        # Под локом для исключения гонки условий при одновременном подключении множества пользователей
+        async with redis_get_client().lock(str(pool.id), timeout=lock_timeout, blocking_timeout=lock_timeout):
+
+            # Check if cache exists and get round_robin_count (zero by default)
+            round_robin_count_key = f"round_robin_count_key_{str(pool.id)}"
+            round_robin_count = await redis_get_client().get_value_with_def(round_robin_count_key, int, 0)
+
+            rdcb_data_key = f"rdcb_connection_data_list_{str(pool.id)}"
+            rdcb_connection_data_list_encoded = await redis_get_client().get(rdcb_data_key)
+
+            if rdcb_connection_data_list_encoded:
+                rdcb_connection_data_list = json.loads(rdcb_connection_data_list_encoded.decode("utf-8"))
+                await system_logger.debug(f"RDS DATA FROM CACHE: {rdcb_connection_data_list}")
+
+            else:
+                # Получить список активных RDS брокеров если в кэше ничего нет
+                vms = await pool.get_vms()
+                future_results = await asyncio.gather(
+                    *[
+                        self._prepare_vm_and_get_conn_data(vm_model)
+                        for vm_model in vms
+                    ],
+                    return_exceptions=True
+                )
+
+                rdcb_connection_data_list = []
+                for result in future_results:
+                    if isinstance(result, tuple):
+                        is_ok, _, vm_connection_data = result
+                        if is_ok:
+                            rdcb_connection_data_list.append(vm_connection_data)
+
+                # Cache the data in redis
+                rdcb_connection_data_list_json = json.dumps(rdcb_connection_data_list, indent=2)
+                await redis_get_client().set(rdcb_data_key, rdcb_connection_data_list_json,
+                                             cache_expire_time)
+
+                await system_logger.debug(f"NEW RDS DATA FORMED: {rdcb_connection_data_list}")
+
+            # Do round robin
+            conn_data = None
+            if len(rdcb_connection_data_list) > 0:
+                if 0 <= round_robin_count < len(rdcb_connection_data_list):
+                    conn_data = rdcb_connection_data_list[round_robin_count]
+                    if round_robin_count == len(rdcb_connection_data_list) - 1:
+                        round_robin_count = 0
+                    else:
+                        round_robin_count += 1
+                else:
+                    round_robin_count = 0
+                    conn_data = rdcb_connection_data_list[round_robin_count]
+            else:
+                round_robin_count = 0
+
+            # Store round_robin_count in redis
+            await redis_get_client().set(round_robin_count_key, round_robin_count, 3600)
+
+            return conn_data
+
+        return None # noqa This code will be reached if blocking_timeout expires and lock is still not aquired
+
+    async def _get_conn_data(self, vm_model, vm_controller=None, veil_domain=None):
         """Return is_ok, response, vm_address, vm_port, vm_token."""
+        if not veil_domain:
+            veil_domain = await vm_model.vm_client
+        if not vm_controller:
+            vm_controller = await vm_model.controller
+
         # Проверяем наличие клиента у контроллера
         veil_client = vm_controller.veil_client
         if not veil_client:
             response = self.form_err_res(_local_("The remote controller is unavailable."))
-            return False, response, None, None, None
+            return False, response, None
 
         # Запрашивает данные о ВМ с контроллера
         domain_info = await veil_domain.info()
 
         #  Для подключения по спайсу через web нужен токен
         vm_token = None
-        if self._is_spice(remote_protocol):
+        if self._is_spice(self.remote_protocol):
             spice = await veil_domain.spice_conn()
             if spice and spice.valid:
                 vm_token = spice.token
 
         # Возвращаем данные подключения из базы данных, если имеются
-        vm_connection_data = await VmConnectionData.get_with_params(vm_model.id, remote_protocol, True)
+        vm_connection_data = await VmConnectionData.get_with_params(vm_model.id, self.remote_protocol, True)
         if vm_connection_data:
-            return True, None, vm_connection_data.address, vm_connection_data.port, vm_token
+            return True, None, dict(address=vm_connection_data.address, port=vm_connection_data.port,
+                                    vm_token=vm_token, vm_id=str(vm_model.id))
 
-        if self._is_rdp(remote_protocol) or remote_protocol == PoolM.PoolConnectionTypes.X2GO.name:
+        if self._is_rdp(self.remote_protocol) or self.remote_protocol == PoolM.PoolConnectionTypes.X2GO.name:
 
-            vm_port = 3389 if self._is_rdp(remote_protocol) else 22  # default port
+            vm_port = 3389 if self._is_rdp(self.remote_protocol) else 22  # default port
             try:
                 # Пробуем дождаться получения машиной адреса
                 wait_timeout = 60
@@ -233,9 +317,9 @@ class PoolGetVm(BaseHttpHandler):
             except asyncio.TimeoutError:
                 response = self.form_err_res(
                     _local_("The controller didn`t provide a VM address. Try again in 1 minute."), "005")
-                return False, response, None, None, None
+                return False, response, None
 
-        elif remote_protocol == PoolM.PoolConnectionTypes.SPICE_DIRECT.name:
+        elif self.remote_protocol == PoolM.PoolConnectionTypes.SPICE_DIRECT.name:
             # Нужен адрес сервера поэтому делаем запрос
             node_id = str(veil_domain.node["id"])
             node_info = await vm_controller.veil_client.node(node_id=node_id).info()
@@ -246,9 +330,9 @@ class PoolGetVm(BaseHttpHandler):
             vm_address = vm_controller.address
             vm_port = veil_domain.remote_access_port
 
-        return True, None, vm_address, vm_port, vm_token
+        return True, None, dict(address=vm_address, port=vm_port, vm_token=vm_token, vm_id=str(vm_model.id))
 
-    async def _prepare_vm_if_required(self, vm, pool_type, remote_protocol):
+    async def _prepare_vm_if_required(self, vm):
         """Prepare VM if it's not ready. Return true if everything is ok."""
         try:
             # Запуск ВМ
@@ -257,11 +341,11 @@ class PoolGetVm(BaseHttpHandler):
                 raise client_exceptions.ServerDisconnectedError()
             await veil_domain.info()
             await vm.start()
-            if self._is_spice(remote_protocol) and not veil_domain.remote_access:
+            if self._is_spice(self.remote_protocol) and not veil_domain.remote_access:
                 await veil_domain.enable_remote_access()
 
             # Time zone
-            await self._set_time_zone_if_required(vm, veil_domain, pool_type)
+            await self._set_time_zone_if_required(vm, veil_domain)
 
         except client_exceptions.ServerDisconnectedError:
             response = self.form_err_res(_local_("VM is unreachable on ECP VeiL."), "004")
@@ -272,10 +356,22 @@ class PoolGetVm(BaseHttpHandler):
 
         return True, None
 
-    async def _set_time_zone_if_required(self, vm, veil_domain, pool_type):
+    async def _prepare_vm_and_get_conn_data(self, vm_model, vm_controller=None, veil_domain=None):
+        is_ok, response = await self._prepare_vm_if_required(vm_model)
+        if not is_ok:
+            return False, response, None
+
+        conn_data = await self._get_conn_data(vm_model, vm_controller, veil_domain)
+
+        return conn_data
+
+    async def _set_time_zone_if_required(self, vm, veil_domain):
+
+        client_time_zone = self.args.get("time_zone")
+        client_os = self.args.get("os")
 
         # В случае RDS пула пробос зоны возможен на уровне сервера удаленных раб столов
-        if pool_type != PoolM.PoolTypes.RDS and self.client_time_zone and self.client_os:
+        if self.pool_type != PoolM.PoolTypes.RDS and client_time_zone and client_os:
             try:
                 await self._notify_vm_await_progress(progress=40, msg=_local_("Setting time zone."))
 
@@ -284,15 +380,15 @@ class PoolGetVm(BaseHttpHandler):
                 # Установка временной зоны.
                 # Если ОС клиента и удаленной ВМ не совпадают, то находим соответствующее имя временной зоны
                 vm_time_zone = None
-                if self.client_os == DomainOsType.OTHER.value:
+                if client_os == DomainOsType.OTHER.value:
                     vm_time_zone = None
-                elif self.client_os == veil_domain.os_type:
-                    vm_time_zone = self.client_time_zone
+                elif client_os == veil_domain.os_type:
+                    vm_time_zone = client_time_zone
                 else:
-                    if self.client_os == DomainOsType.LINUX.value and veil_domain.os_type == DomainOsType.WIN.value:
-                        vm_time_zone = get_corresponding_windows_time_zone(self.client_time_zone)
-                    elif self.client_os == DomainOsType.WIN.value and veil_domain.os_type == DomainOsType.LINUX.value:
-                        vm_time_zone = get_corresponding_linux_time_zone(self.client_time_zone)
+                    if client_os == DomainOsType.LINUX.value and veil_domain.os_type == DomainOsType.WIN.value:
+                        vm_time_zone = get_corresponding_windows_time_zone(client_time_zone)
+                    elif client_os == DomainOsType.WIN.value and veil_domain.os_type == DomainOsType.LINUX.value:
+                        vm_time_zone = get_corresponding_linux_time_zone(client_time_zone)
 
                 # execute qemu agent command
                 if vm_time_zone:
@@ -349,18 +445,7 @@ class PoolGetVm(BaseHttpHandler):
                     "VM address resolving. Attempt number {}.").format(attempt_number))
                 await veil_domain.info()
 
-    @staticmethod
-    def _is_spice(remote_protocol):
-        return bool(remote_protocol == PoolM.PoolConnectionTypes.SPICE.name or  # noqa
-                    remote_protocol == PoolM.PoolConnectionTypes.SPICE_DIRECT.name)  # noqa
-
-    @staticmethod
-    def _is_rdp(remote_protocol):
-        return bool(remote_protocol == PoolM.PoolConnectionTypes.RDP.name or  # noqa
-                    remote_protocol == PoolM.PoolConnectionTypes.NATIVE_RDP.name)  # noqa
-
-    @staticmethod
-    async def _start_validate(pool, remote_protocol):
+    async def _start_validate(self, pool):
         """Do some start validations."""
         # Проверяем лимит клиентов
         thin_client_limit_exceeded = await ActiveTkConnection.thin_client_limit_exceeded()
@@ -373,14 +458,24 @@ class PoolGetVm(BaseHttpHandler):
 
         # Protocol validation
         con_t = pool.connection_types
-        bad_connection_type = remote_protocol not in PoolM.PoolConnectionTypes.values() or \
-                              PoolM.PoolConnectionTypes[remote_protocol] not in con_t  # noqa: E127
+        bad_connection_type = self.remote_protocol not in PoolM.PoolConnectionTypes.values() or \
+                              PoolM.PoolConnectionTypes[self.remote_protocol] not in con_t  # noqa: E127
         if bad_connection_type:
             response = PoolGetVm.form_err_res(
-                _local_("The pool doesnt support connection type {}.").format(remote_protocol), "404")
+                _local_("The pool doesnt support connection type {}.").format(self.remote_protocol), "404")
             return False, response
 
         return True, None
+
+    @staticmethod
+    def _is_spice(remote_protocol):
+        return bool(remote_protocol == PoolM.PoolConnectionTypes.SPICE.name or  # noqa
+                    remote_protocol == PoolM.PoolConnectionTypes.SPICE_DIRECT.name)  # noqa
+
+    @staticmethod
+    def _is_rdp(remote_protocol):
+        return bool(remote_protocol == PoolM.PoolConnectionTypes.RDP.name or  # noqa
+                    remote_protocol == PoolM.PoolConnectionTypes.NATIVE_RDP.name)  # noqa
 
     @staticmethod
     async def _expand_pool_if_required(pool_model, is_expandable_pool):

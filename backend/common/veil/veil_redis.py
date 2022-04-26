@@ -85,6 +85,14 @@ class VeilRedisClient(StrictRedis):
                 except asyncio.QueueFull:
                     pass
 
+    async def get_value_with_def(self, key, value_type, default):
+        value = await self.get(key)
+        if value is None:
+            return default
+
+        value = value_type(value.decode("utf-8"))
+        return value
+
 
 # глобальный обьект клиента редис
 A_REDIS_CLIENT = None
@@ -102,11 +110,12 @@ def redis_init():
 
 async def redis_deinit():
     global A_REDIS_CLIENT
-    if A_REDIS_CLIENT.redis_receiving_messages_cor:
-        A_REDIS_CLIENT.redis_receiving_messages_cor.cancel()
-        A_REDIS_CLIENT.redis_receiving_messages_cor = None
-    del A_REDIS_CLIENT  # В доке не нашел описания способа релиза ресурсов. Судя по всему это происходит автоматом
-    # во время разрушения объекта.
+    if A_REDIS_CLIENT:
+        if A_REDIS_CLIENT.redis_receiving_messages_cor:  # noqa
+            A_REDIS_CLIENT.redis_receiving_messages_cor.cancel()  # noqa
+            A_REDIS_CLIENT.redis_receiving_messages_cor = None
+        del A_REDIS_CLIENT  # В доке не нашел описания способа релиза ресурсов. Судя по всему это происходит автоматом
+        # во время разрушения объекта.
 
 
 def redis_get_client():
