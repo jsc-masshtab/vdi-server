@@ -118,7 +118,7 @@ services:
   vdi-nginx:
     image: nginx:stable
     volumes:
-      - ./nginx/vdi.conf:/etc/nginx/conf.d/vdi.conf
+      - ../nginx/vdi.conf:/etc/nginx/conf.d/vdi.conf
       - ../../backend/common/veil_ssl/veil_default.crt:/etc/ssl/private/veil_default.crt
       - ../../backend/common/veil_ssl/veil_default.key:/etc/ssl/private/veil_default.key
     depends_on:
