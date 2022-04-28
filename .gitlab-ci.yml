@@ -15,7 +15,6 @@ Python lint:
     - docker
   before_script:
     - cd backend/
-    - python -m pip install $PIP_ARGS --upgrade pip
     - python -m pip install $PIP_ARGS flake8 flake8-builtins flake8-bugbear flake8-import-order flake8-docstrings flake8-quotes
   script:
     - flake8
@@ -50,16 +49,12 @@ Security check:
   tags:
     - docker
   before_script:
-    - apk add --no-cache build-base
-    - python -m pip install $PIP_ARGS --upgrade pip
-    - python -m pip install $PIP_ARGS pipenv==2021.5.29 safety
-    - pipenv install
-    - pipenv lock --requirements > requirements.txt
+    - python -m pip install $PIP_ARGS safety
   script:
-    - safety check -r requirements.txt
+    - safety check -r backend/requirements.txt --ignore=36967 --ignore=46499 --ignore=39659 --ignore=42692
   only:
     changes:
-      - backend/Pipfile
+      - backend/requirements.txt
     refs:
       - merge_requests
 

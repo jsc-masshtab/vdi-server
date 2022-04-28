@@ -1,5 +1,4 @@
-# если появляется новый пакет в зависимостях его нужно как раньше добавить в Pipenv, затем выполнить
-# pipenv lock -r -d > dev-requirements.txt && pipenv lock -r > requirements.txt
+# если появляется новый пакет в зависимостях его нужно добавить в requirements.txt, затем выполнить
 # docker system prune -a -f --volumes && docker-compose up
 #
 # Запуск multiple-broker:
