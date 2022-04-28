@@ -1376,7 +1376,8 @@ class RdsPool(db.Model):
         stdout_farms_data = ""
         try:
             response = await domain_veil_api.guest_command(qemu_cmd="guest-exec",
-                                                           f_args=qemu_guest_command)
+                                                           f_args=qemu_guest_command,
+                                                           timeout=120)
             # Ошибка запуска скриптка
             if response.status_code == 400:
                 errors = response.data["errors"]
