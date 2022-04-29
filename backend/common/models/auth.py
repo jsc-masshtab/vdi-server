@@ -197,20 +197,26 @@ class User(AbstractSortableStatusModel, VeilModel):
         # Сейчас роли будут в случайном порядке.
         return roles_set
 
-    @property
-    async def pools(self):
+    async def pools(self, get_favorite_only=False):
+        """Получить список пулов.
+
+        get_favorite_only - вернуть ли только изранные пулы.
+        """
         # Либо размещать staticmethod в пулах, либо импорт тут, либо хардкодить названия полей.
         from common.models.pool import Pool
 
         is_superuser = await self.superuser()
         if is_superuser:
-            # superuser есть все роли - мы просто выбираем все доступные пулы.
-            pools_query = Pool.get_pools_query()
+            pools_query = Pool.get_pools_query(user_id=self.id,
+                                               get_favorite_only=get_favorite_only,
+                                               is_superuser=is_superuser)
         else:
             user_roles = await self.roles
             user_groups_ids = await self.assigned_groups_ids
             pools_query = Pool.get_pools_query(
-                user_id=self.id, groups_ids_list=user_groups_ids, role_set=user_roles
+                user_id=self.id, groups_ids_list=user_groups_ids,
+                role_set=user_roles, get_favorite_only=get_favorite_only,
+                is_superuser=is_superuser,
             )
 
         pools = await pools_query.gino.all()
@@ -224,6 +230,7 @@ class User(AbstractSortableStatusModel, VeilModel):
                 "connection_types": [
                     connection_type.value for connection_type in pool.connection_types
                 ],
+                "favorite": pool.favorite,
             }
             for pool in pools
         ]

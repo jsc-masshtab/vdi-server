@@ -11,8 +11,11 @@ from asyncpg.exceptions import UniqueViolationError
 
 from sqlalchemy import (
     Enum as AlchemyEnum,
+    UniqueConstraint,
     and_,
+    case,
     desc,
+    literal_column,
     text,
     union_all,
 )
@@ -56,7 +59,7 @@ from common.veil.veil_errors import (
     ValidationError,
     VmCreationError
 )
-from common.veil.veil_gino import EntityType, Status, VeilModel
+from common.veil.veil_gino import AbstractSortableStatusModel, EntityType, Status, VeilModel
 from common.veil.veil_graphene import VmState
 from common.veil.veil_redis import publish_data_in_internal_channel
 
@@ -221,48 +224,55 @@ class Pool(VeilModel):
 
     @staticmethod
     def get_pools_query(
-        ordering=None, user_id=None, groups_ids_list=None, role_set=None
+        ordering="verbose_name", user_id=None, groups_ids_list=None, role_set=None,
+        get_favorite_only=False, is_superuser=False
     ):
         from common.models.controller import Controller
 
         # Формирование общего селекта из таблиц пулов
-        query = db.select(
-            [
-                Pool.id.label("master_id"),
-                Pool.verbose_name,
-                Pool.resource_pool_id,
-                Pool.datapool_id,
-                Pool.status,
-                Pool.controller,
-                Pool.keep_vms_on,
-                Pool.free_vm_from_user,
-                Pool.vm_action_upon_user_disconnect,
-                Pool.vm_disconnect_action_timeout,
-                AutomatedPool.template_id,
-                AutomatedPool.increase_step,
-                AutomatedPool.max_amount_of_create_attempts,
-                AutomatedPool.initial_size,
-                AutomatedPool.reserve_size,
-                AutomatedPool.total_size,
-                AutomatedPool.vm_name_template,
-                AutomatedPool.os_type,
-                AutomatedPool.create_thin_clones,
-                AutomatedPool.enable_vms_remote_access,
-                AutomatedPool.start_vms,
-                AutomatedPool.set_vms_hostnames,
-                AutomatedPool.include_vms_in_ad,
-                AutomatedPool.ad_ou,
-                Pool.pool_type,
-                Pool.connection_types,
-            ]
-        )
+        select_fields = [
+            Pool.id.label("master_id"),
+            Pool.verbose_name,
+            Pool.resource_pool_id,
+            Pool.datapool_id,
+            Pool.status,
+            Pool.controller,
+            Pool.keep_vms_on,
+            Pool.free_vm_from_user,
+            Pool.vm_action_upon_user_disconnect,
+            Pool.vm_disconnect_action_timeout,
+            AutomatedPool.template_id,
+            AutomatedPool.increase_step,
+            AutomatedPool.max_amount_of_create_attempts,
+            AutomatedPool.initial_size,
+            AutomatedPool.reserve_size,
+            AutomatedPool.total_size,
+            AutomatedPool.vm_name_template,
+            AutomatedPool.os_type,
+            AutomatedPool.create_thin_clones,
+            AutomatedPool.enable_vms_remote_access,
+            AutomatedPool.start_vms,
+            AutomatedPool.set_vms_hostnames,
+            AutomatedPool.include_vms_in_ad,
+            AutomatedPool.ad_ou,
+            Pool.pool_type,
+            Pool.connection_types,
+        ]
+
+        if user_id:
+            # Признак добавлен ли пул в избранные
+            select_fields.append(db.func.count(case(
+                [((UserFavoritePool.user_id == user_id), UserFavoritePool.id)],
+                else_=literal_column("NULL"))
+            ).label("favorite"))
+
+        query = db.select(select_fields)
 
         if ordering or user_id:
             # Добавляем пересечение с дополнительными внешними таблицами для возможности сортировки
-
-            if user_id or role_set or groups_ids_list:
-                if not role_set or not isinstance(role_set, set):
-                    role_set = set()
+            # permissions to use pools
+            # super user имеет разрешение на все пулы, поэтому для него нет проверок на разрешения
+            if not is_superuser and (user_id or groups_ids_list):
                 if not groups_ids_list or not isinstance(groups_ids_list, list):
                     groups_ids_list = list()
                 permission_outer = False
@@ -284,8 +294,8 @@ class Pool(VeilModel):
                     .join(
                     permissions_query.alias(),
                     (Pool.id == text("entity_entity_uuid")),
-                    isouter=permission_outer,
-                )
+                    isouter=permission_outer)
+                    .join(UserFavoritePool, isouter=True)  # noqa
             ).group_by(
                 Pool.id,
                 Pool.verbose_name,
@@ -315,6 +325,10 @@ class Pool(VeilModel):
                 RdsPool.id,
                 Controller.address,
             )
+
+            # take favorite pools only
+            if user_id and get_favorite_only:
+                query = query.where(UserFavoritePool.user_id == user_id)
 
             # Сортировка
             query = Pool.build_ordering(query, ordering)
@@ -2081,3 +2095,18 @@ class AutomatedPool(db.Model):
 
     def preparation_required(self):
         return self.enable_vms_remote_access or self.start_vms or self.set_vms_hostnames or self.include_vms_in_ad
+
+
+class UserFavoritePool(db.Model, AbstractSortableStatusModel):
+    """Table of favorite pools."""
+
+    __tablename__ = "user_favorite_pool"
+    __table_args__ = (
+        UniqueConstraint(
+            "user_id", "pool_id", name="user_id_pool_id_unique_constraint"
+        ),
+    )
+
+    id = db.Column(UUID(), primary_key=True, default=uuid.uuid4)
+    user_id = db.Column(UUID(), db.ForeignKey("user.id", ondelete="CASCADE"), nullable=False)
+    pool_id = db.Column(UUID(), db.ForeignKey("pool.id", ondelete="CASCADE"), nullable=False)

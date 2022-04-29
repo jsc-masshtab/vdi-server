@@ -18,7 +18,7 @@ from common.languages import _local_
 from common.log.journal import system_logger
 from common.models.active_tk_connection import ActiveTkConnection, TkConnectionEvent
 from common.models.auth import Group, User
-from common.models.pool import AutomatedPool, Pool as PoolM, RdsPool
+from common.models.pool import AutomatedPool, Pool as PoolM, RdsPool, UserFavoritePool
 from common.models.task import PoolTaskType, Task, TaskStatus
 from common.models.tk_vm_connection import TkVmConnection
 from common.models.vm import Vm
@@ -34,6 +34,7 @@ from common.subscription_sources import (
     POOLS_SUBSCRIPTION, USERS_SUBSCRIPTION, WsEventToClient, WsMessageDirection, WsMessageType
 )
 from common.timezone import get_corresponding_linux_time_zone, get_corresponding_windows_time_zone
+from common.utils import str2bool
 from common.veil.auth.veil_jwt import jwtauth, jwtauth_ws
 from common.veil.veil_api import DomainOsType
 from common.veil.veil_handlers import BaseHttpHandler, BaseWsHandler
@@ -53,8 +54,14 @@ class PoolHandler(BaseHttpHandler):
     """Возвращает все пулы пользователя."""
 
     async def get(self):
+
+        get_favorite_only = self.request.headers.get("Get-Favorite-Only", "False")
+        get_favorite_only = str2bool(get_favorite_only)
+        # print("get_favorite_only: ", get_favorite_only, flush=True)
+
         user = await self.get_user_model_instance()
-        pools = await user.pools
+        pools = await user.pools(get_favorite_only=get_favorite_only)
+        print("pools: ", pools, flush=True)
         response = {"data": pools}
 
         await system_logger.info(
@@ -915,4 +922,41 @@ class VmDataHandler(BaseHttpHandler):
             "data": response_data
         }
 
+        return await self.log_finish(response)
+
+
+@jwtauth
+class AddPoolToFavoriteHandler(BaseHttpHandler):
+    """Make the pool favorite."""
+
+    async def post(self, pool_id):
+        user = await self.get_user_model_instance()
+        await UserFavoritePool.create(user_id=user.id, pool_id=pool_id)
+
+        pool = await PoolM.get(pool_id)
+        await system_logger.info(f"Pool {pool.verbose_name} added to favorites by user {user.username}.",
+                                 entity=user.entity,
+                                 user=user.username,
+                                 )
+
+        response = dict(data="success")
+        return await self.log_finish(response)
+
+
+@jwtauth
+class RemovePoolFromFavoriteHandler(BaseHttpHandler):
+    """Make the pool favorite."""
+
+    async def post(self, pool_id):
+        user = await self.get_user_model_instance()
+        await UserFavoritePool.delete.where((UserFavoritePool.user_id == user.id) &  # noqa
+                                            (UserFavoritePool.pool_id == pool_id)).gino.status()
+
+        pool = await PoolM.get(pool_id)
+        await system_logger.info(f"Pool {pool.verbose_name} removed from favorites by user {user.username}.",
+                                 entity=user.entity,
+                                 user=user.username,
+                                 )
+
+        response = dict(data="success")
         return await self.log_finish(response)
