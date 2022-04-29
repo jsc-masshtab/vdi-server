@@ -211,3 +211,7 @@ class Cache:
             key=cache_key, value=cacheable_resources_list, expire_time=expire_time
         )
         return cacheable_resources_list
+
+
+def str2bool(value):
+    return value in ("True", "true", "TRUE", "1")
