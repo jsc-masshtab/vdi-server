@@ -3,7 +3,7 @@ import asyncio
 
 from yaaredis.exceptions import LockError
 
-from common.veil.veil_redis import redis_get_client, redis_get_lock
+from common.veil.veil_redis import redis_get_client
 
 # Добавляем скрипт для для REACQUIRE, так как его нет в редис клиенте
 # KEYS[1] - lock name
@@ -33,7 +33,7 @@ class SingleInstanceLocker:
         self._lua_reacquire = None
 
     async def lock(self):
-        self._app_lock = redis_get_lock(name=self._lock_name, timeout=20)
+        self._app_lock = redis_get_client().lock(name=self._lock_name, timeout=20)
         # add reacquire support
         self._lua_reacquire = redis_get_client().register_script(LUA_REACQUIRE_SCRIPT)
 

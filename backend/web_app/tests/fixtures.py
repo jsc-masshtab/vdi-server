@@ -11,7 +11,7 @@ from common.database import start_gino, stop_gino
 from common.veil.veil_gino import Role
 from common.veil.auth.veil_jwt import encode_jwt
 from common.veil.veil_api import get_veil_client_singleton, stop_veil_client
-from common.veil.veil_redis import redis_flushall, wait_for_task_result
+from common.veil.veil_redis import redis_get_client, wait_for_task_result
 
 from common.models.controller import Controller
 from common.models.pool import Pool
@@ -62,7 +62,7 @@ async def fixt_redis_client():
 @pytest.fixture
 async def fixt_launch_workers(fixt_redis_client):
 
-    await redis_flushall()
+    await redis_get_client().flushdb()
 
     file_path = os.path.dirname(__file__)
     pool_worker_path = os.path.join(file_path, "../../pool_worker/app.py")

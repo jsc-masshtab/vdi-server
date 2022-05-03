@@ -9,7 +9,7 @@ from common.log.journal import system_logger
 from common.models.controller import Controller
 from common.settings import REDIS_TIMEOUT, WS_MONITOR_CMD_QUEUE
 from common.veil.veil_gino import EntityType
-from common.veil.veil_redis import WsMonitorCmd, redis_blpop
+from common.veil.veil_redis import WsMonitorCmd, redis_get_client
 
 from monitor_worker.resources_monitor import ResourcesMonitor
 
@@ -27,7 +27,7 @@ class ResourcesMonitorManager:
         while True:
             try:
                 # wait for message
-                redis_data = await redis_blpop(WS_MONITOR_CMD_QUEUE)
+                redis_data = await redis_get_client().redis_blpop(WS_MONITOR_CMD_QUEUE)
 
                 # get data from message
                 data_dict = json.loads(redis_data.decode())

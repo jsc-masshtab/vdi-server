@@ -16,7 +16,7 @@ from common.models.task import Task, TaskStatus
 from common.models.vm import Vm
 from common.settings import POOL_TASK_QUEUE, POOL_WORKER_CMD_CHANNEL, REDIS_TIMEOUT
 from common.veil.veil_gino import EntityType
-from common.veil.veil_redis import PoolWorkerCmd, redis_blpop, redis_get_subscriber
+from common.veil.veil_redis import PoolWorkerCmd, redis_get_client
 
 from pool_worker.pool_tasks import AbstractTask
 from pool_worker.pool_tasks import *  # noqa
@@ -50,7 +50,7 @@ class PoolTaskManager:
         while True:
             try:
                 # wait for task message
-                redis_data = await redis_blpop(POOL_TASK_QUEUE)
+                redis_data = await redis_get_client().redis_blpop(POOL_TASK_QUEUE)
                 await system_logger.debug(
                     "PoolWorker listen_for_work: {}".format(redis_data)
                 )
@@ -65,7 +65,7 @@ class PoolTaskManager:
 
     async def listen_for_commands(self):
 
-        with redis_get_subscriber([POOL_WORKER_CMD_CHANNEL]) as subscriber:
+        with redis_get_client().create_subscriber([POOL_WORKER_CMD_CHANNEL]) as subscriber:
 
             while True:
                 try:

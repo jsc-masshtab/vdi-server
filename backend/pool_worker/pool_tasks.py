@@ -15,7 +15,7 @@ from common.models.vm import Vm
 from common.utils import cancel_async_task
 from common.veil.veil_errors import PoolCreationError, VmCreationError
 from common.veil.veil_gino import EntityType, Status
-from common.veil.veil_redis import redis_get_lock, redis_release_lock_no_errors
+from common.veil.veil_redis import redis_get_client, redis_release_lock_no_errors
 
 
 # Добавление задачи:
@@ -188,8 +188,8 @@ class InitPoolTask(AbstractTask):
         if not automated_pool:
             raise RuntimeError("InitPoolTask: AutomatedPool doesnt exist")
 
-        async with redis_get_lock(str(automated_pool.id)):
-            async with redis_get_lock(str(automated_pool.template_id)):
+        async with redis_get_client().lock(str(automated_pool.id)):
+            async with redis_get_client().lock(str(automated_pool.template_id)):
                 # Добавляем машины
                 try:
                     pool = await Pool.get(self.task_model.entity_id)
@@ -258,8 +258,8 @@ class ExpandPoolTask(AbstractTask):
 
         vm_list = list()
 
-        async with redis_get_lock(str(automated_pool.id)):
-            async with redis_get_lock(str(automated_pool.template_id)):
+        async with redis_get_client().lock(str(automated_pool.id)):
+            async with redis_get_client().lock(str(automated_pool.template_id)):
                 # Check that total_size is not reached
                 pool = await Pool.get(automated_pool.id)
                 vm_amount_in_pool = await pool.get_vm_amount()
@@ -336,8 +336,8 @@ class RecreationGuestVmTask(AbstractTask):
 
         vm_list = list()
 
-        async with redis_get_lock(str(automated_pool.id)):
-            async with redis_get_lock(str(automated_pool.template_id)):
+        async with redis_get_client().lock(str(automated_pool.id)):
+            async with redis_get_client().lock(str(automated_pool.template_id)):
 
                 pool = await Pool.get(automated_pool.id)
 
@@ -398,7 +398,7 @@ class DecreasePoolTask(AbstractTask):
 
         # Нужно использовать либо контекстный менедженр, либо таймаут. Иначе есть опасность
         # что лок останется залоченным
-        pool_lock = redis_get_lock(str(automated_pool.id), timeout=10, blocking_timeout=0.5)
+        pool_lock = redis_get_client().lock(str(automated_pool.id), timeout=10, blocking_timeout=0.5)
         lock_acquired = await pool_lock.acquire()
         if not lock_acquired:
             raise RuntimeError("Another task works on this pool")
@@ -445,7 +445,7 @@ class DeletePoolTask(AbstractTask):
             await task.cancel()
 
         # Лочим
-        async with redis_get_lock(str(automated_pool.id)):
+        async with redis_get_client().lock(str(automated_pool.id)):
             # удаляем пул
             pool = await Pool.get(automated_pool.id)
 
@@ -587,7 +587,7 @@ class RemoveVmsTask(AbstractTask):
         pool_type = pool.pool_type
 
         if pool_type == Pool.PoolTypes.AUTOMATED or pool_type == Pool.PoolTypes.GUEST:
-            async with redis_get_lock(str(pool.id)):
+            async with redis_get_client().lock(str(pool.id)):
                 await self.remove_vms(pool, remove_vms_on_controller=True)
         else:
             await self.remove_vms(pool)
