@@ -42,8 +42,6 @@ from common.veil.veil_redis import (
     ThinClientCmd,
     publish_to_redis,
     redis_get_client,
-    redis_get_lock,
-    redis_get_subscriber,
     redis_release_lock_no_errors,
     request_to_execute_pool_task,
 )
@@ -139,8 +137,8 @@ class PoolGetVm(BaseHttpHandler):
                 # Critical section protected with redis lock https://aredis.readthedocs.io/en/latest/extra.html
                 # Блокировка необходима для попытки избежать назначение одной ВМ нескольким пользователям
                 # при одновременном запросе свободной ВМ от нескольких пользователей
-                vms_global_lock = redis_get_lock(name="pool_vms_lock_" + pool.verbose_name, timeout=9,
-                                                 blocking_timeout=10)
+                vms_global_lock = redis_get_client().lock(name="pool_vms_lock_" + pool.verbose_name, timeout=9,
+                                                          blocking_timeout=10)
                 lock_acquired = await vms_global_lock.acquire()
                 if not lock_acquired:  # Не удалось получить лок
                     response = self.form_err_res(_local_("The pool is busy. Try again in 1 minute."), "006")
@@ -234,11 +232,12 @@ class PoolGetVm(BaseHttpHandler):
             rdcb_data_key = f"rdcb_connection_data_list_{str(pool.id)}"
             rdcb_connection_data_list_encoded = await redis_get_client().get(rdcb_data_key)
 
+            rdcb_connection_data_list = []
             if rdcb_connection_data_list_encoded:
                 rdcb_connection_data_list = json.loads(rdcb_connection_data_list_encoded.decode("utf-8"))
                 await system_logger.debug(f"RDS DATA FROM CACHE: {rdcb_connection_data_list}")
 
-            else:
+            if len(rdcb_connection_data_list) == 0:
                 # Получить список активных RDS брокеров если в кэше ничего нет
                 vms = await pool.get_vms()
                 future_results = await asyncio.gather(
@@ -249,7 +248,6 @@ class PoolGetVm(BaseHttpHandler):
                     return_exceptions=True
                 )
 
-                rdcb_connection_data_list = []
                 for result in future_results:
                     if isinstance(result, tuple):
                         is_ok, _, vm_connection_data = result
@@ -738,9 +736,9 @@ class ThinClientWsHandler(BaseWsHandler):
 
     async def _send_messages_co(self):
         """Отсылка сообщений на ТК. Сообщения достаются из редис каналов."""
-        with redis_get_subscriber([INTERNAL_EVENTS_CHANNEL,
-                                   WS_MONITOR_CHANNEL_OUT,
-                                   REDIS_TEXT_MSG_CHANNEL]) as subscriber:
+        with redis_get_client().create_subscriber([INTERNAL_EVENTS_CHANNEL,
+                                                   WS_MONITOR_CHANNEL_OUT,
+                                                   REDIS_TEXT_MSG_CHANNEL]) as subscriber:
             while True:
                 try:
                     redis_message = await subscriber.get_msg()
@@ -808,7 +806,7 @@ class ThinClientWsHandler(BaseWsHandler):
 
     async def _listen_for_cmd(self):
         """Команды от админа."""
-        with redis_get_subscriber([REDIS_THIN_CLIENT_CMD_CHANNEL]) as subscriber:
+        with redis_get_client().create_subscriber([REDIS_THIN_CLIENT_CMD_CHANNEL]) as subscriber:
             while True:
                 try:
                     redis_message = await subscriber.get_msg()

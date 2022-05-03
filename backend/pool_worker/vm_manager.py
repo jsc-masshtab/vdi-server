@@ -20,7 +20,7 @@ from common.settings import (
 from common.subscription_sources import THIN_CLIENTS_SUBSCRIPTION, WsMessageType
 from common.utils import cancel_async_task
 from common.veil.veil_gino import EntityType, Status
-from common.veil.veil_redis import redis_get_subscriber, request_to_execute_pool_task, \
+from common.veil.veil_redis import redis_get_client, request_to_execute_pool_task, \
     wait_for_task_result
 
 
@@ -114,7 +114,7 @@ class VmManager:
 
     async def _synchronize_vm_data_task(self):
         """Если на контроллере меняется имя ВМ, то обновляем его на VDI."""
-        with redis_get_subscriber([WS_MONITOR_CHANNEL_OUT]) as subscriber:
+        with redis_get_client().create_subscriber([WS_MONITOR_CHANNEL_OUT]) as subscriber:
 
             while True:
                 try:
@@ -223,7 +223,7 @@ class VmManager:
         - Когда он отключился от ВМ.
         - Когда пользователь отключился от VDI сервера.
         """
-        with redis_get_subscriber([INTERNAL_EVENTS_CHANNEL]) as subscriber:
+        with redis_get_client().create_subscriber([INTERNAL_EVENTS_CHANNEL]) as subscriber:
 
             while True:
 

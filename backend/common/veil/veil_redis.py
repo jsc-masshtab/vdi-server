@@ -63,8 +63,69 @@ class VeilRedisClient(StrictRedis):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-        self.redis_receiving_messages_cor = None
         self._subscribers = []  # list of VeilRedisSubscribers
+
+        loop = asyncio.get_event_loop()
+        self.redis_receiving_messages_cor = loop.create_task(self.redis_receiving_messages())
+
+    async def stop_redis_receiving_messages_cor(self):
+        if self.redis_receiving_messages_cor:  # noqa
+            self.redis_receiving_messages_cor.cancel()  # noqa
+            # await self.redis_receiving_messages_cor()
+            self.redis_receiving_messages_cor = None
+
+    async def redis_receiving_messages(self):
+        """Получение сообщений от редиса.
+
+        Получаем сообщния в одном месте в текущем процессе и затем раздаем их желающим
+        в очереди. Сделано так для того, чтобы не приходилось подключаться к редису для каждого тонкого клиета.
+        (Множество подключений - это во-первых многократный дубляж запрашиваемой информации, во-вторых
+        вероятность превысить лимит максимального числа открытых файлов)
+        """
+        pubsub = self.pubsub()
+        await pubsub.subscribe(settings.INTERNAL_EVENTS_CHANNEL,
+                               settings.WS_MONITOR_CHANNEL_OUT,
+                               settings.REDIS_TEXT_MSG_CHANNEL,
+                               settings.REDIS_THIN_CLIENT_CMD_CHANNEL,
+                               settings.POOL_WORKER_CMD_CHANNEL)
+
+        while True:
+            try:
+                redis_message = await self.redis_block_get_message(pubsub)
+                channel = redis_message.get("channel").decode()
+                if channel is None:
+                    continue
+
+                self.send_message_to_subscribers(channel, redis_message)
+            except asyncio.CancelledError:
+                pubsub.reset()
+                break
+            except Exception as e:
+                from common.log.journal import system_logger
+                await system_logger.error(
+                    message="Unexpected error in redis message receiving",
+                    description=str(e),
+                )
+
+    async def redis_block_get_message(self, pubsub):
+        while True:
+            try:
+                message = await pubsub.get_message()
+                if message:
+                    return message
+                await asyncio.sleep(settings.REDIS_ASYNC_TIMEOUT)
+            except ConnectionError:
+                await self.redis_breconnect(pubsub.connection)
+
+    async def redis_breconnect(self, connection):
+        """Try to reconnect to redis server."""
+        while True:
+            try:
+                await connection.connect()
+                break
+            except ConnectionError:
+                # Таймаут чтобы не спамить попытки реконнекта
+                await asyncio.sleep(settings.REDIS_RECONNECT_TIMEOUT)
 
     def create_subscriber(self, channels):
         subscriber = VeilRedisSubscriber(channels=channels, client=self)
@@ -93,6 +154,35 @@ class VeilRedisClient(StrictRedis):
         value = value_type(value.decode("utf-8"))
         return value
 
+    async def redis_blpop(self, redis_list_name):
+        while True:
+            try:
+                data = await self.lpop(redis_list_name)
+                if data:
+                    return data
+                await asyncio.sleep(settings.REDIS_ASYNC_TIMEOUT)
+            except ConnectionError:
+                # При отсутствии соединения реконнект происходит под капотом в lpop
+                # Поэтому идем к следующей итерации после таймаута
+                await asyncio.sleep(settings.REDIS_RECONNECT_TIMEOUT)
+
+    def redis_error_handle(func):
+        """Декоратор обеспечивает перехват исключений, вызванных при взаимодействии с Redis."""
+
+        @wraps(func)
+        def wrapped_function(*args, **kwargs):
+            """Декорируемая функция."""
+            response = None
+            try:
+                response = func(*args, **kwargs)
+            except RedisError as error:
+                from common.log.journal import system_logger
+
+                system_logger._debug("Redis error {}".format(str(error)))
+            return response
+
+        return wrapped_function
+
 
 # глобальный обьект клиента редис
 A_REDIS_CLIENT = None
@@ -104,16 +194,11 @@ def redis_init():
                                      db=settings.REDIS_DB, password=settings.REDIS_PASSWORD,
                                      max_connections=settings.REDIS_MAX_CLIENT_CONN)
 
-    loop = asyncio.get_event_loop()
-    A_REDIS_CLIENT.redis_receiving_messages_cor = loop.create_task(redis_receiving_messages())
-
 
 async def redis_deinit():
     global A_REDIS_CLIENT
     if A_REDIS_CLIENT:
-        if A_REDIS_CLIENT.redis_receiving_messages_cor:  # noqa
-            A_REDIS_CLIENT.redis_receiving_messages_cor.cancel()  # noqa
-            A_REDIS_CLIENT.redis_receiving_messages_cor = None
+        await A_REDIS_CLIENT.stop_redis_receiving_messages_cor()
         del A_REDIS_CLIENT  # В доке не нашел описания способа релиза ресурсов. Судя по всему это происходит автоматом
         # во время разрушения объекта.
 
@@ -122,114 +207,11 @@ def redis_get_client():
     return A_REDIS_CLIENT
 
 
-def redis_get_subscriber(channels):
-    return A_REDIS_CLIENT.create_subscriber(channels)
-
-
-def redis_get_pubsub():
-    return A_REDIS_CLIENT.pubsub()
-
-
-async def redis_receiving_messages():
-    """Получение сообщений от редиса.
-
-    Получаем сообщния в одном месте в текущем процессе и затем раздаем их желающим
-    в очереди. Сделано так для того, чтобы не приходилось подключаться к редису для каждого тонкого клиета.
-    (Множество подключений - это во-первых многократный дубляж запрашиваемой информации, во-вторых
-    вероятность превысить лимит максимального числа открытых файлов)
-    """
-    pubsub = redis_get_pubsub()
-    await pubsub.subscribe(settings.INTERNAL_EVENTS_CHANNEL,
-                           settings.WS_MONITOR_CHANNEL_OUT,
-                           settings.REDIS_TEXT_MSG_CHANNEL,
-                           settings.REDIS_THIN_CLIENT_CMD_CHANNEL,
-                           settings.POOL_WORKER_CMD_CHANNEL)
-
-    while True:
-        try:
-            redis_message = await redis_block_get_message(pubsub)
-            channel = redis_message.get("channel").decode()
-            if channel is None:
-                continue
-
-            A_REDIS_CLIENT.send_message_to_subscribers(channel, redis_message)
-        except asyncio.CancelledError:
-            pubsub.reset()
-            break
-        except Exception as e:
-            from common.log.journal import system_logger
-            await system_logger.error(
-                message="Unexpected error in redis message receiving",
-                description=str(e),
-            )
-
-
-async def redis_breconnect(connection):
-    """Try to reconnect to redis server."""
-    while True:
-        try:
-            await connection.connect()
-            break
-        except ConnectionError:
-            # Таймаут чтобы не спамить попытки реконнекта
-            await asyncio.sleep(settings.REDIS_RECONNECT_TIMEOUT)
-
-
-async def redis_block_get_message(pubsub):
-    while True:
-        try:
-            message = await pubsub.get_message()
-            if message:
-                return message
-            await asyncio.sleep(settings.REDIS_ASYNC_TIMEOUT)
-        except ConnectionError:
-            await redis_breconnect(pubsub.connection)
-
-
-async def redis_blpop(redis_list_name):
-    while True:
-        try:
-            data = await A_REDIS_CLIENT.lpop(redis_list_name)
-            if data:
-                return data
-            await asyncio.sleep(settings.REDIS_ASYNC_TIMEOUT)
-        except ConnectionError:
-            # При отсутствии соединения реконнект происходит под капотом в lpop
-            # Поэтому идем к следующей итерации после таймаута
-            await asyncio.sleep(settings.REDIS_RECONNECT_TIMEOUT)
-
-
-async def redis_flushall():
-    await A_REDIS_CLIENT.flushdb()
-
-
-def redis_get_lock(name, timeout=None, blocking_timeout=None):
-    return A_REDIS_CLIENT.lock(name=name, timeout=timeout, blocking_timeout=blocking_timeout)
-
-
 async def redis_release_lock_no_errors(redis_lock):
     try:
         await redis_lock.release()
     except LockError:  # Исключение будет, если лок уже был освобожден по таймауту
         pass
-
-
-def redis_error_handle(func):
-    """Декоратор обеспечивает перехват исключений, вызванных при взаимодействии с Redis."""
-
-    @wraps(func)
-    def wrapped_function(*args, **kwargs):
-        """Декорируемая функция."""
-        response = None
-        try:
-            response = func(*args, **kwargs)
-        except RedisError as error:
-            from common.log.journal import system_logger
-
-            system_logger._debug("Redis error {}".format(str(error)))
-        return response
-
-    return wrapped_function
 
 
 async def save_license_dict(dict_name, data):
@@ -262,7 +244,7 @@ async def redis_wait_for_message(redis_channel, predicate):
     :return message: return message when awaited message received.
      Ожидание потенциально бесконечно.
     """
-    with redis_get_subscriber([redis_channel]) as subscriber:
+    with redis_get_client().create_subscriber([redis_channel]) as subscriber:
 
         while True:
             # try to receive message
@@ -283,7 +265,7 @@ async def a_redis_wait_for_task_completion(task_id):
     """
     from common.models.task import TaskStatus
 
-    with redis_get_subscriber([settings.INTERNAL_EVENTS_CHANNEL]) as subscriber:
+    with redis_get_client().create_subscriber([settings.INTERNAL_EVENTS_CHANNEL]) as subscriber:
         try:
             while True:
                 # try to receive message

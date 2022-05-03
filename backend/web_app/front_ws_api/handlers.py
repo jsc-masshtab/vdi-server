@@ -24,7 +24,7 @@ from common.subscription_sources import (
 )
 from common.veil.auth.veil_jwt import jwtauth_ws
 from common.veil.veil_handlers import BaseWsHandler
-from common.veil.veil_redis import redis_get_subscriber
+from common.veil.veil_redis import redis_get_client
 
 
 @jwtauth_ws
@@ -115,9 +115,9 @@ class VdiFrontWsHandler(BaseWsHandler):  # noqa
         """Wait for message and send it to front client."""
         # subscribe to channels  INTERNAL_EVENTS_CHANNEL and WS_MONITOR_CHANNEL_OUT
 
-        with redis_get_subscriber([INTERNAL_EVENTS_CHANNEL,
-                                   WS_MONITOR_CHANNEL_OUT,
-                                   REDIS_TEXT_MSG_CHANNEL]) as subscriber:
+        with redis_get_client().create_subscriber([INTERNAL_EVENTS_CHANNEL,
+                                                   WS_MONITOR_CHANNEL_OUT,
+                                                   REDIS_TEXT_MSG_CHANNEL]) as subscriber:
             while True:
                 try:
                     redis_message = await subscriber.get_msg()
