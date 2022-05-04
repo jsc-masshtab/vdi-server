@@ -50,6 +50,7 @@ class WsEventToClient(Enum):
     DELETED = "DELETED"  # Удаление сущности. Имя диктуется ws интерфейсом контроллера
     VM_PREPARATION_PROGRESS = "vm_preparation_progress"  # Прогресс подготовки ВМ перед выдачей клиенту
     POOL_ENTITLEMENT_CHANGED = "pool_entitlement_changed"  # Смена прав на пользование пулом
+    EVENT = "event"  # Common event
 
 
 class WsMessageDirection(Enum):
