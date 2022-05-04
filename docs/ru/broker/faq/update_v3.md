@@ -53,7 +53,7 @@
 1. Подключить внешний репозиторий **VeiL Broker**:
 
     ```bash
-    echo "deb https://veil-update.mashtab.org/veil-broker-prod-31 smolensk main" | sudo tee /etc/apt/sources.list.d/vdi.list
+    echo "deb https://veil-update.mashtab.org/veil-broker-prod-32 smolensk main" | sudo tee /etc/apt/sources.list.d/vdi.list
     ```
     где указана свежая версия репозитория с [сайта доступных версий](https://veil-update.mashtab.org/).
  
@@ -65,6 +65,17 @@
     sudo rm -f /etc/apt/sources.list.d/vdi.list
     sudo apt-get update
     ```
+    
+    !!! info "Просроченный корневой сертификат"
+         Если при выполнении команды ```sudo apt-get update``` происходит ошибка 
+         **"Данные из этого репозитория нельзя аутентифицировать, и поэтому потенциально 
+         из небезопасно использовать"** \* необходимо выполнить следующие команды и повторить 
+         процесс обновления:
+         ```
+         sudo sed -i '/mozilla\/DST_Root_CA_X3.crt/s/^/#/' /etc/ca-certificates.conf
+         sudo update-ca-certificates --fresh
+         ```
+         \* Орфография и пунктуация автора сохранены.
 
 ## Миграция данных VeiL Broker 2.0 на версию 3.0.0
 
