@@ -40,7 +40,7 @@ menu label ^LiveCD (no hard disk needed)
 kernel alt0/vmlinuz
 append initrd=alt0/full.cz fastboot live changedisk stagename=live ramdisk_size=490013 showopts lowmem vga=normal quiet CONFIG_FILE=http://192.168.135.1/veil_client_settings.ini automatic=method:nfs,network:dhcp tz=Europe/Moscow lang=ru_RU
 ```
-, где:
+где:
 * kernel - путь до ядра ОС относительно пути, указанного в конфигурациях TFTP и DHCP
 * initrd= путь к начальной файловой системе относительно пути, указанного в конфигурации TFTP и DHCP
 * automatic=method:nfs,network:dhcp - способ загрузки корневой файловой системы, если NFS и TFTP сервер находятся на одном сервере. Если NFS и TFTP находятся на разных серверах следует использовать ```automatic=method:nfs,network:dhcp,server:192.168.135.1,directory:/srv/public/netinst/1.img```
