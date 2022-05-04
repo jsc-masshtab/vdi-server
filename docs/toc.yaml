@@ -197,7 +197,17 @@ nav:
         - Установка  на операционную систему Linux: connect/operator_guide/install/cd/linux.md
         - Установка  на операционную систему Windows: connect/operator_guide/install/cd/win.md
       - Установка VeiL Connect по сети Интернет с сервера НИИ "Масштаб":
-        - Установка   на операционную систему Linux: connect/operator_guide/install/net/linux.md
+        - Установка  на операционную систему Linux: 
+          - Автоматическая установка VeiL Connect: connect/operator_guide/install/net/linux/index.md
+          - Alt linux 9: connect/operator_guide/install/net/linux/alt9.md
+          - Centos 7 / Centos 8: connect/operator_guide/install/net/linux/centos.md
+          - Debian 10 / Ubuntu: connect/operator_guide/install/net/linux/debian-ubuntu.md
+          - Debian 9: connect/operator_guide/install/net/linux/debian9.md
+          - Astra Linux Orel 2.12: connect/operator_guide/install/net/linux/orel212.md
+          - RedOS 7.2: connect/operator_guide/install/net/linux/redos72.md
+          - RedOS 7.3: connect/operator_guide/install/net/linux/redos73.md
+          - Astra Linux Smolensk 1.6: connect/operator_guide/install/net/linux/smolensk16.md
+          - Astra Linux Smolensk 1.7: connect/operator_guide/install/net/linux/smolensk17.md
         - Установка  на операционную систему Windows: connect/operator_guide/install/net/win.md
     - Удаление VeiL Connect: connect/operator_guide/delete.md
     - Выполнение программы:
