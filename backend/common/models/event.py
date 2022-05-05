@@ -15,7 +15,7 @@ from sqlalchemy.sql import func
 from common.database import db
 from common.languages import _local_
 from common.settings import INTERNAL_EVENTS_CHANNEL
-from common.subscription_sources import EVENTS_SUBSCRIPTION, WsMessageType
+from common.subscription_sources import EVENTS_SUBSCRIPTION, WsEventToClient, WsMessageType
 from common.utils import gino_model_to_json_serializable_dict
 from common.veil.veil_redis import publish_to_redis
 
@@ -162,7 +162,7 @@ class Event(db.Model):
 
         msg_dict = dict(
             event_type=event_type,
-            event="event",
+            event=WsEventToClient.EVENT.value,
             resource=EVENTS_SUBSCRIPTION,
             msg_type=WsMessageType.DATA.value,
         )

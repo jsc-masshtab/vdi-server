@@ -88,12 +88,16 @@ nav:
       - VeiL Broker 2.1.*: broker/faq/backup_db/ver_2_1/creating_db.md  
     - Службы системы: broker/faq/services.md
     - Протоколы удаленного подключения: broker/faq/remote_conn_protocols.md
-    - Подготовка эталонного образа на основе Windows 8.1/10:
-      - Общие сведения: broker/faq/rdp/example_template_win/index.md
-      - Создание виртуальной машины и установка ОС: broker/faq/rdp/example_template_win/creating_vm.md
-      - Установка драйверов и дополнительного ПО: broker/faq/rdp/example_template_win/install_software.md
-#      - Оптимизация ОС c помощью VMware OS Optimization Tool: broker/faq/rdp/example_template_win/opti_tool.md
-      - Добавление пользователей в группу удалённых рабочих столов для подключения по RDP к ВМ: broker/faq/rdp/example_template_win/add_user.md
+    - Подготовка гостевых ВМ:  
+      - Подготовка эталонного образа на основе Windows 8.1/10:
+        - Общие сведения: broker/faq/rdp/example_template_win/index.md
+        - Создание виртуальной машины и установка ОС: broker/faq/rdp/example_template_win/creating_vm.md
+        - Установка драйверов и дополнительного ПО: broker/faq/rdp/example_template_win/install_software.md
+#        - Оптимизация ОС c помощью VMware OS Optimization Tool: broker/faq/rdp/example_template_win/opti_tool.md
+        - Добавление пользователей в группу удалённых рабочих столов для подключения по RDP к ВМ: broker/faq/rdp/example_template_win/add_user.md
+      - Особенности реализации RDP для Linux:
+        - Общие сведения: broker/faq/rdp/example_template_lin/index.md
+        - Особенности работы RDP в Linux: broker/faq/rdp/example_template_lin/basics_lin_rdp.md
     - Работа по RDP с пулами ВРС: broker/faq/rdp/example_rdp.md
     - Настройка GPO через RDP для ВМ в домене MS AD: broker/faq/rdp/example_rdp_domain.md
     - nVidia Grid: broker/faq/vm/nvidia.md
@@ -197,7 +201,17 @@ nav:
         - Установка  на операционную систему Linux: connect/operator_guide/install/cd/linux.md
         - Установка  на операционную систему Windows: connect/operator_guide/install/cd/win.md
       - Установка VeiL Connect по сети Интернет с сервера НИИ "Масштаб":
-        - Установка   на операционную систему Linux: connect/operator_guide/install/net/linux.md
+        - Установка  на операционную систему Linux: 
+          - Автоматическая установка VeiL Connect: connect/operator_guide/install/net/linux/index.md
+          - Alt linux 9: connect/operator_guide/install/net/linux/alt9.md
+          - Centos 7 / Centos 8: connect/operator_guide/install/net/linux/centos.md
+          - Debian 10 / Ubuntu: connect/operator_guide/install/net/linux/debian-ubuntu.md
+          - Debian 9: connect/operator_guide/install/net/linux/debian9.md
+          - Astra Linux Orel 2.12: connect/operator_guide/install/net/linux/orel212.md
+          - RedOS 7.2: connect/operator_guide/install/net/linux/redos72.md
+          - RedOS 7.3: connect/operator_guide/install/net/linux/redos73.md
+          - Astra Linux Smolensk 1.6: connect/operator_guide/install/net/linux/smolensk16.md
+          - Astra Linux Smolensk 1.7: connect/operator_guide/install/net/linux/smolensk17.md
         - Установка  на операционную систему Windows: connect/operator_guide/install/net/win.md
     - Удаление VeiL Connect: connect/operator_guide/delete.md
     - Выполнение программы:
