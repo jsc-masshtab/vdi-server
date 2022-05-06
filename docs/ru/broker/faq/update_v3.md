@@ -22,9 +22,9 @@
    команды для обновления:
 
     ```
-    sudo mount /media/cdrom
-    cd ~
-    sudo bash /media/cdrom/install.sh > vdi_update.log
+    sudo mount /media/cdrom  
+    cd ~  
+    sudo bash /media/cdrom/install.sh > vdi_update.log  
     sudo umount /media/cdrom
     ```
    
@@ -52,27 +52,27 @@
 
 1. Подключить внешний репозиторий **VeiL Broker**:
 
-    ```bash
+    ```
     echo "deb https://veil-update.mashtab.org/veil-broker-prod-32 smolensk main" | sudo tee /etc/apt/sources.list.d/vdi.list
     ```
     где указана свежая версия репозитория с [сайта доступных версий](https://veil-update.mashtab.org/).
  
 1. Выполнить команды для обновления:
 
-    ```bash
-    sudo apt-get update
-    sudo apt-get upgrade -y
-    sudo rm -f /etc/apt/sources.list.d/vdi.list
+    ```
+    sudo apt-get update  
+    sudo apt-get upgrade -y  
+    sudo rm -f /etc/apt/sources.list.d/vdi.list  
     sudo apt-get update
     ```
     
     !!! info "Просроченный корневой сертификат"
-         Если при выполнении команды ```sudo apt-get update``` происходит ошибка 
+         Если при выполнении команды `sudo apt-get update` происходит ошибка 
          **"Данные из этого репозитория нельзя аутентифицировать, и поэтому потенциально 
          из небезопасно использовать"** \* необходимо выполнить следующие команды и повторить 
          процесс обновления:
          ```
-         sudo sed -i '/mozilla\/DST_Root_CA_X3.crt/s/^/#/' /etc/ca-certificates.conf
+         sudo sed -i '/mozilla\/DST_Root_CA_X3.crt/s/^/#/' /etc/ca-certificates.conf  
          sudo update-ca-certificates --fresh
          ```
          \* Орфография и пунктуация автора сохранены.
@@ -90,19 +90,15 @@
         Если используется более ранняя версия **VeiL Broker**, необходимо сначала обновить ее до 2.1.4.
 
 2. Выполнить установку пакета **_vdi-migration-tool_** 
-```
-sudo dpkg -i vdi-migration-tool_1.0-1_all.deb
-```
+`sudo dpkg -i vdi-migration-tool_1.0-1_all.deb`
 
 3. Запустить скрипт миграции
-```
-cd /opt/veil-vdi/app && ./migrate.sh -v 2
-```
+`cd /opt/veil-vdi/app && ./migrate.sh -v 2`
 
 4. Выполнить перенос получившихся файлов
 ```
-/tmp/broker_pt_1.sql
-/tmp/broker_pt_2.sql
+/tmp/broker_pt_1.sql  
+/tmp/broker_pt_2.sql  
 /tmp/broker_pt_3.sql
 ```
 
@@ -120,22 +116,17 @@ cd /opt/veil-vdi/app && ./migrate.sh -v 2
     !!! note "Примечание"
         Дампы памяти должны быть загружены в каталог, к которому будет доступ у пользователя 
         **_vdiadmin_**.
-   
-    ```
-    /tmp/broker_pt_1.sql
-    /tmp/broker_pt_2.sql
-    /tmp/broker_pt_3.sql 
-    ```
+        ```
+        /tmp/broker_pt_1.sql  
+        /tmp/broker_pt_2.sql  
+        /tmp/broker_pt_3.sql 
+        ```
 
 3. Выполнить установку пакета **_vdi-migration-tool_** 
-```
-sudo dpkg -i vdi-migration-tool_1.0-1_all.deb
-```
+`sudo dpkg -i vdi-migration-tool_1.0-1_all.deb`
 
 4. Запустить скрипт миграции
-```
-cd /opt/veil-vdi/app && ./migrate.sh -v 3
-```
+`cd /opt/veil-vdi/app && ./migrate.sh -v 3`
 
 5. Задать пароли вновь созданным заблокированным пользователям. 
 

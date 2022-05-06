@@ -58,19 +58,20 @@
    
     - с записью результатов в log-файл
 
-    ```bash
-    sudo mount /media/cdrom && cd ~
-    sudo bash /media/cdrom/install.sh > vdi_install.log
-    sudo umount /media/cdrom
     ```
-    
+    sudo mount /media/cdrom && cd ~  
+    sudo bash /media/cdrom/install.sh > vdi_install.log     
+    sudo umount /media/cdrom  
+   ```  
+        
      - просто установка
     
-    ```bash
-    sudo mount /media/cdrom && cd ~
-    sudo bash /media/cdrom/install.sh
-    sudo umount /media/cdrom
     ```
+    sudo mount /media/cdrom && cd ~  
+    sudo bash /media/cdrom/install.sh  
+    sudo umount /media/cdrom  
+    ```
+   
     !!! note "Примечание"
         Монтирование диска через GUI **Astra Linux** может привести к ошибке. Настоятельно рекомендуется монтировать 
         диски через **Терминал Fly**.
@@ -106,8 +107,8 @@
 Для этого в файле настроек `/opt/veil-vdi/app/common/local_settings.py` необходимо
 заменить стандартные значения ключей `LOCAL_AUTH` и `PAM_AUTH` на: 
 
-```python
-LOCAL_AUTH = True
+```
+LOCAL_AUTH = True  
 PAM_AUTH = False
 ```
 
@@ -136,16 +137,13 @@ PAM_AUTH = False
 параметрами **VeiL Broker**, однако, за основу можно взять следующий пример:
 
 !!! example "/etc/pam.d/common-auth"
-    ```
-    # force vdi-web check
-    auth required pam_succeed_if.so user ingroup vdi-web
-    ```    
+    `# force vdi-web check`    
+    `auth required pam_succeed_if.so user ingroup vdi-web`
+        
 
 !!! example "/etc/pam.d/login"
-    ```
-    # change default delay
-    auth optional pam_faildelay.so delay=1000000
-    ```
+    `# change default delay`    
+    `auth optional pam_faildelay.so delay=1000000`
 
 !!! warning "Предупреждение"
     Не забудьте добавить в указанную группу пользователя, под которым выполняется вход в GUI для администрирования.

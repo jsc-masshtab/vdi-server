@@ -4,14 +4,14 @@
 
 Проверьте в терминале ВМ, включен ли сервис **apache2**
 
-```bash
+```
 sudo systemctl status apache2
 ```
    
 Если он не включен, то включить и выполнить:
 
-```bash
-sudo systemctl start apache2
+```
+sudo systemctl start apache2  
 sudo chown www-data:adm /var/log/apache2 -R
 ```
 

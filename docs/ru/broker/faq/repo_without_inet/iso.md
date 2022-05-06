@@ -11,10 +11,10 @@
 5. Запустить терминал, если вход был выполнен в графическом режиме;
 6. В терминале выполнить команды для обновления **VeiL Broker**:
     
-    ```bash
-    sudo mount /media/cdrom
-    cd
-    sudo bash /media/cdrom/install.sh
+    ```
+    sudo mount /media/cdrom  
+    cd  
+    sudo bash /media/cdrom/install.sh  
     sudo umount /media/cdrom
     ```
     
