@@ -1,6 +1,6 @@
 /* tslint:disable:directive-class-suffix */
 /* eslint-disable @angular-eslint/directive-class-suffix */
-import { HostListener, ElementRef, Directive } from '@angular/core';
+import { HostListener, ElementRef, Directive, ViewChild } from '@angular/core';
 
 @Directive()
 export class DetailsMove  {
@@ -12,9 +12,10 @@ export class DetailsMove  {
   public pageRollup: boolean = false;
   public pageShow: boolean = false
   public timeout: any;
-  
 
-  constructor() {}
+  constructor() { }
+  
+  @ViewChild('view', { static: true }) view: ElementRef;
 
   @HostListener('window:resize', ['$event']) onResize(view: ElementRef) {
     if (this.timeout) {
@@ -31,7 +32,11 @@ export class DetailsMove  {
     }, 500);
   }
 
-  public componentActivate(view: ElementRef): void {
+  public componentActivate(view = this.view): void {
+
+    const listVeiw = view.nativeElement.childNodes[0];
+    listVeiw.style.maxHeight = "310px";
+
     this.pageHeight = this.pageHeightMin;
 
     if ((view.nativeElement.clientHeight - this.pageHeightMinNumber) < (this.pageHeightMinNumber + 250)) {
@@ -40,6 +45,9 @@ export class DetailsMove  {
   }
 
   public componentDeactivate(): void {
+    const listVeiw = this.view.nativeElement.childNodes[0];
+    listVeiw.style.maxHeight = "unset";
+
     this.pageHeight = this.pageHeightMax;
     this.pageRollup = false;
   }
