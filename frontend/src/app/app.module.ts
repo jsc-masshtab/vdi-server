@@ -62,7 +62,7 @@ import { AppComponent } from './app.component';
     HttpClientModule,
     LoginModule,
     DashboardModule,
-    ErrorsModule,
+    ErrorsModule
   ],
   bootstrap: [AppComponent],
   providers: [

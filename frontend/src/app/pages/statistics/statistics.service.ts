@@ -19,7 +19,7 @@ export class StatisticsService {
         return this.apollo.watchQuery({
           query: gql`
             query statistics($month: Int, $year: Int) {
-                  statisticsReport:web_statistics_report( year: $year, month: $month)   
+              statisticsReport:web_statistics_report( year: $year, month: $month)   
             }
           `,
           variables: {

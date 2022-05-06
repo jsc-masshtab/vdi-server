@@ -14,18 +14,15 @@
         </button>
     </div>
 
-    <span [style.margin]="'10px'"><pre>Диапазон с</pre></span>
-
-    <input [matDatepicker]="start_picker" [formControl]="start_date">
-
-    <mat-datepicker-toggle [for]="start_picker"></mat-datepicker-toggle>
-    <mat-datepicker #start_picker></mat-datepicker>
-
-    <span [style.margin]="'10px'"><pre>по</pre></span>
-
-    <input [matDatepicker]="end_picker" [formControl]="end_date">
-    <mat-datepicker-toggle [for]="end_picker"></mat-datepicker-toggle>
-    <mat-datepicker #end_picker></mat-datepicker>
+    <mat-form-field class="events-field">
+        <mat-label>Диапазон</mat-label>
+        <mat-date-range-input [rangePicker]="picker">
+            <input matStartDate [formControl]="start_date" placeholder="Начальная дата">
+            <input matEndDate [formControl]="end_date" placeholder="Конечная дата">
+        </mat-date-range-input>
+        <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+        <mat-date-range-picker #picker></mat-date-range-picker>
+    </mat-form-field>
 
     <mat-form-field class="events-field">
         <mat-label>Тип событий</mat-label>

@@ -18,7 +18,11 @@
 </div>
 
 <div class="components-info" #view>
-  <div class="component-list" [class.page-wrap]="pageRollup&&!pageShow" [class.page-rollup]="pageRollup" [style.height]="pageHeight">
+  <div class="component-list" 
+    [class.page-wrap]="pageRollup&&!pageShow" 
+    [class.page-rollup]="pageRollup" 
+    [style.height]="pageHeight">
+
     <vdi-table-component cursor="true" 
       [data]="data" 
       [collection]="collection"
@@ -35,7 +39,9 @@
     </vdi-pagination>
   </div>
   
-  <div class="component-details" [class.page-height-min]="pageHeight==pageHeightMin" [class.page-height-max]="pageRollup">
+  <div class="component-details" 
+    [class.page-height-min]="pageHeight==pageHeightMin" 
+    [class.page-height-max]="pageRollup">
     <router-outlet (activate)="componentActivate()" (deactivate)="componentDeactivate()"></router-outlet>
   </div>
 </div>

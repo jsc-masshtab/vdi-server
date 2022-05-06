@@ -37,6 +37,7 @@ import { DashboardComponent } from './dashboard.component';
 import { SmtpComponent } from '@pages/settings/smtp/smtp.component';
 import { CacheComponent } from '@pages/settings/cache/cache.component';
 import { StatisticsComponent } from '@pages/statistics/statistics.component';
+import { PoolsStatisticsComponent } from '@app/pages/statistics/pools-statistics/pools-statistics.component';
 
 
 const routes: Routes = [
@@ -209,8 +210,12 @@ const routes: Routes = [
         ]
       },
       {
-        path: 'statistics',
+        path: 'statistics/statistics-web',
         component: StatisticsComponent
+      },
+      {
+        path: 'statistics/statistics-pool',
+        component: PoolsStatisticsComponent
       },
       {
         path: '**',

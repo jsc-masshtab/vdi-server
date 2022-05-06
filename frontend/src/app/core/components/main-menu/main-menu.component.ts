@@ -26,6 +26,7 @@ export class MainMenuComponent {
   public toggleThin: boolean = false;
   public toggleSetting: boolean = false;
   public toggleLog: boolean = false;
+  public toggleStatistics: boolean = false;
 
   public clickedManage: string = '';
 
@@ -72,8 +73,7 @@ export class MainMenuComponent {
             }
 
             if (clickedManage1 === 'statistics') {
-              this.clickedManage = 'statistics';
-              return;
+              this.toggleStatistics = true;
             }
           }
 
@@ -98,6 +98,10 @@ export class MainMenuComponent {
 
   public logToggle(): void {
     this.toggleLog = !this.toggleLog;
+  }
+
+  public statisticsToggle(): void {
+    this.toggleStatistics = !this.toggleStatistics;
   }
 
   public routeTo(route: string) {

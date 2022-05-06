@@ -5,7 +5,6 @@ import { map } from 'rxjs/operators';
 import { FormForEditComponent } from '../../../shared/forms-dinamic/change-form/form-edit.component';
 import { LogSettingService } from './log-setting.service';
 
-
 @Component({
   selector: 'vdi-log-setting',
   templateUrl: './log-setting.component.html',

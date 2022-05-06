@@ -36,12 +36,14 @@
     "@types/graphql": "^14.5.0",
     "@types/ws": "^8.5.3",
     "apollo-angular": "^3.0.0",
+    "chart.js": "^3.6.0",
     "core-js": "^2.5.4",
     "file-saver": "^2.0.5",
     "graphql": "^16.3.0",
     "graphql-subscriptions": "^2.0.0",
     "moment": "^2.29.1",
     "moment-timezone": "^0.5.34",
+    "ng2-charts": "^3.0.9",
     "rxjs": "~6.6.6",
     "tslib": "^2.0.0",
     "zone.js": "~0.11.5"
@@ -73,8 +75,8 @@
   "peerDependencies": {
     "@types/node": "^12.11.1"
   },
-  "engines" : { 
-    "npm" : ">=7.0.0",
-    "node" : ">=16.0.0"
+  "engines": {
+    "npm": ">=7.0.0",
+    "node": ">=16.0.0"
   }
 }

@@ -106,15 +106,15 @@
   </a>
 
   <a class="top-menu-item item-tree"
-  [@fadeInOut]
-  *ngIf="toggleSetting"
-  (click)="routeTo('settings/system')"
-  (keydown.enter)="routeTo('settings/system')"
-  [class.clicked-link]="clickedManage =='system'"
-  tabindex="0">
-    <fa-icon title="Система" [icon]="['fas','sliders-h']" size="s" [style.color]="'rgb(204 187 162)'"></fa-icon>
-  <span>Система</span>
-</a>
+    [@fadeInOut]
+    *ngIf="toggleSetting"
+    (click)="routeTo('settings/system')"
+    (keydown.enter)="routeTo('settings/system')"
+    [class.clicked-link]="clickedManage =='system'"
+    tabindex="0">
+      <fa-icon title="Система" [icon]="['fas','sliders-h']" size="s" [style.color]="'rgb(204 187 162)'"></fa-icon>
+    <span>Система</span>
+  </a>
 
   <a class="top-menu-item item-tree"
     [@fadeInOut]
@@ -178,9 +178,23 @@
     <span>Настройки</span>
   </a>
 
-  <a class="top-menu-item" [@fadeInOut] (click)="routeTo('statistics')" (keydown.enter)="routeTo('statistics')" [class.clicked-link]="clickedManage =='statistics'"  tabindex="0">
-    <fa-icon title="События" [icon]="['fas','chart-bar']" size="s" [style.color]="'rgb(68, 119, 221)'"></fa-icon>
+  <a class="top-menu-item item-hat" (click)="statisticsToggle()" (keydown.enter)="statisticsToggle()" tabindex="0">
+    <fa-icon [icon]="['fas','chart-bar']" size="s" title="Ресурсы" [style.color]="'rgb(68, 119, 221)'"></fa-icon>
     <span>Статистика</span>
+    <span class="icon-arrow">
+      <fa-icon [icon]="['fas','chevron-up']" size="xs" *ngIf="toggleStatistics"></fa-icon>
+      <fa-icon [icon]="['fas','chevron-up']" size="xs" rotate="180" *ngIf="!toggleStatistics"></fa-icon>
+    </span>
+  </a>
+
+  <a class="top-menu-item item-tree" [@fadeInOut] *ngIf="toggleStatistics" (click)="routeTo('statistics/statistics-web')" (keydown.enter)="routeTo('statistics/statistics-web')" [class.clicked-link]="clickedManage =='statistics-web'"  tabindex="0">
+    <fa-icon title="События" [icon]="['fas','chart-bar']" size="s" [style.color]="'rgb(68, 119, 221)'"></fa-icon>
+    <span>Веб-статистика</span>
+  </a>
+
+  <a class="top-menu-item item-tree" [@fadeInOut] *ngIf="toggleStatistics" (click)="routeTo('statistics/statistics-pool')" (keydown.enter)="routeTo('statistics/statistics-pool')" [class.clicked-link]="clickedManage =='statistics-pool'"  tabindex="0">
+    <fa-icon title="События" [icon]="['fas','chart-bar']" size="s" [style.color]="'rgb(68, 119, 221)'"></fa-icon>
+    <span>Статистика подключений</span>
   </a>
 
 </div>

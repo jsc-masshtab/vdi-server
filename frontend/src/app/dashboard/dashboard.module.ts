@@ -39,6 +39,8 @@ import { SystemModule } from '@pages/settings/system/system.module';
 import { SmtpModule } from '@pages/settings/smtp/smtp.module';
 import { CacheModule } from '@pages/settings/cache/cache.module';
 import { StatisticsModule } from '@pages/statistics/statistics.module';
+import { PoolStatisticsModule } from '@app/pages/statistics/pools-statistics/pool-statistics.module';
+import { MAT_DATE_LOCALE } from '@angular/material/core';
 
 @NgModule({
   declarations: [
@@ -70,11 +72,13 @@ import { StatisticsModule } from '@pages/statistics/statistics.module';
     ServicePageModule,
     SmtpModule,
     CacheModule,
-    StatisticsModule
+    StatisticsModule,
+    PoolStatisticsModule
   ],
   providers:
     [
-     { provide: MAT_DIALOG_DEFAULT_OPTIONS, useValue: { hasBackdrop: true, restoreFocus: true } }
+      { provide: MAT_DIALOG_DEFAULT_OPTIONS, useValue: { hasBackdrop: true, restoreFocus: true } },
+      { provide: MAT_DATE_LOCALE, useValue: 'ru-RU' }
     ]
 })
 

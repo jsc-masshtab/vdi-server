@@ -181,8 +181,9 @@ export class EventsComponent implements OnInit, OnDestroy {
         this.events = [...data.events];
         this.entity_types = [...data.entity_types];
         this.count = data.count;
-        this.waitService.setWait(false);
         this.users = [...data.users];
+
+        this.waitService.setWait(false);
       });
   }
 
@@ -191,7 +192,8 @@ export class EventsComponent implements OnInit, OnDestroy {
       this.socketSub.unsubscribe();
     }
 
-    this.socketSub = this.ws.stream('/events/').subscribe(() => {
+    this.socketSub = this.ws.stream('/events/').subscribe((t) => {
+      console.log(t)
       this.service.getAllEvents(this.queryset).refetch();
     });
   }
