@@ -194,7 +194,7 @@ class PoolUsageStatsType(graphene.ObjectType):
 
         conn_by_time_intervals = []
         for hour in range(hours_in_day):
-            time_interval = "{:02d}:00-{:02d}:00".format(hour, hour + 1)
+            time_interval = "{:02d}-{:02d}".format(hour, hour + 1)
             conn_number = conn_data_by_time_intervals[hour + 1]
             if all_conn_number and conn_number:
                 percentage = round(float(conn_number) / float(all_conn_number) * 100)

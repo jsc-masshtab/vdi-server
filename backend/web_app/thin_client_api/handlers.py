@@ -312,7 +312,9 @@ class PoolGetVm(BaseHttpHandler):
             return True, None, dict(address=vm_connection_data.address, port=vm_connection_data.port,
                                     vm_token=vm_token, vm_id=str(vm_model.id))
 
-        if self._is_rdp(self.remote_protocol) or self.remote_protocol == PoolM.PoolConnectionTypes.X2GO.name:
+        if self._is_rdp(self.remote_protocol) or \
+            self.remote_protocol == PoolM.PoolConnectionTypes.X2GO.name or \
+            self.remote_protocol == PoolM.PoolConnectionTypes.LOADPLAY.name:  # noqa
 
             vm_port = 3389 if self._is_rdp(self.remote_protocol) else 22  # default port
             try:
@@ -331,9 +333,12 @@ class PoolGetVm(BaseHttpHandler):
             vm_address = node_info.response[0].management_ip
             vm_port = domain_info.data["real_remote_access_port"]
 
-        else:  # PoolM.PoolConnectionTypes.SPICE.name by default
+        elif self.remote_protocol == PoolM.PoolConnectionTypes.SPICE.name:
             vm_address = vm_controller.address
             vm_port = veil_domain.remote_access_port
+        else:
+            response = self.form_err_res(_local_("Wrong protocol."), "007")
+            return False, response, None
 
         return True, None, dict(address=vm_address, port=vm_port, vm_token=vm_token, vm_id=str(vm_model.id))
 
