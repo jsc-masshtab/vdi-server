@@ -315,8 +315,14 @@ class PoolGetVm(BaseHttpHandler):
         if self._is_rdp(self.remote_protocol) or \
             self.remote_protocol == PoolM.PoolConnectionTypes.X2GO.name or \
             self.remote_protocol == PoolM.PoolConnectionTypes.LOADPLAY.name:  # noqa
+            # port
+            if self._is_rdp(self.remote_protocol):
+                vm_port = 3389
+            elif self.remote_protocol == PoolM.PoolConnectionTypes.X2GO.name:
+                vm_port = 22
+            else:  # LOADPLAY
+                vm_port = 8554
 
-            vm_port = 3389 if self._is_rdp(self.remote_protocol) else 22  # default port
             try:
                 # Пробуем дождаться получения машиной адреса
                 wait_timeout = 60
