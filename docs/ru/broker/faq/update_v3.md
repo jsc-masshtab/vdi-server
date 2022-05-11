@@ -22,9 +22,12 @@
    команды для обновления:
 
     ```
-    sudo mount /media/cdrom  
-    cd ~  
-    sudo bash /media/cdrom/install.sh > vdi_update.log  
+    sudo mount /media/cdrom
+     
+    cd ~
+   
+    sudo bash /media/cdrom/install.sh > vdi_update.log
+    
     sudo umount /media/cdrom
     ```
    
@@ -60,9 +63,12 @@
 1. Выполнить команды для обновления:
 
     ```
-    sudo apt-get update  
-    sudo apt-get upgrade -y  
-    sudo rm -f /etc/apt/sources.list.d/vdi.list  
+    sudo apt-get update
+     
+    sudo apt-get upgrade -y
+     
+    sudo rm -f /etc/apt/sources.list.d/vdi.list
+     
     sudo apt-get update
     ```
     
@@ -71,10 +77,8 @@
          **"Данные из этого репозитория нельзя аутентифицировать, и поэтому потенциально 
          из небезопасно использовать"** \* необходимо выполнить следующие команды и повторить 
          процесс обновления:
-         ```
-         sudo sed -i '/mozilla\/DST_Root_CA_X3.crt/s/^/#/' /etc/ca-certificates.conf  
-         sudo update-ca-certificates --fresh
-         ```
+         `sudo sed -i '/mozilla\/DST_Root_CA_X3.crt/s/^/#/' /etc/ca-certificates.conf`  
+         `sudo update-ca-certificates --fresh`  
          \* Орфография и пунктуация автора сохранены.
 
 ## Миграция данных VeiL Broker 2.0 на версию 3.0.0
