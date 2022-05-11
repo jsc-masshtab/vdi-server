@@ -25,6 +25,7 @@
           </mat-option>
         </mat-select>
       </mat-form-field>
+      
       <ng-container *ngIf="form.hasError('required', 'vmsInput') && checkValid">
         <ng-container *ngTemplateOutlet="errorTemp"></ng-container>
       </ng-container>

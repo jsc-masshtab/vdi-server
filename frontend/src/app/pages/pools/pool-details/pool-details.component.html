@@ -33,17 +33,17 @@
         </button>
 
         <ng-container *ngIf="menuActive === 'vms' && pool">
-            <button *ngIf="typePool === 'static'" (click)="addVM()" title="Добавить ВМ в пул" class="btn-control">
+            <button *ngIf="typePool === 'static' || typePool === 'rds'" (click)="addVM()" title="Добавить ВМ в пул" class="btn-control">
                 <fa-icon [icon]="['fas','plus-circle']" size="xs"></fa-icon>
                 <span class="name">Добавить ВМ</span>
             </button>
 
-            <button *ngIf="typePool !== 'rds'" (click)="removeVM()" title="Удалить ВМ из пула" class="btn-control">
+            <button (click)="removeVM()" title="Удалить ВМ из пула" class="btn-control">
                 <fa-icon [icon]="['fas','trash-alt']" size="xs"></fa-icon>
                 <span class="name">Удалить ВМ</span>
             </button>
 
-            <button (click)="backupVms()" *ngIf="menuActive === 'vms' && pool?.vms?.length && pool?.pool_type != 'GUEST'" title="Создать резервные копии всех ВМ в пуле" class="btn-control">
+            <button (click)="backupVms()" *ngIf="menuActive === 'vms' && pool?.vms?.length && pool?.pool_type !== 'GUEST'" title="Создать резервные копии всех ВМ в пуле" class="btn-control">
                 <fa-icon [icon]="['fas','clone']" size="xs"></fa-icon>
                 <span class="name">Резервное копирование</span>
             </button>

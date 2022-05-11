@@ -184,6 +184,23 @@ export class PoolDetailsService {
         });
     }
 
+    public addVmsToRdsPool(pool_id: number, vms: []): Observable<any> {
+        return this.service.mutate<any>({
+            mutation: gql`
+                mutation pools($pool_id: ID!,$vms: [VmInput!]!) {
+                    addVmsToRdsPool(pool_id: $pool_id, vms: $vms) {
+                        ok
+                    }
+                }
+            `,
+            variables: {
+                method: 'POST',
+                pool_id,
+                vms
+            }
+        });
+    }
+
     public prepareVm(data): Observable<any> {
         return this.service.mutate<any>({
             mutation: gql`
@@ -222,6 +239,23 @@ export class PoolDetailsService {
             mutation: gql`
                 mutation pools($pool_id: ID!,$vm_ids: [UUID]!) {
                     removeVmsFromDynamicPool(pool_id: $pool_id,vm_ids: $vm_ids) {
+                        ok
+                    }
+                }
+            `,
+            variables: {
+                method: 'POST',
+                pool_id,
+                vm_ids
+            }
+        });
+    }
+
+    public removeVmsFromRdsPool(pool_id: number, vm_ids: []) {
+        return this.service.mutate<any>({
+            mutation: gql`
+                mutation pools($pool_id: ID!,$vm_ids: [UUID]!) {
+                    removeVmsFromRdsPool(pool_id: $pool_id,vm_ids: $vm_ids) {
                         ok
                     }
                 }

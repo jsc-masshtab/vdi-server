@@ -51,6 +51,8 @@
 <div class="components-info">
   <div class="pool-statistic">
 
+    <!-- <div *ngFor="let color of colors" class="pallete" [style.background]="color"></div> -->
+
     <vdi-table-into [item]="statistics" [collection]="collectionConnections">
     </vdi-table-into>
     
@@ -69,7 +71,7 @@
 </div>
 
 <ng-template #bar let-title="title" let-metric="metric">
-  <div class="pool-statistic-chart" *ngIf="metric?.length">
+  <div class="pool-statistic-chart" *ngIf="metric?.length" [style.minWidth]="'160px'" [style.flex]="1">
     <div class="pool-statistic-chart-title">{{ title }}</div>
     <div class="pool-statistic-bar" *ngFor="let bar of metric" [style.width]="bar.value + '%'" [style.background]="bar.color">
       <span>{{ bar.name }} ({{ bar.conn_number }})</span>

@@ -236,10 +236,6 @@
         &:hover {
             border: 1px solid rgba(0,0,0,0.2);
             overflow: initial;
-
-            & + button {
-                border-color: transparent !important;
-            }
         }
 
         .name {
@@ -271,6 +267,7 @@
         height: 100%;
         display: flex;
         flex-direction: column;
+        padding: 1px;
 	}
 
 	.component-details {

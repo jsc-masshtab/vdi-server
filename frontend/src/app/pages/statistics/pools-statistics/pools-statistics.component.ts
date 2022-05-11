@@ -43,7 +43,7 @@ export class PoolsStatisticsComponent extends PoolStatisticsCollections implemen
     super();
   }
 
-  colors = ["#acd2ee", "#e3cff7", "#f8bfa3", "#cdd2c1", "#8eced4", "#c9aacd", "#cbd4aa", "#db87ba", "#8ae487", "#c59eaf", "#a3dab1", "#f58cbb", "#ebddd3", "#91d295", "#eab2f9", "#fa81c1", "#c1faa8", "#ebc7a5", "#9ab097", "#cdf5eb"]
+  colors = ["#9dd2c8", "#efb4a1", "#e4e892", "#bfece6", "#e2b2d4", "#b7b6fe", "#f5bdbf", "#dccae1", "#c9e6a9", "#8494c2", "#fc85f1", "#8ccfb7", "#93b1ed", "#d9fa93", "#e8fcfe", "#d598ad", "#de8ddd", "#8783cd", "#f7e99f", "#ffd1a3"];
 
   public pool: FormControl = new FormControl('all');
   public period: FormControl = new FormControl(1);
@@ -78,6 +78,10 @@ export class PoolsStatisticsComponent extends PoolStatisticsCollections implemen
   }
 
   public refresh(): void {
+    
+    /* this.colors = this.colors.map(() => this.generateLightColorHex())
+    console.log(this.colors) */
+
     this.getAllPools();
     this.getStatistics();
   }
