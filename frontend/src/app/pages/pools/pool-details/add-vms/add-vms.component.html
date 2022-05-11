@@ -4,6 +4,7 @@
     <h1>Добавление вм в статический пул {{data?.namePool}}</h1>
     <button [mat-dialog-close]="true" class="form-close"><fa-icon [icon]="['fas','times-circle']"></fa-icon></button>
   </div>
+
   <div class="form-fields">
     <label class="field" title="Отображаются только ВМ, имеющие виртуальный диск" >
       <ng-container *ngIf="vms$ | async as vms; else loading">
@@ -25,21 +26,26 @@
               </mat-option>
             </mat-select>
           </mat-form-field>
+
+          <ng-container *ngIf="vmsInput.hasError('required') && checkValid">
+            <ng-container *ngTemplateOutlet="errorTemp"></ng-container>
+          </ng-container>
       </ng-container>
-      </label>
+    </label>
   </div>
+
   <div class="form-actions">
     <button (click)="send()" class="form-btn"><fa-icon [icon]="['fas','plus-circle']" size="xs"></fa-icon><span class="action-name">Добавить</span></button>
   </div>
-
 </div>
 
+<ng-template #errorTemp>
+  <div class="error" [@animForm]="error">Поле обязательно для заполения</div>
+</ng-template>
 
-
-
-  <ng-template #loading>
-    <mat-form-field>
-      <mat-label >Загрузка ...</mat-label>
-      <mat-select [disabled]='true'></mat-select>
-    </mat-form-field>
-  </ng-template>
+<ng-template #loading>
+  <mat-form-field>
+    <mat-label >Загрузка ...</mat-label>
+    <mat-select [disabled]='true'></mat-select>
+  </mat-form-field>
+</ng-template>

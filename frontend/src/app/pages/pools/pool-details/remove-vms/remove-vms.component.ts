@@ -36,12 +36,12 @@ interface IData {
 
 export class RemoveVMStaticPoolComponent implements OnDestroy {
 
-  
   private destroy: Subject<void> = new Subject<void>();
-  public checkValid: boolean = false 
+  public checkValid: boolean = false;
   public form = new FormGroup({
     vmsInput: new FormControl([], Validators.required)
-  })
+  });
+
   constructor(
     private poolService: PoolDetailsService,
     private waitService: WaitService,
@@ -57,22 +57,37 @@ export class RemoveVMStaticPoolComponent implements OnDestroy {
   
     const selectedVms = this.form.get('vmsInput').value;  
 
-    this.waitService.setWait(true);
+    let method = '';
 
-    const method = this.data.typePool === 'static' ? 'removeVMStaticPool' : 'removeVmsDynamicPool'
+    switch (this.data.typePool) {
+      case 'static':
+        method = 'removeVMStaticPool';
+        break;
+      case 'rds':
+        method = 'removeVmsFromRdsPool';
+        break;
+      case 'automated':
+        method = 'removeVmsDynamicPool';
+        break;
+      default:
+        return;
+    }
+    
+    if (method) {
+      this.waitService.setWait(true);
 
-    this.poolService[method](this.data.idPool, selectedVms).pipe(takeUntil(this.destroy)).subscribe((res) => {
-      if (res) {
-        setTimeout( () => this.poolService.getPool(this.data.idPool).refetch(), 500)
+      this.poolService[method](this.data.idPool, selectedVms).pipe(takeUntil(this.destroy)).subscribe((res) => {
+        if (res) {
+          setTimeout(() => this.poolService.getPool(this.data.idPool).refetch(), 500)
 
-        this.waitService.setWait(false);
-        this.dialogRef.close();
-      }
-    });
+          this.waitService.setWait(false);
+          this.dialogRef.close();
+        }
+      });
+    }
   }
 
   public selectAllVms(): void { 
-    
     this.form.get('vmsInput').setValue(this.data.vms.map( (vm: any) => vm.id ));
   }
 
