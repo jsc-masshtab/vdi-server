@@ -239,7 +239,7 @@ export class PoolAddComponent implements OnInit, OnDestroy {
 
   resetData() {
     this.data = {
-      connection_types: this.type === 'rds' ? ['RDP', 'NATIVE_RDP'] : ['RDP', 'NATIVE_RDP', 'SPICE', 'SPICE_DIRECT', 'X2GO'],
+      connection_types: this.type === 'rds' ? ['RDP', 'NATIVE_RDP'] : ['RDP', 'NATIVE_RDP', 'SPICE', 'SPICE_DIRECT', 'X2GO', 'LOADPLAY'],
       controllers: [],
       resource_pools: [],
       data_pools: [],
