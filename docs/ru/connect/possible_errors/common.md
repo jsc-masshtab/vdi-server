@@ -51,9 +51,31 @@
 - Проверьте статус ВМ в Web-интерфейсе **ECP VeiL**. При обнаружении проблем действуйте в соответствии 
 с документацией **ECP VeiL**.
 
-## VeiL Connect аварийно закрывается при попытке пробросить USB устройство
+## VeiL Connect аварийно закрывается при попытке пробросить USB устройство (Windows)
 
 Решение:
 
 - Зайдите в **Установка и удаление программ**, удалите UsbDk Runtime Libraries,
 удалите VeiL Connect и установите его заново. При установке поставьте галку **установить UsbDk**.
+
+## Ошибка при установке на ubuntu/astralinux: server certificate verification failed. CAfile: /etc/ssl/certs/ca-certificates.crt CRTfile: none
+
+Решение:
+
+####Способ 1
+
+Выполнить:
+
+```
+sudo sed -i '/mozilla\/DST_Root_CA_X3.crt/s/^/#/' /etc/ca-certificates.conf
+sudo update-ca-certificates --fresh
+```
+
+####Способ 2
+
+Поставить пакет с игнорированием SSL, выполнив:
+
+```
+sudo apt-get update -o Acquire::https::veil-update.mashtab.org::Verify-Peer=false
+sudo apt-get -o Acquire::https::veil-update.mashtab.org::Verify-Peer=false install veil-connect
+```
