@@ -6,14 +6,6 @@
 Дополнительную информацию смотрите в разделе руководства оператора **ECP VeiL** 
 [Создание ВМ](https://veil.mashtab.org/docs/latest/base/operator_guide/domains/create/).
 
-!!! note "VeiL Broker 4.x" 
-    Для работы **VeiL Broker** версии **4.х** можно воспользоваться готовой ВМ с ОС **Astra Linux Special Edition** версии **1.7** 
-    релиз **Смоленск**, скачав ее [резервную копию](https://veil-update.mashtab.org/files/astra/astravdi-2022.02.18-14.27.32.tar.zst).
-
-!!! note "VeiL Broker 3.x" 
-    Для работы **VeiL Broker** версии **3.х** можно воспользоваться готовой ВМ с ОС **Astra Linux Special Edition** версии **1.6** 
-    релиз **Смоленск**, скачав ее [резервную копию](https://veil-update.mashtab.org/files/astra/astravdi-2021.05.26-19.16.19.tar).
-
 На первом этапе необходимо задать следующие параметры:
 
    - локация и кластер;

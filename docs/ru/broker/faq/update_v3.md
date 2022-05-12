@@ -101,8 +101,10 @@
 
 4. Выполнить перенос получившихся файлов
 ```
-/tmp/broker_pt_1.sql  
-/tmp/broker_pt_2.sql  
+/tmp/broker_pt_1.sql 
+ 
+/tmp/broker_pt_2.sql 
+ 
 /tmp/broker_pt_3.sql
 ```
 
@@ -119,12 +121,10 @@
 
     !!! note "Примечание"
         Дампы памяти должны быть загружены в каталог, к которому будет доступ у пользователя 
-        **_vdiadmin_**.
-        ```
-        /tmp/broker_pt_1.sql  
-        /tmp/broker_pt_2.sql  
-        /tmp/broker_pt_3.sql 
-        ```
+        **_vdiadmin_**.  
+        `/tmp/broker_pt_1.sql`   
+        `/tmp/broker_pt_2.sql`    
+        `/tmp/broker_pt_3.sql`
 
 3. Выполнить установку пакета **_vdi-migration-tool_** 
 `sudo dpkg -i vdi-migration-tool_1.0-1_all.deb`
