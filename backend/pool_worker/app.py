@@ -37,8 +37,6 @@ def main():
 
     loop.run_until_complete(stop_gino())
 
-    loop.run_until_complete(single_instance_locker.unlock())
-
     loop.run_until_complete(redis_deinit())
 
 

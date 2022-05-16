@@ -263,6 +263,10 @@ class TestPool(VdiHttpTestCase):
 
     API_URL = "/client/pools/"
 
+    async def _get_pools(self, headers):
+        response = await self.get_response(body=None, url=self.API_URL, headers=headers, method="GET")
+        return response
+
     @pytest.mark.usefixtures("fixt_db", "fixt_user_admin", "fixt_create_static_pool")
     @gen_test
     async def test_superuser_pools_list(self):
@@ -307,6 +311,45 @@ class TestPool(VdiHttpTestCase):
         )
         assert "data" in response_dict
         assert len(response_dict["data"]) == 1
+
+    @pytest.mark.usefixtures("fixt_db", "fixt_user", "fixt_create_static_pool")
+    @gen_test
+    async def test_favorite_pools_list(self):
+        username = "test_user"
+        headers = await self.do_login_and_get_auth_headers(username=username)
+        headers["Get-Favorite-Only"] = "true"
+
+        # Закрепляем 1 из пулов за пользователем
+        pool = await Pool.query.gino.first()
+        user = await User.query.where(User.username == username).gino.first()
+        await pool.add_user(user.id, "system")
+
+        # Запросить избранное (должно быть 0)
+        response = await self._get_pools(headers)
+        assert len(response["data"]) == 0
+
+        # Добавить в избранное
+        url_add_to_fav = f"/client/pools/{str(pool.id)}/add-pool-to-favorite/"
+        response = await self.get_response(body="", url=url_add_to_fav, headers=headers, method="POST")
+        assert response["data"]["ok"]
+
+        # Запросить избранное (должно быть 1)
+        response = await self._get_pools(headers)
+        assert len(response["data"]) == 1
+
+        # Убрать из избранного
+        url_remove_to_fav = f"/client/pools/{str(pool.id)}/remove-pool-from-favorite/"
+        response = await self.get_response(body="", url=url_remove_to_fav, headers=headers, method="POST")
+        assert response["data"]["ok"]
+
+        # Запросить избранное (должно быть 0)
+        response = await self._get_pools(headers)
+        assert len(response["data"]) == 0
+
+        # Запросить все назначенные пулы
+        headers["Get-Favorite-Only"] = "false"
+        response = await self._get_pools(headers)
+        assert len(response["data"]) == 1
 
 
 class TestPoolVm(VdiHttpTestCase):

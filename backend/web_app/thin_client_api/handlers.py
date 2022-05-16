@@ -59,7 +59,7 @@ class PoolHandler(BaseHttpHandler):
 
         user = await self.get_user_model_instance()
         pools = await user.pools(get_favorite_only=get_favorite_only)
-        print("pools: ", pools, flush=True)
+        # print("pools: ", pools, flush=True)
         response = {"data": pools}
 
         await system_logger.info(
@@ -948,7 +948,7 @@ class AddPoolToFavoriteHandler(BaseHttpHandler):
                                  user=user.username,
                                  )
 
-        response = dict(data="success")
+        response = dict(data=dict(ok=True))
         return await self.log_finish(response)
 
 
@@ -967,5 +967,5 @@ class RemovePoolFromFavoriteHandler(BaseHttpHandler):
                                  user=user.username,
                                  )
 
-        response = dict(data="success")
+        response = dict(data=dict(ok=True))
         return await self.log_finish(response)
