@@ -55,14 +55,13 @@ def get_test_pool_name():
 @pytest.fixture
 async def fixt_redis_client():
     redis_init()
+    await redis_get_client().flushdb()
     yield
     await redis_deinit()
 
 
 @pytest.fixture
 async def fixt_launch_workers(fixt_redis_client):
-
-    await redis_get_client().flushdb()
 
     file_path = os.path.dirname(__file__)
     pool_worker_path = os.path.join(file_path, "../../pool_worker/app.py")

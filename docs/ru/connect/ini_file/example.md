@@ -3,6 +3,7 @@
 Ниже представлен пример файла настроек приложения **VeiL Connect**.
 
 ```
+
 [General]
 cur_remote_protocol_index=0
 log_output_to_file=0
@@ -54,4 +55,5 @@ session_type=XFCE
 conn_type_assigned=1
 conn_type=modem
 full_screen=1
+
 ```

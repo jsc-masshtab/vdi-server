@@ -38,7 +38,6 @@ def main():
     # free resources
     loop.run_until_complete(resources_monitor_manager.stop())
     loop.run_until_complete(stop_gino())
-    loop.run_until_complete(single_instance_locker.unlock())
     loop.run_until_complete(redis_deinit())
 
 

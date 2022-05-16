@@ -66,9 +66,14 @@ class SingleInstanceLocker:
 
     async def _keep_reacquiring(self):
 
-        while True:
-            reacquiring_timeout = 15
-            await asyncio.sleep(reacquiring_timeout)
-            # print("Before self.reacquire()", flush=True)
-            await self.reacquire()
-            # print("After self.reacquire()", flush=True)
+        try:
+            while True:
+                reacquiring_timeout = 15
+                await asyncio.sleep(reacquiring_timeout)
+                # print("Before self.reacquire()", flush=True)
+                await self.reacquire()
+                # print("After self.reacquire()", flush=True)
+        except LockError as ex:
+            loop = asyncio.get_event_loop()
+            loop.stop()
+            print(f"Event loop was stopped. {str(ex)}", flush=True)
