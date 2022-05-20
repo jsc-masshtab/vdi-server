@@ -9,9 +9,9 @@
 
 - в терминале запустить универсальный установочный скрипт путем выполнения следующих команд:
 
-```
-wget https://veil-update.mashtab.org/veil-connect/linux/veil-connect-linux-installer.sh
-sudo bash veil-connect-linux-installer.sh
-```
+`wget https://veil-update.mashtab.org/veil-connect/linux/veil-connect-linux-installer.sh`  
+
+`sudo bash veil-connect-linux-installer.sh`
+
 
 - после выполнения команд необходимо выбрать ОС из списка. В случае, если список ОС откроется в графической оболочке необходимо выбрать ОС и нажать кнопку "ОК". Если список откроется текстом в терминале необходимо набрать номер ОС из списка и нажать Enter. 
