@@ -12,6 +12,7 @@
 
 
 ```
+
 option domain-name-servers 8.8.8.8; #DNS сервера
  
 server-name "veil-pxe"
@@ -26,5 +27,6 @@ default-lease-time 3600;
 max-lease-time 3600;
 range 192.168.135.100 192.168.135.200; #Диапазон ip адресов для раздачи
 }
+
 ```
 

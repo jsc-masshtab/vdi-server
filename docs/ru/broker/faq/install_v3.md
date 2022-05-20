@@ -58,24 +58,20 @@
    
     - с записью результатов в log-файл
 
-    ```
-    sudo mount /media/cdrom && cd ~
+    `sudo mount /media/cdrom && cd ~`
      
-    sudo bash /media/cdrom/install.sh > vdi_install.log
+    `sudo bash /media/cdrom/install.sh > vdi_install.log`
         
-    sudo umount /media/cdrom  
-   ```  
-        
+    `sudo umount /media/cdrom`  
+           
      - просто установка
     
-    ```
-    sudo mount /media/cdrom && cd ~
+    `sudo mount /media/cdrom && cd ~`
      
-    sudo bash /media/cdrom/install.sh
+    `sudo bash /media/cdrom/install.sh`
      
-    sudo umount /media/cdrom  
-    ```
-   
+    `sudo umount /media/cdrom`  
+       
     !!! note "Примечание"
         Монтирование диска через GUI **Astra Linux** может привести к ошибке. Настоятельно рекомендуется монтировать 
         диски через **Терминал Fly**.
@@ -111,11 +107,9 @@
 Для этого в файле настроек `/opt/veil-vdi/app/common/local_settings.py` необходимо
 заменить стандартные значения ключей `LOCAL_AUTH` и `PAM_AUTH` на: 
 
-```
-LOCAL_AUTH = True
+`LOCAL_AUTH = True`
   
-PAM_AUTH = False
-```
+`PAM_AUTH = False`
 
 !!! warning "Предупреждение"
     Параметры являются взаимоисключающими, поэтому редактировать нужно оба.

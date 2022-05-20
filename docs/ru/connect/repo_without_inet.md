@@ -16,14 +16,14 @@
      deb http://{VM_IP_ADDRESS}/veil-connect {DISTRIB} main
      ```
    - Для rpm-based систем - `/etc/yum.repos.d/veil-connect.repo` с содержанием:
-     ```
-     [veil-connect]
-     name=VeiL Connect repository
-     baseurl=http://{VM_IP_ADDRESS}/veil-connect/linux/yum/el$releasever/$basearch
-     gpgcheck=1
-     gpgkey=http://{VM_IP_ADDRESS}/veil-connect/linux/yum/RPM-GPG-KEY-veil-connect
-     enabled=1
-     ```
+  
+     `[veil-connect]`  
+     `name=VeiL Connect repository`  
+     `baseurl=http://{VM_IP_ADDRESS}/veil-connect/linux/yum/el$releasever/$basearch`  
+     `gpgcheck=1`  
+     `gpgkey=http://{VM_IP_ADDRESS}/veil-connect/linux/yum/RPM-GPG-KEY-veil-connect`  
+     `enabled=1`  
+     
 6. Обновить списки пакетов командой:
 
     - Для deb-based систем: `apt-get update`.
@@ -40,34 +40,32 @@
 Актуальные адреса и названия для репозиториев можно получить у службы поддержки.
 
 1. Устанавливаем утилиту **wget** для создания локального зеркала репозитория на выделенный для этого сервер:
-```
-apt-get update
-apt-get install wget -y
-```
+
+`apt-get update`
+ 
+`apt-get install wget -y`
+
 2. Создаём локальное зеркало репозитория. Начнется загрузка пакетов, может занять продолжительное время, в зависимости от скорости вашего канала:
-```
-mkdir -p /opt/repo
-wget --recursive --no-parent --no-host-directories --reject='index.html*' -l 0 -P /opt/repo veil-update.mashtab.org/veil-connect/
-```
+
+`mkdir -p /opt/repo`  
+`wget --recursive --no-parent --no-host-directories --reject='index.html*' -l 0 -P /opt/repo veil-update.mashtab.org/veil-connect/`
+
 3. Устанавливаем **nginx** на тот же самый сервер:
 ```
 apt-get install nginx -y
 ```
 4. Приводим конфигурацию **/etc/nginx/sites-enabled/default** к виду:
-```
-server {
-    listen 80 default_server;
 
-    root /opt/repo;
+`server {`
+    `listen 80 default_server;`  
+    `root /opt/repo;`  
+    `server_name _;`  
+    `location / {`  
+        `try_files $uri $uri/ =404;`  
+        `autoindex on;`  
+    `}`  
+`}`  
 
-    server_name _;
-
-    location / {
-        try_files $uri $uri/ =404;
-        autoindex on;
-    }
-}
-```
 5. Обновляем конфигурацию **nginx**:
 ```
 nginx -s reload
@@ -79,14 +77,14 @@ nginx -s reload
     deb http://{LOCAL_REPO_IP_ADDRESS}/veil-connect {DISTRIB} main
     ```
     - Для rpm-based систем - `/etc/yum.repos.d/veil-connect.repo` с содержанием:
-    ```
-    [veil-connect]
-    name=VeiL Connect repository
-    baseurl=http://{LOCAL_REPO_IP_ADDRESS}/veil-connect/linux/yum/el$releasever/$basearch
-    gpgcheck=1
-    gpgkey=http://{LOCAL_REPO_IP_ADDRESS}/veil-connect/linux/yum/RPM-GPG-KEY-veil-connect
-    enabled=1
-    ```
+    
+    `[veil-connect]`  
+    `name=VeiL Connect repository`  
+    `baseurl=http://{LOCAL_REPO_IP_ADDRESS}/veil-connect/linux/yum/el$releasever/$basearch`  
+    `gpgcheck=1`  
+    `gpgkey=http://{LOCAL_REPO_IP_ADDRESS}/veil-connect/linux/yum/RPM-GPG-KEY-veil-connect`  
+    `enabled=1`  
+   
 7. Обновить списки пакетов командой:
    
     - Для deb-based систем: `apt-get update`.

@@ -21,16 +21,14 @@
 1. Подключить новый iso-образ **VeiL Broker** и выполнить 
    команды для обновления:
 
-    ```
-    sudo mount /media/cdrom
+    `sudo mount /media/cdrom`
      
-    cd ~
+    `cd ~`
    
-    sudo bash /media/cdrom/install.sh > vdi_update.log
+    `sudo bash /media/cdrom/install.sh > vdi_update.log`
     
-    sudo umount /media/cdrom
-    ```
-   
+    `sudo umount /media/cdrom`
+       
 1. Вернуться в окно управления **ECP VeiL** и перейти во вкладку **Виртуальная машина** - <имя ВМ> - **CD-ROM**. 
    В списке приводов нажать на название привода и в открывшемся диалоговом окне размонтировать 
    iso-образ, нажав кнопку **Извлечь**.
@@ -62,16 +60,14 @@
  
 1. Выполнить команды для обновления:
 
-    ```
-    sudo apt-get update
+    `sudo apt-get update`
      
-    sudo apt-get upgrade -y
+    `sudo apt-get upgrade -y`
      
-    sudo rm -f /etc/apt/sources.list.d/vdi.list
+    `sudo rm -f /etc/apt/sources.list.d/vdi.list`
      
-    sudo apt-get update
-    ```
-    
+    `sudo apt-get update`
+     
     !!! info "Просроченный корневой сертификат"
          Если при выполнении команды `sudo apt-get update` происходит ошибка 
          **"Данные из этого репозитория нельзя аутентифицировать, и поэтому потенциально 
@@ -100,13 +96,13 @@
 `cd /opt/veil-vdi/app && ./migrate.sh -v 2`
 
 4. Выполнить перенос получившихся файлов
-```
-/tmp/broker_pt_1.sql 
+
+   `/tmp/broker_pt_1.sql` 
  
-/tmp/broker_pt_2.sql 
+   `/tmp/broker_pt_2.sql` 
  
-/tmp/broker_pt_3.sql
-```
+   `/tmp/broker_pt_3.sql`
+
 
 ### Команды для запуска на версии 3
 

@@ -100,14 +100,14 @@
 - выполняем следующие команды:
 
     ```
-        apt install build-essential linux-headers-amd64
-        modprobe -r nouveau
-        sh ./NVIDIA-Linux-x86_64-440.43-vgpu-kvm.run --disable-nouveau
-        mkdir /usr/lib64
-        ln -s /usr/lib/x86_64-linux-gnu/libnvidia-vgpu.so /usr/lib64
-        ln -s /usr/lib/x86_64-linux-gnu/libnvidia-vgxcfg.so /usr/lib64
-        ln -s /usr/lib/x86_64-linux-gnu/libnvidia-ml.so /usr/lib64
-        ln -s /usr/lib/x86_64-linux-gnu/libnvidia-cfg.so /usr/lib64
+        apt install build-essential linux-headers-amd64  
+        modprobe -r nouveau  
+        sh ./NVIDIA-Linux-x86_64-440.43-vgpu-kvm.run --disable-nouveau  
+        mkdir /usr/lib64  
+        ln -s /usr/lib/x86_64-linux-gnu/libnvidia-vgpu.so /usr/lib64  
+        ln -s /usr/lib/x86_64-linux-gnu/libnvidia-vgxcfg.so /usr/lib64  
+        ln -s /usr/lib/x86_64-linux-gnu/libnvidia-ml.so /usr/lib64  
+        ln -s /usr/lib/x86_64-linux-gnu/libnvidia-cfg.so /usr/lib64  
     ```
 
     !!! note "Примечание"

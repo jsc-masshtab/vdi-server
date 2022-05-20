@@ -1,8 +1,8 @@
 # Описание логирования
 
-!!! info ""
-        На Linux логи пишутся в папку **/opt/veil-connect/log**. 
-        На Windows - в папку **C:\Users\{текущий пользователь}\AppData\Local\VeilConnect\log**.
+!!! info "Примечание"
+    На Linux логи пишутся в папку **/opt/veil-connect/log**.  
+    На Windows - в папку **C:\Users\{текущий пользователь}\AppData\Local\VeilConnect\log**.
 
 ### Структура логов
 

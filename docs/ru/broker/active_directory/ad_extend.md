@@ -94,13 +94,16 @@
     `(&(objectclass=posixAccount)(objectclass=person)(!(nsaccountlock=TRUE))`
 
 !!! info "Фильтры, используемые при построении списка пользователей MS AD"
-    ```
-    base_filter = '(&(sAMAccountName=*)'
-    locked_account_filter = '(!(userAccountControl:1.2.840.113556.1.4.803:=2))'
-    persons_filter = '(|(objectCategory=USER)(objectCategory=PERSON))(objectClass=USER)'
-    member_of_filter = '(memberOf={})'.format(groups_cn)
-    final_filter = ''.join([base_filter, locked_account_filter, persons_filter, member_of_filter, ')'])
-    ```
+    `base_filter = '(&(sAMAccountName=*)'`  
+
+    `locked_account_filter = '(!(userAccountControl:1.2.840.113556.1.4.803:=2))'`  
+
+    `persons_filter = '(|(objectCategory=USER)(objectCategory=PERSON))(objectClass=USER)'`  
+
+    `member_of_filter = '(memberOf={})'.format(groups_cn)`  
+
+    `final_filter = ''.join([base_filter, locked_account_filter, persons_filter, member_of_filter, ')'])`
+    
 
 !!! info "Фильтры, используемые при построении списка пользователей Free IPA"
     ```
