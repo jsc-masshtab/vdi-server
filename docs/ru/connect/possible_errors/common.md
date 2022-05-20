@@ -68,6 +68,8 @@
 
 ```
 sudo sed -i '/mozilla\/DST_Root_CA_X3.crt/s/^/#/' /etc/ca-certificates.conf
+```
+```
 sudo update-ca-certificates --fresh
 ```
 
@@ -77,6 +79,7 @@ sudo update-ca-certificates --fresh
 
 ```
 sudo apt-get update -o Acquire::https::veil-update.mashtab.org::Verify-Peer=false
-
+```
+```
 sudo apt-get -o Acquire::https::veil-update.mashtab.org::Verify-Peer=false install veil-connect
 ```
