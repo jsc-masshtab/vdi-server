@@ -99,17 +99,15 @@
 - заходим в shell;
 - выполняем следующие команды:
 
-    ```
-        apt install build-essential linux-headers-amd64  
-        modprobe -r nouveau  
-        sh ./NVIDIA-Linux-x86_64-440.43-vgpu-kvm.run --disable-nouveau  
-        mkdir /usr/lib64  
-        ln -s /usr/lib/x86_64-linux-gnu/libnvidia-vgpu.so /usr/lib64  
-        ln -s /usr/lib/x86_64-linux-gnu/libnvidia-vgxcfg.so /usr/lib64  
-        ln -s /usr/lib/x86_64-linux-gnu/libnvidia-ml.so /usr/lib64  
-        ln -s /usr/lib/x86_64-linux-gnu/libnvidia-cfg.so /usr/lib64  
-    ```
-
+    `apt install build-essential linux-headers-amd64`    
+    `modprobe -r nouveau`  
+    `sh ./NVIDIA-Linux-x86_64-440.43-vgpu-kvm.run --disable-nouveau`    
+    `mkdir /usr/lib64`    
+    `ln -s /usr/lib/x86_64-linux-gnu/libnvidia-vgpu.so /usr/lib64`    
+    `ln -s /usr/lib/x86_64-linux-gnu/libnvidia-vgxcfg.so /usr/lib64`    
+    `ln -s /usr/lib/x86_64-linux-gnu/libnvidia-ml.so /usr/lib64`    
+    `ln -s /usr/lib/x86_64-linux-gnu/libnvidia-cfg.so /usr/lib64`  
+    
     !!! note "Примечание"
         В процессе установки инсталлятор предложит установить драйверы через DKMS,
         следует отказаться.
@@ -157,10 +155,9 @@
 то через SSH указываем драйверу PCI адрес видеоадаптера Nvidia:
 ищем наш видеоадаптер в выводе команды `lspci` и идём править `/etc/X11/xorg.conf`.
 Там в секции **Device** прописываем строку, например, если PCI адрес MDEV равен **00:000a:00.0**,
-```
- # не забываем перевести hex в dec!
- BusID          "PCI:0:10:0"
-```
+
+ `# не забываем перевести hex в dec!`  
+ `BusID          "PCI:0:10:0"`
 
 Перезагружаем машину, изображение должно быть.
 

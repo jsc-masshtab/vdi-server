@@ -94,7 +94,7 @@
 ## Не удалось добавить TCP USB устройство к виртуальной машине
  
  !!! example ""
-    ![image](../../_assets/vdi/thin_client/usb_tcp_atach_error.png)
+     ![image](../../_assets/vdi/thin_client/usb_tcp_atach_error.png)
  
  Данное сообщение будет показано в случае, если **ECP VeiL** не смог добавить TCP USB устройство текущей ВМ.
  

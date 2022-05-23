@@ -33,11 +33,11 @@ wget -qO - https://veil-update.mashtab.org/veil-repo-key.gpg | sudo apt-key add 
 
 - Для Centos 7 / Centos 8 cоздайте файл `/etc/yum.repos.d/veil-connect.repo` (от имени суперпользователя) и добавьте в него следующие строки:
 
-`name=VeiL Connect repository`  
-`baseurl=https://veil-update.mashtab.org/veil-connect/linux/yum/el$releasever/$basearch`  
-`gpgcheck=1`  
-`gpgkey=https://veil-update.mashtab.org/veil-connect/linux/yum/RPM-GPG-KEY-veil-connect`  
-`enabled=1`  
+    `name=VeiL Connect repository`  
+    `baseurl=https://veil-update.mashtab.org/veil-connect/linux/yum/el$releasever/$basearch`  
+    `gpgcheck=1`  
+    `gpgkey=https://veil-update.mashtab.org/veil-connect/linux/yum/RPM-GPG-KEY-veil-connect`  
+    `enabled=1`  
 
 - После этого выполните в терминале команду: `sudo yum makecache`.
 

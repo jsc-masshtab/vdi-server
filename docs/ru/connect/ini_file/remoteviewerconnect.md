@@ -15,6 +15,6 @@
 | to_save_pswd                     | Сохранять ли пароль в ini файл                                                                           | 1/0                |
 
 !!! note "Примечание" 
-  Для автоподключения к определенному пулу при старте приложения RemoteViewerConnect/connect_to_pool должен быть равкн 1, 
+  Для автоподключения к определенному пулу при старте приложения RemoteViewerConnect/connect_to_pool должен быть равен 1, 
  в RemoteViewerConnect/pool_id должен быть указан id пула, в General/cur_remote_protocol_index должен 
  быть указан протокол подключения.
