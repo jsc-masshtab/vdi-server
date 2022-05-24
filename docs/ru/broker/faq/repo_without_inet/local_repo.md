@@ -12,9 +12,9 @@
 2. Выполнить установку ОС **Debian** версии **9** или **10** и настройку сети виртуальной машины.
 3. Установить утилиту **_apt-mirror_** для создания локального зеркала репозитория на выделенный для этого сервер:
    
-   `apt-get update`
+    `apt-get update`
    
-   `apt-get install apt-mirror -y`
+    `apt-get install apt-mirror -y`
     
 4. Привести конфигурационный файл **_/etc/apt/mirror.list_** к виду:
    
@@ -52,7 +52,7 @@
        `listen 80 default_server;`      
         `root /var/spool/apt-mirror/mirror/veil-update.mashtab.org;`    
         `server_name _;`    
-        `location / {`
+        `location / {`  
             `try_files $uri $uri/ =404;`  
             `autoindex on;`  
          `}`  

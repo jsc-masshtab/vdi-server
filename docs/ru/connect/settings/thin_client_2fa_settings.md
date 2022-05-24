@@ -12,23 +12,23 @@
 
 1. После успешной авторизации нажмите кнопку **Настройки профиля**.
 
-   ![image](../../_assets/vdi/thin_client/2fa/vdi_pools_window.png)
+    ![image](../../_assets/vdi/thin_client/2fa/vdi_pools_window.png)
 
 1. В открывшемся окне активируйте пункт **Двухфакторная аутентификация**.
 
-   ![image](../../_assets/vdi/thin_client/2fa/2fa_1.png)
+    ![image](../../_assets/vdi/thin_client/2fa/2fa_1.png)
 
 1. Нажмите кнопку **Сгенерировать новый код**.
 
-   ![image](../../_assets/vdi/thin_client/2fa/2fa_2.png)
+    ![image](../../_assets/vdi/thin_client/2fa/2fa_2.png)
 
 1. Отсканируйте QR-код c помощью аутентификатора (система тестировалась с приложениями: Яндекс.Ключ, Google Authenticator).
 
-   ![image](../../_assets/vdi/thin_client/2fa/2fa_3.png)
+    ![image](../../_assets/vdi/thin_client/2fa/2fa_3.png)
 
 1. Нажмите **Применить**.
 
-   ![image](../../_assets/vdi/thin_client/2fa/2fa_4.png)
+    ![image](../../_assets/vdi/thin_client/2fa/2fa_4.png)
     
     
 ### Отключение
