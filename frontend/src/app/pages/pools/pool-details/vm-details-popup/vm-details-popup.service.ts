@@ -227,6 +227,22 @@ export class VmDetailsPopupService {
     });
   }
 
+  public prepareVm(data) {
+    return this.service.mutate<any>({
+      mutation: gql`
+                mutation pools($vm: ID!) {
+                     prepareVm(vm_id: $vm) {
+                        ok
+                    }
+                }
+            `,
+      variables: {
+        method: 'POST',
+        ...data
+      }
+    });
+  }
+
   public convertToTemplate(vm_id: string, data) {
     return this.service.mutate<any>({
       mutation: gql`

@@ -50,7 +50,7 @@
         <vdi-checkbox-input [formControl]='vm_status' (click)="toggleReserve($event)">Зарезервировано</vdi-checkbox-input>
       </div>
       
-      <button [mat-dialog-close]="true" *ngIf="data?.typePool != 'static'" (click)="prepareVM()" title="Подготовка ВМ" class="btn-control">
+      <button *ngIf="data?.typePool != 'static'" (click)="prepareVM()" title="Подготовка ВМ" class="btn-control">
         <fa-icon [icon]="['fas','suitcase']"></fa-icon>
 
         <span class="name">Подготовка ВМ</span>
