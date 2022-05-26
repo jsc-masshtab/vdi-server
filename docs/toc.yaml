@@ -274,6 +274,7 @@ nav:
       - 3.0.0: broker/changelog/3.0.0.md
       - 2.1.4: broker/changelog/2.1.4.md
     - VeiL Connect:
+      - 1.13.0: connect/changelog/1.13.0.md
       - 1.12.0: connect/changelog/1.12.0.md
       - 1.11.3: connect/changelog/1.11.3.md
       - 1.11.2: connect/changelog/1.11.2.md
