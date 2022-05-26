@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 import socket
 import ssl
 
@@ -8,8 +7,6 @@ from tornado.ioloop import IOLoop
 from tornado.options import define, options
 from tornado.process import task_id
 from tornado.web import Application
-
-import uvloop
 
 from common.database import start_gino, stop_gino
 from common.languages import _local_
@@ -151,8 +148,15 @@ async def startup_alerts(vdi_license):
             await system_logger.warning(_local_("DEBUG mode is enabled."))
 
 
-async def startup_server():
-    """Запуск брокера."""
+async def init_systems():
+    """Инитализация систем. Здесь код требующий асинхронного выполнерия."""
+    # Инициализация БД
+    await start_gino(app)
+    # Вывод уведомлений
+    await startup_alerts(vdi_license)
+
+
+if __name__ == "__main__":
     # Парсинг аргументов
     options.parse_command_line()
 
@@ -162,8 +166,13 @@ async def startup_server():
 
     # Инициализация редис
     redis_init()
-    # Инициализация клиента
+
+    # Инициализация HTTP клиента (контроллеров)
     get_veil_client_singleton()
+
+    # Инициализация лицензии
+    vdi_license = init_license()
+
     # Запуск tornado
     if options.ssl:
         ssl_options = make_ssl()
@@ -173,15 +182,7 @@ async def startup_server():
 
     server.listen(port=options.port, address=options.address)
     server.start(options.workers)
-    # Инициализация лицензии
-    vdi_license = init_license()
-    # Инициализация БД
-    await start_gino(app)
-    # Вывод уведомлений
-    await startup_alerts(vdi_license)
 
+    IOLoop.current().run_sync(init_systems)
 
-if __name__ == "__main__":
-    uvloop.install()
-    IOLoop.current().run_sync(startup_server)
     IOLoop.current().start()
