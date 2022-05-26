@@ -255,22 +255,20 @@ class Vm(VeilModel):
         # Добавлено 02.06.2021
         await EntityOwnerModel.multi_remove(ids=[self.id],
                                             entity_type=self.entity_type)
-        # Отключено 02.06.2021
-        # entity = EntityModel.select("id").where(
-        #     (EntityModel.entity_type == self.entity_type)
-        #     & (EntityModel.entity_uuid == self.id)  # noqa: W503
-        # )
-        # entity_id = await entity.gino.all()
-        # if entity_id:
-        #     await EntityOwnerModel.delete.where(
-        #         EntityOwnerModel.entity_id == entity
-        #     ).gino.status()
 
         if remove_on_controller and self.created_by_vdi:
             try:
-                domain_entity = await self.vm_client
-                if not domain_entity:
+                vm_controller = await self.controller
+                controller_client = vm_controller.veil_client
+                if not controller_client:
                     raise AssertionError(_local_("VM has no api client."))
+
+                # Удаление объектов (Computer) из OU AD
+                await Vm.delete_computers_from_ad(controller_client=controller_client,
+                                                  vms_ids=[str(self.id)],
+                                                  creator=creator)
+
+                domain_entity = controller_client.domain(domain_id=self.id_str)
                 delete_response = await domain_entity.remove(full=True)
                 delete_task = delete_response.task
                 await self.task_waiting(delete_task)
@@ -292,7 +290,6 @@ class Vm(VeilModel):
                     entity=self.entity,
                 )
             except asyncio.CancelledError:
-                # Здесь бы в идеале отменять задачу удаления вм на вейле
                 raise
             except Exception as e:  # noqa
                 # Сейчас нас не заботит что пошло не так при удалении на ECP.
@@ -556,10 +553,9 @@ class Vm(VeilModel):
 
     @staticmethod
     async def remove_vms(vm_ids, creator="system", remove_vms_on_controller=False):
-        """Remove given vms."""
+        """Remove given vms. Outdated."""
         if not vm_ids:
             return False
-        # Ради логирования и вывода из домена удаление делается по 1 ВМ.
         await asyncio.gather(
             *[
                 Vm.remove_vm_with_timeout(vm_id, creator, remove_vms_on_controller)
@@ -567,6 +563,58 @@ class Vm(VeilModel):
             ]
         )
         return True
+
+    @classmethod
+    async def delete_computers_from_ad(cls, controller_client, vms_ids, creator="system"):
+        """Удалить объекты (Computer) из OU AD."""
+        try:
+            # На данный момент может быть только одна АД
+            auth_dirs = await AuthenticationDirectory.get_objects()
+            if not auth_dirs:
+                return
+            auth_dir = auth_dirs[0]
+
+            # Establish connection to AD
+            connection = await auth_dir.get_connection()
+            if not connection:
+                return
+
+            dc_str = auth_dir.convert_dc_str(auth_dir.dc_str)
+
+            # Получить информацию о hostname
+            ids_str = ",".join(vms_ids)
+            fields = ["id", "verbose_name", "guest_utils"]
+            domains_list_response = await controller_client.domain().list(
+                fields=fields, params={"ids": ids_str}
+            )
+            vms = domains_list_response.paginator_results
+
+            # Удалить объекты из АД
+            for vm_info in vms:
+                guest_utils = vm_info.get("guest_utils")
+                name = None
+                if guest_utils:
+                    name = guest_utils.get("hostname")
+
+                # Если не удалось получить hostname то пробуем удалить по имени
+                # (вероятночть высока что hostname и verbose_name совпадают)
+                if not name:
+                    name = vm_info.get("verbose_name")
+
+                if not name:
+                    continue
+
+                connection.delete(f"CN={name},CN=Computers,{dc_str}")
+                await asyncio.sleep(0.01)
+
+            # Close connection
+            connection.unbind()
+        except Exception as ex:  # Широкое исключение, так как ошибка удаление объекта из АД незначительна
+            # и не должна влиять на задачу удаления ВМ
+            await system_logger.warning(_local_("Error occurred during deleting Computers "
+                                                "from Authentication Directory"),
+                                        description=str(ex),
+                                        user=creator)
 
     @classmethod
     async def step_by_step_removing(cls,
@@ -583,9 +631,15 @@ class Vm(VeilModel):
         for i in range(0, len(vms_ids), DOMAIN_CREATION_MAX_STEP):
             slice_end = i + DOMAIN_CREATION_MAX_STEP
             vms_group = vms_ids[slice_start:slice_end]
-            # Снимаем действующие блокировки для ВМ
+            # Отменяем задачи, если есть
             for vm_id in vms_group:
                 await send_cmd_to_cancel_tasks_associated_with_entity(vm_id)
+
+            # Удаление объектов (Computer) из OU AD
+            await cls.delete_computers_from_ad(controller_client=controller_client,
+                                               vms_ids=vms_group,
+                                               creator=creator)
+
             # Запускаем удаление блока
             await cls.remove_vms_with_timeout(controller_client=controller_client,
                                               vms_ids=vms_group,
