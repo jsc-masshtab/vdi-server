@@ -833,17 +833,13 @@ class Pool(VeilModel):
                         ),
                         entity=vm.entity,
                     )
-                # Отключено 02.06.2021
-                # await VmModel.remove_vms(vm_ids, creator, True)
-                # Добавлено 02.06.2021
+
                 await VmModel.step_by_step_removing(controller_client=controller_client,
                                                     vms_ids=vm_ids,
                                                     creator=creator,
                                                     remove_from_ecp=True)
             else:
                 vm_ids = await VmModel.get_vms_ids_in_pool(self.id)
-                # Отключено 02.06.2021
-                # await VmModel.remove_vms(vm_ids, creator)
                 await VmModel.step_by_step_removing(controller_client=controller_client,
                                                     vms_ids=vm_ids,
                                                     creator=creator,

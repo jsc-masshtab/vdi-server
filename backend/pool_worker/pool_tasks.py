@@ -588,11 +588,23 @@ class RemoveVmsTask(AbstractTask):
 
         if pool_type == Pool.PoolTypes.AUTOMATED or pool_type == Pool.PoolTypes.GUEST:
             async with redis_get_client().lock(str(pool.id)):
-                await self.remove_vms(pool, remove_vms_on_controller=True)
+                await self._remove_vms(pool, remove_vms_on_controller=True)
         else:
-            await self.remove_vms(pool)
+            await self._remove_vms(pool)
 
-    async def remove_vms(self, pool, remove_vms_on_controller=False):
+    async def _remove_vms(self, pool, remove_vms_on_controller=False):
         await pool.remove_vms(self._vm_ids, self.task_model.creator)
-        # remove vms from db
-        await Vm.remove_vms(self._vm_ids, self.task_model.creator, remove_vms_on_controller)
+        # remove vms
+        controller_obj = await pool.controller_obj
+        controller_client = controller_obj.veil_client
+        await Vm.step_by_step_removing(controller_client=controller_client,
+                                       vms_ids=self._vm_ids,
+                                       creator=self.task_model.creator,
+                                       remove_from_ecp=remove_vms_on_controller)
+
+    # override
+    async def do_on_fail(self):
+        for vm_id in self._vm_ids:
+            vm = await Vm.get(vm_id)
+            if vm:
+                await vm.set_status(Status.FAILED)

@@ -31,10 +31,6 @@ class AuthHandler(BaseHttpHandler, ABC):
 
             username = self.args["username"]
             password = self.args["password"]
-            if "code" in self.args:
-                two_factor_code = self.args["code"]
-            else:
-                two_factor_code = None
 
             if not username or len(username) < 2:
                 raise ValidationError(_local_("Missing username."))
@@ -68,7 +64,7 @@ class AuthHandler(BaseHttpHandler, ABC):
                     _local_("Auth system is disabled. Check broker settings.")
                 )
 
-            await User.check_2fa(username, two_factor_code)
+            await User.check_2fa(username, self.args.get("code"))
 
             access_token = encode_jwt(account_name, domain=domain_name)
             if self.client_type == "thin-client":
@@ -83,7 +79,7 @@ class AuthHandler(BaseHttpHandler, ABC):
                 client_type=self.client_type,
             )
             response = {"data": access_token}
-
+        # TODO: Почему при неудаче код 200 в исключениях? Возвращать 403
         except RuntimeError as auth_error:
             await self._create_error_msg_and_log(auth_error)
             response = {"errors": [{"message": str(auth_error)}]}

@@ -349,6 +349,7 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
                 ldap_server.simple_bind_s(self.connection_username, self.password)
             else:
                 ldap_server.simple_bind_s()
+
         except (ldap.INVALID_CREDENTIALS, TypeError):
             await self.update(status=Status.BAD_AUTH).apply()
             return False

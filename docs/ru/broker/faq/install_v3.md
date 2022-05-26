@@ -164,7 +164,7 @@
 
   `description=Ports for VeiL-Broker`
 
-  `ports=443,80,6379/tcp`
+  `ports=443,80/tcp`
 
 - перезапустить фаервол c помощью команды
 

@@ -141,7 +141,7 @@ REDIS_TEXT_MSG_CHANNEL = (
 # пользователями ТК
 REDIS_ASYNC_TIMEOUT = 0.01
 REDIS_RECONNECT_TIMEOUT = 5
-REDIS_EXPIRE_TIME = 600  # Время хранения кэша, сек.
+REDIS_EXPIRE_TIME = 30  # Время хранения кэша, сек.
 
 POOL_TASK_QUEUE = "POOL_TASK_QUEUE"  # Очередь задач воркера
 POOL_WORKER_CMD_CHANNEL = (
