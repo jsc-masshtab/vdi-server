@@ -1,11 +1,11 @@
 FROM python:3.7-slim-buster
-#FROM python:3.7-alpine
 COPY devops/deb/veil-broker-backend/root/usr/sbin/* /usr/sbin/
-ADD backend /opt/veil-vdi/app
-WORKDIR /opt/veil-vdi/app
+ADD backend /opt/broker-backend/app
+WORKDIR /opt/broker-backend/app
 RUN chmod 755 /usr/sbin/vdi_* && \
     apt-get update && apt-get install -y gcc libldap2-dev libsasl2-dev iproute2 && \
-#RUN apk add --no-cache build-base libffi-dev openldap-dev postgresql-dev && \
-    pip install -r requirements.txt && \
+    pip install -r requirements.txt \
+        -i http://nexus.bazalt.team/repository/pypi-proxy/simple \
+        --trusted-host nexus.bazalt.team && \
     apt-get purge gcc -y && apt-get autoremove -y && \
     rm -f /var/cache/apt/archives/*.deb /var/cache/apt/archives/partial/*.deb /var/cache/apt/*.bin || true

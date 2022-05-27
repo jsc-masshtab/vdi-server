@@ -7,6 +7,15 @@ services:
     environment:
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_DB=vdi
+    deploy:
+      placement:
+        constraints: [node.role == manager]
+    volumes:
+      - type: volume
+        source: dbdata
+        target: /var/lib/postgresql/data
+        volume:
+          nocopy: true
   vdi-redis:
     image: redis:5-alpine
     command: redis-server --requirepass 4NZ7GpHn4IlshPhb --bind 0.0.0.0
@@ -18,7 +27,7 @@ services:
       restart_policy:
         condition: none
     environment:
-      - PYTHONPATH=/opt/veil-vdi/app
+      - PYTHONPATH=/opt/broker-backend/app
       - PYTHONDONTWRITEBYTECODE=1
       - PYTHONPYCACHEPREFIX=/tmp
       - VDI_BROKER_DB_HOST=vdi-postgres
@@ -28,9 +37,11 @@ services:
   vdi-tornado:
     image: nexus.bazalt.team/veil-broker-backend:latest
     deploy:
-      replicas: 3
+      mode: global
+      update_config:
+        parallelism: 1
     environment:
-      - PYTHONPATH=/opt/veil-vdi/app
+      - PYTHONPATH=/opt/broker-backend/app
       - PYTHONDONTWRITEBYTECODE=1
       - PYTHONPYCACHEPREFIX=/tmp
       - VDI_BROKER_DB_HOST=vdi-postgres
@@ -40,14 +51,14 @@ services:
       - vdi-postgres
       - vdi-redis
       - vdi-migrations
-    expose:
-      - "8888"
   vdi-pool-worker:
     image: nexus.bazalt.team/veil-broker-backend:latest
     deploy:
-      replicas: 3
+      mode: global
+      update_config:
+        parallelism: 1
     environment:
-      - PYTHONPATH=/opt/veil-vdi/app
+      - PYTHONPATH=/opt/broker-backend/app
       - PYTHONDONTWRITEBYTECODE=1
       - PYTHONPYCACHEPREFIX=/tmp
       - VDI_BROKER_DB_HOST=vdi-postgres
@@ -58,9 +69,11 @@ services:
   vdi-monitor-worker:
     image: nexus.bazalt.team/veil-broker-backend:latest
     deploy:
-      replicas: 3
+      mode: global
+      update_config:
+        parallelism: 1
     environment:
-      - PYTHONPATH=/opt/veil-vdi/app
+      - PYTHONPATH=/opt/broker-backend/app
       - PYTHONDONTWRITEBYTECODE=1
       - PYTHONPYCACHEPREFIX=/tmp
       - VDI_BROKER_DB_HOST=vdi-postgres
@@ -69,25 +82,21 @@ services:
     depends_on:
       - vdi-tornado
       - vdi-pool-worker
-  vdi-angular:
+  vdi-frontend:
     image: nexus.bazalt.team/veil-broker-frontend:latest
     deploy:
-      replicas: 3
-    command: sh -c "npm start --prefix /home/node/app/ -- --host=0.0.0.0 --disableHostCheck & npm run thin-client --prefix /home/node/app/ -- --host=0.0.0.0 --disableHostCheck"
+      mode: global
+      update_config:
+        parallelism: 1
     depends_on:
       - vdi-tornado
-    expose:
-      - "4200"
+    ports:
+      - "443:443"
+      - "80:80"
   vdi-guacamole:
     image: guacamole/guacd:1.3.0
     depends_on:
       - vdi-tornado
-    expose:
-      - "4822"
-  vdi-nginx:
-    image: nexus.bazalt.team/veil-broker-nginx:latest
-    depends_on:
-      - vdi-angular
-    ports:
-      - "443:443"
-      - "80:80"
+
+volumes:
+  dbdata:

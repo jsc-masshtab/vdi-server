@@ -1,0 +1,5 @@
+Jinja2==3.0.0
+mkdocs==1.2.3
+mkdocs-material==7.3.6
+mkdocs-print-site-plugin==2.1 
+pymdown-extensions==9.1

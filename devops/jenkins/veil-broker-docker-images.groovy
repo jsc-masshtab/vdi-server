@@ -49,7 +49,6 @@ pipeline {
         choice(      name: 'AGENT',    choices: ['cloud-ubuntu-20', 'bld-agent'], description: 'jenkins build agent')
         booleanParam(name: 'BACKEND',  defaultValue: true,                        description: 'veil-broker-backend')
         booleanParam(name: 'FRONTEND', defaultValue: true,                        description: 'veil-broker-frontend')
-        booleanParam(name: 'NGINX',    defaultValue: false,                       description: 'veil-broker-nginx')
     }
 
     stages {
@@ -97,27 +96,6 @@ pipeline {
                     steps {
                         sh script: '''
                             COMPONENT="frontend"
-                            echo -n $NEXUS_CREDS_PSW | docker login -u $NEXUS_CREDS_USR --password-stdin $NEXUS_DOCKER_REGISTRY
-                            docker pull $DOCKER_IMAGE_NAME-$COMPONENT:latest || true
-                            docker build . --pull \
-                                           --cache-from $DOCKER_IMAGE_NAME-$COMPONENT:latest \
-                                           -f devops/docker/prod/Dockerfile.$COMPONENT \
-                                           --tag $DOCKER_IMAGE_NAME-$COMPONENT:$VERSION
-                            docker push $DOCKER_IMAGE_NAME-$COMPONENT:$VERSION
-                            docker tag $DOCKER_IMAGE_NAME-$COMPONENT:$VERSION $DOCKER_IMAGE_NAME-$COMPONENT:latest
-                            docker push $DOCKER_IMAGE_NAME-$COMPONENT:latest
-                        '''
-                    }
-                }
-
-                stage ('nginx. docker build') {
-                    when {
-                        beforeAgent true
-                        expression { params.NGINX == true }
-                    }
-                    steps {
-                        sh script: '''
-                            COMPONENT="nginx"
                             echo -n $NEXUS_CREDS_PSW | docker login -u $NEXUS_CREDS_USR --password-stdin $NEXUS_DOCKER_REGISTRY
                             docker pull $DOCKER_IMAGE_NAME-$COMPONENT:latest || true
                             docker build . --pull \
