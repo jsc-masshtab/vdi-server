@@ -1,3 +1,0 @@
-FROM nginx:stable-alpine
-ADD devops/nginx/vdi.conf /etc/nginx/conf.d/vdi.conf
-ADD backend/common/veil_ssl/* /etc/ssl/private/
