@@ -557,7 +557,8 @@ class TestAuthenticationDirectoryUtils:
                            sync_data:
                                {group_ad_guid: "ec0efca9-5878-4ab4-bb8f-149af659e115",
                                 group_verbose_name: "veil-ad-users",
-                                group_ad_cn: "CN=veil-ad-users,CN=Users,DC=bazalt,DC=local"})
+                                group_ad_cn: "CN=veil-ad-users,CN=Users,DC=bazalt,DC=local"},
+                                convert_local_users_to_ad: true)
                            {ok}}"""
         executed = await execute_scheme(
             auth_dir_schema, query, context=fixt_auth_context
@@ -618,7 +619,8 @@ class TestAuthenticationDirectoryUtils:
         """Проверяем что работает поиск по id и просмотр доступных для назначения групп."""
         query = """mutation{syncOpenLDAPUsers(
                                    auth_dir_id: "10923d5d-ba7a-4049-88c5-769267a6cbe7",
-                                   ou: "users")
+                                   ou: "users",
+                                   convert_local_users_to_ad: true)
                                    {ok}
                 }"""
         executed = await execute_scheme(

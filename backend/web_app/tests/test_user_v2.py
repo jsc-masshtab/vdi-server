@@ -112,6 +112,34 @@ class TestUserSchema:
         executed = await execute_scheme(user_schema, query, context=fixt_auth_context)
         snapshot.assert_match(executed)
 
+    async def test_user_create_and_delete(self, snapshot, fixt_auth_context):  # noqa
+        # create
+        query = """mutation {
+                createUser(
+                username: "testuser",  # !обязательное поле
+                password: "qwQ123$%",  # !обязательное поле
+                groups: []
+                )
+                {
+                ok,
+                user {id}
+                }
+                }"""
+        executed = await execute_scheme(user_schema, query, context=fixt_auth_context)
+        assert executed["createUser"]["ok"]
+
+        user_id = executed["createUser"]["user"]["id"]
+
+        # delete
+        query = """mutation {
+                deleteUser(id: "%s")
+                {
+                ok
+                }
+                }""" % user_id
+        executed = await execute_scheme(user_schema, query, context=fixt_auth_context)
+        assert executed["deleteUser"]["ok"]
+
     async def test_user_create_bad(self, snapshot, fixt_auth_context):  # noqa
         query = """mutation {
                 createUser(

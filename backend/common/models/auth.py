@@ -125,8 +125,8 @@ class User(AbstractSortableStatusModel, VeilModel):
         db.Boolean(), default=False
     )  # Атрибут локальной авторизации
     is_active = db.Column(db.Boolean(), default=True)
-    two_factor = db.Column(db.Boolean(), default=False)
-    secret = db.Column(db.Unicode(length=32), nullable=True)
+    two_factor = db.Column(db.Boolean(), default=False)  # 2fa
+    secret = db.Column(db.Unicode(length=32), nullable=True)  # 2fa
     by_ad = db.Column(db.Boolean(), default=False)
     local_password = db.Column(db.Boolean(), default=True)
 
@@ -622,6 +622,26 @@ class User(AbstractSortableStatusModel, VeilModel):
             if not pam_result.success:
                 return pam_result
         return result
+
+    async def convert_to_ad_user(self, username, first_name, last_name, email, creator):
+        """Convert local user to ad user."""
+        if self.by_ad:
+            return
+
+        encoded_password = hashers.make_password(None, salt=SECRET_KEY)  # to remove local password
+        await self.update(password=encoded_password,
+                          first_name=first_name,
+                          last_name=last_name,
+                          email=email,
+                          is_superuser=False,
+                          is_active=True,
+                          by_ad=True,
+                          local_password=False).apply()
+
+        entity = {"entity_type": EntityType.AUTH, "entity_uuid": None}
+        await system_logger.info(
+            _local_(f"Local user {username} was converted to domain user."),
+            entity=entity, user=creator)
 
     @classmethod
     async def soft_create(

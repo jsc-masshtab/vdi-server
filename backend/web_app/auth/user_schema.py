@@ -9,6 +9,7 @@ from sqlalchemy import and_
 from common.database import db
 from common.graphene_utils import ShortString
 from common.languages import _local_
+from common.log.journal import system_logger
 from common.models.auth import User
 from common.models.user_tk_permission import TkPermission
 from common.veil.veil_decorators import security_administrator_required
@@ -348,6 +349,36 @@ class UpdateUserMutation(graphene.Mutation, UserValidator):
         return UpdateUserMutation(user=UserType(**user.__values__), ok=True)
 
 
+class DeleteUserMutation(graphene.Mutation, UserValidator):
+    class Arguments:
+        id = graphene.UUID(required=True)
+
+    ok = graphene.Boolean(default_value=False)
+
+    @classmethod
+    @security_administrator_required
+    async def mutate(cls, root, info, **kwargs):
+        await cls.validate(**kwargs)
+        user = await User.get(kwargs["id"])
+        username = user.username
+        creator = kwargs["creator"]
+
+        if user.is_superuser:
+            raise SimpleError(
+                _local_(f"Can not delete administrator account {username}."),
+                user=creator,
+            )
+
+        await user.delete()
+
+        await system_logger.info(
+            _local_(f"User {username} was deleted."),
+            user=creator,
+        )
+
+        return dict(ok=True)
+
+
 class ChangeUserPasswordMutation(graphene.Mutation, UserValidator):
     class Arguments:
         id = graphene.UUID(required=True)
@@ -522,6 +553,8 @@ class UserMutations(graphene.ObjectType):
     activateUser = ActivateUserMutation.Field()
     deactivateUser = DeactivateUserMutation.Field()
     updateUser = UpdateUserMutation.Field()
+    deleteUser = DeleteUserMutation.Field()
+
     changeUserPassword = ChangeUserPasswordMutation.Field()
     addUserRole = AddUserRoleMutation.Field()
     removeUserRole = RemoveUserRoleMutation.Field()

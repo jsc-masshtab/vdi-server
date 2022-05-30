@@ -373,7 +373,7 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
 
     # Authentication Directory synchronization methods
 
-    async def sync_openldap_users(self, ou, creator="system"):
+    async def sync_openldap_users(self, ou, convert_local_users_to_ad=True, creator="system"):
         if self.directory_type == AuthenticationDirectory.DirectoryTypes.OpenLDAP:
             ldap_server = ldap.initialize(self.directory_url)
             dc_str = self.convert_dc_str(self.dc_str)
@@ -383,15 +383,15 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
                 if user[1].get("ou"):
                     continue
                 info = dict()
-                info["first_name"] = user[1].get("givenName")[0].decode("UTF-8") if user[1].get("givenName") else user[1].get("givenName")
+                info["first_name"] = user[1].get("givenName")[0].decode("UTF-8") if user[1].get("givenName") \
+                    else user[1].get("givenName")
                 info["username"] = user[1].get("cn")[0].decode("UTF-8") if user[1].get("cn") else user[1].get("cn")
                 info["last_name"] = user[1].get("sn")[0].decode("UTF-8") if user[1].get("sn") else user[1].get("sn")
                 info["email"] = user[1].get("mail")[0].decode("UTF-8") if user[1].get("mail") else user[1].get("mail")
                 sync_members.append(info)
-            # group = await GroupModel.soft_create(verbose_name="OpenLDAP", creator="system")
-            await self.sync_users(sync_members, creator=creator)
-            # new_users = await self.sync_users(sync_members)
-            # await group.add_users(user_id_list=new_users, creator="system")
+
+            await self.sync_users(sync_members, convert_local_users_to_ad=convert_local_users_to_ad, creator=creator)
+
             return True
         raise SilentError("Not OpenLDAP directory.")
 
@@ -1056,36 +1056,43 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
         return group
 
     @staticmethod
-    async def sync_users(users_info, creator="system"):
+    async def sync_users(users_info, convert_local_users_to_ad=True, creator="system"):
         """При необходимости создает пользователей из Authentication Directory на VDI."""
         users_list = list()
+
         async with db.transaction():
             new_users_count = 0
+
             for user_info in users_info:
                 username = user_info["username"]
                 last_name = user_info.get("last_name")
                 first_name = user_info.get("first_name")
                 email = user_info.get("email")
+
                 # Ищем пользователя в системе
-                user = await UserModel.query.where(
-                    UserModel.username == username
-                ).gino.first()
+                user = await UserModel.query.where(UserModel.username == username).gino.first()
+
                 if user:
-                    users_list.append(user.id)
-                    continue
-                # Создаем пользователя
-                user = await UserModel.soft_create(
-                    username=username,
-                    last_name=last_name,
-                    first_name=first_name,
-                    email=email,
-                    by_ad=True,
-                    local_password=False,
-                    creator=creator,
-                )
-                if user:
-                    users_list.append(user.id)
+                    # Преобразуем локального пользователя в АД пользователя
+                    if convert_local_users_to_ad and not user.by_ad:
+                        await user.convert_to_ad_user(username, first_name, last_name, email, creator)
+                        new_users_count += 1
+
+                else:
+                    # Создаем пользователя
+                    user = await UserModel.soft_create(
+                        username=username,
+                        last_name=last_name,
+                        first_name=first_name,
+                        email=email,
+                        by_ad=True,
+                        local_password=False,
+                        creator=creator,
+                    )
                     new_users_count += 1
+
+                users_list.append(user.id)
+
         entity = {"entity_type": EntityType.AUTH, "entity_uuid": None}
         await system_logger.info(
             _local_("{} new users synced from Authentication Directory.").format(
@@ -1096,7 +1103,7 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
         )
         return users_list
 
-    async def synchronize_group(self, group_id, creator="system"):
+    async def synchronize_group(self, group_id, convert_local_users_to_ad=True, creator="system"):
         """Синхронизирует пользователей группы из AD на VDI."""
         group = await GroupModel.get(group_id)
         if not group:
@@ -1123,13 +1130,15 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
         # Исключаем лишних пользователей
         await group.remove_users(user_id_list=exclude_user_list, creator=creator)
         # Синхронизируем пользователей
-        new_users = await self.sync_users(ad_group_members, creator=creator)
-        # Добавлено 22.10.2020
+        new_users = await self.sync_users(ad_group_members,
+                                          convert_local_users_to_ad=convert_local_users_to_ad,
+                                          creator=creator)
+
         # Включаем пользователей в группу
         await group.add_users(user_id_list=new_users, creator=creator)
         return True
 
-    async def synchronize(self, data, creator="system"):
+    async def synchronize(self, data, convert_local_users_to_ad=True, creator="system"):
         """Синхронизирует переданные группы на VDI."""
         # Создаем группу
         group_info = {
@@ -1139,7 +1148,9 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
         }
         group = await self.sync_group(group_info, creator=creator)
         # Синхронизируем пользователей
-        await self.synchronize_group(group.id, creator=creator)
+        await self.synchronize_group(group.id,
+                                     convert_local_users_to_ad=convert_local_users_to_ad,
+                                     creator=creator)
         return True
 
 
