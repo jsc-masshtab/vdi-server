@@ -429,15 +429,17 @@ class SyncAuthenticationDirectoryGroupUsers(graphene.Mutation):
     class Arguments:
         auth_dir_id = graphene.UUID(required=True)
         sync_data = AuthenticationDirectorySyncGroupType(required=True)
+        convert_local_users_to_ad = graphene.Boolean()
 
     ok = graphene.Boolean(default_value=False)
 
     @security_administrator_required
-    async def mutate(self, _info, auth_dir_id, sync_data, creator, **kwargs):
+    async def mutate(self, _info, auth_dir_id, sync_data, convert_local_users_to_ad=True,
+                     creator="system", **kwargs):
         auth_dir = await AuthenticationDirectory.get(auth_dir_id)
         if not auth_dir:
             raise SilentError(_local_("No such Authentication Directory."))
-        await auth_dir.synchronize(sync_data, creator=creator)
+        await auth_dir.synchronize(sync_data, convert_local_users_to_ad=convert_local_users_to_ad, creator=creator)
         return SyncAuthenticationDirectoryGroupUsers(ok=True)
 
 
@@ -447,15 +449,19 @@ class SyncExistingAuthenticationDirectoryGroupUsers(graphene.Mutation):
     class Arguments:
         auth_dir_id = graphene.UUID(required=True)
         group_id = graphene.UUID(required=True)
+        convert_local_users_to_ad = graphene.Boolean()
 
     ok = graphene.Boolean(default_value=False)
 
     @security_administrator_required
-    async def mutate(self, info, auth_dir_id, group_id, creator, **kwargs):
+    async def mutate(self, info, auth_dir_id, group_id, convert_local_users_to_ad=True,
+                     creator="system", **kwargs):
         auth_dir = await AuthenticationDirectory.get(auth_dir_id)
         if not auth_dir:
             raise SilentError(_local_("No such Authentication Directory."))
-        await auth_dir.synchronize_group(group_id, creator=creator)
+        await auth_dir.synchronize_group(group_id=group_id,
+                                         convert_local_users_to_ad=convert_local_users_to_ad,
+                                         creator=creator)
         return SyncAuthenticationDirectoryGroupUsers(ok=True)
 
 
@@ -463,15 +469,19 @@ class SyncAuthenticationDirectoryOpenLDAPUsers(graphene.Mutation):
     class Arguments:
         auth_dir_id = graphene.UUID(required=True)
         ou = graphene.String(required=True)
+        convert_local_users_to_ad = graphene.Boolean()
 
     ok = graphene.Boolean()
 
     @security_administrator_required
-    async def mutate(self, _info, auth_dir_id, ou, creator, **kwargs):
+    async def mutate(self, _info, auth_dir_id, ou,
+                     convert_local_users_to_ad=True, creator="system", **kwargs):
         auth_dir = await AuthenticationDirectory.get(auth_dir_id)
         if not auth_dir:
             raise SilentError(_local_("No such Authentication Directory."))
-        ok = await auth_dir.sync_openldap_users(ou=ou, creator=creator)
+        ok = await auth_dir.sync_openldap_users(ou=ou,
+                                                convert_local_users_to_ad=convert_local_users_to_ad,
+                                                creator=creator)
         return SyncAuthenticationDirectoryOpenLDAPUsers(ok=ok)
 
 
