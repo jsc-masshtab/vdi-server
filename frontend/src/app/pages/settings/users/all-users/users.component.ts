@@ -13,8 +13,6 @@ import { IParams } from '@shared/types';
 import { AddUserComponent } from '../add-user/add-user.component';
 import { UsersService   } from '../users.service';
 
-
-
 @Component({
   selector: 'vdi-users',
   templateUrl: './users.component.html',
@@ -122,6 +120,12 @@ export class UsersComponent extends DetailsMove implements OnInit, OnDestroy {
     this.is_superuser.valueChanges.subscribe(() => {
       this.getAllUsers();
     });
+
+    this.service.portal$.subscribe((message) => {
+      if (message === 'reload') {
+        this.getAllUsers();
+      }
+    })
   }
 
   public addUser() {

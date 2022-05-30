@@ -23,6 +23,8 @@ import { RemoveGroupComponent } from './user-details/remove-group/remove-group.c
 import { RemovePermissionComponent } from './user-details/remove-permission/remove-permission.component';
 import { RemoveRoleComponent } from './user-details/remove-role/remove-role.component';
 import { UserDetailsComponent } from './user-details/user-details.component';
+import { DeleteUserComponent } from './user-details/remove-user/remove-user.component';
+
 import { UsersService } from './users.service';
 
 
@@ -38,7 +40,8 @@ import { UsersService } from './users.service';
       RemoveRoleComponent,
       RemoveGroupComponent,
       RemovePermissionComponent,
-      GenerateQrcodeComponent
+      GenerateQrcodeComponent,
+      DeleteUserComponent
    ],
    imports: [
       SharedModule,
