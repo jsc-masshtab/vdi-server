@@ -15,6 +15,7 @@ import { AddRoleComponent } from './add-role/add-role.component';
 import { MutateUserComponent } from './mutate-user/mutate-user.component';
 import { RemovePermissionComponent } from './remove-permission/remove-permission.component';
 import { RemoveRoleComponent } from './remove-role/remove-role.component';
+import { DeleteUserComponent } from './remove-user/remove-user.component';
 
 
 @Component({
@@ -256,7 +257,8 @@ export class UserDetailsComponent implements OnInit, OnDestroy {
   }
 
   public deactivateUser(): void {
-    this.dialog.open(MutateUserComponent, {disableClose: true,
+    this.dialog.open(MutateUserComponent, {
+      disableClose: true,
       width: '500px',
       data: {
         id: this.id,
@@ -279,7 +281,8 @@ export class UserDetailsComponent implements OnInit, OnDestroy {
   }
 
   public activateUser(): void {
-    this.dialog.open(MutateUserComponent, {disableClose: true,
+    this.dialog.open(MutateUserComponent, {
+      disableClose: true,
       width: '500px',
       data: {
         id: this.id,
@@ -301,12 +304,24 @@ export class UserDetailsComponent implements OnInit, OnDestroy {
     });
   }
 
+  public deleteUser(): void {
+    this.dialog.open(DeleteUserComponent, {
+      disableClose: true,
+      width: '500px',
+      data: {
+        id: this.id,
+        username: this.entity['username']
+      }
+    })
+  }
+
   public close() {
     this.router.navigate(['pages/settings/users']);
   }
 
   public addGroup() {
-    this.dialog.open(AddGropComponent, {disableClose: true,
+    this.dialog.open(AddGropComponent, {
+      disableClose: true,
       width: '500px',
       data: {
         id: this.id,
@@ -317,7 +332,8 @@ export class UserDetailsComponent implements OnInit, OnDestroy {
   }
 
   public removeGroup() {
-    this.dialog.open(RemoveRoleComponent, {disableClose: true,
+    this.dialog.open(RemoveRoleComponent, {
+      disableClose: true,
       width: '500px',
       data: {
         id: this.id,
@@ -328,7 +344,8 @@ export class UserDetailsComponent implements OnInit, OnDestroy {
   }
 
   public addRole() {
-    this.dialog.open(AddRoleComponent, {disableClose: true,
+    this.dialog.open(AddRoleComponent, {
+      disableClose: true,
       width: '500px',
       data: {
         id: this.id,

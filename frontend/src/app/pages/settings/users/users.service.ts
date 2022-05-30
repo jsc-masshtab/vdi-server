@@ -1,11 +1,15 @@
 import { Injectable } from '@angular/core';
 import { Apollo, QueryRef } from 'apollo-angular';
 import gql from 'graphql-tag';
+import { Subject } from 'rxjs';
 
 import { IParams } from '../../../shared/types';
 
 @Injectable()
 export class UsersService  {
+
+    portal = new Subject();
+    portal$ = this.portal.asObservable();
 
     public paramsForGetUsers: IParams = { // для несбрасывания параметров сортировки при всех обновлениях
         spin: true,
@@ -173,6 +177,23 @@ export class UsersService  {
             variables: {
                 method: 'POST',
                 ...params.props
+            }
+        });
+    }
+
+    public deleteUser(data) {
+        return this.service.mutate<any>({
+            mutation: gql`
+                mutation users(
+                    $id: UUID!){
+                    deleteUser(id: $id) {
+                        ok
+                    }
+                }
+            `,
+            variables: {
+                method: 'POST',
+                ...data
             }
         });
     }
