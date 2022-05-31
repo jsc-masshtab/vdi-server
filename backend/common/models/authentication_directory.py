@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import asyncio
 import uuid
 from collections.abc import Iterable
 from enum import Enum
@@ -395,7 +396,7 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
             return True
         raise SilentError("Not OpenLDAP directory.")
 
-    async def get_ad_user_attributes(
+    def get_ad_user_attributes(
         self, ldap_server: "ldap.ldapobject.SimpleLDAPObject", account_name: str, domain_name: str
     ) -> Tuple[Optional[str], dict]:
         """Получение информации о текущем пользователе из службы каталогов.
@@ -440,11 +441,8 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
         return "", {}
 
     @classmethod
-    async def _get_user(cls, username: str):
+    async def check_if_user_exists(cls, username: str):
         """Получение объекта пользователя из БД на основе его имени.
-
-        Если пользователь не существует, то будет создан с пустым паролем.
-        Авторизация этого пользователя возможна только по LDAP.
 
         :param username: имя пользователя
         :return: объект пользователя, флаг создания пользователя
@@ -459,8 +457,6 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
             include_inactive=True,
         )
         if not user:
-            # user = await UserModel.soft_create(username, by_ad=True, local_password=False, creator="system")
-            # created = True
             users_list = await UserModel.get_object(
                 extra_field_name="username",
                 extra_field_value=username,
@@ -470,14 +466,12 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
             users = ", ".join([user.username for user in users_list]) if users_list else _local_("something other.")
             raise SilentError(_local_("Username {} is incorrect. Maybe you mean {}.").format(username, users))
         else:
-            # await user.update(is_active=True).apply()
             if not user.is_active:
                 raise SilentError(_local_("User {} is deactivate.").format(username))
-            created = False
-        return user, created
+        return user
 
     @staticmethod
-    async def init_ldap(ad, directory_url: str = None):
+    def init_ldap(ad, directory_url: str = None):
         ldap.set_option(ldap.OPT_X_TLS_REQUIRE_CERT, ldap.OPT_X_TLS_NEVER)
         ldap_connection = ldap.initialize(directory_url or ad.directory_url)
         ldap_connection.set_option(ldap.OPT_REFERRALS, 0)
@@ -575,6 +569,37 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
             domain_name = authentication_directory.dc_str
         return domain_name
 
+    def authenticate_blocking(self, username, password, account_name, domain_name, directory_url=None):
+        """Логин на сервере ldap.
+
+        Блокирующий вызов.
+        """
+        ldap_server = AuthenticationDirectory.init_ldap(self, directory_url)
+        user_dn, user_groups = self.get_ad_user_attributes(ldap_server, account_name, domain_name)
+        if self.directory_type == AuthenticationDirectory.DirectoryTypes.ActiveDirectory:
+            ldap_server.simple_bind_s(username, password)
+        else:
+            if not user_dn:
+                raise ValidationError(_local_("Invalid credentials."))
+            ldap_server.simple_bind_s(user_dn, password)
+
+        return user_dn, user_groups
+
+    async def try_to_authenticate(self, user, username, password, account_name, domain_name, directory_url=None):
+
+        # Чтобы не блокировать ивент луп, выполняем в run_in_executor. В идеале нужен асинхронный модуль ldap
+        loop = asyncio.get_event_loop()
+        aio_task = asyncio.ensure_future(loop.run_in_executor(None,
+                                                              self.authenticate_blocking,
+                                                              username, password,
+                                                              account_name, domain_name,
+                                                              directory_url))
+        try:
+            user_dn, user_groups = await asyncio.wait_for(aio_task, timeout=55)
+            await self.assign_veil_roles(user, account_name, user_dn, user_groups)
+        except asyncio.TimeoutError:
+            raise ValidationError(_local_("LDAP auth timeout."))
+
     @classmethod
     async def authenticate(cls, username, password):
         """Метод аутентификации пользователя на основе данных из службы каталогов."""
@@ -585,13 +610,14 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
             raise ValidationError(_local_("No authentication directory controllers."))
 
         account_name, domain_name = extract_domain_from_username(username)
-        if domain_name == authentication_directory.dc_str or not domain_name:
-            user, created = await cls._get_user(account_name)
+        # check if user exists
+        user = await cls.check_if_user_exists(account_name)
+
         dc_str = cls.convert_dc_str(authentication_directory.dc_str)
-        # Добавлено 31.05.2021
+
+        # Преобразование username и domain_name
         if authentication_directory.directory_type == AuthenticationDirectory.DirectoryTypes.FreeIPA:
-            username = LDAP_LOGIN_PATTERN.format(
-                username=username, dc=dc_str)
+            username = LDAP_LOGIN_PATTERN.format(username=username, dc=dc_str)
             if not domain_name:
                 domain_name = dc_str
         elif authentication_directory.directory_type == AuthenticationDirectory.DirectoryTypes.ActiveDirectory:
@@ -600,87 +626,44 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
                 username = "@".join([account_name, domain_name])
                 # domain_name = authentication_directory.domain_name
                 # username = "\\".join([domain_name, account_name])
+
+        # Авторизация
         try:
-            ldap_server = await cls.init_ldap(authentication_directory)
-            user_dn, user_groups = await authentication_directory.get_ad_user_attributes(ldap_server,
-                                                                                         account_name,
-                                                                                         domain_name)
-            if authentication_directory.directory_type == AuthenticationDirectory.DirectoryTypes.ActiveDirectory:
-                ldap_server.simple_bind_s(username, password)
-            else:
-                if not user_dn:
-                    raise ValidationError(_local_("Invalid credentials."))
-                ldap_server.simple_bind_s(user_dn, password)
-            user = await UserModel.get_object(
-                extra_field_name="username",
-                extra_field_value=account_name,
-                include_inactive=True,
-            )
-            await authentication_directory.assign_veil_roles(
-                user, account_name, user_dn, user_groups
-            )
-            created = False
-            success = True
+            await authentication_directory.try_to_authenticate(user, username, password, account_name, domain_name)
+
         except ldap.INVALID_CREDENTIALS as ldap_error:
             # Если пользователь не проходит ауф в службе с предоставленными
             # данными, то ауф в системе считается неуспешной и создается событие
             # о провале.
-            success = False
             raise ValidationError(
                 _local_("Invalid credentials (ldap): {}.").format(ldap_error)
             )
         except ldap.SERVER_DOWN:
             # Если нет связи с сервером службы каталогов,
             # то возвращаем ошибку о недоступности сервера
-            success = False
             raise ValidationError(_local_("Server down (ldap)."))
         except ldap.REFERRAL as e:
             ref_url, referral_dn = await cls._get_ldap_referral_dn(e)
             if not referral_dn:
-                raise ValidationError(_local_(
-                    "The LDAP server provides an alternate address to which an LDAP request can be processed, but the attempt was unsuccessful."))
+                raise ValidationError(_local_("The LDAP server provides an alternate address to which an LDAP "
+                                              "request can be processed, but the attempt was unsuccessful."))
             try:
-                ldap_server = await cls.init_ldap(authentication_directory, ref_url)
-                ldap_server.simple_bind_s(username, password)
-                user_dn, user_groups = await authentication_directory.get_ad_user_attributes(ldap_server,
-                                                                                             account_name,
-                                                                                             domain_name)
-                user = await UserModel.get_object(
-                    extra_field_name="username",
-                    extra_field_value=username,
-                    include_inactive=True,
-                )
-                if not user:
-                    user = await UserModel.soft_create(username, by_ad=True, local_password=False, creator="system")
-                    created = True
-                await authentication_directory.assign_veil_roles(
-                    user, account_name, user_dn, user_groups
-                )
-                success = True
-                return username
+                await authentication_directory.try_to_authenticate(user, username, password,
+                                                                   account_name, domain_name, ref_url)
+
             except ldap.INVALID_CREDENTIALS as ldap_error:
                 # Если пользователь не проходит ауф в службе с предоставленными
                 # данными, то ауф в системе считается неуспешной и создается событие
                 # о провале.
-                success = False
                 raise ValidationError(
-                    _local_("Invalid credentials (ldap): {}.").format(ldap_error)
+                    _local_("Invalid credentials (ldap Referral): {}.").format(ldap_error)
                 )
             except ldap.SERVER_DOWN:
-                # Если нет связи с сервером службы каталогов,
-                # то возвращаем ошибку о недоступности сервера
-                success = False
-                raise ValidationError(_local_("Server down (ldap)."))
+                raise ValidationError(_local_("Referral server is down (ldap)."))
         except Exception as E:
-            success = False
             await system_logger.debug(E)
             raise ValidationError("LDAP Error: {}".format(str(E)))
-        finally:
-            try:
-                if not success and created:
-                    await user.delete()
-            except:  # noqa
-                pass
+
         return account_name
 
     @staticmethod

@@ -39,12 +39,8 @@ class AuthHandler(BaseHttpHandler, ABC):
 
             # Updated 26.12.2020
             if self.args.get("ldap") and settings.EXTERNAL_AUTH:
-                account_name = await AuthenticationDirectory.authenticate(
-                    username, password
-                )
-                domain_name = await AuthenticationDirectory.get_domain_name(
-                    self.args["username"]
-                )
+                account_name = await AuthenticationDirectory.authenticate(username, password)
+                domain_name = await AuthenticationDirectory.get_domain_name(self.args["username"])
             elif self.args.get("ldap") and not settings.EXTERNAL_AUTH:
                 raise ValidationError(
                     _local_("External auth system is disabled. Check broker settings.")
