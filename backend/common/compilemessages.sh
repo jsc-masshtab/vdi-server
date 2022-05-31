@@ -15,18 +15,11 @@ do
   locales_dir="./locales/${locales}/LC_MESSAGES"
   po_file="${locales_dir}/${domain}.po"
   mo_file="${locales_dir}/${domain}.mo"
-  var1=$(grep -c "msgstr \"\"" "${po_file}")
-  var2=$(grep -c "fuzzy" "${po_file}")
-  var3=$(grep -c "\.\"\|\:\"" "${po_file}")
-  var4=$(grep -c -E "msgstr|msgid" "${po_file}")
+  fuzzy_count=$(grep -c "fuzzy" "${po_file}")
 
-  if [ "${var1}" -gt 1 ] || [ "${var2}" -gt 0 ] || [ "$((${var4} - ${var3}))" -gt 2 ]; then
-    echo "Rows ending without :/. is $((${var4} - ${var3} - 2))"
+  if [ "${fuzzy_count}" -gt 0 ]; then
     echo "Locale: ${locale}"
-    echo "Var 1: ${var1}"
-    echo "Var 2: ${var2}"
-    echo "Var 3: ${var3}"
-    echo "Var 4: ${var4}"
+    echo "Fuzzy translation detected. Fix translation and remove fuzzy keywords: ${fuzzy_count}"
     echo "Error code 1"
     exit 1
   fi
