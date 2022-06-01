@@ -152,7 +152,7 @@ class AbstractSortableStatusModel:
         elif similar and extra_field_name and extra_field_value:
             field = cls.get_query_field(extra_field_name)
             query = query.where(field.ilike("{}%".format(extra_field_value)))
-            return await query.gino.all()
+            return await query.gino.first()
         obj = await query.gino.first()
         return obj
 

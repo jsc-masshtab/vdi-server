@@ -106,8 +106,8 @@ BROKER_NAME = "VeiL VDI"
 
 # LDAP
 # -----------------------------
-LDAP_TIMEOUT = 15
-LDAP_NETWORK_TIMEOUT = 10
+LDAP_TIMEOUT = 20
+LDAP_NETWORK_TIMEOUT = 15
 LDAP_OPT_REFERRALS = 0
 LDAP_LOGIN_PATTERN = "uid={username},cn=users,cn=accounts,{dc}"
 OPENLDAP_LOGIN_PATTERN = "uid={username},ou=people,{dc}"
