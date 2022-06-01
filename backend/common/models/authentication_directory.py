@@ -457,14 +457,17 @@ class AuthenticationDirectory(VeilModel, AbstractSortableStatusModel):
             include_inactive=True,
         )
         if not user:
-            users_list = await UserModel.get_object(
+            user = await UserModel.get_object(
                 extra_field_name="username",
                 extra_field_value=username,
                 include_inactive=True,
                 similar=True
             )
-            users = ", ".join([user.username for user in users_list]) if users_list else _local_("something other.")
-            raise SilentError(_local_("Username {} is incorrect. Maybe you mean {}.").format(username, users))
+            if user:
+                raise SilentError(_local_("Username {} is incorrect. Maybe you mean {}.").format(
+                    username, user.username))
+            else:
+                raise SilentError(_local_(f"Username {username} is incorrect."))
         else:
             if not user.is_active:
                 raise SilentError(_local_("User {} is deactivate.").format(username))

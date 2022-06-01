@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-05-30 17:10+0300\n"
+"POT-Creation-Date: 2022-06-01 12:30+0300\n"
 "PO-Revision-Date: 2020-07-30 11:25+0300\n"
 "Last-Translator: Emil <emil@emil-pc>\n"
 "Language-Team: Russian\n"
@@ -153,6 +153,7 @@ msgid "Password of user {} has been changed to the local password."
 msgstr "Пароль пользователя {} изменен на локальный пароль."
 
 #: ../common/models/auth.py:643
+#, python-brace-format
 msgid "Local user {username} was converted to domain user."
 msgstr "Локальный пользователь {username} был преобразован в доменного пользователя."
 
@@ -285,131 +286,141 @@ msgstr "Группе {} уже назначена роль {}."
 msgid "Roles: {} was deleted to group {}."
 msgstr "Роли: {} удалены из группы {}."
 
-#: ../common/models/authentication_directory.py:191
+#: ../common/models/authentication_directory.py:192
 #: ../web_app/tests/test_auth_dir.py:177
 msgid "More than one authentication directory can not be created."
 msgstr "Не может быть создано более одной службы каталогов."
 
-#: ../common/models/authentication_directory.py:215
+#: ../common/models/authentication_directory.py:216
 msgid "Authentication directory {} is created."
 msgstr "Служба каталогов {} создана."
 
-#: ../common/models/authentication_directory.py:250
+#: ../common/models/authentication_directory.py:251
 msgid "Values for auth directory is updated."
 msgstr "Значения службы каталогов обновлены."
 
-#: ../common/models/authentication_directory.py:285
+#: ../common/models/authentication_directory.py:286
 msgid "Arguments: {} of group: {}."
 msgstr "Аргументы: {} группы: {}."
 
-#: ../common/models/authentication_directory.py:288
+#: ../common/models/authentication_directory.py:289
 msgid "Mapping for auth directory {} is created."
 msgstr "Сопоставление для службы каталогов {} создано."
 
-#: ../common/models/authentication_directory.py:324
+#: ../common/models/authentication_directory.py:325
 msgid "New arguments: {} of group: {}."
 msgstr "Новые аргументы: {} группы: {}."
 
-#: ../common/models/authentication_directory.py:327
+#: ../common/models/authentication_directory.py:328
 msgid "Mapping for auth directory {} is updated."
 msgstr "Сопоставление для службы каталогов {} обновлено."
 
-#: ../common/models/authentication_directory.py:357
-#: ../common/models/authentication_directory.py:733
+#: ../common/models/authentication_directory.py:358
+#: ../common/models/authentication_directory.py:719
 msgid "Failed to connect to authentication directory server {}."
 msgstr "Не удалось подключиться к серверу службы каталогов LDAP {}."
 
-#: ../common/models/authentication_directory.py:367
+#: ../common/models/authentication_directory.py:368
 msgid "Authentication directory server {} is connected."
 msgstr "Сервер службы каталогов {} подключен."
 
-#: ../common/models/authentication_directory.py:453
+#: ../common/models/authentication_directory.py:451
 msgid "Username must be a string."
 msgstr "Имя пользователя должно быть строкой."
 
-#: ../common/models/authentication_directory.py:470
-msgid "something other."
-msgstr "что-то другое."
-
-#: ../common/models/authentication_directory.py:471
+#: ../common/models/authentication_directory.py:467
 msgid "Username {} is incorrect. Maybe you mean {}."
 msgstr "Имя пользователя {} неверное. Может быть вы имели в виду {}."
 
-#: ../common/models/authentication_directory.py:475
+#: ../common/models/authentication_directory.py:470
+msgid "Username {username} is incorrect."
+msgstr "Имя пользователя {username} неверное."
+
+#: ../common/models/authentication_directory.py:473
 msgid "User {} is deactivate."
 msgstr "Пользователь {} деактивирован."
 
-#: ../common/models/authentication_directory.py:506
+#: ../common/models/authentication_directory.py:503
 msgid "Mappings: {}."
 msgstr "Сопоставления: {}."
 
-#: ../common/models/authentication_directory.py:530
+#: ../common/models/authentication_directory.py:527
 msgid "escaped values: {}."
 msgstr "скрытые значения: {}."
 
-#: ../common/models/authentication_directory.py:532
+#: ../common/models/authentication_directory.py:529
 msgid "role mapping value type: {}."
 msgstr "тип значений отображения роли: {}."
 
-#: ../common/models/authentication_directory.py:545
+#: ../common/models/authentication_directory.py:542
 msgid "User VeiL groups: {}."
 msgstr "Группы пользователей VeiL: {}."
 
-#: ../common/models/authentication_directory.py:553
+#: ../common/models/authentication_directory.py:550
 msgid "Attaching user {} to group: {}."
 msgstr "Прикрепление пользователя {} к группе {}."
 
-#: ../common/models/authentication_directory.py:574
-#: ../common/models/authentication_directory.py:585
+#: ../common/models/authentication_directory.py:571
+#: ../common/models/authentication_directory.py:613
 msgid "No authentication directory controllers."
 msgstr "Нет контроллеров служб каталогов."
 
-#: ../common/models/authentication_directory.py:612
-#: ../web_app/auth/handlers.py:61
+#: ../common/models/authentication_directory.py:586
+#: ../web_app/auth/handlers.py:57
 msgid "Invalid credentials."
 msgstr "Неверные учетные данные."
 
-#: ../common/models/authentication_directory.py:630
-#: ../common/models/authentication_directory.py:667
+#: ../common/models/authentication_directory.py:604
+msgid "LDAP auth timeout."
+msgstr ""
+
+#: ../common/models/authentication_directory.py:642
 msgid "Invalid credentials (ldap): {}."
 msgstr "Неверные учетные данные (ldap): {}."
 
-#: ../common/models/authentication_directory.py:636
-#: ../common/models/authentication_directory.py:673
+#: ../common/models/authentication_directory.py:647
 msgid "Server down (ldap)."
 msgstr "Сервер не отвечает (ldap)."
 
-#: ../common/models/authentication_directory.py:641
+#: ../common/models/authentication_directory.py:651
 msgid "The LDAP server provides an alternate address to which an LDAP request can be processed, but the attempt was unsuccessful."
 msgstr "Сервер LDAP предоставляет альтернативный адрес, по которому может быть обработан запрос LDAP, но попытка было неудачной."
 
-#: ../common/models/authentication_directory.py:717
+#: ../common/models/authentication_directory.py:662
+msgid "Invalid credentials (ldap Referral): {}."
+msgstr "Неверные учетные данные (ldap Referral): {}."
+
+#: ../common/models/authentication_directory.py:665
+msgid "Referral server is down (ldap)."
+msgstr "Referral сервер не отвечает (ldap)."
+
+#: ../common/models/authentication_directory.py:703
 msgid "LDAP username and password can`t be empty."
 msgstr "Имя пользователя и пароль LDAP не могут быть пустыми."
 
-#: ../common/models/authentication_directory.py:726
+#: ../common/models/authentication_directory.py:712
 msgid "Authentication directory server {} has bad auth info."
 msgstr "Не удалось подключиться к серверу службы каталогов {}."
 
-#: ../common/models/authentication_directory.py:865
-#: ../common/models/authentication_directory.py:1033
+#: ../common/models/authentication_directory.py:851
+#: ../common/models/authentication_directory.py:1019
 msgid "Fail to connect to Authentication Directory. Check service information."
 msgstr "Ошибка подключения к службе каталогов."
 
-#: ../common/models/authentication_directory.py:1098
+#: ../common/models/authentication_directory.py:1084
 msgid "{} new users synced from Authentication Directory."
 msgstr "{} новых пользователей синхронизировано из службы каталогов."
 
-#: ../common/models/authentication_directory.py:1110
+#: ../common/models/authentication_directory.py:1096
 #: ../web_app/auth/group_schema.py:228
 msgid "No such Group."
 msgstr "Отсутствует такая группа."
 
-#: ../common/models/authentication_directory.py:1114
+#: ../common/models/authentication_directory.py:1100
 msgid "Group {} is not synchronized by AD."
 msgstr "Группа {} не синхронизирована со службой каталогов."
 
-#: ../common/models/authentication_directory.py:1121
+#: ../common/models/authentication_directory.py:1107
 msgid "There is no users to sync."
 msgstr "В группе не найдены пользователи для синхронизации."
 
@@ -1221,37 +1232,37 @@ msgstr "Отсутствует имя пользователя."
 msgid "Missing password."
 msgstr "Отсутствует пароль."
 
-#: ../web_app/auth/handlers.py:50
+#: ../web_app/auth/handlers.py:46
 msgid "External auth system is disabled. Check broker settings."
 msgstr "Внешняя служба авторизации отключена. Проверьте настройки брокера."
 
-#: ../web_app/auth/handlers.py:54
+#: ../web_app/auth/handlers.py:50
 msgid "PAM or LOCAL auth only. Check broker settings."
 msgstr "Проверьте настройки брокера. Разрешена только pam ИЛИ локальная авторизация."
 
-#: ../web_app/auth/handlers.py:64
+#: ../web_app/auth/handlers.py:60
 msgid "Auth system is disabled. Check broker settings."
 msgstr "Проверьте настройки брокера. Система аутентификации отключена."
 
-#: ../web_app/auth/handlers.py:95 ../web_app/auth/handlers.py:114
+#: ../web_app/auth/handlers.py:91 ../web_app/auth/handlers.py:110
 msgid "Authentication failed for user: {}."
 msgstr "Ошибка авторизации пользователя: {}."
 
-#: ../web_app/auth/handlers.py:129
+#: ../web_app/auth/handlers.py:125
 #, python-brace-format
 msgid "Missing VeiL Connect version. {base_error_msg}."
 msgstr "Не указана версия VeiL Connect. {base_error_msg}."
 
-#: ../web_app/auth/handlers.py:135
+#: ../web_app/auth/handlers.py:131
 #, python-brace-format
 msgid "Version {veil_connect_version} is not supported. {base_error_msg}."
 msgstr "Версия {veil_connect_version} не поддерживается. {base_error_msg}."
 
-#: ../web_app/auth/handlers.py:141 ../web_app/thin_client_api/handlers.py:469
+#: ../web_app/auth/handlers.py:137 ../web_app/thin_client_api/handlers.py:469
 msgid "Thin client limit exceeded."
 msgstr "Превышен лимит тонких клиентов."
 
-#: ../web_app/auth/handlers.py:150
+#: ../web_app/auth/handlers.py:146
 msgid "User {} logged out."
 msgstr "Пользователь {} вышел из системы."
 
@@ -1310,6 +1321,7 @@ msgid "Can not delete administrator account {username}."
 msgstr "Невозможно удалить учетную запись администратора {username}."
 
 #: ../web_app/auth/user_schema.py:375
+#, python-brace-format
 msgid "User {username} was deleted."
 msgstr "Пользователь {username} был удален."
 
@@ -1451,6 +1463,7 @@ msgid "Connection types {} are not supported."
 msgstr "Типы подключения {} не поддерживаются."
 
 #: ../web_app/pool/schema.py:268
+#, python-brace-format
 msgid "Vm connection data with id {id_} does not exist."
 msgstr "Данные подключения с id {id_} не существуют."
 
@@ -1791,125 +1804,128 @@ msgstr "Пропущены данные для spice соединения."
 msgid "Missing connection vnc data."
 msgstr "Пропущены данные для vnc соединения."
 
-#~ msgid "Group {} is removed for user {}."
-#~ msgstr "Группа {} удалена у пользователя {}."
-
-#~ msgid "One-time password error for user: {}."
-#~ msgstr "Ошибка одноразового пароля для пользователя: {}."
-
-#~ msgid "User {} do not have a secret code for 2fa auth. Please generate this in settings of user."
-#~ msgstr "У пользователя {} нет секретного кода для двухфакторной аутентификации. Пожалуйста, сгенерируйте это в настройках пользователя."
-
-#~ msgid "2fa auth error for user: {}."
-#~ msgstr "Ошибка двухфакторной аутентификации для пользователя: {}."
-
-#~ msgid "StaticPool: Create Pool."
-#~ msgstr "Статический пул: создание пула."
-
-#~ msgid "StaticPool: Create StaticPool."
-#~ msgstr "Статический пул: создание статического пула."
-
-#~ msgid "StaticPool: Create VMs."
-#~ msgstr "Статический пул: создание виртуальных машин."
-
-#~ msgid "Can`t connect to {}."
-#~ msgstr "Не удается подключиться к {}."
-
-#~ msgid "Pool {} has been deactivated."
-#~ msgstr "Пул {} деактивирован."
-
-#~ msgid "Controller has not free space for creating new VM."
-#~ msgstr "На контроллере отсутствует место для создания новой виртуальной машины."
-
-#~ msgid "Something went wrong. Interrupt while."
-#~ msgstr "Что-то пошло не так. Прерываем while."
-
-#~ msgid "User {} created with role {}."
-#~ msgstr "Пользователь {} создан с ролью {}."
-
-#~ msgid "  Duration: {}."
-#~ msgstr "  Продолжительность: {}."
-
-#~ msgid "Attempts to create VM {} have been exhausted."
-#~ msgstr "Превышен лимит попыток создания ВМ {}."
-
-#~ msgid "Unknown node {}."
-#~ msgstr "Неизвестный узел {}."
-
-#~ msgid "Controller can`t create VM. Unknown node."
-#~ msgstr "Контроллер не может создать ВМ. Неизвестный узел."
-
-#~ msgid "Roles: {} was deleted to pool {}."
-#~ msgstr "Роли: {} удалены в пуле {}."
-
-#~ msgid "Pool already has role."
-#~ msgstr "Пул уже имеет роль."
-
-#~ msgid "Role {} has been set to pool {}."
-#~ msgstr "Роль {} добавлена в пул {}."
-
-#~ msgid "Critical controller error."
-#~ msgstr "Критическая ошибка контроллера."
-
-#~ msgid "ECP VeiL controller {} error."
-#~ msgstr "Ошибка контроллера ECP VeiL {}."
-
-#~ msgid "Failed to update automated pool {}. Name must be unique."
-#~ msgstr "Ошибка редактирования автоматического пула {}. Имя должно быть уникальным."
-
-#~ msgid "Failed to create automated pool {}."
-#~ msgstr "Ошибка создания автоматического пула {}."
-
-#~ msgid "Update Pool values for AutomatedPool {}."
-#~ msgstr "Обновление значений пула для автоматического пула {}."
-
-#~ msgid "Demo version."
-#~ msgstr "Демонстрационная версия."
-
-#~ msgid "VM {} AD group including successful."
-#~ msgstr "ВМ {} успешно заведена в контейнер/группу AD."
-
-#~ msgid "VM {} active directory group including error."
-#~ msgstr "Ошибка ввода ВМ {} в группу AD."
-
-#~ msgid "Active directory object has no service username or password. Including skipped."
-#~ msgstr "У службы каталогов не указаны имя пользователя и пароль. Пропускаем."
-
-#~ msgid "Expansion of guest pool {} requested."
-#~ msgstr "Запрошено расширение гостевого пула {}."
-
-#~ msgid "Another task works on pool {} before creating new blank VM."
-#~ msgstr "Другая задача выполняется над пулом {} перед созданием новой пустой ВМ."
-
-#~ msgid "User {} password setting error."
-#~ msgstr "Ошибка задания пароля пользователя {}."
-
-#~ msgid "Redis waiting exception."
-#~ msgstr "Ошибка Redis."
-
-#~ msgid "username {} must contain >= 3 chars (letters, digits, _, -, +), begin from letter and can't contain any spaces."
-#~ msgstr "имя пользователя {} должно быть >= 3 символов (буквы, цифры, _, -, +), начинаться с буквы и не содержать пробелов."
-
-#~ msgid "Password {} contains invalid characters."
-#~ msgstr "Пароль {} содержит недопустимые символы."
-
-#~ msgid "Check pool settings."
-#~ msgstr "Проверьте настройки пула."
-
-#~ msgid "VM {} has been not prepared."
-#~ msgstr "ВМ {} не подготовлена."
-
-#~ msgid "VM {} AD inclusion skipped."
-#~ msgstr "Заведение ВМ {} в домен пропущено."
-
-#~ msgid "VM {} AD inclusion success."
-#~ msgstr "ВМ {} успешно заведена в AD."
-
-#~ msgid "VM {} domain including task failed."
-#~ msgstr "Ошибка включения ВМ {} в домен."
+#~ msgid "Unsupported pool type."
+#~ msgstr "Неподдерживаемый тип пула."
 
 #~ msgid "VM {} failed to receive DHCP ip address ({})."
 #~ msgstr "ВМ {} не получила IP адрес по DHCP ({})."
 
-#~ msgid "Unsupported pool type."
-#~ msgstr "Неподдерживаемый тип пула."
+#~ msgid "VM {} domain including task failed."
+#~ msgstr "Ошибка включения ВМ {} в домен."
+
+#~ msgid "VM {} AD inclusion success."
+#~ msgstr "ВМ {} успешно заведена в AD."
+
+#~ msgid "VM {} AD inclusion skipped."
+#~ msgstr "Заведение ВМ {} в домен пропущено."
+
+#~ msgid "VM {} has been not prepared."
+#~ msgstr "ВМ {} не подготовлена."
+
+#~ msgid "Check pool settings."
+#~ msgstr "Проверьте настройки пула."
+
+#~ msgid "Password {} contains invalid characters."
+#~ msgstr "Пароль {} содержит недопустимые символы."
+
+#~ msgid "username {} must contain >= 3 chars (letters, digits, _, -, +), begin from letter and can't contain any spaces."
+#~ msgstr "имя пользователя {} должно быть >= 3 символов (буквы, цифры, _, -, +), начинаться с буквы и не содержать пробелов."
+
+#~ msgid "Redis waiting exception."
+#~ msgstr "Ошибка Redis."
+
+#~ msgid "User {} password setting error."
+#~ msgstr "Ошибка задания пароля пользователя {}."
+
+#~ msgid "Another task works on pool {} before creating new blank VM."
+#~ msgstr "Другая задача выполняется над пулом {} перед созданием новой пустой ВМ."
+
+#~ msgid "Expansion of guest pool {} requested."
+#~ msgstr "Запрошено расширение гостевого пула {}."
+
+#~ msgid "Active directory object has no service username or password. Including skipped."
+#~ msgstr "У службы каталогов не указаны имя пользователя и пароль. Пропускаем."
+
+#~ msgid "VM {} active directory group including error."
+#~ msgstr "Ошибка ввода ВМ {} в группу AD."
+
+#~ msgid "VM {} AD group including successful."
+#~ msgstr "ВМ {} успешно заведена в контейнер/группу AD."
+
+#~ msgid "Demo version."
+#~ msgstr "Демонстрационная версия."
+
+#~ msgid "Update Pool values for AutomatedPool {}."
+#~ msgstr "Обновление значений пула для автоматического пула {}."
+
+#~ msgid "Failed to create automated pool {}."
+#~ msgstr "Ошибка создания автоматического пула {}."
+
+#~ msgid "Failed to update automated pool {}. Name must be unique."
+#~ msgstr "Ошибка редактирования автоматического пула {}. Имя должно быть уникальным."
+
+#~ msgid "ECP VeiL controller {} error."
+#~ msgstr "Ошибка контроллера ECP VeiL {}."
+
+#~ msgid "Critical controller error."
+#~ msgstr "Критическая ошибка контроллера."
+
+#~ msgid "Role {} has been set to pool {}."
+#~ msgstr "Роль {} добавлена в пул {}."
+
+#~ msgid "Pool already has role."
+#~ msgstr "Пул уже имеет роль."
+
+#~ msgid "Roles: {} was deleted to pool {}."
+#~ msgstr "Роли: {} удалены в пуле {}."
+
+#~ msgid "Controller can`t create VM. Unknown node."
+#~ msgstr "Контроллер не может создать ВМ. Неизвестный узел."
+
+#~ msgid "Unknown node {}."
+#~ msgstr "Неизвестный узел {}."
+
+#~ msgid "Attempts to create VM {} have been exhausted."
+#~ msgstr "Превышен лимит попыток создания ВМ {}."
+
+#~ msgid "  Duration: {}."
+#~ msgstr "  Продолжительность: {}."
+
+#~ msgid "User {} created with role {}."
+#~ msgstr "Пользователь {} создан с ролью {}."
+
+#~ msgid "Something went wrong. Interrupt while."
+#~ msgstr "Что-то пошло не так. Прерываем while."
+
+#~ msgid "Controller has not free space for creating new VM."
+#~ msgstr "На контроллере отсутствует место для создания новой виртуальной машины."
+
+#~ msgid "Pool {} has been deactivated."
+#~ msgstr "Пул {} деактивирован."
+
+#~ msgid "Can`t connect to {}."
+#~ msgstr "Не удается подключиться к {}."
+
+#~ msgid "StaticPool: Create VMs."
+#~ msgstr "Статический пул: создание виртуальных машин."
+
+#~ msgid "StaticPool: Create StaticPool."
+#~ msgstr "Статический пул: создание статического пула."
+
+#~ msgid "StaticPool: Create Pool."
+#~ msgstr "Статический пул: создание пула."
+
+#~ msgid "2fa auth error for user: {}."
+#~ msgstr "Ошибка двухфакторной аутентификации для пользователя: {}."
+
+#~ msgid "User {} do not have a secret code for 2fa auth. Please generate this in settings of user."
+#~ msgstr "У пользователя {} нет секретного кода для двухфакторной аутентификации. Пожалуйста, сгенерируйте это в настройках пользователя."
+
+#~ msgid "One-time password error for user: {}."
+#~ msgstr "Ошибка одноразового пароля для пользователя: {}."
+
+#~ msgid "Group {} is removed for user {}."
+#~ msgstr "Группа {} удалена у пользователя {}."
+
+#~ msgid "something other."
+#~ msgstr "что-то другое."
