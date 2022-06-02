@@ -12,6 +12,7 @@ from common.models.authentication_directory import AuthenticationDirectory
 from common.models.pool import AutomatedPool, Pool
 from common.models.task import PoolTaskType, Task, TaskStatus
 from common.models.vm import Vm
+from common.settings import POOL_TASK_LOCK_TIMEOUT
 from common.utils import cancel_async_task
 from common.veil.veil_errors import PoolCreationError, VmCreationError
 from common.veil.veil_gino import EntityType, Status
@@ -188,8 +189,8 @@ class InitPoolTask(AbstractTask):
         if not automated_pool:
             raise RuntimeError("InitPoolTask: AutomatedPool doesnt exist")
 
-        async with redis_get_client().lock(str(automated_pool.id)):
-            async with redis_get_client().lock(str(automated_pool.template_id)):
+        async with redis_get_client().lock(str(automated_pool.id), timeout=POOL_TASK_LOCK_TIMEOUT):
+            async with redis_get_client().lock(str(automated_pool.template_id), timeout=POOL_TASK_LOCK_TIMEOUT):
                 # Добавляем машины
                 try:
                     pool = await Pool.get(self.task_model.entity_id)
@@ -258,8 +259,8 @@ class ExpandPoolTask(AbstractTask):
 
         vm_list = list()
 
-        async with redis_get_client().lock(str(automated_pool.id)):
-            async with redis_get_client().lock(str(automated_pool.template_id)):
+        async with redis_get_client().lock(str(automated_pool.id), timeout=POOL_TASK_LOCK_TIMEOUT):
+            async with redis_get_client().lock(str(automated_pool.template_id), timeout=POOL_TASK_LOCK_TIMEOUT):
                 # Check that total_size is not reached
                 pool = await Pool.get(automated_pool.id)
                 vm_amount_in_pool = await pool.get_vm_amount()
@@ -336,8 +337,8 @@ class RecreationGuestVmTask(AbstractTask):
 
         vm_list = list()
 
-        async with redis_get_client().lock(str(automated_pool.id)):
-            async with redis_get_client().lock(str(automated_pool.template_id)):
+        async with redis_get_client().lock(str(automated_pool.id), timeout=POOL_TASK_LOCK_TIMEOUT):
+            async with redis_get_client().lock(str(automated_pool.template_id), timeout=POOL_TASK_LOCK_TIMEOUT):
 
                 pool = await Pool.get(automated_pool.id)
 
@@ -445,7 +446,7 @@ class DeletePoolTask(AbstractTask):
             await task.cancel()
 
         # Лочим
-        async with redis_get_client().lock(str(automated_pool.id)):
+        async with redis_get_client().lock(str(automated_pool.id), timeout=POOL_TASK_LOCK_TIMEOUT):
             # удаляем пул
             pool = await Pool.get(automated_pool.id)
 
@@ -587,7 +588,7 @@ class RemoveVmsTask(AbstractTask):
         pool_type = pool.pool_type
 
         if pool_type == Pool.PoolTypes.AUTOMATED or pool_type == Pool.PoolTypes.GUEST:
-            async with redis_get_client().lock(str(pool.id)):
+            async with redis_get_client().lock(str(pool.id), timeout=POOL_TASK_LOCK_TIMEOUT):
                 await self._remove_vms(pool, remove_vms_on_controller=True)
         else:
             await self._remove_vms(pool)
