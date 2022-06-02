@@ -45,7 +45,7 @@ pipeline {
 
     parameters {
         string(      name: 'BRANCH',   defaultValue: 'dev',                       description: 'branch')
-        string(      name: 'VERSION',  defaultValue: '4.0.0',                     description: 'base version')
+        string(      name: 'VERSION',  defaultValue: '4.1.0',                     description: 'base version')
         choice(      name: 'AGENT',    choices: ['cloud-ubuntu-20', 'bld-agent'], description: 'jenkins build agent')
         booleanParam(name: 'BACKEND',  defaultValue: true,                        description: 'veil-broker-backend')
         booleanParam(name: 'FRONTEND', defaultValue: true,                        description: 'veil-broker-frontend')

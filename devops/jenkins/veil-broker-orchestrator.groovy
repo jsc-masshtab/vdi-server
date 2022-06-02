@@ -32,15 +32,15 @@ pipeline {
     }
 
     parameters {
-        string(      name: 'BRANCH',     defaultValue: 'dev',                                          description: 'branch')
-        choice(      name: 'REPO',       choices: ['dev', 'prod-30', 'prod-31', 'prod-32', 'prod-40'], description: 'repo for uploading')
-        string(      name: 'VERSION',    defaultValue: '4.0.0',                                        description: 'base version')
-        string(      name: 'AGENT',      defaultValue: 'master',                                       description: 'jenkins build agent')
-        booleanParam(name: 'BACKEND',    defaultValue: false,                                          description: 'veil-broker-backend')
-        booleanParam(name: 'FRONTEND',   defaultValue: false,                                          description: 'veil-broker-frontend')
-        booleanParam(name: 'DOCS',       defaultValue: false,                                          description: 'veil-broker-docs')
-        booleanParam(name: 'THINCLIENT', defaultValue: false,                                          description: 'veil-connect-web')
-        booleanParam(name: 'ISO',        defaultValue: false,                                          description: 'veil-broker-iso')
+        string(      name: 'BRANCH',     defaultValue: 'dev',                                                     description: 'branch')
+        choice(      name: 'REPO',       choices: ['dev', 'prod-30', 'prod-31', 'prod-32', 'prod-40', 'prod-41'], description: 'repo for uploading')
+        string(      name: 'VERSION',    defaultValue: '4.1.0',                                                   description: 'base version')
+        string(      name: 'AGENT',      defaultValue: 'master',                                                  description: 'jenkins build agent')
+        booleanParam(name: 'BACKEND',    defaultValue: false,                                                     description: 'veil-broker-backend')
+        booleanParam(name: 'FRONTEND',   defaultValue: false,                                                     description: 'veil-broker-frontend')
+        booleanParam(name: 'DOCS',       defaultValue: false,                                                     description: 'veil-broker-docs')
+        booleanParam(name: 'THINCLIENT', defaultValue: false,                                                     description: 'veil-connect-web')
+        booleanParam(name: 'ISO',        defaultValue: false,                                                     description: 'veil-broker-iso')
     }
 
     stages {

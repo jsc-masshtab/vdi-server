@@ -50,10 +50,10 @@ pipeline {
     }
 
     parameters {
-        string(name: 'BRANCH',  defaultValue: 'dev',                                          description: 'branch')
-        choice(name: 'REPO',    choices: ['dev', 'prod-30', 'prod-31', 'prod-32', 'prod-40'], description: 'repo for uploading')
-        string(name: 'VERSION', defaultValue: '4.0.0',                                        description: 'base version')
-        choice(name: 'AGENT',   choices: ['cloud-ubuntu-20', 'bld-agent'],                    description: 'jenkins build agent')
+        string(name: 'BRANCH',  defaultValue: 'dev',                                                     description: 'branch')
+        choice(name: 'REPO',    choices: ['dev', 'prod-30', 'prod-31', 'prod-32', 'prod-40', 'prod-41'], description: 'repo for uploading')
+        string(name: 'VERSION', defaultValue: '4.1.0',                                                   description: 'base version')
+        choice(name: 'AGENT',   choices: ['cloud-ubuntu-20', 'bld-agent'],                               description: 'jenkins build agent')
     }
 
     stages {
@@ -106,6 +106,8 @@ pipeline {
                       http://${VEIL_ADDRESS}/api/tasks/${TASK_ID}/ | jq -r .progress)
 
                       echo "Task status is: $TASK_STATUS, progress: $TASK_PROGRESS %"
+
+                      if [ "$TASK_STATUS" == "null" ]; then exit 1; fi
                     done
 
                     # Get new VM id
