@@ -264,6 +264,7 @@ nav:
   - ECP VeiL: https://veil.mashtab.org/docs/
   - Cписок изменений:
     - VeiL Broker:
+      - 4.1.0 : broker/changelog/4.1.0.md
       - 4.0.0 : broker/changelog/4.0.0.md
       - 3.2.1 : broker/changelog/3.2.1.md
       - 3.2.0 : broker/changelog/3.2.0.md
@@ -274,6 +275,7 @@ nav:
       - 3.0.0: broker/changelog/3.0.0.md
       - 2.1.4: broker/changelog/2.1.4.md
     - VeiL Connect:
+      - 1.13.1: connect/changelog/1.13.1.md
       - 1.13.0: connect/changelog/1.13.0.md
       - 1.12.0: connect/changelog/1.12.0.md
       - 1.11.3: connect/changelog/1.11.3.md
