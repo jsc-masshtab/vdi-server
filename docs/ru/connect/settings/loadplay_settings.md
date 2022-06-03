@@ -1,17 +1,17 @@
-# Настройки Loadplay
+# Настройки Loudplay
 
-Loadplay - протокол удаленного доступа на основе RDP. 
+Loudplay - протокол удаленного доступа на основе RDP. 
 Данный функционал добавлен в версии VeiL Connect 1.12.0 и VeiL брокере версии 4.1.0.
 
 ## Подготовка на стороне удаленной машины
 
-- Установите сервер Loadplay.
+- Установите сервер Loudplay.
 
 ## Подготовка на стороне тонкого клиента
 
-- Установите клиент Loadplay.
+- Установите клиент Loudplay.
 
-- Перейдите в Настройки VeiL Connect на вкладку LOADPLAY и укажите путь к установленному клиенту.
+- Перейдите в Настройки VeiL Connect на вкладку LOUDPLAY и укажите путь к установленному клиенту.
 
 !!! example "X2Go"
-    ![image](../../_assets/vdi/thin_client/loadplay_settings.png)
+    ![image](../../_assets/vdi/thin_client/loudplay_settings.png)
