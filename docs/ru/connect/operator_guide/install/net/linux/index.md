@@ -3,7 +3,7 @@
 Для автоматической установки **VeiL Connect** из репозиториев **НИИ Масштаб** на любую из [поддерживаемых ОС](../../index.md) семейства Linux кроме **Astra Linux Smolensk** необходимо выполнить следующие действия:
 
 !!! info "Astra Linux Smolensk"
-     Установку **VeiL Connect** на ос **Astra Linux Smolensk** необходимо выполнять согласно cоответствующим разделам документации: [Установка Veil-Connect на Astra Linux Smolensk 1.7](smolensk17.md) и [Установка Veil-Connect на Astra Linux Smolensk 1.6](smolensk16.md).
+     Установку **VeiL Connect** на ос **Astra Linux Smolensk** необходимо выполнять согласно cоответствующим разделам документации: [Установка Veil-Connect на Astra Linux Smolensk](smolensk.md).
  
 - запустить терминал;
 

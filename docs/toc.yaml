@@ -210,8 +210,7 @@ nav:
           - Astra Linux Orel 2.12: connect/operator_guide/install/net/linux/orel212.md
           - RedOS 7.2: connect/operator_guide/install/net/linux/redos72.md
           - RedOS 7.3: connect/operator_guide/install/net/linux/redos73.md
-          - Astra Linux Smolensk 1.6: connect/operator_guide/install/net/linux/smolensk16.md
-          - Astra Linux Smolensk 1.7: connect/operator_guide/install/net/linux/smolensk17.md
+          - Astra Linux Smolensk: connect/operator_guide/install/net/linux/smolensk.md
         - Установка  на операционную систему Windows: connect/operator_guide/install/net/win.md
     - Удаление VeiL Connect: connect/operator_guide/delete.md
     - Выполнение программы:

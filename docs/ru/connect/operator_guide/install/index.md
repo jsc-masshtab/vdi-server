@@ -11,7 +11,7 @@ VeiL Connect предназначен для работы на базе след
     - Centos 7
     - Centos 8
     - Astra Linux Orel 2.12
-    - Astra Linux Smolensk 1.6
+    - Astra Linux Smolensk (SE)
     - Alt Linux 9
     - RedOS 7.2
     - RedOS 7.3
