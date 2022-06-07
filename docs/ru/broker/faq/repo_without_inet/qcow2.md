@@ -17,7 +17,7 @@
 6. Прописать репозитории (название репозитория уточнить в службе поддержки) на серверах **VeiL Broker**, 
    для этого создать файл **_/etc/apt/sources.list.d/veil-broker.list_** с содержанием:
     ```
-    deb http://{VM_IP_ADDRESS}/{REPO_NAME} smolensk main
+    deb http://{VM_IP_ADDRESS}/{REPO_NAME} 1.7_x86-64 main
     ```
 7. Через терминал обновить списки пакетов командой: `apt-get update`.
 8. Выполнить обновление пакетной базы командой: `apt-get upgrade -y`.

@@ -34,7 +34,7 @@
     `#`  
     `############# end config ##############`    
     
-    `deb http://veil-update.mashtab.org/{REPO_NAME} smolensk main`
+    `deb http://veil-update.mashtab.org/{REPO_NAME} 1.7_x86-64 main`
     
     `clean http://veil-update.mashtab.org/{REPO_NAME}`
    
@@ -71,7 +71,7 @@
 10. Прописать репозитории на серверах **VeiL Broker**, для этого создать файл `/etc/apt/sources.list.d/veil-broker.list` с содержанием:
     
     ```
-    deb http://{LOCAL_REPO_SERVER_IP}/{REPO_NAME} smolensk main
+    deb http://{LOCAL_REPO_SERVER_IP}/{REPO_NAME} 1.7_x86-64 main
     ```
     
 11. Обновить списки пакетов командой: `apt-get update`.
