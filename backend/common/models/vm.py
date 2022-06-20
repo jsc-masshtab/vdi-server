@@ -621,7 +621,8 @@ class Vm(VeilModel):
                                     controller_client,
                                     vms_ids: list,
                                     creator: str = "system",
-                                    remove_from_ecp: bool = False) -> bool:
+                                    remove_from_ecp: bool = False,
+                                    deleting_computers_from_ad_enabled=True) -> bool:
         """Групповое удаление ВМ блоками."""
         # Нечего удалять
         if not vms_ids:
@@ -636,9 +637,10 @@ class Vm(VeilModel):
                 await send_cmd_to_cancel_tasks_associated_with_entity(vm_id)
 
             # Удаление объектов (Computer) из OU AD
-            await cls.delete_computers_from_ad(controller_client=controller_client,
-                                               vms_ids=vms_group,
-                                               creator=creator)
+            if deleting_computers_from_ad_enabled:
+                await cls.delete_computers_from_ad(controller_client=controller_client,
+                                                   vms_ids=vms_group,
+                                                   creator=creator)
 
             # Запускаем удаление блока
             await cls.remove_vms_with_timeout(controller_client=controller_client,
@@ -1114,8 +1116,7 @@ class Vm(VeilModel):
 
             if not automated_pool.is_guest:
                 # hostname if required
-                if automated_pool.set_vms_hostnames and \
-                        str(domain_entity.hostname).upper() != str(self.verbose_name).upper():  # noqa
+                if automated_pool.set_vms_hostnames:
                     set_hostname = True
 
                 # add to AD if required
