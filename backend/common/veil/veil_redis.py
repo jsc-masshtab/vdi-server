@@ -328,7 +328,7 @@ async def request_to_execute_pool_task(entity_id, task_type, **additional_data):
 
 
 async def execute_delete_pool_task(
-    pool_id: str, full, wait_for_result=True, wait_timeout=20, creator=None
+    pool_id: str, wait_for_result=True, wait_timeout=20, creator=None, deleting_computers_from_ad_enabled=True
 ):
     """Удаление автоматического пула.
 
@@ -338,8 +338,10 @@ async def execute_delete_pool_task(
     from common.models.task import PoolTaskType, TaskStatus  # для избежания цикл ссылки
 
     # send command to pool worker
-    task_id = await request_to_execute_pool_task(
-        pool_id, PoolTaskType.POOL_DELETE, full_deletion=full, creator=creator)
+    task_id = await request_to_execute_pool_task(pool_id,
+                                                 PoolTaskType.POOL_DELETE,
+                                                 creator=creator,
+                                                 deleting_computers_from_ad_enabled=deleting_computers_from_ad_enabled)
 
     # wait for result
     if wait_for_result:

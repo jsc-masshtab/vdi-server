@@ -422,10 +422,9 @@ class DeletePoolTask(AbstractTask):
 
     task_type = PoolTaskType.POOL_DELETE
 
-    def __init__(self, full_deletion=True):
+    def __init__(self, deleting_computers_from_ad_enabled=True):
         super().__init__()
-
-        self.full_deletion = full_deletion
+        self._deleting_computers_from_ad_enabled = deleting_computers_from_ad_enabled
         self._task_priority = 3
 
     async def get_user_friendly_text(self):
@@ -450,7 +449,7 @@ class DeletePoolTask(AbstractTask):
             # удаляем пул
             pool = await Pool.get(automated_pool.id)
 
-            is_deleted = await Pool.delete_pool(pool, "system")
+            is_deleted = await pool.full_delete(self._deleting_computers_from_ad_enabled, "system")
             await system_logger.debug("is pool deleted: {}".format(is_deleted))
 
 

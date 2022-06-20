@@ -803,7 +803,7 @@ class Pool(VeilModel):
 
         return pool
 
-    async def full_delete(self, creator):
+    async def full_delete(self, deleting_computers_from_ad_enabled=True, creator="system"):
         """Удаление сущности с удалением зависимых сущностей."""
         old_status = self.status  # Запомнить текущий статус
         controller_obj = await self.controller_obj
@@ -834,16 +834,16 @@ class Pool(VeilModel):
                         entity=vm.entity,
                     )
 
-                await VmModel.step_by_step_removing(controller_client=controller_client,
-                                                    vms_ids=vm_ids,
-                                                    creator=creator,
-                                                    remove_from_ecp=True)
+                remove_from_ecp = True
             else:
                 vm_ids = await VmModel.get_vms_ids_in_pool(self.id)
-                await VmModel.step_by_step_removing(controller_client=controller_client,
-                                                    vms_ids=vm_ids,
-                                                    creator=creator,
-                                                    remove_from_ecp=False)
+                remove_from_ecp = False
+
+            await VmModel.step_by_step_removing(controller_client=controller_client,
+                                                vms_ids=vm_ids,
+                                                creator=creator,
+                                                remove_from_ecp=remove_from_ecp,
+                                                deleting_computers_from_ad_enabled=deleting_computers_from_ad_enabled)
 
             if self.tag:
                 await self.tag_remove(self.tag)
@@ -872,10 +872,6 @@ class Pool(VeilModel):
         await publish_data_in_internal_channel(self.get_resource_type(),
                                                WsEventToClient.POOL_ENTITLEMENT_CHANGED.value,
                                                self, additional_data)
-
-    @staticmethod
-    async def delete_pool(pool, creator):
-        return await pool.full_delete(creator)
 
     @classmethod
     async def activate(cls, pool_id, creator="system"):

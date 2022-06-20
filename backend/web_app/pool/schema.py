@@ -580,11 +580,12 @@ class DeletePoolMutation(graphene.Mutation, PoolValidator):
     class Arguments:
         pool_id = graphene.UUID()
         full = graphene.Boolean(required=False)
+        deleting_computers_from_ad_enabled = graphene.Boolean()
 
     ok = graphene.Boolean()
 
     @administrator_required
-    async def mutate(self, info, pool_id, creator, full=True):
+    async def mutate(self, info, creator, pool_id, full=True, deleting_computers_from_ad_enabled=True):
 
         # Нет запуска валидации, т.к. нужна сущность пула далее - нет смысла запускать запрос 2жды.
         # print('pool_id', pool_id)
@@ -597,12 +598,11 @@ class DeletePoolMutation(graphene.Mutation, PoolValidator):
 
         # Авто пул или Гостевой пул
         if pool_type == Pool.PoolTypes.AUTOMATED or pool_type == Pool.PoolTypes.GUEST:
-            await execute_delete_pool_task(
-                str(pool.id), full=full, wait_for_result=False, creator=creator
-            )
+            await execute_delete_pool_task(str(pool.id), wait_for_result=False, creator=creator,
+                                           deleting_computers_from_ad_enabled=deleting_computers_from_ad_enabled)
             return DeletePoolMutation(ok=True)
         else:
-            is_deleted = await Pool.delete_pool(pool, creator)
+            is_deleted = await pool.full_delete(creator)
             return DeletePoolMutation(ok=is_deleted)
 
 
