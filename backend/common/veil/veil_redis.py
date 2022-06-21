@@ -328,7 +328,7 @@ async def request_to_execute_pool_task(entity_id, task_type, **additional_data):
 
 
 async def execute_delete_pool_task(
-    pool_id: str, wait_for_result=True, wait_timeout=20, creator=None, deleting_computers_from_ad_enabled=True
+    pool_id: str, wait_for_result=True, wait_timeout=20, creator=None, deleting_computers_from_ad_enabled=False
 ):
     """Удаление автоматического пула.
 

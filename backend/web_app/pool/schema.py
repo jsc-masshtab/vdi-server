@@ -585,7 +585,7 @@ class DeletePoolMutation(graphene.Mutation, PoolValidator):
     ok = graphene.Boolean()
 
     @administrator_required
-    async def mutate(self, info, creator, pool_id, full=True, deleting_computers_from_ad_enabled=True):
+    async def mutate(self, info, creator, pool_id, full=True, deleting_computers_from_ad_enabled=False):
 
         # Нет запуска валидации, т.к. нужна сущность пула далее - нет смысла запускать запрос 2жды.
         # print('pool_id', pool_id)
@@ -1217,17 +1217,20 @@ class RemoveVmsFromPoolMutation(graphene.Mutation):
     class Arguments:
         pool_id = graphene.ID(required=True)
         vm_ids = graphene.List(graphene.UUID, required=True)
+        deleting_computers_from_ad_enabled = graphene.Boolean()
 
     ok = graphene.Boolean()
     task_id = graphene.ID()
 
     @administrator_required
-    async def mutate(self, _info, pool_id, vm_ids, creator):
+    async def mutate(self, _info, pool_id, vm_ids, creator, deleting_computers_from_ad_enabled=False):
         vm_str_ids = [str(vm_id) for vm_id in vm_ids]
-        task_id = await request_to_execute_pool_task(str(pool_id),
-                                                     PoolTaskType.VMS_REMOVE,
-                                                     vm_ids=vm_str_ids,
-                                                     creator=creator)
+        task_id = \
+            await request_to_execute_pool_task(str(pool_id),
+                                               PoolTaskType.VMS_REMOVE,
+                                               vm_ids=vm_str_ids,
+                                               deleting_computers_from_ad_enabled=deleting_computers_from_ad_enabled,
+                                               creator=creator)
 
         return RemoveVmsFromPoolMutation(ok=True, task_id=task_id)
 

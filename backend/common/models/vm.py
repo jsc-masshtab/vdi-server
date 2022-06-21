@@ -622,7 +622,7 @@ class Vm(VeilModel):
                                     vms_ids: list,
                                     creator: str = "system",
                                     remove_from_ecp: bool = False,
-                                    deleting_computers_from_ad_enabled=True) -> bool:
+                                    deleting_computers_from_ad_enabled=False) -> bool:
         """Групповое удаление ВМ блоками."""
         # Нечего удалять
         if not vms_ids:
