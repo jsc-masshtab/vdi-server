@@ -42,6 +42,8 @@ export class RemoveVMStaticPoolComponent implements OnDestroy {
     vmsInput: new FormControl([], Validators.required)
   });
 
+  ad_deliting = new FormControl(false);
+
   constructor(
     private poolService: PoolDetailsService,
     private waitService: WaitService,
@@ -67,7 +69,10 @@ export class RemoveVMStaticPoolComponent implements OnDestroy {
         method = 'removeVmsFromRdsPool';
         break;
       case 'automated':
-        method = 'removeVmsDynamicPool';
+        method = 'removeVmsPoolAdDeleting';
+        break;
+      case 'guest':
+        method = 'removeVmsPoolAdDeleting';
         break;
       default:
         return;
@@ -76,7 +81,7 @@ export class RemoveVMStaticPoolComponent implements OnDestroy {
     if (method) {
       this.waitService.setWait(true);
 
-      this.poolService[method](this.data.idPool, selectedVms).pipe(takeUntil(this.destroy)).subscribe((res) => {
+      this.poolService[method](this.data.idPool, selectedVms, this.ad_deliting.value).pipe(takeUntil(this.destroy)).subscribe((res) => {
         if (res) {
           setTimeout(() => this.poolService.getPool(this.data.idPool).refetch(), 500)
 

@@ -24,7 +24,25 @@ export class PoolDetailsService {
     public orderingGroups: any = {
         spin: true,
         nameSort: undefined
-    };
+    };deleting_computers_from_ad_enabled
+
+    public removePoolAdDeleting(pool_id: number,  deleting_computers_from_ad_enabled: boolean) {
+        return this.service.mutate<any>({
+            mutation: gql`
+                        mutation pools($pool_id: UUID, $deleting_computers_from_ad_enabled: Boolean, $full: Boolean) {
+                            removePool(pool_id: $pool_id, deleting_computers_from_ad_enabled: $deleting_computers_from_ad_enabled, full: $full) {
+                                ok
+                            }
+                        }
+            `,
+            variables: {
+                method: 'POST',
+                pool_id,
+                full: true,
+                deleting_computers_from_ad_enabled
+            }
+        });
+    }
 
     public removePool(pool_id: number,  full: boolean) {
         return this.service.mutate<any>({
@@ -234,7 +252,7 @@ export class PoolDetailsService {
         });
     }
 
-    public removeVmsDynamicPool(pool_id: number, vm_ids: []) {
+    public removeVmsDynamicPool(pool_id: number, vm_ids: [], _deleting_computers_from_ad_enabled: boolean = false) {
         return this.service.mutate<any>({
             mutation: gql`
                 mutation pools($pool_id: ID!,$vm_ids: [UUID]!) {
@@ -247,6 +265,24 @@ export class PoolDetailsService {
                 method: 'POST',
                 pool_id,
                 vm_ids
+            }
+        });
+    }
+
+    public removeVmsPoolAdDeleting(pool_id: number, vm_ids: [], deleting_computers_from_ad_enabled: boolean) {
+        return this.service.mutate<any>({
+            mutation: gql`
+                mutation pools($pool_id: ID!,$vm_ids: [UUID]!, $deleting_computers_from_ad_enabled: Boolean) {
+                    removeVmsFromDynamicPool(pool_id: $pool_id,vm_ids: $vm_ids, deleting_computers_from_ad_enabled: $deleting_computers_from_ad_enabled) {
+                        ok
+                    }
+                }
+            `,
+            variables: {
+                method: 'POST',
+                pool_id,
+                vm_ids,
+                deleting_computers_from_ad_enabled
             }
         });
     }

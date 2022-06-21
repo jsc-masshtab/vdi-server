@@ -12,6 +12,13 @@
     <p class="description" *ngIf="data?.typePool === 'static'">Будут удалены все виртуальные машины на VDI</p>
   </div>
 
+  <div class="form-fields" *ngIf="data?.typePool === 'automated' || data?.typePool === 'guest'">
+    <label class="field-inline">
+      <mat-checkbox [color]="'warn'" [formControl]="ac_deliting"></mat-checkbox>
+      <p class="description" title="Автоматическое удаление объектов (Computer) из OU AD">Удалять записи в домене</p>
+    </label>
+  </div>
+ 
   <div class="form-actions">
     <button (click)="send()" class="form-btn"><fa-icon [icon]="['fas','trash-alt']" size="xs"></fa-icon><span class="action-name">Удалить</span></button>
   </div>
