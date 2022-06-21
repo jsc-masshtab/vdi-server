@@ -52,7 +52,7 @@ PAM_KILL_PROC_CMD = "/usr/sbin/vdi_kill_proc_bi.sh"
 PAM_USER_GROUP = "vdi-web"
 PAM_SUPERUSER_GROUP = "vdi-web-admin"
 
-MINIMUM_SUPPORTED_DESKTOP_THIN_CLIENT_VERSION = "1.11.2"
+MINIMUM_SUPPORTED_DESKTOP_THIN_CLIENT_VERSION = "1.13.2"
 
 # JWT Options
 # -----------------------------

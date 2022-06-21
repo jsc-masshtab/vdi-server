@@ -83,7 +83,7 @@ class Pool(VeilModel):
         RDP = "RDP"
         NATIVE_RDP = "NATIVE_RDP"
         X2GO = "X2GO"
-        LOADPLAY = "LOADPLAY"
+        LOUDPLAY = "LOUDPLAY"
 
         @classmethod
         def values(cls):
