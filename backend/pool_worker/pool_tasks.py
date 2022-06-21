@@ -422,7 +422,7 @@ class DeletePoolTask(AbstractTask):
 
     task_type = PoolTaskType.POOL_DELETE
 
-    def __init__(self, deleting_computers_from_ad_enabled=True):
+    def __init__(self, deleting_computers_from_ad_enabled=False):
         super().__init__()
         self._deleting_computers_from_ad_enabled = deleting_computers_from_ad_enabled
         self._task_priority = 3
@@ -573,10 +573,11 @@ class RemoveVmsTask(AbstractTask):
 
     task_type = PoolTaskType.VMS_REMOVE
 
-    def __init__(self, vm_ids):
+    def __init__(self, vm_ids, deleting_computers_from_ad_enabled=False):
         super().__init__()
 
         self._vm_ids = vm_ids
+        self._deleting_computers_from_ad_enabled = deleting_computers_from_ad_enabled
 
     async def get_user_friendly_text(self):
         entity_name = await self._get_associated_entity_name()
@@ -600,7 +601,8 @@ class RemoveVmsTask(AbstractTask):
         await Vm.step_by_step_removing(controller_client=controller_client,
                                        vms_ids=self._vm_ids,
                                        creator=self.task_model.creator,
-                                       remove_from_ecp=remove_vms_on_controller)
+                                       remove_from_ecp=remove_vms_on_controller,
+                                       deleting_computers_from_ad_enabled=self._deleting_computers_from_ad_enabled)
 
     # override
     async def do_on_fail(self):

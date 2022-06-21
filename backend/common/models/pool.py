@@ -803,7 +803,7 @@ class Pool(VeilModel):
 
         return pool
 
-    async def full_delete(self, deleting_computers_from_ad_enabled=True, creator="system"):
+    async def full_delete(self, deleting_computers_from_ad_enabled=False, creator="system"):
         """Удаление сущности с удалением зависимых сущностей."""
         old_status = self.status  # Запомнить текущий статус
         controller_obj = await self.controller_obj
