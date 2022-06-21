@@ -54,7 +54,7 @@ export class PoolDetailsComponent extends PoolCollections implements OnInit, OnD
 
   ngOnInit() {
     this.activatedRoute.paramMap.subscribe((param: ParamMap) => {
-      
+
       this.typePool = param.get('type');
       this.idPool = param.get('id');
 
@@ -337,7 +337,7 @@ export class PoolDetailsComponent extends PoolCollections implements OnInit, OnD
             multiple: true,
             title: 'Выбрать тип подключения',
             fieldName: 'connection_types',
-            data: this.typePool === 'rds' ? ['RDP', 'NATIVE_RDP'] : ['RDP', 'NATIVE_RDP', 'SPICE', 'SPICE_DIRECT', 'X2GO', 'LOADPLAY'],
+            data: this.typePool === 'rds' ? ['RDP', 'NATIVE_RDP'] : ['RDP', 'NATIVE_RDP', 'SPICE', 'SPICE_DIRECT', 'X2GO', 'LOUDPLAY'],
             fieldValue: this.pool.assigned_connection_types,
           }]
         },
@@ -756,7 +756,7 @@ export class PoolDetailsComponent extends PoolCollections implements OnInit, OnD
       }
     });
   }
-  
+
   public copyPool(): void {
     this.poolService.copyPool(this.idPool).subscribe((res) => {
        this.poolSettings = JSON.parse(res.data.copyDynamicPool.pool_settings);
