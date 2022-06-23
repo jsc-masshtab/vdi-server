@@ -1,7 +1,11 @@
-def currentDate = new Date().format('yyyyMMddHHmmss')
-def rocketNotify = true
+library "vdi-server-libraries@$BRANCH"
 
-notifyBuild(rocketNotify, ":bell: STARTED", "Start new build. Version: ${currentDate}")
+def currentDate = new Date().format('yyyyMMddHHmmss')
+def branch = buildParameters.branch()
+def version = buildParameters.version()
+def agents = buildParameters.agents()
+
+notifyBuild("STARTED")
 
 pipeline {
     agent {
@@ -10,27 +14,16 @@ pipeline {
 
     environment {
         DATE = "${currentDate}"
-        VER = "${VERSION}-${BUILD_NUMBER}"
         NEXUS_DOCKER_REGISTRY = "nexus.bazalt.team"
         NEXUS_CREDS = credentials('nexus-jenkins-creds')
         DOCKER_IMAGE_NAME = "${NEXUS_DOCKER_REGISTRY}/veil-broker"
     }
 
     post {
-        failure {
-            println "Something goes wrong"
-            println "Current build marked as ${currentBuild.result}"
-            notifyBuild(rocketNotify,":x: FAILED", "Something goes wrong. Version: ${currentDate}")
-        }
-
-        aborted {
-            println "Build was interrupted manually"
-            println "Current build marked as ${currentBuild.result}"
-            notifyBuild(rocketNotify,":x: FAILED", "Build was interrupted manually. Version: ${currentDate}")
-        }
-
-        success {
-            notifyBuild(rocketNotify, ":white_check_mark: SUCCESSFUL","Build SUCCESSFUL. Version: ${currentDate}")
+        always {
+            script {
+                notifyBuild(currentBuild.result)
+            }
         }
     }
 
@@ -44,24 +37,19 @@ pipeline {
     }
 
     parameters {
-        string(      name: 'BRANCH',   defaultValue: 'dev',                       description: 'branch')
-        string(      name: 'VERSION',  defaultValue: '4.1.0',                     description: 'base version')
-        choice(      name: 'AGENT',    choices: ['cloud-ubuntu-20', 'bld-agent'], description: 'jenkins build agent')
-        booleanParam(name: 'BACKEND',  defaultValue: true,                        description: 'veil-broker-backend')
-        booleanParam(name: 'FRONTEND', defaultValue: true,                        description: 'veil-broker-frontend')
+        string(      name: 'BRANCH',      defaultValue: branch,     description: 'branch')
+        string(      name: 'VERSION',     defaultValue: version,    description: 'base version')
+        choice(      name: 'AGENT',       choices: agents,          description: 'jenkins build agent')
+        booleanParam(name: 'BACKEND',     defaultValue: true,       description: 'veil-broker-backend')
+        booleanParam(name: 'FRONTEND',    defaultValue: true,       description: 'veil-broker-frontend')
     }
 
     stages {
         stage ('checkout') {
             steps {
-                cleanWs()
-                checkout([ $class: 'GitSCM',
-                    branches: [[name: '$BRANCH']],
-                    doGenerateSubmoduleConfigurations: false,
-                    extensions: [], submoduleCfg: [],
-                    userRemoteConfigs: [[credentialsId: 'jenkins-vdi-token',
-                    url: 'http://gitlab.bazalt.team/vdi/vdi-server.git']]
-                ])
+                script {
+                    buildSteps.gitCheckout("$BRANCH")
+                }
             }
         }
 
@@ -72,19 +60,13 @@ pipeline {
                         beforeAgent true
                         expression { params.BACKEND == true }
                     }
+                    environment {
+                      COMPONENT = "backend"
+                    }
                     steps {
-                        sh script: '''
-                            COMPONENT="backend"
-                            echo -n $NEXUS_CREDS_PSW | docker login -u $NEXUS_CREDS_USR --password-stdin $NEXUS_DOCKER_REGISTRY
-                            docker pull $DOCKER_IMAGE_NAME-$COMPONENT:latest || true
-                            docker build . --pull \
-                                           --cache-from $DOCKER_IMAGE_NAME-$COMPONENT:latest \
-                                           -f devops/docker/prod/Dockerfile.$COMPONENT \
-                                           --tag $DOCKER_IMAGE_NAME-$COMPONENT:$VERSION
-                            docker push $DOCKER_IMAGE_NAME-$COMPONENT:$VERSION
-                            docker tag $DOCKER_IMAGE_NAME-$COMPONENT:$VERSION $DOCKER_IMAGE_NAME-$COMPONENT:latest
-                            docker push $DOCKER_IMAGE_NAME-$COMPONENT:latest
-                        '''
+                        script {
+                            buildSteps.prepareBrokerImage()
+                        }
                     }
                 }
 
@@ -93,34 +75,16 @@ pipeline {
                         beforeAgent true
                         expression { params.FRONTEND == true }
                     }
+                    environment {
+                      COMPONENT = "frontend"
+                    }
                     steps {
-                        sh script: '''
-                            COMPONENT="frontend"
-                            echo -n $NEXUS_CREDS_PSW | docker login -u $NEXUS_CREDS_USR --password-stdin $NEXUS_DOCKER_REGISTRY
-                            docker pull $DOCKER_IMAGE_NAME-$COMPONENT:latest || true
-                            docker build . --pull \
-                                           --cache-from $DOCKER_IMAGE_NAME-$COMPONENT:latest \
-                                           -f devops/docker/prod/Dockerfile.$COMPONENT \
-                                           --tag $DOCKER_IMAGE_NAME-$COMPONENT:$VERSION
-                            docker push $DOCKER_IMAGE_NAME-$COMPONENT:$VERSION
-                            docker tag $DOCKER_IMAGE_NAME-$COMPONENT:$VERSION $DOCKER_IMAGE_NAME-$COMPONENT:latest
-                            docker push $DOCKER_IMAGE_NAME-$COMPONENT:latest
-                        '''
+                        script {
+                            buildSteps.prepareBrokerImage()
+                        }
                     }
                 }
             }
         }
-    }
-}
-
-def notifyBuild(rocketNotify, buildStatus, msg) {
-    buildStatus =  buildStatus ?: 'SUCCESSFUL'
-
-    def summary = "${buildStatus}: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})" + "\n"
-
-    summary += "${msg}"
-
-    if (rocketNotify){
-        rocketSend (channel: 'jenkins-notify', message: summary, serverUrl: '192.168.14.210', trustSSL: true, rawMessage: true)
     }
 }
