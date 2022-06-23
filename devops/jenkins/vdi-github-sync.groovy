@@ -1,37 +1,20 @@
+library "vdi-server-libraries@$BRANCH"
+
 def currentDate = new Date().format('yyyyMMddHHmmss')
-def rocketNotify = true
+def branch = buildParameters.branch()
+def agents = buildParameters.agents()
 
-def notifyBuild(rocketNotify, buildStatus, msg) {
-    buildStatus =  buildStatus ?: 'SUCCESSFUL'
-
-    def summary = "${buildStatus}: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})" + "\n"
-
-    summary += "${msg}"
-
-    if (rocketNotify){
-        rocketSend (channel: 'jenkins-notify', message: summary, serverUrl: '192.168.14.210', trustSSL: true, rawMessage: true)
-    }
-}
-
-notifyBuild(rocketNotify, ":bell: STARTED", "Start new build. Version: ${currentDate}")
+notifyBuild("STARTED")
 
 pipeline {
     agent {
         label "${AGENT}"
     }
     post {
-        failure {
-            println "Something goes wrong"
-            println "Current build marked as ${currentBuild.result}"
-            notifyBuild(rocketNotify,":x: FAILED", "Something goes wrong. Version: ${currentDate}")
-        }
-        aborted {
-            println "Build was interrupted manually"
-            println "Current build marked as ${currentBuild.result}"
-            notifyBuild(rocketNotify,":x: FAILED", "Build was interrupted manually. Version: ${currentDate}")
-        }
-        success {
-            notifyBuild(rocketNotify, ":white_check_mark: SUCCESSFUL","Build SUCCESSFUL. Version: ${currentDate}")
+        always {
+            script {
+                notifyBuild(currentBuild.result)
+            }
         }
     }
 
@@ -45,21 +28,16 @@ pipeline {
     }
 
     parameters {
-        string(name: 'BRANCH', defaultValue: 'dev',                       description: 'branch')
-        choice(name: 'AGENT',  choices: ['cloud-ubuntu-20', 'bld-agent'], description: 'jenkins build agent')
+        string(    name: 'BRANCH',     defaultValue: branch,     description: 'branch')
+        choice(    name: 'AGENT',      choices: agents,          description: 'jenkins build agent')
     }
 
     stages {
         stage ('checkout') {
             steps {
-                cleanWs()
-                checkout([ $class: 'GitSCM',
-                    branches: [[name: '$BRANCH']],
-                    doGenerateSubmoduleConfigurations: false,
-                    extensions: [], submoduleCfg: [],
-                    userRemoteConfigs: [[credentialsId: 'jenkins-vdi-token',
-                    url: 'http://gitlab.bazalt.team/vdi/vdi-server.git']]
-                ])
+                script {
+                    buildSteps.gitCheckout("$BRANCH")
+                }
             }
         }
 
@@ -72,4 +50,3 @@ pipeline {
         }
     }
 }
-

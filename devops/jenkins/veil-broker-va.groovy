@@ -1,7 +1,12 @@
-def currentDate = new Date().format('yyyyMMddHHmmss')
-def rocketNotify = true
+library "vdi-server-libraries@$BRANCH"
 
-notifyBuild(rocketNotify, ":bell: STARTED", "Start new build. Version: ${currentDate}")
+def currentDate = new Date().format('yyyyMMddHHmmss')
+def branch = buildParameters.branch()
+def repos = buildParameters.repos()
+def version = buildParameters.version()
+def agents = buildParameters.agents()
+
+notifyBuild("STARTED")
 
 pipeline {
     agent {
@@ -9,7 +14,6 @@ pipeline {
     }
 
     environment {
-        APT_SRV = "192.168.11.118"
         DATE = "${currentDate}"
         VEIL_ADDRESS = "192.168.11.102"
         VEIL_NODE_ID = "de4a8586-db6d-480f-bc60-f5868e229191"
@@ -23,20 +27,10 @@ pipeline {
     }
 
     post {
-        failure {
-            println "Something goes wrong"
-            println "Current build marked as ${currentBuild.result}"
-            notifyBuild(rocketNotify,":x: FAILED", "Something goes wrong. Version: ${currentDate}")
-        }
-
-        aborted {
-            println "Build was interrupted manually"
-            println "Current build marked as ${currentBuild.result}"
-            notifyBuild(rocketNotify,":x: FAILED", "Build was interrupted manually. Version: ${currentDate}")
-        }
-
-        success {
-            notifyBuild(rocketNotify, ":white_check_mark: SUCCESSFUL","Build SUCCESSFUL. Version: ${currentDate}")
+        always {
+            script {
+                notifyBuild(currentBuild.result)
+            }
         }
     }
 
@@ -50,23 +44,18 @@ pipeline {
     }
 
     parameters {
-        string(name: 'BRANCH',  defaultValue: 'dev',                                                     description: 'branch')
-        choice(name: 'REPO',    choices: ['dev', 'prod-30', 'prod-31', 'prod-32', 'prod-40', 'prod-41'], description: 'repo for uploading')
-        string(name: 'VERSION', defaultValue: '4.1.0',                                                   description: 'base version')
-        choice(name: 'AGENT',   choices: ['cloud-ubuntu-20', 'bld-agent'],                               description: 'jenkins build agent')
+        string(    name: 'BRANCH',     defaultValue: branch,     description: 'branch')
+        choice(    name: 'REPO',       choices: repos,           description: 'repo for uploading')
+        string(    name: 'VERSION',    defaultValue: version,    description: 'base version')
+        choice(    name: 'AGENT',      choices: agents,          description: 'jenkins build agent')
     }
 
     stages {
         stage ('checkout') {
             steps {
-                cleanWs()
-                checkout([ $class: 'GitSCM',
-                    branches: [[name: '$BRANCH']],
-                    doGenerateSubmoduleConfigurations: false,
-                    extensions: [], submoduleCfg: [],
-                    userRemoteConfigs: [[credentialsId: 'jenkins-vdi-token',
-                    url: 'http://gitlab.bazalt.team/vdi/vdi-server.git']]
-                ])
+                script {
+                    buildSteps.gitCheckout("$BRANCH")
+                }
             }
         }
 
@@ -190,17 +179,5 @@ pipeline {
                 '''
             }
         }
-    }
-}
-
-def notifyBuild(rocketNotify, buildStatus, msg) {
-    buildStatus =  buildStatus ?: 'SUCCESSFUL'
-
-    def summary = "${buildStatus}: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})" + "\n"
-
-    summary += "${msg}"
-
-    if (rocketNotify){
-        rocketSend (channel: 'jenkins-notify', message: summary, serverUrl: '192.168.14.210', trustSSL: true, rawMessage: true)
     }
 }

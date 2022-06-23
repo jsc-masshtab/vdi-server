@@ -1,25 +1,21 @@
-def rocketNotify = true
+library "vdi-server-libraries@$BRANCH"
+
+def branch = buildParameters.branch()
+def repos = buildParameters.repos()
+def version = buildParameters.version()
+
+notifyBuild("STARTED")
 
 pipeline {
     agent {
-        label "${AGENT}"
+        label "master"
     }
 
     post {
-        failure {
-            println "Something goes wrong"
-            println "Current build marked as ${currentBuild.result}"
-            notifyBuild(rocketNotify,":x: FAILED")
-        }
-
-        aborted {
-            println "Build was interrupted manually"
-            println "Current build marked as ${currentBuild.result}"
-            notifyBuild(rocketNotify,":x: FAILED")
-        }
-
-        success {
-            notifyBuild(rocketNotify, ":white_check_mark: SUCCESSFUL")
+        always {
+            script {
+                notifyBuild(currentBuild.result)
+            }
         }
     }
 
@@ -32,23 +28,22 @@ pipeline {
     }
 
     parameters {
-        string(      name: 'BRANCH',     defaultValue: 'dev',                                                     description: 'branch')
-        choice(      name: 'REPO',       choices: ['dev', 'prod-30', 'prod-31', 'prod-32', 'prod-40', 'prod-41'], description: 'repo for uploading')
-        string(      name: 'VERSION',    defaultValue: '4.1.0',                                                   description: 'base version')
-        string(      name: 'AGENT',      defaultValue: 'master',                                                  description: 'jenkins build agent')
-        booleanParam(name: 'BACKEND',    defaultValue: false,                                                     description: 'veil-broker-backend')
-        booleanParam(name: 'FRONTEND',   defaultValue: false,                                                     description: 'veil-broker-frontend')
-        booleanParam(name: 'DOCS',       defaultValue: false,                                                     description: 'veil-broker-docs')
-        booleanParam(name: 'THINCLIENT', defaultValue: false,                                                     description: 'veil-connect-web')
-        booleanParam(name: 'ISO',        defaultValue: false,                                                     description: 'veil-broker-iso')
+        string(      name: 'BRANCH',        defaultValue: branch,     description: 'branch')
+        choice(      name: 'REPO',          choices: repos,           description: 'repo for uploading')
+        string(      name: 'VERSION',       defaultValue: version,    description: 'base version')
+        booleanParam(name: 'BACKEND',       defaultValue: false,      description: 'veil-broker-backend')
+        booleanParam(name: 'FRONTEND',      defaultValue: false,      description: 'veil-broker-frontend')
+        booleanParam(name: 'DOCS',          defaultValue: false,      description: 'veil-broker-docs')
+        booleanParam(name: 'THINCLIENT',    defaultValue: false,      description: 'veil-connect-web')
+        booleanParam(name: 'ISO',           defaultValue: false,      description: 'veil-broker-iso')
     }
 
     stages {
         stage ('create environment') {
             steps {
-                notifyBuild(rocketNotify, ":bell: STARTED")
-                cleanWs()
-                git branch: '$BRANCH', url: 'git@gitlab.bazalt.team:vdi/vdi-server.git'
+                script {
+                    buildSteps.gitCheckout("$BRANCH")
+                }
             }
         }
 
@@ -115,22 +110,6 @@ pipeline {
             steps {
                 build job: 'vdi-broker-iso', parameters: [string(name: 'BRANCH', value: "${BRANCH}"), string(name: 'REPO', value: "${REPO}"), string(name: 'VERSION', value: "${VERSION}")]
             }
-        }
-    }
-}
-
-def notifyBuild(rocketNotify, buildStatus) {
-    buildStatus =  buildStatus ?: 'SUCCESSFUL'
-
-    def summary = "${buildStatus}: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})" + "\n"
-
-    summary += "BRANCH: ${BRANCH}. REPO: ${REPO}"
-
-    if (rocketNotify){
-        try {
-            rocketSend (channel: 'jenkins-notify', message: summary, serverUrl: '192.168.14.210', trustSSL: true, rawMessage: true)
-        } catch (Exception e) {
-            println "Notify is failed"
         }
     }
 }
