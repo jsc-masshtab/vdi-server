@@ -11,6 +11,7 @@ from tornado.web import Application
 from common.database import start_gino, stop_gino
 from common.languages import _local_
 from common.log.journal import system_logger
+from common.models.license import License
 from common.settings import (
     AUTH_ENABLED,
     DEBUG,
@@ -27,7 +28,6 @@ from common.veil.veil_redis import redis_deinit, redis_init
 from web_app.auth.authentication_directory.auth_dir_schema import auth_dir_schema
 from web_app.auth.group_schema import group_schema
 from web_app.auth.license.urls import license_api_urls
-from web_app.auth.license.utils import License
 from web_app.auth.urls import auth_api_urls
 from web_app.auth.user_schema import user_schema
 from web_app.controller.resource_schema import resources_schema
@@ -111,10 +111,6 @@ def make_ssl():
     return ssl_ctx
 
 
-def init_license():
-    return License()
-
-
 def exit_handler(sig, frame):  # noqa
     io_loop = IOLoop.current()
 
@@ -152,8 +148,12 @@ async def init_systems():
     """Инитализация систем. Здесь код требующий асинхронного выполнерия."""
     # Инициализация БД
     await start_gino(app)
+
+    # Инициализация лицензии
+    license_obj = await License.get_license()
+
     # Вывод уведомлений
-    await startup_alerts(vdi_license)
+    await startup_alerts(license_obj)
 
 
 if __name__ == "__main__":
@@ -169,9 +169,6 @@ if __name__ == "__main__":
 
     # Инициализация HTTP клиента (контроллеров)
     get_veil_client_singleton()
-
-    # Инициализация лицензии
-    vdi_license = init_license()
 
     # Запуск tornado
     if options.ssl:

@@ -18,6 +18,7 @@ from common.models.pool import Pool
 from common.models.vm import Vm
 from common.models.auth import Group, User
 from common.models.authentication_directory import AuthenticationDirectory, Mapping
+from common.models.license import License
 from common.models.task import Task, TaskStatus
 
 from common.veil.veil_redis import redis_init, redis_deinit
@@ -88,6 +89,20 @@ async def fixt_db(fixt_redis_client):
     await start_gino()
     yield
     await stop_gino()
+
+
+@pytest.fixture
+async def fixt_init_license():
+
+    license_data = {
+        "verbose_name": "Fake license",
+        "thin_clients_limit": 10,
+        "uuid": str(uuid.uuid4()),
+        "expiration_date": License.convert_date("2030-05-01", "%Y-%m-%d"),
+        "support_expiration_date": License.convert_date("2030-05-01", "%Y-%m-%d")
+    }
+    await License.save_license_data_to_db(license_data)
+    yield
 
 
 async def get_auth_token():

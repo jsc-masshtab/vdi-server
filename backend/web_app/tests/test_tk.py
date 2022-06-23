@@ -11,6 +11,7 @@ from web_app.tests.utils import VdiHttpTestCase
 
 from common.models.active_tk_connection import ActiveTkConnection, TkConnectionEvent
 from common.models.auth import User
+from common.models.license import License
 from common.models.pool import Pool
 from common.models.tk_vm_connection import TkVmConnection
 from common.models.vm import Vm, VmActionUponUserDisconnect
@@ -23,6 +24,7 @@ from common.settings import INTERNAL_EVENTS_CHANNEL, PAM_AUTH
 
 from web_app.tests.fixtures import (
     fixt_db,  # noqa: F401
+    fixt_init_license,
     fixt_redis_client,
     fixt_user_locked,  # noqa: F401
     fixt_user,  # noqa: F401
@@ -267,7 +269,7 @@ class TestPool(VdiHttpTestCase):
         response = await self.get_response(body=None, url=self.API_URL, headers=headers, method="GET")
         return response
 
-    @pytest.mark.usefixtures("fixt_db", "fixt_user_admin", "fixt_create_static_pool")
+    @pytest.mark.usefixtures("fixt_db", "fixt_init_license", "fixt_user_admin", "fixt_create_static_pool")
     @gen_test
     async def test_superuser_pools_list(self):
         """Check tk rest api."""
@@ -278,7 +280,7 @@ class TestPool(VdiHttpTestCase):
         )
         assert len(response_dict["data"]) == 1
 
-    @pytest.mark.usefixtures("fixt_db", "fixt_user", "fixt_create_static_pool")
+    @pytest.mark.usefixtures("fixt_db", "fixt_init_license", "fixt_user", "fixt_create_static_pool")
     @gen_test
     async def test_user_has_no_pools(self):
         """Сценарий, когда у пользователя нет закрепленных пулов."""
@@ -290,7 +292,7 @@ class TestPool(VdiHttpTestCase):
         assert "data" in response_dict
         assert len(response_dict["data"]) == 0
 
-    @pytest.mark.usefixtures("fixt_db", "fixt_user", "several_static_pools")
+    @pytest.mark.usefixtures("fixt_db", "fixt_init_license", "fixt_user", "several_static_pools")
     @gen_test
     async def test_user_has_one_pool(self):
         """Сценарий, когда обычному пользователю выдан 1 пул из 2х."""
@@ -312,7 +314,7 @@ class TestPool(VdiHttpTestCase):
         assert "data" in response_dict
         assert len(response_dict["data"]) == 1
 
-    @pytest.mark.usefixtures("fixt_db", "fixt_user", "fixt_create_static_pool")
+    @pytest.mark.usefixtures("fixt_db", "fixt_init_license", "fixt_user", "fixt_create_static_pool")
     @gen_test
     async def test_favorite_pools_list(self):
         username = "test_user"
@@ -358,19 +360,28 @@ class TestPoolVm(VdiHttpTestCase):
 
     @pytest.mark.usefixtures("fixt_db", "fixt_user", "several_static_pools_with_user")
     @gen_test(timeout=20)
-    def test_bad_license(self):
-        self.init_fake_license(expired=True)
+    async def test_bad_license(self):
+        # init expired license
+        license_data = {
+            "verbose_name": "Fake license",
+            "thin_clients_limit": 10,
+            "uuid": str(uuid4()),
+            "expiration_date": License.convert_date("2020-05-01", "%Y-%m-%d"),
+            "support_expiration_date": License.convert_date("2020-05-01", "%Y-%m-%d")
+        }
+        await License.save_license_data_to_db(license_data)
+
         vm_url = self.API_URL.format(pool_id=str(uuid4()))
         body = ""
-        auth_headers = yield self.do_login_and_get_auth_headers(username="test_user")
-        response_dict = yield self.get_response(
+        auth_headers = await self.do_login_and_get_auth_headers(username="test_user")
+        response_dict = await self.get_response(
             body=body, url=vm_url, headers=auth_headers, method="POST"
         )
 
         assert "errors" in response_dict
         assert "001" == response_dict["errors"][0]["code"]
 
-    @pytest.mark.usefixtures("fixt_db", "fixt_user")
+    @pytest.mark.usefixtures("fixt_db", "fixt_init_license", "fixt_user")
     @gen_test(timeout=20)
     def test_bad_pool_id(self):
         """Сценарий, когда отправляется несуществующий пул."""
@@ -386,7 +397,7 @@ class TestPoolVm(VdiHttpTestCase):
         assert "errors" in response_dict
         assert "404" == response_dict["errors"][0]["code"]
 
-    @pytest.mark.usefixtures("fixt_db", "fixt_user", "several_static_pools_with_user")
+    @pytest.mark.usefixtures("fixt_db", "fixt_init_license", "fixt_user", "several_static_pools_with_user")
     @gen_test(timeout=20)
     def test_user_get_vm(self):
         """Сценарий получения пользователем ВМ из пула."""
@@ -421,7 +432,7 @@ class TestPoolVm(VdiHttpTestCase):
         password = response_dict["data"]["password"]
         assert password == "1"
 
-    @pytest.mark.usefixtures("fixt_db", "fixt_user", "fixt_create_rds_pool")
+    @pytest.mark.usefixtures("fixt_db", "fixt_init_license", "fixt_user", "fixt_create_rds_pool")
     @gen_test(timeout=20)
     async def test_user_get_broker_from_rds_pool(self):
         pool = await Pool.query.where(Pool.pool_type == Pool.PoolTypes.RDS).gino.first()
@@ -439,7 +450,7 @@ class TestPoolVm(VdiHttpTestCase):
         print("response_dict: ", response_dict, flush=True)
         assert response_dict["data"]["pool_type"] == Pool.PoolTypes.RDS.value
 
-    @pytest.mark.usefixtures("fixt_db", "fixt_user", "several_static_pools_with_user")
+    @pytest.mark.usefixtures("fixt_db", "fixt_init_license", "fixt_user", "several_static_pools_with_user")
     @gen_test(timeout=20)
     def test_bad_connection_type(self):
         pool = yield Pool.query.gino.first()
@@ -453,7 +464,7 @@ class TestPoolVm(VdiHttpTestCase):
         assert "errors" in response_dict
         assert "404" == response_dict["errors"][0]["code"]
 
-    @pytest.mark.usefixtures("fixt_db", "fixt_user", "several_static_pools_with_user")
+    @pytest.mark.usefixtures("fixt_db", "fixt_init_license", "fixt_user", "several_static_pools_with_user")
     @gen_test(timeout=20)
     def test_rdp_connection_type(self):
         pool = yield Pool.query.gino.first()
@@ -466,7 +477,7 @@ class TestPoolVm(VdiHttpTestCase):
         # Проверяем, что ВМ выдана
         assert "data" in response_dict
 
-    @pytest.mark.usefixtures("fixt_db", "fixt_user", "several_static_pools_with_user")
+    @pytest.mark.usefixtures("fixt_db", "fixt_init_license", "fixt_user", "several_static_pools_with_user")
     @gen_test
     async def test_set_time_zone(self):
         pool = await Pool.query.gino.first()
@@ -488,6 +499,7 @@ class TestPoolVm(VdiHttpTestCase):
 @pytest.mark.asyncio
 @pytest.mark.usefixtures(
     "fixt_db",
+    "fixt_init_license",
     "fixt_controller",
     "fixt_user_admin",
     "fixt_create_static_pool",
@@ -524,6 +536,7 @@ class VmActionTestCase(VdiHttpTestCase):
 @pytest.mark.asyncio
 @pytest.mark.usefixtures(
     "fixt_db",
+    "fixt_init_license",
     "fixt_controller",
     "fixt_user_admin",
     "fixt_create_static_pool",
@@ -579,7 +592,7 @@ class USbTestCase(VdiHttpTestCase):
 
 
 class TestUserAuth(VdiHttpTestCase):
-    @pytest.mark.usefixtures("fixt_db", "fixt_user")
+    @pytest.mark.usefixtures("fixt_db", "fixt_init_license", "fixt_user")
     @gen_test
     async def test_2fa_ok(self):
 
@@ -613,7 +626,7 @@ class TestUserAuth(VdiHttpTestCase):
 
 
 class TestVmDataRequest(VdiHttpTestCase):
-    @pytest.mark.usefixtures("fixt_db", "fixt_create_static_pool", "fixt_user")
+    @pytest.mark.usefixtures("fixt_db", "fixt_init_license", "fixt_create_static_pool", "fixt_user")
     @gen_test
     async def test_vm_data(self):
 

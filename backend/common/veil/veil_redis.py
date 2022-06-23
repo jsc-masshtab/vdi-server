@@ -214,29 +214,6 @@ async def redis_release_lock_no_errors(redis_lock):
         pass
 
 
-async def save_license_dict(dict_name, data):
-    for value in data:
-        data[value] = str(data[value])
-    return await A_REDIS_CLIENT.hmset(dict_name, data)
-
-
-async def read_license_dict(dict_name):
-    data = await A_REDIS_CLIENT.hgetall(dict_name)
-    read_dict = {
-        key.decode("utf-8"): value.decode("utf-8") for (key, value) in data.items()
-    }
-    for value in read_dict:
-        if read_dict[value] == "None":
-            read_dict[value] = None
-        elif read_dict[value] == "True":
-            read_dict[value] = True
-        elif read_dict[value] == "False":
-            read_dict[value] = False
-        elif read_dict[value].isdigit():
-            read_dict[value] = int(read_dict[value])
-    return read_dict
-
-
 async def redis_wait_for_message(redis_channel, predicate):
     """Asynchronously wait for message.
 

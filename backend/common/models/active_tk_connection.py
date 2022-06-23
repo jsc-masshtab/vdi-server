@@ -10,6 +10,7 @@ from common.database import db
 from common.languages import _local_
 from common.log.journal import system_logger
 from common.models.auth import User
+from common.models.license import License
 from common.models.pool import Pool
 from common.models.tk_vm_connection import TkVmConnection
 from common.models.vm import Vm
@@ -18,8 +19,6 @@ from common.veil.veil_gino import AbstractSortableStatusModel
 from common.veil.veil_redis import (
     publish_data_in_internal_channel
 )
-
-from web_app.auth.license.utils import License
 
 
 class TkConnectionEvent(Enum):
@@ -114,9 +113,9 @@ class ActiveTkConnection(db.Model, AbstractSortableStatusModel):
     @classmethod
     async def thin_client_limit_exceeded(cls):
 
-        current_license = License()
+        license_obj = await License.get_license()
         current_clients_count = await ActiveTkConnection.get_thin_clients_conn_count()
-        return current_clients_count >= current_license.thin_clients_limit
+        return current_clients_count >= license_obj.real_thin_clients_limit
 
     async def get_username(self):
         user = await User.get(self.user_id) if self.user_id else None

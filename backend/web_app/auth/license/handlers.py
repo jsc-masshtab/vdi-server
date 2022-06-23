@@ -2,26 +2,23 @@
 from abc import ABC
 
 from common.languages import _local_
-from common.log.journal import system_logger
 from common.models.active_tk_connection import ActiveTkConnection
+from common.models.license import License
+from common.utils import gino_model_to_json_serializable_dict
 from common.veil.auth.veil_jwt import jwtauth
 from common.veil.veil_decorators import is_administrator
 from common.veil.veil_errors import Unauthorized, ValidationError
 from common.veil.veil_handlers import BaseHttpHandler
 
 
-from web_app.auth.license.utils import License
-
-
 @jwtauth
 class LicenseHandler(BaseHttpHandler, ABC):
     async def get(self):
         """Get license key info."""
-        license_data = License().license_data.public_attrs_dict
-        # Число активных подключений ТК
-        thin_clients_conn_count = await ActiveTkConnection.get_thin_clients_conn_count()
-        license_data["thin_clients_count"] = str(thin_clients_conn_count)
-        response = {"data": license_data}
+        license_obj = await License.get_license()
+        license_data = gino_model_to_json_serializable_dict(license_obj)
+
+        response = await LicenseHandler._form_response(license_data, license_obj)
         return self.finish(response)
 
     async def post(self):
@@ -49,13 +46,13 @@ class LicenseHandler(BaseHttpHandler, ABC):
             key_file_name = key_file_dict["filename"]
             if not key_file_name.endswith(".key"):
                 raise ValidationError(_local_("Bad extension."))
-
             # TODO: check content_type of file - application/x-iwork-keynote-sffkey
             # key_file_content_type = key_file_dict.get('content_type')  # noqa
 
             key_file_body = key_file_dict.get("body")
-            response = License().upload_license(key_file_body)
+            license_obj = await License.upload_license(key_file_body, user.username)
         except (IndexError, ValidationError, TypeError, AssertionError):
+
             response = {
                 "errors": [
                     {
@@ -65,10 +62,23 @@ class LicenseHandler(BaseHttpHandler, ABC):
                     }
                 ]
             }
-        if License().take_verbose_name == "Unlicensed Veil VDI":
-            msg = _local_("Try to upload invalid license key.")
-            await system_logger.error(msg)
-        else:
-            msg = _local_("Valid license key is uploaded.")
-            await system_logger.info(msg, user=user.username)
+            return await self.log_finish(response)
+
+        # Send response with license data
+        license_data = gino_model_to_json_serializable_dict(license_obj)
+
+        response = await LicenseHandler._form_response(license_data, license_obj)
         return await self.log_finish(response)
+
+    @staticmethod
+    async def _form_response(license_data, license_obj):
+        thin_clients_conn_count = await ActiveTkConnection.get_thin_clients_conn_count()
+        license_data["thin_clients_limit"] = license_obj.real_thin_clients_limit
+        license_data["expired"] = license_obj.expired
+        license_data["support_expired"] = license_obj.support_expired
+        license_data["remaining_days"] = license_obj.remaining_days
+        license_data["support_remaining_days"] = license_obj.support_remaining_days
+
+        license_data["thin_clients_count"] = str(thin_clients_conn_count)
+        response = {"data": license_data}
+        return response
