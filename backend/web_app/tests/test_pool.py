@@ -15,7 +15,6 @@ from common.veil.veil_redis import wait_for_task_result
 
 from common.models.vm import Vm
 
-from web_app.auth.license.utils import License, LicenseData
 
 from web_app.tests.fixtures import (
     fixt_db,

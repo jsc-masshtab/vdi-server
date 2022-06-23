@@ -1275,7 +1275,7 @@ msgid "Fail to open license key file."
 msgstr "Не удалось открыть лицензионный ключ."
 
 #: ../web_app/auth/license/handlers.py:69
-msgid "Try to upload invalid license key."
+msgid "Invalid license key."
 msgstr "Неудачная попытка загрузить лицензионный ключ."
 
 #: ../web_app/auth/license/handlers.py:72

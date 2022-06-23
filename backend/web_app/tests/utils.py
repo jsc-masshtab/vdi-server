@@ -11,10 +11,9 @@ from tornado.testing import AsyncHTTPTestCase
 from tornado.ioloop import IOLoop
 from tornado.escape import json_decode
 
-from web_app.auth.license.utils import License, LicenseData
-from web_app.app import make_app
-
+from common.models.license import License
 from common.subscription_sources import WsMessageType
+from web_app.app import make_app
 
 
 class ExecError(Exception):
@@ -55,29 +54,7 @@ async def ws_wait_for_text_msg_with_timeout(ws_conn, msg_type=WsMessageType.TEXT
 
 class VdiHttpTestCase(AsyncHTTPTestCase):
 
-    @staticmethod
-    def init_fake_license(expired: bool = False):
-        current_license = License()
-        if expired:
-            license_data = {
-                "verbose_name": "Fake license",
-                "thin_clients_limit": 10,
-                "uuid": str(uuid.uuid4()),
-                "expiration_date": "2020-05-01",
-                "support_expiration_date": "2020-05-01"
-            }
-        else:
-            license_data = {
-                "verbose_name": "Fake license",
-                "thin_clients_limit": 10,
-                "uuid": str(uuid.uuid4()),
-                "expiration_date": "2030-05-01",
-                "support_expiration_date": "2030-05-01"
-            }
-        current_license.license_data = LicenseData(**license_data)
-
     def get_app(self):
-        self.init_fake_license()
         return make_app()
 
     def get_new_ioloop(self):
