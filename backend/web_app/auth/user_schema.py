@@ -35,11 +35,12 @@ class UserValidator(MutationValidation):
         if not value:
             raise AssertError(_local_("username can`t be empty."))
         value_len = len(value)
-        if 0 < value_len <= 128:
-            return value
+
+        if value_len < 2:
+            raise ValidationError(_local_("username must be at least 2 character."))
         if value_len > 128:
             raise ValidationError(_local_("username must be <= 128 characters."))
-        user_name_re = re.compile("^[a-zA-Z][a-zA-Z0-9.-_+]$")
+        user_name_re = re.compile("^[a-zA-Z][a-zA-Z0-9.-_+]+$")
         template_name = re.match(user_name_re, value)
         if template_name:
             obj_dict["username"] = value
@@ -73,8 +74,6 @@ class UserValidator(MutationValidation):
 
     @staticmethod
     async def validate_password(obj_dict, value):
-        # return value
-        # TODO: СМЕНИТЬ НА ВАЛИДАЦИЮ ОТНОСИТЕЛЬНО ВЫБРАННОЙ БЕЗОПАСНОСТИ В АСТРЕ
         pass_re = re.compile("^[a-zA-Z0-9@$#^/!<>,`~%*?&._-]{8,32}$")
         template_name = re.match(pass_re, value)
         if template_name:
