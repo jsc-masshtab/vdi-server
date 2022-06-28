@@ -130,7 +130,7 @@ nav:
       - Структура программы: broker/engineer_guide/structure.md
       - Установка и базовая настройка:
         - Общие сведения: broker/engineer_guide/install/general_settings.md
-        - Подготовка к работе: broker/engineer_guide/install/prepare/index.md
+        - Подготовка к работе: broker/engineer_guide/install/prepare.md
           - Проверка целостности: broker/engineer_guide/install/prepare/integrity_check.md
           - Создание ВМ в среде ECP VeiL: broker/engineer_guide/install/prepare/create_domains.md
           - Установка и настройка ОС: broker/engineer_guide/install/prepare/install_os/index.md
