@@ -4,7 +4,7 @@
 
 [:fontawesome-solid-atlas: Требования к техническим средствам](./broker/engineer_guide/hardware_requirements.md){ .md-button }
 
-[:fontawesome-solid-plus-square: Создание ВМ в среде ECP VeiL](./broker/engineer_guide/create_domains.md){ .md-button }
+[:fontawesome-solid-plus-square: Создание ВМ в среде ECP VeiL](broker/engineer_guide/install/prepare/create_domains.md){ .md-button }
 
 [:fontawesome-solid-window-maximize: Установка ОС Astra Linux](./broker/engineer_guide/install_os/index.md){ .md-button }
 
