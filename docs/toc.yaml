@@ -77,7 +77,7 @@ nav:
       - Создание ВМ в ECP VeiL: broker/faq/install/install_step2.md
       - Монтирование ISO в ECP VeiL: broker/faq/install/install_step3.md
       - Установка VeiL Broker: broker/faq/install/install_step4.md
-    - Обновление: broker/faq/update_v3.md
+    - Обновление VeiL Broker: broker/faq/update_v3.md
     - Обновление VeiL Broker с 3.2.0 на 4.0.0: broker/faq/update_v4.md
     - Обновление  Veil Broker при отсутствии доступа в Интернет:
       - Общие сведения: broker/faq/repo_without_inet/index.md
@@ -87,9 +87,9 @@ nav:
     - Резервное копирование БД:
       - Общие сведения: broker/faq/backup_db/index.md
       - VeiL Broker 3.2.0: broker/faq/backup_db/ver_3_2_0/creating_db.md
-      - VeiL Broker 3.*: broker/faq/backup_db/ver_3.md
-      - VeiL Broker 2.2.*: broker/faq/backup_db/ver_2_2/creating_db.md
-      - VeiL Broker 2.1.*: broker/faq/backup_db/ver_2_1/creating_db.md  
+      - VeiL Broker 3.х: broker/faq/backup_db/ver_3.md
+      - VeiL Broker 2.2.х: broker/faq/backup_db/ver_2_2/creating_db.md
+      - VeiL Broker 2.1.х: broker/faq/backup_db/ver_2_1/creating_db.md
     - Службы системы: broker/faq/services.md
     - Протоколы удаленного подключения: broker/faq/remote_conn_protocols.md
     - Подготовка гостевых ВМ:  
