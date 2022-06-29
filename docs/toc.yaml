@@ -73,10 +73,10 @@ markdown_extensions:
 nav:
   - FAQ VeiL Broker:
     - Установка VeiL Broker:
-      - Восстановление ВМ с VeiL Broker из резервной копии: broker/faq/install_step1.md
-      - Создание ВМ в ECP VeiL: broker/faq/install_step2.md
-      - Монтирование ISO в ECP VeiL: broker/faq/install_step3.md
-      - Установка VeiL Broker: broker/faq/install_step4.md
+      - Восстановление ВМ с VeiL Broker из резервной копии: broker/faq/install/install_step1.md
+      - Создание ВМ в ECP VeiL: broker/faq/install/install_step2.md
+      - Монтирование ISO в ECP VeiL: broker/faq/install/install_step3.md
+      - Установка VeiL Broker: broker/faq/install/install_step4.md
     - Обновление: broker/faq/update_v3.md
     - Обновление VeiL Broker с 3.2.0 на 4.0.0: broker/faq/update_v4.md
     - Обновление  Veil Broker при отсутствии доступа в Интернет:
@@ -130,13 +130,15 @@ nav:
       - Структура программы: broker/engineer_guide/structure.md
       - Установка и базовая настройка:
         - Общие сведения: broker/engineer_guide/install/general_settings.md
-        - Подготовка к работе: broker/engineer_guide/install/prepare/index.md
+        - Подготовка к установке:
+          - Подготовка: broker/engineer_guide/install/prepare.md
           - Проверка целостности: broker/engineer_guide/install/prepare/integrity_check.md
           - Создание ВМ в среде ECP VeiL: broker/engineer_guide/install/prepare/create_domains.md
-          - Установка и настройка ОС: broker/engineer_guide/install/prepare/install_os/index.md
+          - Установка и настройка ОС:
+            - Версии ОС: broker/engineer_guide/install/prepare/install_os.md
             - ОС Astra Linux Special Edition 1.6 релиз Смоленск: broker/engineer_guide/install/prepare/install_os/1-6.md
             - ОС Astra Linux Special Edition 1.7 релиз Смоленск: broker/engineer_guide/install/prepare/install_os/1-7.md
-        - Установка VeiL Broker: broker/engineer_guide/install/install.md
+        - Установка VeiL Broker: broker/engineer_guide/install/install_broker.md
         - Базовая настройка:
           - Настройка фаервола: broker/engineer_guide/install/base/faervol.md
           - Отключение механизмов AUTH Astra Linux: broker/engineer_guide/install/base/AUTH.md
