@@ -195,6 +195,7 @@ nav:
     - Пулы:
       - Автоматический пул: broker/pools/automated_pool_v3.md
       - Гостевой пул: broker/pools/guest_pool.md
+      - Действия над ВМ после отключения пользователя: free_VM.md
       - Пулы приложений: broker/pools/apps-pool.md
       - Подбор свободной ВМ: broker/pools/get-user-vm.md
     - Фоновые задачи VeiL Broker: broker/worker/tasks.md
