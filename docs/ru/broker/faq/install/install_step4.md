@@ -61,5 +61,5 @@
      ![image](../../../_assets/vdi/how_to/password_policy.PNG)
       
 Этап установки **VeiL Broker** можно считать завершенным. Далее переходите к работе в соответствии с 
-[Руководством оператора VeiL Broker](../operator_guide/prepare.md).
+[Руководством оператора VeiL Broker](../../operator_guide/prepare.md).
 
