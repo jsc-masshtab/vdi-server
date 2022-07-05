@@ -3,7 +3,7 @@
 ## Подготовка к установке
 - [Требования к техническим средствам](../../engineer_guide/hardware_requirements.md).
 - [Создание ВМ в среде ECP VeiL](../../engineer_guide/install/prepare/create_domains.md).
-- [Установка ОС Astra Linux Special Edition](../engineer_guide/install_os/index.md).
+- [Установка ОС Astra Linux Special Edition](../../engineer_guide/install/prepare/install_os.md).
 - Описание прочих требований и спецификация доступны в разделах:
   [Подготовка сервера](../../spec/domain-req.md) и [Перечень портов](../../spec/ports_info.md).
 
@@ -22,11 +22,11 @@
    необходимый виртуальный интерфейс.
 6. Включить ВМ **VeiL_VDI**. 
 7. Web-интерфейс брокера будет доступен по `https://server_ip_address`, где необходимо указать IP-адрес сервера. По умолчанию пользователь 
-   **_vdiadmin_** и пароль **_Bazalt1!_**. Список назначенных IP-адресов можно посмотреть таблице ВМ интерфейса ECP VeiL 
+   **vdiadmin** и пароль **Bazalt1!**. Список назначенных IP-адресов можно посмотреть таблице ВМ интерфейса **ECP VeiL** 
    или в самой ВМ в окне приложения **Терминал Fly** с помощью команды `ip a`.
 8. Брокер готов к работе, дальнейшая настройка выполняется только в случае особой необходимости.
 
 !!! info "Логин/пароль ВМ"
     Для работы в ВМ **VeiL_VDI** (**ОС Astra Linux Special Edition**) по умолчанию используется пользователь 
-      **_astravdi_**, пароль **_Bazalt1!_**.
+      **astravdi**, пароль **Bazalt1!**.
 
