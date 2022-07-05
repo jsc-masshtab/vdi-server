@@ -8,6 +8,7 @@ VeiL Connect предназначен для работы на базе след
     - Ubuntu 16.04
     - Ubuntu 18.04
     - Ubuntu 20.04
+    - Ubuntu 22.04
     - Centos 7
     - Centos 8
     - Astra Linux Orel 2.12
