@@ -7,27 +7,31 @@
 - Создайте файл `/etc/apt/sources.list.d/veil-connect.list` (от имени суперпользователя) и добавьте в него следующие строки:
 - Для Debian 9:
 ```
-deb https://veil-update.mashtab.org/veil-connect/linux/apt stretch main
+deb [arch=amd64 signed-by=/usr/share/keyrings/veil-repo-key.gpg] https://veil-update.mashtab.org/veil-connect/linux/apt stretch main
 ```
 - Для Debian 10:
 ```
-deb https://veil-update.mashtab.org/veil-connect/linux/apt buster main
+deb [arch=amd64 signed-by=/usr/share/keyrings/veil-repo-key.gpg] https://veil-update.mashtab.org/veil-connect/linux/apt buster main
 ```
 - Для Ubuntu 18.04:
 ```
-deb https://veil-update.mashtab.org/veil-connect/linux/apt bionic main
+deb [arch=amd64 signed-by=/usr/share/keyrings/veil-repo-key.gpg] https://veil-update.mashtab.org/veil-connect/linux/apt bionic main
 ```
 - Для Ubuntu 20.04:
 ```
-deb https://veil-update.mashtab.org/veil-connect/linux/apt focal main
+deb [arch=amd64 signed-by=/usr/share/keyrings/veil-repo-key.gpg] https://veil-update.mashtab.org/veil-connect/linux/apt focal main
+```
+- Для Ubuntu 22.04:
+```
+deb [arch=amd64 signed-by=/usr/share/keyrings/veil-repo-key.gpg] https://veil-update.mashtab.org/veil-connect/linux/apt jammy main
 ```
 - Для Astra Linux Orel 2.12:
 ```
-deb https://veil-update.mashtab.org/veil-connect/linux/apt bionic main
+deb [arch=amd64 signed-by=/usr/share/keyrings/veil-repo-key.gpg] https://veil-update.mashtab.org/veil-connect/linux/apt bionic main
 ```
 - Загрузите ключ проверки репозитория командой:
 ```
-wget -qO - https://veil-update.mashtab.org/veil-repo-key.gpg | sudo apt-key add -
+sudo wget -O /usr/share/keyrings/veil-repo-key.gpg https://veil-update.mashtab.org/veil-repo-key.gpg
 ```
 - После этого выполните в терминале команду: `sudo apt-get update`.
 
