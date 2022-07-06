@@ -20,6 +20,7 @@ from sqlalchemy import (
     union_all,
 )
 from sqlalchemy.dialects.postgresql import ARRAY, UUID
+from sqlalchemy.sql import func
 
 from veil_api_client import (
     TagConfiguration,
@@ -113,8 +114,11 @@ class Pool(VeilModel):
     vm_action_upon_user_disconnect = db.Column(AlchemyEnum(VmActionUponUserDisconnect), nullable=False,
                                                default=VmActionUponUserDisconnect.NONE)
     vm_disconnect_action_timeout = db.Column(db.Integer(), nullable=False,
-                                             default=VEIL_DEFAULT_VM_DISCONNECT_ACTION_TIMEOUT)
-    # на дисконнект пользователя
+                                             default=VEIL_DEFAULT_VM_DISCONNECT_ACTION_TIMEOUT)  # на дисконнект юзера
+
+    created = db.Column(db.DateTime(timezone=True), server_default=func.now())
+    updated = db.Column(db.DateTime(timezone=True), server_default=func.now())
+    creator = db.Column(db.Unicode(length=128), default="system")
 
     # ----- ----- ----- ----- ----- ----- -----
     # Properties and getters:
@@ -258,6 +262,9 @@ class Pool(VeilModel):
             AutomatedPool.ad_ou,
             Pool.pool_type,
             Pool.connection_types,
+            Pool.created,
+            Pool.updated,
+            Pool.creator
         ]
 
         if user_id:
@@ -356,7 +363,8 @@ class Pool(VeilModel):
                 connection_types=connection_types,
                 creator=creator,
                 vm_action_upon_user_disconnect=vm_action_upon_user_disconnect,
-                vm_disconnect_action_timeout=vm_disconnect_action_timeout
+                vm_disconnect_action_timeout=vm_disconnect_action_timeout,
+                updated=func.now()
             )
 
             msg = _local_("Pool {} has been updated.").format(old_pool_obj.verbose_name)
@@ -777,7 +785,7 @@ class Pool(VeilModel):
     async def create(
         cls, verbose_name, resource_pool_id, controller_id,
         connection_types, tag, pool_type, vm_action_upon_user_disconnect, vm_disconnect_action_timeout,
-        datapool_id=None
+        creator, datapool_id=None
     ):
         if not controller_id:
             raise ValidationError(
@@ -793,7 +801,8 @@ class Pool(VeilModel):
             tag=tag,
             pool_type=pool_type,
             vm_action_upon_user_disconnect=vm_action_upon_user_disconnect,
-            vm_disconnect_action_timeout=vm_disconnect_action_timeout
+            vm_disconnect_action_timeout=vm_disconnect_action_timeout,
+            creator=creator
         )
 
         # Оповещаем о создании пула
@@ -1352,7 +1361,8 @@ class RdsPool(db.Model):
                 connection_types=connection_types,
                 pool_type=Pool.PoolTypes.RDS,
                 vm_action_upon_user_disconnect=VmActionUponUserDisconnect.NONE,
-                vm_disconnect_action_timeout=0
+                vm_disconnect_action_timeout=0,
+                creator=creator
             )
             pool = await super().create(id=base_pool.id)
 
@@ -1472,7 +1482,8 @@ class StaticPool(db.Model):
                 tag=tag,
                 pool_type=Pool.PoolTypes.STATIC,
                 vm_action_upon_user_disconnect=vm_action_upon_user_disconnect,
-                vm_disconnect_action_timeout=vm_disconnect_action_timeout
+                vm_disconnect_action_timeout=vm_disconnect_action_timeout,
+                creator=creator
             )
             pool = await super().create(id=pl.id)
             # Создаем ВМ
@@ -1655,7 +1666,8 @@ class AutomatedPool(db.Model):
                 tag=tag,
                 pool_type=current_pool_type,
                 vm_action_upon_user_disconnect=vm_action_upon_user_disconnect,
-                vm_disconnect_action_timeout=vm_disconnect_action_timeout
+                vm_disconnect_action_timeout=vm_disconnect_action_timeout,
+                creator=creator
             )
             # Создаем AutomatedPool
             automated_pool = await super().create(
@@ -1746,7 +1758,7 @@ class AutomatedPool(db.Model):
                     )
                 )
                 pool = await Pool.get(self.id)
-                await pool.update(**pool_kwargs).apply()
+                await pool.update(updated=func.now(), **pool_kwargs).apply()
 
             # Update AutomatedPool values
             if reserve_size:

@@ -2,7 +2,6 @@
 import asyncio
 import re
 from enum import Enum
-from uuid import UUID
 
 from asyncpg.exceptions import UniqueViolationError
 
@@ -301,6 +300,9 @@ class PoolType(graphene.ObjectType):
     resource_pool_id = graphene.UUID()
     controller = graphene.Field(ControllerType)
     vm_amount = graphene.Int()
+    created = graphene.DateTime()
+    updated = graphene.DateTime()
+    creator = ShortString()
 
     # StaticPool fields
     static_pool_id = graphene.UUID()
@@ -531,6 +533,9 @@ def pool_obj_to_type(pool_obj: Pool) -> PoolType:
         "include_vms_in_ad": pool_obj.include_vms_in_ad,
         "controller": pool_obj.controller,
         "status": pool_obj.status,
+        "created": pool_obj.created,
+        "updated": pool_obj.updated,
+        "creator": pool_obj.creator
         # 'assigned_connection_types': pool_obj.connection_types
     }
     return PoolType(**pool_dict)
@@ -1201,12 +1206,12 @@ class CopyAutomatedPoolMutation(graphene.Mutation):
         auto_pool = await AutomatedPool.query.where(AutomatedPool.id == pool_id).gino.first()
         pool_settings = {**simple_pool.__values__, **auto_pool.__values__}
         for key, val in pool_settings.items():
-            if isinstance(val, UUID):
-                pool_settings[key] = str(val)
-            elif isinstance(val, Enum):
+            if isinstance(val, Enum):
                 pool_settings[key] = val.value
             elif isinstance(val, list):
                 pool_settings[key] = [element.value for element in val]
+            else:
+                pool_settings[key] = str(val)
         await system_logger.info(_local_("Settings of pool {} is copied.").format(simple_pool.verbose_name),
                                  description=str(pool_settings),
                                  user=creator)
