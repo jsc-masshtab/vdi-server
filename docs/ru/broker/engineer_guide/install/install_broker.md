@@ -51,41 +51,36 @@
 
    - открыть меню **Пуск** и выбрать **Панель управления** → **Безопасность** → **Политика безопасности**
 
-       !!! example "Пример"
-           ![image](../../../_assets/vdi/install_broker/safety.png)
+     ![image](../../../_assets/vdi/install_broker/safety.png)
 
    - далее ввести пароль **Bazalt1!** для использования прав **root** и нажать **Да**;
 
    - выбрать **Политики учетной записи** → **Политика создания пользователей**
      
-       !!! example "Пример"
-           ![image](../../../_assets/vdi/install_broker/setup_1.png)
+     ![image](../../../_assets/vdi/install_broker/setup_1.png)
 
-   -  в поле **Оболочка** указать **/sbin/nologin**, в поле **Первичная группа** указать **vdi-web**. 
+   - в поле **Оболочка** указать **/sbin/nologin**, в поле **Первичная группа** указать **vdi-web**. 
      Снять переключатели в **Создавать новую пользовательскую группу** и 
      **Добавлять пользователя в дополнительные группы**. Нажать **Применить настройки** или **Ctrl+S**. 
      
-       !!! example "Пример"
-           ![image](../../../_assets/vdi/install_broker/setup_2.PNG)   
+     ![image](../../../_assets/vdi/install_broker/setup_2.PNG)   
 
 
    - выбрать **Политики учетной записи** → **Политика паролей**. Активировать переключатель 
      **Применять для пользователя root** и нажать **Применить настройки** или **Ctrl+S**.
      
-       !!! example "Пример"
-           ![image](../../../_assets/vdi/install_broker/setup_3.PNG)
+     ![image](../../../_assets/vdi/install_broker/setup_3.PNG)
  
 
 ## Вход в VeiL Broker
 Этап установки **VeiL Broker** считается завершенным.  Для входа в Web-интерфейс **VeiL Broker** необходимо в строке браузера указать IP-адрес сервера`https://server_ip_address` и 
 далее в окне авторизации использовать параметры по умолчанию: пользователь **vdiadmin** / пароль **Bazalt1!**.
 
-   !!! example "Окно авторизации VeiL Broker"
-       ![image](../../../_assets/vdi/install_broker/web_broker.png)
+!!! example "Окно авторизации VeiL Broker"
+    ![image](../../../_assets/vdi/install_broker/web_broker.png)
    
- 
-   !!! example "Web-интерфейс VeiL Broker"
-       ![image](../../../_assets/vdi/install_broker/broker.png)
+!!! example "Web-интерфейс VeiL Broker"
+    ![image](../../../_assets/vdi/install_broker/broker.png)
 
 Далее переходите к работе в соответствии с [Руководством оператора VeiL Broker](../../operator_guide/prepare.md).
 
