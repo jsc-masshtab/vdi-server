@@ -66,14 +66,14 @@
      **Добавлять пользователя в дополнительные группы**. Нажать **Применить настройки** или **Ctrl+S**. 
      
       !!! example "Пример"
-          ![image](../../../_assets/vdi/install_broker/setup_2.png)   
+          ![image](../../../_assets/vdi/install_broker/setup_2.PNG)   
 
 
    - выбрать **Политики учетной записи** → **Политика паролей**. Активировать переключатель 
      **Применять для пользователя root** и нажать **Применить настройки** или **Ctrl+S**.
      
      !!! example "Пример"
-         ![image](../../../_assets/vdi/install_broker/setup_3.png)
+         ![image](../../../_assets/vdi/install_broker/setup_3.PNG)
  
 
 ## Вход в VeiL Broker
