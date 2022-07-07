@@ -81,7 +81,7 @@
 далее в окне авторизации использовать параметры по умолчанию: пользователь **vdiadmin** / пароль **Bazalt1!**.
 
    !!! example "Окно авторизации VeiL Broker"
-       ![image](../../../_assets/vdi/install_broker/broker.png)
+       ![image](../../../_assets/vdi/install_broker/web_broker.png)
     
    !!! example "Web-интерфейс VeiL Broker"
        ![image](../../../_assets/vdi/install_broker/broker.png)
