@@ -78,9 +78,12 @@
 
 ## Вход в VeiL Broker
 Этап установки **VeiL Broker** считается завершенным.  Для входа в Web-интерфейс **VeiL Broker** необходимо в строке браузера указать IP-адрес сервера`https://server_ip_address` и 
-далее в окне авторизации использовать параметры по умолчанию: пользователь **vdiadmin** / пароль **Bazalt1!**. 
+далее в окне авторизации использовать параметры по умолчанию: пользователь **vdiadmin** / пароль **Bazalt1!**.
+
+   !!! example "Окно авторизации VeiL Broker"
+       ![image](../../../_assets/vdi/install_broker/broker.png)
     
-   !!! example "Пример Web-интерфейса"
+   !!! example "Web-интерфейс VeiL Broker"
        ![image](../../../_assets/vdi/install_broker/broker.png)
 
 Далее переходите к работе в соответствии с [Руководством оператора VeiL Broker](../../operator_guide/prepare.md).
