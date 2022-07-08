@@ -49,9 +49,10 @@ Security check:
   tags:
     - docker
   before_script:
+    - apk add --no-cache build-base
     - python -m pip install $PIP_ARGS safety
   script:
-    - safety check -r backend/requirements.txt --ignore=36967 --ignore=46499 --ignore=39659 --ignore=42692
+    - safety check -r backend/requirements.txt --ignore=36967 --ignore=46499 --ignore=39659 --ignore=42692 --ignore=48542
   only:
     changes:
       - backend/requirements.txt

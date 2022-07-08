@@ -43,7 +43,7 @@ typing-extensions==4.0.1; python_version < '3.8'
 ujson==3.0.0; python_version >= '3.5'
 uvloop==0.16.0
 veil-aio-au==0.1.4
-veil-api-client==2.2.17
+veil-api-client==2.2.18
 werkzeug==0.12.2
 yaaredis==2.0.4
 yarl==1.5.1; python_version >= '3.5'
