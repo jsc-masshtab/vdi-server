@@ -77,13 +77,17 @@ nav:
       - Создание ВМ в ECP VeiL: broker/faq/install/install_step2.md
       - Монтирование ISO в ECP VeiL: broker/faq/install/install_step3.md
       - Установка VeiL Broker: broker/faq/install/install_step4.md
-    - Обновление VeiL Broker: broker/faq/update_v3.md
-    - Обновление VeiL Broker с 3.2.0 на 4.0.0: broker/faq/update_v4.md
-    - Обновление  Veil Broker при отсутствии доступа в Интернет:
-      - Общие сведения: broker/faq/repo_without_inet/index.md
-      - Обновление с помощью установочного iso-образа: broker/faq/repo_without_inet/iso.md
-      - Обновление через виртуальный диск qcow2: broker/faq/repo_without_inet/qcow2.md
-      - Обновление через создание локальной копии репозитория: broker/faq/repo_without_inet/local_repo.md
+    - Обновление VeiL Broker:
+      - Обшие сведения: broker/faq/update/index.md
+      - Обновление с внешнего репозитория: broker/faq/update/update_repo.md
+      - Обновление с iso-образа: broker/faq/update/update_iso.md
+      - Обновление  без доступа в Интернет:
+        - Общие сведения: broker/faq/update/repo_without_inet/index.md
+        - Обновление через виртуальный диск qcow2: broker/faq/update/repo_without_inet/qcow2.md
+        - Обновление через создание локальной копии репозитория: broker/faq/update/repo_without_inet/local_repo.md
+      - Обновление версий:
+        - Обновление VeiL Broker с 3.2.0 на 4.0.0: broker/faq/update/version/update_v3-v4.md
+        - Обновление VeiL Broker с 4.0.x на 4.1.х: broker/faq/update/version/update_v4-v4.md
     - Резервное копирование БД:
       - Общие сведения: broker/faq/backup_db/index.md
       - VeiL Broker 3.2.0: broker/faq/backup_db/ver_3_2_0/creating_db.md
