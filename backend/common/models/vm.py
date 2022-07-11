@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 import asyncio
-import uuid
 import functools
+import uuid
 from enum import Enum, IntEnum
+
 from asyncpg.exceptions import UniqueViolationError
 
 import ldap
