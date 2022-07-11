@@ -56,6 +56,9 @@ def check_parameters(func):
             entity = {"entity_type": EntityType.SECURITY, "entity_uuid": None}
         if message and not isinstance(message, str):
             message = str(message)
+        if description and isinstance(description, dict):
+            if "password" in description:
+                description["password"] = "*" * 8
         if description and not isinstance(description, str):
             description = str(description)
         return func(self, message, entity, description, *args, **kwargs)
