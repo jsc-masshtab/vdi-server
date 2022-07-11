@@ -2,8 +2,10 @@
 import asyncio
 import uuid
 from enum import Enum, IntEnum
-
+import functools
 from asyncpg.exceptions import UniqueViolationError
+
+import ldap
 
 from sqlalchemy import Enum as AlchemyEnum, desc
 from sqlalchemy.dialects.postgresql import UUID
@@ -596,15 +598,32 @@ class Vm(VeilModel):
                 if guest_utils:
                     name = guest_utils.get("hostname")
 
-                # Если не удалось получить hostname то пробуем удалить по имени
-                # (вероятночть высока что hostname и verbose_name совпадают)
+                # Если не удалось получить hostname, то пробуем удалить по имени
+                # (вероятность высока, что hostname и verbose_name совпадают)
                 if not name:
                     name = vm_info.get("verbose_name")
 
                 if not name:
                     continue
 
-                connection.delete(f"CN={name},CN=Computers,{dc_str}")
+                # Находим полное имя компьютера (он может быть в OU) и удаляем
+                loop = asyncio.get_event_loop()
+                aio_task = asyncio.ensure_future(loop.run_in_executor(None,
+                                                                      functools.partial(connection.search_ext_s,
+                                                                                        base=dc_str,
+                                                                                        scope=ldap.SCOPE_SUBTREE,
+                                                                                        timeout=1,
+                                                                                        filterstr=f"(cn={name})",
+                                                                                        attrlist=['distinguishedName'],
+                                                                                        sizelimit=1)))
+                try:
+                    res = await asyncio.wait_for(aio_task, timeout=2)
+                    distinguished_name, _ = res[0]
+                    if distinguished_name:
+                        connection.delete(distinguished_name)
+                except asyncio.TimeoutError:
+                    pass
+
                 await asyncio.sleep(0.01)
 
             # Close connection
