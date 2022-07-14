@@ -303,4 +303,9 @@ async def send_mail_async(event_type, subject, message, description=None, text_t
         await system_logger.debug(error_msg)
         return False
 
+
+async def check_smtp_connection():
+    return None
+
+
 system_logger = Log()
