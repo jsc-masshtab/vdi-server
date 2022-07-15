@@ -1,7 +1,9 @@
 import { trigger, style, animate, transition } from '@angular/animations';
 import { Component } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
-import { Router, NavigationEnd} from '@angular/router';
+import { Router, NavigationEnd } from '@angular/router';
+
+import { environment } from 'environments/environment';
 
 @Component({
   selector: 'vdi-main-menu',
@@ -19,7 +21,6 @@ import { Router, NavigationEnd} from '@angular/router';
     ]) ]
 })
 
-
 export class MainMenuComponent {
 
   public toggleResourse: boolean = false;
@@ -27,11 +28,14 @@ export class MainMenuComponent {
   public toggleSetting: boolean = false;
   public toggleLog: boolean = false;
   public toggleStatistics: boolean = false;
+  public multiple: boolean = false;
 
   public clickedManage: string = '';
 
-  constructor(private router: Router, private dialog: MatDialog) {this.beginRoute(); }
-
+  constructor(private router: Router, private dialog: MatDialog) {
+    this.multiple = environment.multiple || false;
+    this.beginRoute();
+  }
 
   private beginRoute() {
     this.router.events.subscribe((event) => {
