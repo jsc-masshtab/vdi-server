@@ -305,7 +305,13 @@ async def send_mail_async(event_type, subject, message, description=None, text_t
 
 
 async def check_smtp_connection():
-    return None
+    result = await send_mail_async(
+        event_type=0,
+        subject=_local_("INFO message from VeiL Broker."),
+        message="Connection to SMTP server successfully",
+        description="SMTP server connection test"
+    )
+    return result
 
 
 system_logger = Log()
