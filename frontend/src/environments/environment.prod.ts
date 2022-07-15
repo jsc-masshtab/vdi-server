@@ -5,7 +5,8 @@
 export const environment = {
   production: true,
   api: 'api/',
-  api_ws: 'api/'
+  api_ws: 'api/',
+  multiple: false
 };
 /*
  * For easier debugging in development mode, you can import the following file

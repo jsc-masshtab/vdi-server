@@ -1,9 +1,12 @@
 # -*- coding: utf-8 -*-
 import asyncio
+import functools
 import uuid
 from enum import Enum, IntEnum
 
 from asyncpg.exceptions import UniqueViolationError
+
+import ldap
 
 from sqlalchemy import Enum as AlchemyEnum, desc
 from sqlalchemy.dialects.postgresql import UUID
@@ -596,15 +599,32 @@ class Vm(VeilModel):
                 if guest_utils:
                     name = guest_utils.get("hostname")
 
-                # Если не удалось получить hostname то пробуем удалить по имени
-                # (вероятночть высока что hostname и verbose_name совпадают)
+                # Если не удалось получить hostname, то пробуем удалить по имени
+                # (вероятность высока, что hostname и verbose_name совпадают)
                 if not name:
                     name = vm_info.get("verbose_name")
 
                 if not name:
                     continue
 
-                connection.delete(f"CN={name},CN=Computers,{dc_str}")
+                # Находим полное имя компьютера (он может быть в OU) и удаляем
+                loop = asyncio.get_event_loop()
+                aio_task = asyncio.ensure_future(loop.run_in_executor(None,
+                                                                      functools.partial(connection.search_ext_s,
+                                                                                        base=dc_str,
+                                                                                        scope=ldap.SCOPE_SUBTREE,
+                                                                                        timeout=1,
+                                                                                        filterstr=f"(cn={name})",
+                                                                                        attrlist=["distinguishedName"],
+                                                                                        sizelimit=1)))
+                try:
+                    res = await asyncio.wait_for(aio_task, timeout=2)
+                    distinguished_name, _ = res[0]
+                    if distinguished_name:
+                        connection.delete(distinguished_name)
+                except asyncio.TimeoutError:
+                    pass
+
                 await asyncio.sleep(0.01)
 
             # Close connection
@@ -1139,19 +1159,24 @@ class Vm(VeilModel):
                                                        oupath=oupath
                                                        )
 
-        # Ожидаем выполнения задачи
-        if prepare_response.status_code == 202 and prepare_response.task:
-            await self.task_waiting(prepare_response.task)
+        try:
+            # Ожидаем выполнения задачи
+            if prepare_response.status_code == 202 and prepare_response.task:
+                await self.task_waiting(prepare_response.task)
 
-            is_success = await prepare_response.task.is_success()
-            if is_success:
-                # Протоколируем результат
-                msg = _local_("VM {} has been prepared.").format(self.verbose_name)
-                await system_logger.info(message=msg, entity=self.entity)
+                is_success = await prepare_response.task.is_success()
+                if is_success:
+                    # Протоколируем результат
+                    msg = _local_("VM {} has been prepared.").format(self.verbose_name)
+                    await system_logger.info(message=msg, entity=self.entity)
+                else:
+                    raise RuntimeError(_local_("VM preparation task finished with errors. Check ECP Veil."))
             else:
-                raise RuntimeError(_local_("VM preparation task finished with errors. Check ECP Veil."))
-        else:
-            raise RuntimeError(_local_("ECP Veil failed to prepare VM."))
+                raise RuntimeError(_local_("ECP Veil failed to prepare VM."))
+        except (asyncio.TimeoutError, asyncio.CancelledError):
+            # В случае отмены задачи отменяем и на контроллере
+            await prepare_response.task.cancel()
+            raise
 
         return True
 

@@ -85,7 +85,7 @@ nav:
         - Общие сведения: broker/faq/update/repo_without_inet/index.md
         - Обновление через виртуальный диск qcow2: broker/faq/update/repo_without_inet/qcow2.md
         - Обновление через создание локальной копии репозитория: broker/faq/update/repo_without_inet/local_repo.md
-      - Обновление версий:
+      - Особенности обновлений некоторых версий:
         - Обновление VeiL Broker с 3.2.0 на 4.0.0: broker/faq/update/version/update_v3-v4.md
         - Обновление VeiL Broker с 4.0.x на 4.1.х: broker/faq/update/version/update_v4-v4.md
     - Резервное копирование БД:
@@ -295,6 +295,8 @@ nav:
       - 3.0.0: broker/changelog/3.0.0.md
       - 2.1.4: broker/changelog/2.1.4.md
     - VeiL Connect:
+      - 1.14.2: connect/changelog/1.14.2.md
+      - 1.14.1: connect/changelog/1.14.1.md
       - 1.14.0: connect/changelog/1.14.0.md
       - 1.13.2: connect/changelog/1.13.2.md
       - 1.13.1: connect/changelog/1.13.1.md
