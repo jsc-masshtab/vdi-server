@@ -1,6 +1,6 @@
-# Debian 10 / Ubuntu
+# Debian 10, 11 / Ubuntu
 
-Для установки **VeiL Connect** с сервера **НИИ "Масштаб"** на **Debian 10 (Buster) / Ubuntu 16.04 (Xenial) / Ubuntu 18.04 (Bionic) / Ubuntu 20.04 (Focal) / Ubuntu 22.04 (Jammy)** выполнить следующие команды:
+Для установки **VeiL Connect** с сервера **НИИ "Масштаб"** на **Debian 10 (Buster) / **Debian 11 (Bullseye) / Ubuntu 16.04 (Xenial) / Ubuntu 18.04 (Bionic) / Ubuntu 20.04 (Focal) / Ubuntu 22.04 (Jammy)** выполнить следующие команды:
 
 `sudo apt-get update && sudo apt-get install apt-transport-https wget lsb-release gnupg -y`  
 `sudo wget -O /usr/share/keyrings/veil-repo-key.gpg https://veil-update.mashtab.org/veil-repo-key.gpg`  

@@ -1,5 +1,5 @@
-# Debian 9 (Stretch)
-Для установки **VeiL Connect** с сервера **НИИ "Масштаб"** на **Debian 9** выполнить следующие команды:
+# Debian 9
+Для установки **VeiL Connect** с сервера **НИИ "Масштаб"** на **Debian 9 (Stretch)** выполнить следующие команды:
 
 `sudo apt-get update && sudo apt-get install apt-transport-https wget lsb-release -y`  
 `wget -qO - https://veil-update.mashtab.org/veil-repo-key.gpg | sudo apt-key add -`
