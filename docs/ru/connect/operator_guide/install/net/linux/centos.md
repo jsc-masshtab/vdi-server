@@ -1,4 +1,4 @@
-# Centos 7 / Centos 8
+# Centos 7, 8
 Для установки **VeiL Connect** с сервера **НИИ "Масштаб"** на **Centos 7 / Centos 8** выполнить следующие команды:
 
 `sudo tee /etc/yum.repos.d/veil-connect.repo <<EOF`  

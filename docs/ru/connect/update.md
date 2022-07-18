@@ -13,6 +13,14 @@ deb [arch=amd64 signed-by=/usr/share/keyrings/veil-repo-key.gpg] https://veil-up
 ```
 deb [arch=amd64 signed-by=/usr/share/keyrings/veil-repo-key.gpg] https://veil-update.mashtab.org/veil-connect/linux/apt buster main
 ```
+- Для Debian 11:
+```
+deb [arch=amd64 signed-by=/usr/share/keyrings/veil-repo-key.gpg] https://veil-update.mashtab.org/veil-connect/linux/apt bullseye main
+```
+- Для Ubuntu 16.04:
+```
+deb [arch=amd64 signed-by=/usr/share/keyrings/veil-repo-key.gpg] https://veil-update.mashtab.org/veil-connect/linux/apt xenial main
+```
 - Для Ubuntu 18.04:
 ```
 deb [arch=amd64 signed-by=/usr/share/keyrings/veil-repo-key.gpg] https://veil-update.mashtab.org/veil-connect/linux/apt bionic main
