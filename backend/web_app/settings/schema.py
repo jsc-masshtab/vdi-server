@@ -9,7 +9,7 @@ import graphene
 
 from common.graphene_utils import ShortString
 from common.languages import _local_
-from common.log.journal import system_logger
+from common.log.journal import check_smtp_connection, system_logger
 from common.models.settings import Settings
 from common.utils import Cache, create_subprocess
 from common.veil.veil_decorators import administrator_required
@@ -93,6 +93,7 @@ class SysInfoGrapheneType(graphene.ObjectType):
 class SettingsQuery(graphene.ObjectType):
     settings = graphene.Field(SettingsType)
     smtp_settings = graphene.Field(SmtpSettingsType)
+    check_smtp_connection = graphene.Boolean()
 
     services = graphene.List(ServiceGrapheneType)
 
@@ -109,6 +110,11 @@ class SettingsQuery(graphene.ObjectType):
         smtp_settings = await Settings.get_smtp_settings()
         smtp_settings_list = SmtpSettingsType(**smtp_settings)
         return smtp_settings_list
+
+    @administrator_required
+    async def resolve_check_smtp_connection(self, _info, **kwargs):
+        connection_status = await check_smtp_connection()
+        return connection_status
 
     @administrator_required
     async def resolve_services(self, _info, creator):

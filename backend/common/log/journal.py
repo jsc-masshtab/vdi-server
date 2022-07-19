@@ -56,6 +56,9 @@ def check_parameters(func):
             entity = {"entity_type": EntityType.SECURITY, "entity_uuid": None}
         if message and not isinstance(message, str):
             message = str(message)
+        if description and isinstance(description, dict):
+            if "password" in description:
+                description["password"] = "*" * 8
         if description and not isinstance(description, str):
             description = str(description)
         return func(self, message, entity, description, *args, **kwargs)
@@ -299,5 +302,16 @@ async def send_mail_async(event_type, subject, message, description=None, text_t
         error_msg = _local_("Error in smtp server: {}.".format(e))
         await system_logger.debug(error_msg)
         return False
+
+
+async def check_smtp_connection():
+    result = await send_mail_async(
+        event_type=0,
+        subject=_local_("INFO message from VeiL Broker."),
+        message="Connection to SMTP server successfully",
+        description="SMTP server connection test"
+    )
+    return result
+
 
 system_logger = Log()
