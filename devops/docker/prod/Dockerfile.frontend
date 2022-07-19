@@ -3,7 +3,7 @@ USER node
 ADD --chown=node:node frontend /home/node/app
 WORKDIR /home/node/app
 RUN npm --registry http://nexus.bazalt.team/repository/npm-proxy/ ci && \
-    npm run build -- --configuration production && \
+    npm run build -- --configuration multiple && \
     npm run build -- --project=thin-client --configuration production --base-href /thin-client/
 
 FROM python:3.7-alpine AS doc-builder
