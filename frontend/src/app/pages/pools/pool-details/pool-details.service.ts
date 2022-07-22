@@ -171,6 +171,9 @@ export class PoolDetailsService {
                         vm_action_upon_user_disconnect
 
                         status
+                        creator
+                        created
+                        updated
                     }
                 }`,
             variables: {
