@@ -67,6 +67,21 @@ export class PoolCollections {
       type: 'array-length'
     },
     {
+      title: 'Создал',
+      property: 'creator',
+      type: 'string'
+    },
+    {
+      title: 'Дата создания',
+      property: 'created',
+      type: 'time'
+    },
+    {
+      title: 'Дата изменения',
+      property: 'updated',
+      type: 'time'
+    },
+    {
       title: 'Статус',
       property: 'status',
       type: 'string'
@@ -115,6 +130,21 @@ export class PoolCollections {
       title: 'Пользователи',
       property: 'users',
       type: 'array-length'
+    },
+    {
+      title: 'Создал',
+      property: 'creator',
+      type: 'string'
+    },
+    {
+      title: 'Дата создания',
+      property: 'created',
+      type: 'time'
+    },
+    {
+      title: 'Дата изменения',
+      property: 'updated',
+      type: 'time'
     },
     {
       title: 'Статус',
@@ -294,10 +324,25 @@ export class PoolCollections {
       type: 'array-length'
     },
     {
+      title: 'Создал',
+      property: 'creator',
+      type: 'string'
+    },
+    {
+      title: 'Дата создания',
+      property: 'created',
+      type: 'time'
+    },
+    {
+      title: 'Дата изменения',
+      property: 'updated',
+      type: 'time'
+    },
+    {
       title: 'Статус',
       property: 'status',
       type: 'string'
-    }
+    },
   ];
 
   public collectionDetailsGuest: any[] = [
@@ -427,10 +472,25 @@ export class PoolCollections {
       type: 'array-length'
     },
     {
+      title: 'Создал',
+      property: 'creator',
+      type: 'string'
+    },
+    {
+      title: 'Дата создания',
+      property: 'created',
+      type: 'time'
+    },
+    {
+      title: 'Дата изменения',
+      property: 'updated',
+      type: 'time'
+    },
+    {
       title: 'Статус',
       property: 'status',
       type: 'string'
-    }
+    },
   ];
 
   public collectionVmsAutomated: any[] = [
