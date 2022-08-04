@@ -7,9 +7,12 @@ VeiL Connect предназначен для удаленного подключ
     - Astra Linux Special Edition *Смоленск* версия 1.6 и выше
     - Astra Linux Common Edition *Орел* версия 1.6 и выше
     - Debian 9 и выше
-    - Ubuntu 18.04 LTS и выше
+    - Ubuntu 16.04 LTS и выше
     - Centos 7 и выше
     - Astra Linux Common Edition *Орел* в режиме киоска
+    - ALT Linux 9 и выше
+    - РЕД ОС 7.2 и выше
+    - AlterOS 7 и выше
 
 !!! note "ОС Windows"
     - Windows 7

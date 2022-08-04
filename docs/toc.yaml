@@ -231,6 +231,7 @@ nav:
           - RedOS 7.2: connect/operator_guide/install/net/linux/redos72.md
           - RedOS 7.3: connect/operator_guide/install/net/linux/redos73.md
           - Astra Linux Smolensk: connect/operator_guide/install/net/linux/smolensk.md
+          - AlterOS: connect/operator_guide/install/net/linux/alteros.md
         - Установка  на операционную систему Windows: connect/operator_guide/install/net/win.md
     - Удаление VeiL Connect: connect/operator_guide/delete.md
     - Выполнение программы:
