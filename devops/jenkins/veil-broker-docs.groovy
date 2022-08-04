@@ -112,6 +112,9 @@ pipeline {
         }
 
         stage ('publish to repo') {
+            environment {
+                COMPONENT = "docs"
+            }
             steps {
                 script {
                     buildSteps.deployToAptly()

@@ -36,8 +36,8 @@ def deployToAptly() {
         DEB=$(ls -1 "${DEB_ROOT}/${PRJNAME}"/*.deb)
         curl -sS -X POST -F file=@$DEB http://$APT_SRV:8008/api/files/veil-broker-${REPO}; echo ""
         curl -sS -X POST http://$APT_SRV:8008/api/repos/veil-broker-${REPO}/file/veil-broker-${REPO}?forceReplace=1
-        JSON1="{\\"Name\\":\\"veil-broker-${REPO}-${DATE}-back\\"}"
-        JSON2="{\\"Snapshots\\":[{\\"Component\\":\\"main\\",\\"Name\\":\\"veil-broker-${REPO}-\${DATE}-back\\"}],\\"ForceOverwrite\\":true}"
+        JSON1="{\\"Name\\":\\"veil-broker-${REPO}-${DATE}-${COMPONENT}\\"}"
+        JSON2="{\\"Snapshots\\":[{\\"Component\\":\\"main\\",\\"Name\\":\\"veil-broker-${REPO}-\${DATE}-${COMPONENT}\\"}],\\"ForceOverwrite\\":true}"
         curl -sS -X POST -H 'Content-Type: application/json' -d ${JSON1} http://$APT_SRV:8008/api/repos/veil-broker-${REPO}/snapshots
         curl -sS -X PUT -H 'Content-Type: application/json' -d ${JSON2} http://$APT_SRV:8008/api/publish/veil-broker-${REPO}/${DISTR}
     '''
