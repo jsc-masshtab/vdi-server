@@ -102,6 +102,9 @@ pipeline {
         }
 
         stage ('publish to repo') {
+            environment {
+                COMPONENT = "front"
+            }
             steps {
                 script {
                     buildSteps.deployToAptly()
