@@ -100,6 +100,9 @@ pipeline {
         }
 
         stage ('publish to repo') {
+            environment {
+                COMPONENT = "tc"
+            }
             steps {
                 script {
                     buildSteps.deployToAptly()
