@@ -28,7 +28,7 @@ class PoolTaskType(Enum):
 
 class TaskStatus(Enum):
 
-    INITIAL = "INITIAL"  # Статус в  момент создания таски перед ее запуском
+    INITIAL = "INITIAL"  # Статус в момент создания таски перед ее запуском
     IN_PROGRESS = "IN_PROGRESS"  # Задача выполняется.
     FAILED = "FAILED"  # Было исключение во время выполнения соответствующей корутины.
     CANCELLED = "CANCELLED"  # Задача отменена.
