@@ -11,7 +11,9 @@ from common.graphene_utils import ShortString
 from common.languages import _local_
 from common.log.journal import system_logger
 from common.models.auth import User
+from common.models.settings import Settings
 from common.models.user_tk_permission import TkPermission
+from common.password import PassSecLevel, password_check
 from common.veil.veil_decorators import security_administrator_required
 from common.veil.veil_errors import AssertError, SimpleError, ValidationError
 from common.veil.veil_gino import Role, RoleTypeGraphene
@@ -74,14 +76,12 @@ class UserValidator(MutationValidation):
 
     @staticmethod
     async def validate_password(obj_dict, value):
-        pass_re = re.compile("^[a-zA-Z0-9@$#^/!<>,`~%*?&._-]{8,32}$")
-        template_name = re.match(pass_re, value)
-        if template_name:
-            return value
-        # raise AssertError(
-        #     'Пароль должен быть не меньше 8 символов, содержать буквы, цифры и спец.символы.')
-        raise AssertError(_local_(
-            "Password must contain letters and/or digits, special characters; also be at least 8 characters."))
+
+        security_level = await Settings.get_settings("PASSWORD_SECURITY_LEVEL", PassSecLevel.LOW)
+        resp = password_check(value, PassSecLevel(security_level), obj_dict["username"])
+        if not resp["result"]:
+            msg = resp["comment"].format(**resp["comment_values"])
+            raise AssertError(msg)
 
     @staticmethod
     async def validate_first_name(obj_dict, value):
@@ -388,10 +388,12 @@ class ChangeUserPasswordMutation(graphene.Mutation, UserValidator):
     @classmethod
     @security_administrator_required
     async def mutate(cls, root, info, creator, **kwargs):
-        await cls.validate(**kwargs)
         # Назначаем новый пароль
         user = await User.get(kwargs["id"])
         if user:
+            kwargs["username"] = user.username  # При валидации пароля необходим логин
+            await cls.validate(**kwargs)
+
             await user.set_password(kwargs["password"], creator=creator)
             return ChangeUserPasswordMutation(ok=True)
         return ChangeUserPasswordMutation(ok=False)

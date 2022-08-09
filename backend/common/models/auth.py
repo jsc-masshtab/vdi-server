@@ -689,6 +689,7 @@ class User(AbstractSortableStatusModel, VeilModel):
 
         user_role = _local_("Superuser.") if is_superuser else _local_("User.")
 
+        user_obj = None
         try:
             user_obj = await cls.create(**user_kwargs)
             if PAM_AUTH and not user_obj.by_ad:
@@ -738,7 +739,8 @@ class User(AbstractSortableStatusModel, VeilModel):
                 user=creator,
                 description=str(err_msg),
             )
-            await user_obj.delete()
+            if user_obj:
+                await user_obj.delete()
             raise AssertionError(msg)
         except SilentError as err_msg:
             msg = _local_("Your password is incorrect for user {}. Check description in journal.".format(
