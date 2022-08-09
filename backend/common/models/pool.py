@@ -83,7 +83,6 @@ class Pool(VeilModel):
         SPICE_DIRECT = "SPICE_DIRECT"
         RDP = "RDP"
         NATIVE_RDP = "NATIVE_RDP"
-        X2GO = "X2GO"
         LOUDPLAY = "LOUDPLAY"
 
         @classmethod
