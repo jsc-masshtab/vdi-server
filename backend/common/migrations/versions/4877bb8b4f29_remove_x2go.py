@@ -20,7 +20,7 @@ new_protocols = ["SPICE",
                  "SPICE_DIRECT",
                  "RDP",
                  "NATIVE_RDP",
-                 "LOADPLAY"
+                 "LOUDPLAY"
                  ]
 value_to_remove = "X2GO"
 old_protocols = [*new_protocols, value_to_remove]
