@@ -186,7 +186,7 @@ class PoolGetVm(BaseHttpHandler):
             "data": dict(
                 host=vm_connection_data.get("address"),
                 port=vm_connection_data.get("port"),
-                token=vm_connection_data.get("token"),
+                token=vm_connection_data.get("vm_token"),
                 password=veil_domain.graphics_password,
                 vm_verbose_name=veil_domain.verbose_name,
                 vm_controller_address=vm_controller.address,
