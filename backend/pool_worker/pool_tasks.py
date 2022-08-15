@@ -5,6 +5,8 @@ from abc import ABC, abstractmethod
 
 from aiohttp import client_exceptions
 
+from yaaredis.exceptions import LockError
+
 from common.languages import _local_
 from common.log.journal import system_logger
 from common.models.auth import Entity
@@ -12,12 +14,10 @@ from common.models.authentication_directory import AuthenticationDirectory
 from common.models.pool import AutomatedPool, Pool
 from common.models.task import PoolTaskType, Task, TaskStatus
 from common.models.vm import Vm
-from common.settings import POOL_TASK_LOCK_TIMEOUT
 from common.utils import cancel_async_task
 from common.veil.veil_errors import PoolCreationError, VmCreationError
 from common.veil.veil_gino import EntityType, Status
-from common.veil.veil_redis import redis_get_client, redis_release_lock_no_errors
-
+from common.veil.veil_redis import ReacquireLock, redis_get_client, redis_release_lock_no_errors
 
 # Добавление задачи:
 # 1) В файле common/models/task.py в конец enum PoolTaskType добавить новое имя (MY_TASK например)
@@ -44,6 +44,7 @@ class AbstractTask(ABC):
         self._coroutine = None
         self._task_priority = 1
         self._associated_entity_name = ""
+        self._show_tb_upon_fail = True
 
     @staticmethod
     def get_task_list_shallow_copy():
@@ -119,7 +120,8 @@ class AbstractTask(ABC):
 
             description = str(ex)
             # asyncio.TimeoutError и PoolCreationError считаются ожидаемым исключением, поэтому traceback не требуется
-            if not isinstance(ex, asyncio.TimeoutError) and not isinstance(ex, PoolCreationError):
+            if self._show_tb_upon_fail and not isinstance(ex, asyncio.TimeoutError) and \
+                    not isinstance(ex, PoolCreationError):
                 tb = traceback.format_exc()
                 description += (" " + tb)
             await system_logger.warning(message=message,
@@ -189,48 +191,51 @@ class InitPoolTask(AbstractTask):
         if not automated_pool:
             raise RuntimeError("InitPoolTask: AutomatedPool doesnt exist")
 
-        async with redis_get_client().lock(str(automated_pool.id), timeout=POOL_TASK_LOCK_TIMEOUT):
-            async with redis_get_client().lock(str(automated_pool.template_id), timeout=POOL_TASK_LOCK_TIMEOUT):
-                # Добавляем машины
-                try:
-                    pool = await Pool.get(self.task_model.entity_id)
-                    await pool.update(status=Status.CREATING).apply()
+        try:
+            async with ReacquireLock(redis_get_client(), str(automated_pool.id)):
+                async with ReacquireLock(redis_get_client(), str(automated_pool.template_id)):
+                    # Добавляем машины
+                    try:
+                        pool = await Pool.get(self.task_model.entity_id)
+                        await pool.update(status=Status.CREATING).apply()
 
-                    await automated_pool.add_initial_vms(self.task_model.creator)
-                except PoolCreationError:
-                    await automated_pool.deactivate()
-                    # Чтобы проблема была передана внешнему обработчику в AbstractTask
-                    raise
+                        await automated_pool.add_initial_vms(self.task_model.creator)
+                    except PoolCreationError:
+                        await automated_pool.deactivate()
+                        # Чтобы проблема была передана внешнему обработчику в AbstractTask
+                        raise
+                    except asyncio.CancelledError:
+                        await system_logger.warning(_local_("Pool Creation cancelled."))
+                        await automated_pool.deactivate()
+                        raise
+
+                # Подготавливаем машины. Находимся на этом отступе так как нам нужен лок пула но не нужен лок шаблона
+                try:
+                    if automated_pool.preparation_required():
+                        results_future = await automated_pool.prepare_initial_vms(self.task_model.creator)
+                        # Если есть отмененные корутины, то считаем, что инициализация пула отменена
+                        for response in results_future:
+                            if isinstance(response, asyncio.CancelledError):
+                                raise asyncio.CancelledError
+
                 except asyncio.CancelledError:
-                    await system_logger.warning(_local_("Pool Creation cancelled."))
                     await automated_pool.deactivate()
                     raise
                 except Exception as E:
-                    await system_logger.error(
-                        message=_local_("Failed to init pool."), description=str(E)
-                    )
                     await automated_pool.deactivate()
+                    await system_logger.error(
+                        message=_local_("Pool initialization VM(s) preparation error."),
+                        description=str(E),
+                    )
                     raise E
-
-            # Подготавливаем машины. Находимся на этом отступе так как нам нужен лок пула но не нужен лок шаблона
-            try:
-                if automated_pool.preparation_required():
-                    results_future = await automated_pool.prepare_initial_vms(self.task_model.creator)
-                    # Если есть отмененные корутины, то считаем, что инициализация пула отменена
-                    for response in results_future:
-                        if isinstance(response, asyncio.CancelledError):
-                            raise asyncio.CancelledError
-
-            except asyncio.CancelledError:
-                await automated_pool.deactivate()
-                raise
-            except Exception as E:
-                await automated_pool.deactivate()
-                await system_logger.error(
-                    message=_local_("Pool initialization VM(s) preparation error."),
-                    description=str(E),
-                )
-                raise E
+        except LockError:
+            pass
+        except Exception as E:
+            await system_logger.error(
+                message=_local_("Failed to init pool."), description=str(E)
+            )
+            await automated_pool.deactivate()
+            raise E
 
         # Активируем пул
         await automated_pool.activate()
@@ -259,8 +264,8 @@ class ExpandPoolTask(AbstractTask):
 
         vm_list = list()
 
-        async with redis_get_client().lock(str(automated_pool.id), timeout=POOL_TASK_LOCK_TIMEOUT):
-            async with redis_get_client().lock(str(automated_pool.template_id), timeout=POOL_TASK_LOCK_TIMEOUT):
+        async with ReacquireLock(redis_get_client(), str(automated_pool.id)):
+            async with ReacquireLock(redis_get_client(), str(automated_pool.template_id)):
                 # Check that total_size is not reached
                 pool = await Pool.get(automated_pool.id)
                 vm_amount_in_pool = await pool.get_vm_amount()
@@ -337,8 +342,8 @@ class RecreationGuestVmTask(AbstractTask):
 
         vm_list = list()
 
-        async with redis_get_client().lock(str(automated_pool.id), timeout=POOL_TASK_LOCK_TIMEOUT):
-            async with redis_get_client().lock(str(automated_pool.template_id), timeout=POOL_TASK_LOCK_TIMEOUT):
+        async with ReacquireLock(redis_get_client(), str(automated_pool.id)):
+            async with ReacquireLock(redis_get_client(), str(automated_pool.template_id)):
 
                 pool = await Pool.get(automated_pool.id)
 
@@ -445,7 +450,7 @@ class DeletePoolTask(AbstractTask):
             await task.cancel()
 
         # Лочим
-        async with redis_get_client().lock(str(automated_pool.id), timeout=POOL_TASK_LOCK_TIMEOUT):
+        async with ReacquireLock(redis_get_client(), str(automated_pool.id)):
             # удаляем пул
             pool = await Pool.get(automated_pool.id)
 
@@ -588,7 +593,7 @@ class RemoveVmsTask(AbstractTask):
         pool_type = pool.pool_type
 
         if pool_type == Pool.PoolTypes.AUTOMATED or pool_type == Pool.PoolTypes.GUEST:
-            async with redis_get_client().lock(str(pool.id), timeout=POOL_TASK_LOCK_TIMEOUT):
+            async with ReacquireLock(redis_get_client(), str(pool.id)):
                 await self._remove_vms(pool, remove_vms_on_controller=True)
         else:
             await self._remove_vms(pool)

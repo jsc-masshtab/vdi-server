@@ -57,6 +57,58 @@ class VeilRedisSubscriber:
         return msg
 
 
+class ReacquireLock:
+
+    def __init__(self, redis_client, lock_name):
+        self._redis_client = redis_client
+        self._lock_name = lock_name
+
+        self._app_lock = None
+        self._timeout = 30
+        self._keep_reacquiring_task = None
+
+    async def __aenter__(self):
+
+        self._app_lock = self._redis_client.lock(name=self._lock_name, timeout=self._timeout)
+        # Acquire lock and keep reacquiring
+        await self._app_lock.acquire()
+
+        loop = asyncio.get_event_loop()
+        self._keep_reacquiring_task = loop.create_task(self._keep_reacquiring())
+
+        return self._app_lock
+
+    async def __aexit__(self, type, value, traceback):
+
+        if self._keep_reacquiring_task:
+            self._keep_reacquiring_task.cancel()
+        if self._app_lock:
+            await self._app_lock.release()
+
+    async def _keep_reacquiring(self):
+
+        while True:
+            await asyncio.sleep(self._timeout - 10)
+            # print("Before self.reacquire()", flush=True)
+            self._redis_client.reacquire(self._app_lock)
+            # print("After self.reacquire()", flush=True)
+
+
+# Добавляем скрипт для для REACQUIRE, так как его нет в редис клиенте
+# KEYS[1] - lock name
+# ARGV[1] - token
+# ARGV[2] - milliseconds
+# return 1 if the locks time was reacquired, otherwise 0
+LUA_REACQUIRE_SCRIPT = """
+    local token = redis.call('get', KEYS[1])
+    if not token or token ~= ARGV[1] then
+        return 0
+    end
+    redis.call('pexpire', KEYS[1], ARGV[2])
+    return 1
+"""
+
+
 class VeilRedisClient(StrictRedis):
     """Клиент редиса."""
 
@@ -67,6 +119,27 @@ class VeilRedisClient(StrictRedis):
 
         loop = asyncio.get_event_loop()
         self.redis_receiving_messages_cor = loop.create_task(self.redis_receiving_messages())
+
+        # add reacquire support
+        self._lua_reacquire = self.register_script(LUA_REACQUIRE_SCRIPT)
+
+    async def reacquire(self, lock_obj):
+        """Reset a TTL of an already acquired lock back to a timeout value."""
+        if lock_obj.local.get() is None:
+            raise LockError("Cannot reacquire an unlocked lock")
+        if lock_obj.timeout is None:
+            raise LockError("Cannot reacquire a lock with no timeout")
+
+        timeout = int(lock_obj.timeout * 1000)
+        if not bool(
+            await self._lua_reacquire.execute(
+                keys=[lock_obj.name],
+                args=[lock_obj.local.get(), timeout],
+                client=lock_obj.redis
+            )
+        ):
+            raise LockError("Cannot extend a lock that's no longer owned")
+        return True
 
     async def stop_redis_receiving_messages_cor(self):
         if self.redis_receiving_messages_cor:  # noqa
