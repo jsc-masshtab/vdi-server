@@ -8,7 +8,7 @@
 
      - создать файл **veil-broker.list** с помощью команды
    
-       `sudo mkdir /etc/apt/sources.list.d/veil-broker.list`
+       `sudo touch /etc/apt/sources.list.d/veil-broker.list`
    
      - открыть его для редактирования с помощью команды
     
