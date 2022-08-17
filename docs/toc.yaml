@@ -87,7 +87,6 @@ nav:
         - Обновление через создание локальной копии репозитория: broker/faq/update/repo_without_inet/local_repo.md
       - Особенности обновлений некоторых версий:
         - Обновление VeiL Broker с 3.2.0 на 4.0.0: broker/faq/update/version/update_v3-v4.md
-        - Обновление VeiL Broker с 4.0.x на 4.1.х: broker/faq/update/version/update_v4-v4.md
     - Резервное копирование БД:
       - Общие сведения: broker/faq/backup_db/index.md
       - VeiL Broker 3.2.0: broker/faq/backup_db/ver_3_2_0/creating_db.md
