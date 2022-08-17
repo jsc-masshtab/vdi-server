@@ -337,7 +337,7 @@ export class PoolDetailsComponent extends PoolCollections implements OnInit, OnD
             multiple: true,
             title: 'Выбрать тип подключения',
             fieldName: 'connection_types',
-            data: this.typePool === 'rds' ? ['RDP', 'NATIVE_RDP'] : ['RDP', 'NATIVE_RDP', 'SPICE', 'SPICE_DIRECT', 'X2GO', 'LOUDPLAY'],
+            data: this.typePool === 'rds' ? ['RDP', 'NATIVE_RDP'] : ['RDP', 'NATIVE_RDP', 'SPICE', 'SPICE_DIRECT', 'LOUDPLAY'],
             fieldValue: this.pool.assigned_connection_types,
           }]
         },
