@@ -83,7 +83,10 @@ class ReacquireLock:
         if self._keep_reacquiring_task:
             self._keep_reacquiring_task.cancel()
         if self._app_lock:
-            await self._app_lock.release()
+            try:
+                await self._app_lock.release()
+            except LockError:
+                pass
 
     async def _keep_reacquiring(self):
 
