@@ -149,7 +149,7 @@ class LogoutHandler(BaseHttpHandler, ABC):
 class VersionHandler(BaseHttpHandler, ABC):
     async def get(self):
         info_dict = {
-            "version": "4.1.3",
+            "version": "4.1.4",
             "year": "2019-2022",
             "url": "https://mashtab.org",
             "copyright": "© mashtab.org",
