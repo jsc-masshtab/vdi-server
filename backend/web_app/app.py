@@ -33,6 +33,7 @@ from web_app.auth.user_schema import user_schema
 from web_app.controller.resource_schema import resources_schema
 from web_app.controller.schema import controller_schema
 from web_app.front_ws_api.urls import ws_event_monitoring_urls
+from web_app.info.schema import broker_info_schema
 from web_app.journal.schema import event_schema
 from web_app.pool.schema import pool_schema
 from web_app.settings.schema import settings_schema
@@ -78,7 +79,8 @@ handlers = [
         VdiTornadoGraphQLHandler,
         dict(graphiql=True, schema=thin_client_schema),
     ),
-    (r"/statistics", VdiTornadoGraphQLHandler, dict(graphiql=True, schema=statistics_schema))
+    (r"/statistics", VdiTornadoGraphQLHandler, dict(graphiql=True, schema=statistics_schema)),
+    (r"/broker_info", VdiTornadoGraphQLHandler, dict(graphiql=True, schema=broker_info_schema)),
 ]
 
 handlers += auth_api_urls

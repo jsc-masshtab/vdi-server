@@ -150,10 +150,6 @@ snapshots['TestAuthenticationDirectoryQuery.test_auth_dir_get_possible_ad_groups
         'id': '10913d5d-ba7a-4049-88c5-769267a6cbe5',
         'possible_ad_groups': [
             {
-                'ad_guid': '08c79257-d766-46c0-bec7-69439960a2fe',
-                'verbose_name': '131'
-            },
-            {
                 'ad_guid': 'd61e64b2-449f-4fd8-89fa-5ee29edde9c7',
                 'verbose_name': 'DnsAdmins'
             },
