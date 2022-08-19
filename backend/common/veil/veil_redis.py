@@ -93,7 +93,7 @@ class ReacquireLock:
         while True:
             await asyncio.sleep(self._timeout - 10)
             # print("Before self.reacquire()", flush=True)
-            self._redis_client.reacquire(self._app_lock)
+            await self._redis_client.reacquire(self._app_lock)
             # print("After self.reacquire()", flush=True)
 
 
