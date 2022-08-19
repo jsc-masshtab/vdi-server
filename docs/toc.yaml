@@ -87,7 +87,6 @@ nav:
         - Обновление через создание локальной копии репозитория: broker/faq/update/repo_without_inet/local_repo.md
       - Особенности обновлений некоторых версий:
         - Обновление VeiL Broker с 3.2.0 на 4.0.0: broker/faq/update/version/update_v3-v4.md
-        - Обновление VeiL Broker с 4.0.x на 4.1.х: broker/faq/update/version/update_v4-v4.md
     - Резервное копирование БД:
       - Общие сведения: broker/faq/backup_db/index.md
       - VeiL Broker 3.2.0: broker/faq/backup_db/ver_3_2_0/creating_db.md
@@ -231,6 +230,7 @@ nav:
           - RedOS 7.2: connect/operator_guide/install/net/linux/redos72.md
           - RedOS 7.3: connect/operator_guide/install/net/linux/redos73.md
           - Astra Linux Smolensk: connect/operator_guide/install/net/linux/smolensk.md
+          - AlterOS: connect/operator_guide/install/net/linux/alteros.md
         - Установка  на операционную систему Windows: connect/operator_guide/install/net/win.md
     - Удаление VeiL Connect: connect/operator_guide/delete.md
     - Выполнение программы:
@@ -270,6 +270,13 @@ nav:
     - Описание логов: connect/log_files_description.md
     - Тонкие клиенты:
       - FAQ ТК: connect/thin_clients/thin_clients.md
+      - GM Smart System с VeiL Connect:
+        - Общая информация: connect/thin_clients/getmobit/gm_base.md
+        - Подготовка окружения: connect/thin_clients/getmobit/env_prep.md
+        - Установка и запуск: connect/thin_clients/getmobit/gm_install.md
+        - Настройка сервера управления: connect/thin_clients/getmobit/gm_setup.md
+        - Начало работы с устройством GM-Box: connect/thin_clients/getmobit/gm_start.md
+        - Использование AD совместно с GM: connect/thin_clients/getmobit/using_ad.md
       - Приложение. Установка ОС "Astra Linux Common Edition": connect/thin_clients/application1.md
       - Приложение. Установка ОС "Astra Linux Special Edition": connect/thin_clients/application2.md
       - Приложение. Установка ОС "Альт Рабочая станция": connect/thin_clients/application3.md

@@ -11,6 +11,7 @@ from common.graphene_utils import ShortString
 from common.languages import _local_
 from common.log.journal import check_smtp_connection, system_logger
 from common.models.settings import Settings
+from common.password import PassSecLevel
 from common.utils import Cache, create_subprocess
 from common.veil.veil_decorators import administrator_required
 from common.veil.veil_errors import SilentError, SimpleError
@@ -39,6 +40,7 @@ class ServiceAction(Enum):
 
 
 ServiceActionGraphene = graphene.Enum.from_enum(ServiceAction)
+PassSecLevelGraphene = graphene.Enum.from_enum(PassSecLevel)
 
 
 class SettingsType(graphene.ObjectType):
@@ -60,6 +62,7 @@ class SettingsType(graphene.ObjectType):
     VEIL_MAX_URL_LEN = graphene.Int()
     VEIL_MAX_IDS_LEN = graphene.Int()
     VEIL_MAX_VM_CREATE_ATTEMPTS = graphene.Int()
+    PASSWORD_SECURITY_LEVEL = PassSecLevelGraphene()
 
 
 class SmtpSettingsType(graphene.ObjectType):
@@ -233,6 +236,7 @@ class ChangeSettingsMutation(graphene.Mutation):
         VEIL_MAX_URL_LEN = graphene.Int()
         VEIL_MAX_IDS_LEN = graphene.Int()
         VEIL_MAX_VM_CREATE_ATTEMPTS = graphene.Int()
+        PASSWORD_SECURITY_LEVEL = PassSecLevelGraphene()
 
     ok = graphene.Boolean()
 

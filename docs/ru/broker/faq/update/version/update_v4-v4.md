@@ -8,7 +8,7 @@
 
      - создать файл **veil-broker.list** с помощью команды
    
-       `sudo mkdir /etc/apt/sources.list.d/veil-broker.list`
+       `sudo touch /etc/apt/sources.list.d/veil-broker.list`
    
      - открыть его для редактирования с помощью команды
     
@@ -21,6 +21,6 @@
      - сохранить изменения, нажав **Ctrl+Х** и **Enter**.
  
 1. Обновить списки пакетов с помощью команды
-   `apt-get update`.
+   `sudo apt-get update`.
 
-1. Выполнить обновление пакетной базы командой: `apt-get upgrade -y`.
+1. Выполнить обновление пакетной базы командой: `sudo apt-get upgrade -y`.

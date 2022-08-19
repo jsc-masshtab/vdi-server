@@ -14,7 +14,7 @@ export class AddVmConnectionComponent {
   public checkValid: boolean = true;
   public form: FormGroup;
 
-  public connection_types = this.data.typePool === 'rds' ? ['RDP', 'NATIVE_RDP'] : ['RDP', 'NATIVE_RDP', 'SPICE', 'SPICE_DIRECT', 'X2GO', 'LOUDPLAY'];
+  public connection_types = this.data.typePool === 'rds' ? ['RDP', 'NATIVE_RDP'] : ['RDP', 'NATIVE_RDP', 'SPICE', 'SPICE_DIRECT', 'LOUDPLAY'];
 
   constructor(
     @Inject(MAT_DIALOG_DATA) public data,

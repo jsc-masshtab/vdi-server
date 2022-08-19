@@ -313,13 +313,10 @@ class PoolGetVm(BaseHttpHandler):
                                     vm_token=vm_token, vm_id=str(vm_model.id))
 
         if self._is_rdp(self.remote_protocol) or \
-            self.remote_protocol == PoolM.PoolConnectionTypes.X2GO.name or \
             self.remote_protocol == PoolM.PoolConnectionTypes.LOUDPLAY.name:  # noqa
             # port
             if self._is_rdp(self.remote_protocol):
                 vm_port = 3389
-            elif self.remote_protocol == PoolM.PoolConnectionTypes.X2GO.name:
-                vm_port = 22
             else:  # LOUDPLAY
                 vm_port = 8554
 
