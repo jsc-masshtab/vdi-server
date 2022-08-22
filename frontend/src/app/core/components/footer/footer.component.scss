@@ -105,12 +105,12 @@ footer {
         overflow: hidden;
 
         > span {
-            display: flex;
             margin: 0 10px;
             font-size: 11px;
             line-height: 11px;
             padding: 3px;
-            min-width: 150px;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
     
         .warning {

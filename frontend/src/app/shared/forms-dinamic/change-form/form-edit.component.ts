@@ -132,7 +132,11 @@ export class FormForEditComponent implements OnInit, OnDestroy {
           }
         });
       } else {
-        throw new Error('post || update отсутствует'); // а если я не хочу обновлять?
+        this.waitService.setWait(true);
+        this.data.post.service[this.data.post.method](this.data.post.params, this.formGroup.value).subscribe(() => {
+          this.waitService.setWait(false);
+          this.dialogRef.close();
+        })
       }
     } else {
       this.checkValid = true;
