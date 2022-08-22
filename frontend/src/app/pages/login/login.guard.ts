@@ -25,6 +25,10 @@ export class LoginGuard implements CanActivate, CanActivateChild {
   public canActivateChild(route: ActivatedRouteSnapshot): boolean {
     const path = route.routeConfig.path;
 
+    if (path === 'settings/system' && environment.multiple) {
+      return false;
+    }
+
     if (path === 'settings/services' && environment.multiple) {
       return false;
     }
