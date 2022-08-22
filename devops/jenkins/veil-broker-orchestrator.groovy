@@ -35,6 +35,7 @@ pipeline {
         booleanParam(name: 'FRONTEND',      defaultValue: false,      description: 'veil-broker-frontend')
         booleanParam(name: 'DOCS',          defaultValue: false,      description: 'veil-broker-docs')
         booleanParam(name: 'THINCLIENT',    defaultValue: false,      description: 'veil-connect-web')
+        booleanParam(name: 'DOCKER',        defaultValue: false,      description: 'veil-broker docker images')
         booleanParam(name: 'ISO',           defaultValue: false,      description: 'veil-broker-iso')
     }
 
@@ -98,6 +99,21 @@ pipeline {
                     }
                     steps {
                         build job: 'vdi-thin-client-web', parameters: [string(name: 'BRANCH', value: "${BRANCH}"), string(name: 'REPO', value: "${REPO}"), string(name: 'VERSION', value: "${VERSION}")]
+                    }
+                }
+
+                stage ('veil-broker-docker-images') {
+                    when {
+                        anyOf {
+                            changeset "backend/**"
+                            changeset "frontend/**"
+                            changeset "docs/**"
+                            changeset "devops/docker/prod/**"
+                            expression { params.DOCKER == true }
+                        }
+                    }
+                    steps {
+                        build job: 'veil-broker-docker-images', parameters: [string(name: 'BRANCH', value: "${BRANCH}"), string(name: 'VERSION', value: "${VERSION}")]
                     }
                 }
             }

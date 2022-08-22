@@ -1,7 +1,0 @@
----
-
-# PostgreSQL High-Availability Cluster
-with_pgcluster: false # or 'true' if you want to install and configure the postgresql HA cluster
-
-# VeiL Broker
-with_broker: true
