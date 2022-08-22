@@ -63,7 +63,24 @@ pipeline {
             }
         }
 
-        stage ('build') {
+        stage('add docker images') {
+            steps {
+                sh script: '''
+                    mkdir -p iso/docker
+                    for IMAGE in "postgres:11-alpine" "redis:5-alpine" "nexus.bazalt.team/veil-broker-backend:latest" "nexus.bazalt.team/veil-broker-frontend:latest" "guacamole/guacd:1.3.0"
+                    do
+                        docker pull $IMAGE
+                    done
+                    docker save postgres:11-alpine | gzip > iso/docker/postgres.tar.gz
+                    docker save redis:5-alpine | gzip > iso/docker/redis.tar.gz
+                    docker save nexus.bazalt.team/veil-broker-backend:latest | gzip > iso/docker/backend.tar.gz
+                    docker save nexus.bazalt.team/veil-broker-frontend:latest | gzip > iso/docker/frontend.tar.gz
+                    docker save guacamole/guacd:1.3.0 | gzip > iso/docker/guacamole.tar.gz
+                '''
+            }
+        }
+
+        stage ('build iso') {
             agent {
                 docker {
                     image "${DOCKER_IMAGE_NAME}:${VERSION}"
@@ -76,13 +93,11 @@ pipeline {
             steps {
                 sh script: '''
                     # download apt repo
-                    mkdir iso
                     wget -r -nH -nv --reject="index.html*" http://${APT_SRV}/veil-broker-${REPO}/
                     mv veil-broker-${REPO}/ iso/repo
 
                     # copy files
                     cp -r devops/ansible iso/ansible
-                    rm -f iso/ansible/*.png iso/ansible/*.md iso/ansible/LICENSE
                     cp devops/installer/install.sh iso
 
                     # build iso

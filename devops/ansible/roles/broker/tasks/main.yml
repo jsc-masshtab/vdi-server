@@ -37,10 +37,6 @@
   blockinfile:
     path: "{{ broker_local_settings }}"
     block: |
-      {% if with_pgcluster|bool %}
-      DB_HOST = '{{ cluster_vip }}'
-      DB_PORT = {{ pgbouncer_listen_port }}
-      {% endif %}
       DB_NAME = '{{ broker_db_name }}'
       DB_USER = '{{ broker_db_user }}'
       LOCAL_AUTH = True
