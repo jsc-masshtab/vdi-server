@@ -33,7 +33,7 @@
           <mat-label>{{ field.title }}</mat-label>
            <mat-select [multiple]="field.multiple ? true : false" [formControlName]="field.fieldName">
             <mat-option  *ngFor="let option of field.data" [value]="option">
-              {{option}}
+              {{ option | rename }}
             </mat-option>
           </mat-select>
         </mat-form-field>

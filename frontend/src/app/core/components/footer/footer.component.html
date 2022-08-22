@@ -43,9 +43,9 @@
   </div>
 
   <div class="license">
-    <span *ngIf="time">Время на контроллере: {{ time | date:'dd.MM.yyyy HH:mm:ss':timezone }} {{ timezone }}</span>
-    <span *ngIf="license.remaining_days < 100" [class.warning]="!license.remaining_days"> Дней до окончания лицензии: {{ license.remaining_days || 0 }}</span>
-    <span *ngIf="license.support_remaining_days < 100" [class.warning]="!license.support_remaining_days"> Дней до окончания сервисной поддержки: {{ license.support_remaining_days || 0 }}</span>
+    <span *ngIf="time" title="Время на контроллере: {{ time | date:'dd.MM.yyyy HH:mm:ss':timezone }} {{ timezone }}">Время на контроллере: {{ time | date:'dd.MM.yyyy HH:mm:ss':timezone }} {{ timezone }}</span>
+    <span *ngIf="license.remaining_days < 100" [class.warning]="!license.remaining_days" title="Дней до окончания лицензии: {{ license.remaining_days || 0 }}"> Дней до окончания лицензии: {{ license.remaining_days || 0 }}</span>
+    <span *ngIf="license.support_remaining_days < 100" [class.warning]="!license.support_remaining_days" title="Дней до окончания сервисной поддержки: {{ license.support_remaining_days || 0 }}">Дней до окончания сервисной поддержки: {{ license.support_remaining_days || 0 }}</span>
   </div>
 
   <div class="copyright" *ngIf="(info$ | async) as info"> 

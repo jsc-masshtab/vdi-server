@@ -3,7 +3,7 @@ import { FormControl } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { distinctUntilChanged, map } from 'rxjs/operators';
 
 import { WaitService } from '@core/components/wait/wait.service';
 
@@ -12,6 +12,7 @@ import { IParams } from '@shared/types';
 
 import { AddUserComponent } from '../add-user/add-user.component';
 import { UsersService   } from '../users.service';
+import { FormForEditComponent } from '@app/shared/forms-dinamic/change-form/form-edit.component';
 
 @Component({
   selector: 'vdi-users',
@@ -22,6 +23,7 @@ import { UsersService   } from '../users.service';
 export class UsersComponent extends DetailsMove implements OnInit, OnDestroy {
 
   private getUsersSub: Subscription;
+  private getOptionsSub: Subscription;
 
   public limit = 100;
   public count = 0;
@@ -137,6 +139,37 @@ export class UsersComponent extends DetailsMove implements OnInit, OnDestroy {
     });
   }
 
+  public openSettings() {
+
+    if (this.getOptionsSub) {
+      this.getOptionsSub.unsubscribe();
+    }
+
+    this.getOptionsSub = this.service.getSettings().valueChanges.pipe(map((data: any) => data.data), distinctUntilChanged()).subscribe((res: any) => {
+      this.dialog.open(FormForEditComponent, {
+        disableClose: true,
+        width: '500px',
+        data: {
+          post: {
+            service: this.service,
+            method: 'setSettings'
+          },
+          settings: {
+            header: 'Политика авторизации пользователей',
+            buttonAction: 'Изменить',
+            form: [{
+              tag: 'select',
+              title: 'Уровень безопасности пароля',
+              fieldName: 'PASSWORD_SECURITY_LEVEL',
+              fieldValue: res.settings['PASSWORD_SECURITY_LEVEL'],
+              data: ['LOW', 'MIDDLE', 'HIGH']
+            }]
+          }
+        }
+      });
+    });
+  }
+
   public getAllUsers() {
     if (this.getUsersSub) {
       this.getUsersSub.unsubscribe();
@@ -209,6 +242,10 @@ export class UsersComponent extends DetailsMove implements OnInit, OnDestroy {
   ngOnDestroy() {
     this.service.paramsForGetUsers.spin = true;
     this.service.paramsForGetUsers.nameSort = undefined;
+
+    if (this.getUsersSub) {
+      this.getUsersSub.unsubscribe();
+    }
 
     if (this.getUsersSub) {
       this.getUsersSub.unsubscribe();
