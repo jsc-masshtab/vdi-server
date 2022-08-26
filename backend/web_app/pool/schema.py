@@ -325,7 +325,8 @@ class PoolType(graphene.ObjectType):
                           limit=graphene.Int(default_value=500),
                           offset=graphene.Int(default_value=0),
                           entitled=graphene.Boolean(),
-                          ordering=ShortString())
+                          ordering=ShortString(),
+                          username=ShortString())
     assigned_roles = graphene.List(RoleTypeGraphene)
     possible_roles = graphene.List(RoleTypeGraphene)
     assigned_groups = graphene.List(
@@ -392,11 +393,14 @@ class PoolType(graphene.ObjectType):
         else:
             return await pool.possible_users_count()
 
-    async def resolve_users(self, _info, limit=500, offset=0, entitled=True, ordering=None):
+    async def resolve_users(self, _info, limit=500, offset=0, entitled=True, ordering=None,
+                            username=None):
         pool = await Pool.get(self.pool_id)
         if entitled:
-            return await pool.assigned_users(ordering=ordering, limit=limit, offset=offset)
-        return await pool.possible_users(limit=limit, offset=offset)  # ordered by name inside the method
+            return await pool.assigned_users(ordering=ordering, limit=limit, offset=offset, username=username)
+        else:
+            # ordered by name inside the method
+            return await pool.possible_users(limit=limit, offset=offset, username=username)
 
     async def resolve_vms(self, _info, limit=500, offset=0, ordering=None, verbose_name=None):
 
@@ -1378,19 +1382,20 @@ class AssignVmToUser(graphene.Mutation):
                 raise SimpleError(_local_("Provide users list or username."))
 
             for user in users:
-                # check if the user is entitled to the pool(pool_id) the vm belongs to
-                user_entitled_to_pool = await pool.check_if_user_assigned(user)
+                async with db.transaction():
+                    # check if the user is entitled to the pool(pool_id) the vm belongs to
+                    user_entitled_to_pool = await pool.check_if_user_assigned(user)
 
-                if not user_entitled_to_pool:
-                    # Requested user is not entitled to the pool the requested vm belongs to
-                    raise SimpleError(
-                        _local_("User does not have the right to use pool, which has VM.")
-                    )
+                    if not user_entitled_to_pool:
+                        # Requested user is not entitled to the pool the requested vm belongs to
+                        raise SimpleError(
+                            _local_("User does not have the right to use pool, which has VM.")
+                        )
 
-                # another vm in the pool may have this user as owner. Remove assignment
-                await pool.free_user_vms(user)
+                    # another vm in the pool may have this user as owner. Remove assignment
+                    await pool.free_user_vms(user)
 
-                await vm.add_user(user, creator)
+                    await vm.add_user(user, creator)
             return AssignVmToUser(ok=True, vm=vm)
         return AssignVmToUser(ok=False, vm=vm)
 

@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-from abc import ABC
-
 from common.languages import _local_
 from common.models.active_tk_connection import ActiveTkConnection
 from common.models.license import License
@@ -12,7 +10,7 @@ from common.veil.veil_handlers import BaseHttpHandler
 
 
 @jwtauth
-class LicenseHandler(BaseHttpHandler, ABC):
+class LicenseHandler(BaseHttpHandler):
     async def get(self):
         """Get license key info."""
         license_obj = await License.get_license()

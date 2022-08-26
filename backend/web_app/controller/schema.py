@@ -183,6 +183,7 @@ class ControllerType(graphene.ObjectType, ControllerFetcher):
         ordering=ShortString(),
         limit=graphene.Int(default_value=100),
         offset=graphene.Int(default_value=0),
+        verbose_name=ShortString()
     )
     veil_event = graphene.Field(lambda: VeilEventType, event_id=graphene.UUID())
     veil_events_count = graphene.Int(event_type=graphene.Int())
@@ -313,10 +314,11 @@ class ControllerType(graphene.ObjectType, ControllerFetcher):
         node_id=None,
         exclude_existed=True,
         ordering: str = None,
+        verbose_name: str = None
     ):
         """В self прилетает инстанс модели контроллера."""
         controller = await Controller.get(self.id)
-        paginator = VeilRestPaginator(ordering=ordering, limit=limit, offset=offset)
+        paginator = VeilRestPaginator(name=verbose_name, ordering=ordering, limit=limit, offset=offset)
         vms = await Vm.query.gino.all()
         # Прерываем выполнение при отсутствии клиента
         if controller.veil_client:

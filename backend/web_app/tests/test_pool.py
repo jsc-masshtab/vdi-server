@@ -597,10 +597,16 @@ async def test_pools_ordering(
                     vm_amount
                     vms {
                       verbose_name
-                      assigned_users {
+                      assigned_users(username: "n") {
                         id
                       }
                       assigned_users_count
+                      possible_users(username: "n"){
+                        username
+                        is_superuser
+                        date_joined
+                      }
+                      possible_users_count
                       count
                       events {
                         message
