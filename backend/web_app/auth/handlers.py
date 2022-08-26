@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-from abc import ABC
-
 from packaging import version
 
 from tornado.web import HTTPError
@@ -21,7 +19,7 @@ from common.veil.veil_gino import EntityType
 from common.veil.veil_handlers import BaseHttpHandler
 
 
-class AuthHandler(BaseHttpHandler, ABC):
+class AuthHandler(BaseHttpHandler):
     async def post(self):
         try:
             if not self.args:
@@ -137,7 +135,7 @@ class AuthHandler(BaseHttpHandler, ABC):
             raise RuntimeError(_local_("Thin client limit exceeded."))
 
 
-class LogoutHandler(BaseHttpHandler, ABC):
+class LogoutHandler(BaseHttpHandler):
     async def post(self):
         username, token = extract_user_and_token_with_no_expire_check(
             self.request.headers
@@ -146,7 +144,7 @@ class LogoutHandler(BaseHttpHandler, ABC):
         await system_logger.debug(_local_("User {} logged out.").format(username))
 
 
-class VersionHandler(BaseHttpHandler, ABC):
+class VersionHandler(BaseHttpHandler):
     async def get(self):
         info_dict = {
             "version": "4.1.4",
@@ -158,7 +156,7 @@ class VersionHandler(BaseHttpHandler, ABC):
         return self.finish(response)
 
 
-class SettingsHandler(BaseHttpHandler, ABC):
+class SettingsHandler(BaseHttpHandler):
     async def get(self):
         try:
             from common.broker_name import BROKER_NAME
@@ -173,7 +171,7 @@ class SettingsHandler(BaseHttpHandler, ABC):
         return self.finish(response)
 
 
-class KerberosAuthHandler(BaseHttpHandler, ABC):
+class KerberosAuthHandler(BaseHttpHandler):
     async def get(self):
         auth_dir = await AuthenticationDirectory.get_objects(first=True)
         if auth_dir and auth_dir.sso:

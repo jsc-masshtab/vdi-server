@@ -538,9 +538,13 @@ class Pool(VeilModel):
         users_count = await db.select([db.func.count()]).select_from(finish_query.alias()).gino.scalar()
         return users_count
 
-    async def assigned_users(self, ordering=None, limit=100, offset=0):
+    async def assigned_users(self, ordering=None, limit=100, offset=0, username=None):
         """Пользователи назначенные пулу (с учетом групп)."""
         finish_query = await self.get_assigned_users_query()
+
+        # filter by name pattern
+        if username:
+            finish_query = finish_query.where(UserModel.username.ilike(f"%{username}%"))
 
         if ordering:
             (ordering, reverse) = extract_ordering_data(ordering)
@@ -619,9 +623,14 @@ class Pool(VeilModel):
         users_count = await db.select([db.func.count()]).select_from(finish_query.alias()).gino.scalar()
         return users_count
 
-    async def possible_users(self, limit=100, offset=0):
+    async def possible_users(self, limit=100, offset=0, username=None):
         """Пользователи которых можно закрепить за пулом."""
         finish_query = await self.get_possible_users_query()
+
+        # filter by name pattern
+        if username:
+            finish_query = finish_query.where(UserModel.username.ilike(f"%{username}%"))
+
         finish_query = finish_query.order_by(UserModel.username)
         return await finish_query.limit(limit).offset(offset).gino.load(UserModel).all()
 

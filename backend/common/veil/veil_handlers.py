@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import json
 import textwrap
-from abc import ABC
 from typing import Any, Awaitable, Optional
 
 from graphene_tornado.tornado_graphql_handler import TornadoGraphQLHandler
@@ -23,7 +22,7 @@ from common.veil.auth.veil_jwt import (
 from common.veil.veil_errors import InvalidUserError, ValidationError
 
 
-class BaseHandler(RequestHandler, ABC):
+class BaseHandler(RequestHandler):
     @property
     def remote_ip(self):
         remote_ip = (
@@ -134,7 +133,7 @@ class BaseHttpHandler(BaseHandler):  # todo: нужно реализовать �
 
 
 @jwtauth
-class VdiTornadoGraphQLHandler(TornadoGraphQLHandler, ABC):
+class VdiTornadoGraphQLHandler(TornadoGraphQLHandler):
     pass
 
 
