@@ -44,6 +44,7 @@ async def test_request_tasks(fixt_db, fixt_auth_context):  # noqa
                 priority
                 created
              }
+             tasks_count
         }"""
     await execute_scheme(task_schema, qu, context=fixt_auth_context)
 

@@ -157,7 +157,7 @@ async def test_resolve_controller(
                   file_count
                   iso_count
                 }
-                vms {
+                vms(verbose_name: "i") {
                   id
                   verbose_name
                 }

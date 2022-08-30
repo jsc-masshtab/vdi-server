@@ -7,6 +7,7 @@ from graphene import Enum as GrapheneEnum
 
 from sqlalchemy import and_
 
+from common.database import db
 from common.graphene_utils import ShortString
 from common.languages import _local_
 from common.log.journal import system_logger
@@ -49,6 +50,7 @@ class TaskQuery(graphene.ObjectType):
         task_type=TaskTypeGraphene(),
         ordering=ShortString(),
     )
+    tasks_count = graphene.Int(default_value=100, status=TaskStatusGraphene(), task_type=TaskTypeGraphene())
 
     task = graphene.Field(TaskType, id=graphene.UUID())
 
@@ -94,6 +96,15 @@ class TaskQuery(graphene.ObjectType):
             task_graphene_types.append(task_graphene_type)
 
         return task_graphene_types
+
+    @administrator_required
+    async def resolve_tasks_count(self, _info, status=None, task_type=None, **kwargs):
+        query = Task.query
+        filters = TaskQuery.build_filters(status, task_type)
+        if filters:
+            query = query.where(and_(*filters))
+
+        return await db.select([db.func.count()]).select_from(query.alias()).gino.scalar()
 
     @administrator_required
     async def resolve_task(self, _info, id, **kwargs):
