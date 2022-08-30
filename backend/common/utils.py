@@ -201,7 +201,7 @@ class Cache:
     ):
         from web_app.controller.resource_schema import ResourcesQuery
 
-        resources_list = await ResourcesQuery.get_resources_list(
+        resources_list, _ = await ResourcesQuery.get_resources_list(
             limit=limit, offset=offset, ordering=ordering, resource_type=resource_type
         )
         cacheable_resources_list = await Cache.get_cacheable_resources(
