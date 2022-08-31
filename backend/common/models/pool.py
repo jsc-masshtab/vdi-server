@@ -1937,12 +1937,7 @@ class AutomatedPool(db.Model):
                 await self.deactivate(status=Status.PARTIAL)
             else:
                 success_vm_ids = pending_vm_ids
-        except VmCreationError:
-            # Исключение для прерывания повторных попыток создания заведомо провальных задач.
-            await self.deactivate()
-            raise
         except asyncio.CancelledError:
-            await self.deactivate()
             # Если получили CancelledError в ходе ожидания создания вм,
             # то отменяем на контроллере таску создания вм.
             # (Например, при мягком завершении процесса pool_worker)
