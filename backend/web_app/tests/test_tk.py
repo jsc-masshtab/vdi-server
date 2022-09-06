@@ -643,3 +643,5 @@ class TestVmDataRequest(VdiHttpTestCase):
         )
 
         assert vm_id_str == response_dict["data"]["id"]
+        assert response_dict["data"]["spice_conn"]["address"]
+        assert response_dict["data"]["spice_conn"]["port"]

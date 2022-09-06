@@ -924,9 +924,14 @@ class VmDataHandler(BaseHttpHandler):
 
         response_data = domain_info.data
         response_data["controller_address"] = vm_controller.address
-        response = {
-            "data": response_data
-        }
+
+        vm_conn_data = await VmConnectionData.get_with_params(vm.id, PoolM.PoolConnectionTypes.SPICE.name, True)
+        if vm_conn_data:
+            response_data["spice_conn"] = dict(address=vm_conn_data.address, port=vm_conn_data.port)
+        else:
+            response_data["spice_conn"] = dict(address=vm_controller.address, port=response_data["remote_access_port"])
+
+        response = dict(data=response_data)
 
         return await self.log_finish(response)
 
