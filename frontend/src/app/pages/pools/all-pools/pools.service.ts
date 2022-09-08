@@ -37,30 +37,38 @@ export class PoolsService {
         });
     }
 
-    public getAllPools(): QueryRef<any, any> {
-
-
+    public getAllPools(props): QueryRef<any, any> {
         return this.service.watchQuery({
-            query: gql` query pools($ordering:ShortString) {
-                            pools(ordering: $ordering) {
-                                pool_id
-                                verbose_name
-                                vm_amount
-                                pool_type
-                                controller {
-                                    verbose_name
-                                    address
-                                }
-                                users {
-                                    username
-                                }
-                                status
-                            }
+            query: gql` 
+                query pools(
+                    $ordering:ShortString,
+                    $limit: Int,
+                    $offset: Int
+                ){
+                    pools(
+                        limit: $limit,
+                        offset: $offset,
+                        ordering: $ordering
+                    ){
+                        pool_id
+                        verbose_name
+                        vm_amount
+                        pool_type
+                        controller {
+                            verbose_name
+                            address
                         }
-                `,
+                        users {
+                            username
+                        }
+                        status
+                    }
+                }
+            `,
             variables: {
                 method: 'GET',
-                ordering: this.paramsForGetPools.nameSort
+                ordering: this.paramsForGetPools.nameSort,
+                ...props
             }
         });
     }

@@ -11,6 +11,7 @@ interface IData {
   idPool: string;
   namePool: string;
   typePool: string;
+  queryset: any;
 }
 
 @Component({
@@ -51,7 +52,7 @@ export class AddUsersPoolComponent implements OnInit, OnDestroy {
       this.waitService.setWait(true);
       this.poolService.entitleUsersToPool(this.data.idPool, this.idUsers).pipe(takeUntil(this.destroy)).subscribe((res) => {
         if (res) {
-          this.poolService.getPool(this.data.idPool).refetch();
+          this.poolService.getPool(this.data.idPool, this.data.queryset).refetch();
           this.waitService.setWait(false);
           this.dialogRef.close();
         }

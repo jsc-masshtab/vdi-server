@@ -43,6 +43,12 @@ export class PoolDetailsComponent extends PoolCollections implements OnInit, OnD
   public eventCreatedVm: object[] = [];
   private subPool: Subscription;
 
+  public limit = 100;
+  public vm_amount = 0;
+  public users_count = 0;
+  public offset = 0;
+  public queryset: any;
+
   constructor(
     private activatedRoute: ActivatedRoute,
     private router: Router,
@@ -110,24 +116,37 @@ export class PoolDetailsComponent extends PoolCollections implements OnInit, OnD
     }
 
     const queryset = {
+      offset_vms: this.offset,
+      limit_vms: this.limit
+    }
+
+    this.queryset = queryset;
+
+    /* const queryset = {
       user_power_state: this.user_power_state.value
     };
 
     if (this.user_power_state.value === false) {
       delete queryset['user_power_state'];
-    }
+    } */
 
     this.host = false;
-    this.subPool = this.poolService.getPool(this.idPool)
+    this.subPool = this.poolService.getPool(this.idPool, queryset)
       .valueChanges.pipe(map((data: any) => data.data['pool']))
       .subscribe((data) => {
         this.pool = data;
-
+        this.vm_amount = data.vm_amount;
+        this.users_count = data.users_count;
         this.host = true;
       },
       () => {
         this.host = true;
       });
+  }
+
+  public toPage(message: any): void {
+    this.offset = message.offset;
+    this.getPool();
   }
 
   public removePool(): void {
@@ -170,7 +189,8 @@ export class PoolDetailsComponent extends PoolCollections implements OnInit, OnD
       data: {
         idPool: this.idPool,
         namePool: this.pool.verbose_name,
-        typePool: this.typePool
+        typePool: this.typePool,
+        queryset: this.queryset
       }
     });
   }
@@ -182,7 +202,8 @@ export class PoolDetailsComponent extends PoolCollections implements OnInit, OnD
       data: {
         idPool: this.idPool,
         namePool: this.pool.verbose_name,
-        typePool: this.typePool
+        typePool: this.typePool,
+        queryset: this.queryset
       }
     });
   }
@@ -196,7 +217,8 @@ export class PoolDetailsComponent extends PoolCollections implements OnInit, OnD
         namePool: this.pool.verbose_name,
         idResourcePool: this.pool.resource_pool_id,
         idController: this.pool.controller.id,
-        typePool: this.typePool
+        typePool: this.typePool,
+        queryset: this.queryset
       }
     });
   }
@@ -209,7 +231,8 @@ export class PoolDetailsComponent extends PoolCollections implements OnInit, OnD
         idPool: this.idPool,
         namePool: this.pool.verbose_name,
         vms: this.pool.vms,
-        typePool: this.typePool
+        typePool: this.typePool,
+        queryset: this.queryset
       }
     });
   }

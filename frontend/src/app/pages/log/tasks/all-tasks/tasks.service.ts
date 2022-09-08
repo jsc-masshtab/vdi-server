@@ -42,6 +42,7 @@ export class TasksService {
                     $status: TaskStatus,
                     $ordering:ShortString
                 ){
+                    tasks_count(status: $status, task_type: $task_type)
                     tasks(
                         limit: $limit,
                         offset: $offset,

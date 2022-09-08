@@ -15,6 +15,7 @@ interface IData {
   idResourcePool: string;
   idController: string;
   typePool: string;
+  queryset: any;
 }
  
 @Component({
@@ -82,7 +83,7 @@ export class AddVMStaticPoolComponent implements OnInit, OnDestroy {
       
       this.poolService[method](this.data.idPool, selectedVms).pipe(takeUntil(this.destroy$)).subscribe((res) => {
         if (res) {
-          this.poolService.getPool(this.data.idPool).refetch();
+          this.poolService.getPool(this.data.idPool, this.data.queryset).refetch();
           this.waitService.setWait(false);
           this.dialogRef.close();
         }

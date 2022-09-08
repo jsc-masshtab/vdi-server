@@ -17,19 +17,32 @@ export class TemplatesService {
 
     public getAllTemplates(filter?, refresh?): QueryRef<any, any> {
 
-        let query: string = `query resources($ordering:ShortString) {
-            templates(ordering: $ordering) {
-                id
-                verbose_name
-                status
-                controller {
-                    id
-                    verbose_name
+        let query: string = `
+            query resources(
+                $limit: Int,
+                $offset: Int,
+                $ordering:ShortString
+            ){
+                templates_with_count(
+                    limit: $limit,
+                    offset: $offset,
+                    ordering: $ordering
+                ){
+                    count
+                    vms {
+                        id
+                        verbose_name
+                        status
+                        controller {
+                            id
+                            verbose_name
+                        }
+                    }
                 }
             }
-        }`
+        `
 
-        if (filter) {
+        if (filter.controller_id) {
             query = `query controllers($controller_id:UUID, $cluster_id: UUID, $resource_pool_id: UUID, $node_id: UUID, $ordering:ShortString) {
                 controller(id_:$controller_id) {
                     id
@@ -41,18 +54,6 @@ export class TemplatesService {
                         }
                         id
                         status
-                    }
-                }
-            }`
-        } else if (refresh && !filter) {
-            query = `query resources($ordering:ShortString, $refresh: Boolean) {
-                templates(ordering: $ordering, refresh: $refresh) {
-                    id
-                    verbose_name
-                    status
-                    controller {
-                        id
-                        verbose_name
                     }
                 }
             }`
