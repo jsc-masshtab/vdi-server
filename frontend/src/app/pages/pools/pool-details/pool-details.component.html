@@ -94,24 +94,32 @@
                 <ng-container *ngIf="typePool === 'automated'">
                     <vdi-table-into *ngIf="menuActive === 'info'" [item]="pool" [collection]="collectionDetailsAutomated" (action)="actionEdit($event)"></vdi-table-into>
                     <vdi-table-component *ngIf="menuActive === 'vms'" [data]="pool?.vms" [collection]="collectionVmsAutomated" entity="vm" (clickRowData)="clickVm($event)" (sortListNow)="sortVms($event)" cursor="true"></vdi-table-component>
+                    <vdi-pagination *ngIf="menuActive === 'vms'" [count]="vm_amount" [limit]="limit" [offset]="offset" (action)="toPage($event)"></vdi-pagination>
                 </ng-container>
 
                 <ng-container *ngIf="typePool === 'static'">
                     <vdi-table-into *ngIf="menuActive === 'info'" [item]="pool" [collection]="collectionDetailsStatic" (action)="actionEdit($event)"></vdi-table-into>
                     <vdi-table-component *ngIf="menuActive === 'vms'" [data]="pool?.vms" [collection]="collectionVmsStatic" entity="vm" (clickRowData)="clickVm($event)" (sortListNow)="sortVms($event)" cursor="true"></vdi-table-component>
+                    <vdi-pagination *ngIf="menuActive === 'vms'" [count]="vm_amount" [limit]="limit" [offset]="offset" (action)="toPage($event)"></vdi-pagination>
                 </ng-container>
 
                 <ng-container *ngIf="typePool === 'rds'">
                     <vdi-table-into *ngIf="menuActive === 'info'" [item]="pool" [collection]="collectionDetailsRds" (action)="actionEdit($event)"></vdi-table-into>
                     <vdi-table-component *ngIf="menuActive === 'vms'" [data]="pool?.vms" [collection]="collectionVmsRds" entity="vm" (clickRowData)="clickVm($event)" (sortListNow)="sortVms($event)" cursor="true"></vdi-table-component>
+                    <vdi-pagination *ngIf="menuActive === 'vms'" [count]="vm_amount" [limit]="limit" [offset]="offset" (action)="toPage($event)"></vdi-pagination>
                 </ng-container>
 
                 <ng-container *ngIf="typePool === 'guest'">
                     <vdi-table-into *ngIf="menuActive === 'info'" [item]="pool" [collection]="collectionDetailsGuest" (action)="actionEdit($event)"></vdi-table-into>
                     <vdi-table-component *ngIf="menuActive === 'vms'" [data]="pool?.vms" [collection]="collectionVmsGuest" entity="vm" (clickRowData)="clickVm($event)" (sortListNow)="sortVms($event)" cursor="true"></vdi-table-component>
+                    <vdi-pagination *ngIf="menuActive === 'vms'" [count]="vm_amount" [limit]="limit" [offset]="offset" (action)="toPage($event)"></vdi-pagination>
                 </ng-container>
 
-                <vdi-table-component *ngIf="menuActive === 'users'" [data]="pool?.users" [collection]="collectionUsers" (sortListNow)="sortUsers($event)"></vdi-table-component>
+                <ng-container *ngIf="menuActive === 'users'">
+                    <vdi-table-component [data]="pool?.users" [collection]="collectionUsers" (sortListNow)="sortUsers($event)"></vdi-table-component>
+                    <vdi-pagination [count]="users_count" [limit]="limit" [offset]="offset" (action)="toPage($event)"></vdi-pagination>
+                </ng-container>
+                
                 <vdi-table-component *ngIf="menuActive === 'groups'" [data]="pool?.assigned_groups" [collection]="collectionGroups" (sortListNow)="sortGroups($event)"></vdi-table-component>
             </div>
         </div>

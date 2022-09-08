@@ -205,6 +205,8 @@
             [data]="data?.vm?.assigned_users" 
             [collection]="collectionUsers">
           </vdi-table-component>
+
+          <vdi-pagination [count]="data?.vm?.assigned_users_count" [limit]="limit" [offset]="offset" (action)="toPage($event)"></vdi-pagination>
         </ng-container>
         
         <ng-container *ngIf="menuActive === 'events'">

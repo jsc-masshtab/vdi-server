@@ -17,23 +17,35 @@ export class DatapoolsService {
 
     public getAllDatapools(filter?, refresh?): QueryRef<any, any> {
 
-        let query: string = `query resources($ordering:ShortString) {
-                datapools(ordering: $ordering) {
-                    id
-                    used_space
-                    free_space
-                    status
-                    type
-                    verbose_name
-                    controller {
+        let query: string = `
+            query resources(
+                $limit: Int,
+                $offset: Int,
+                $ordering:ShortString
+            ){
+                datapools_with_count(
+                    limit: $limit,
+                    offset: $offset,
+                    ordering: $ordering
+                ){
+                    count
+                    datapools {
                         id
+                        used_space
+                        free_space
+                        status
+                        type
                         verbose_name
+                        controller {
+                            id
+                            verbose_name
+                        }
                     }
                 }
             }
         `
 
-        if (filter) {
+        if (filter.controller_id) {
             query = `query controllers($controller_id:UUID, $cluster_id: UUID, $resource_pool_id: UUID, $node_id: UUID, $ordering:ShortString) {
                 controller(id_:$controller_id) {
                     id
@@ -47,21 +59,6 @@ export class DatapoolsService {
                     }
                 }
             }`
-        } else if (refresh && !filter) {
-            query = `query resources($ordering:ShortString, $refresh: Boolean) {
-                  datapools(ordering: $ordering, refresh: $refresh) {
-                      id
-                      used_space
-                      free_space
-                      status
-                      type
-                      verbose_name
-                      controller {
-                          id
-                          verbose_name
-                      }
-                  }
-              }`
         }
 
         return  this.service.watchQuery({

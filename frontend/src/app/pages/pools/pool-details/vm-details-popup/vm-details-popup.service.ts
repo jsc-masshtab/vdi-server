@@ -71,6 +71,7 @@ export class VmDetailsPopupService {
                 id
                 verbose_name
               }
+              assigned_users_count
               assigned_users {
                 id
                 username

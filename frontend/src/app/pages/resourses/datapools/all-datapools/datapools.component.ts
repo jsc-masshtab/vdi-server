@@ -9,17 +9,19 @@ import { IParams } from '@shared/types';
 import { DatapoolsService } from './datapools.service';
 import { WebsocketService } from '@app/core/services/websock.service';
 
-
 @Component({
   selector: 'vdi-datapools',
   templateUrl: './datapools.component.html',
   styleUrls: ['./datapools.component.scss']
 })
-
-
 export class DatapoolsComponent extends DetailsMove implements OnInit, OnDestroy {
 
   @Input() filter: object
+
+  public limit = 100;
+  public count = 0;
+  public offset = 0;
+  public queryset: any;
 
   public refresh: boolean = false
 
@@ -98,26 +100,44 @@ export class DatapoolsComponent extends DetailsMove implements OnInit, OnDestroy
     });
   }
 
+  public toPage(message: any): void {
+    this.offset = message.offset;
+    this.getDatapools();
+  }
+
   public getDatapools(refresh?) {
     if (this.sub) {
       this.sub.unsubscribe();
     }
+
+    const queryset = {
+      offset: this.offset,
+      limit: this.limit
+    }
+
+    this.queryset = queryset;
+
     this.waitService.setWait(true);
 
     let filtered = (data) => {
       if ((this.filter && !this.refresh) || (this.filter && this.refresh)) {
-        return data.data.controller.data_pools
+        return data.data.controller
       } else {
-        return data.data.datapools
+        return data.data.datapools_with_count
       }
     }
 
     if (refresh) {
       this.refresh = refresh
     }
-    this.sub = this.service.getAllDatapools(this.filter, this.refresh).valueChanges.pipe(map(data => filtered(data)))
+
+    this.sub = this.service.getAllDatapools({
+      ...this.filter,
+      ...queryset
+    }, this.refresh).valueChanges.pipe(map(data => filtered(data)))
       .subscribe( (data) => {
-        this.datapools = data;
+        this.count = data.count;
+        this.datapools = data.datapools || data.data_pools;
         this.waitService.setWait(false);
       });
   }

@@ -15,11 +15,14 @@ import { WebsocketService } from '@app/core/services/websock.service';
   templateUrl: './vms.component.html',
   styleUrls: ['./vms.component.scss']
 })
-
-
 export class VmsComponent extends DetailsMove implements OnInit, OnDestroy {
 
   @Input() filter: object
+
+  public limit = 100;
+  public count = 0;
+  public offset = 0;
+  public queryset: any;
 
   public refresh: boolean = false
 
@@ -90,34 +93,43 @@ export class VmsComponent extends DetailsMove implements OnInit, OnDestroy {
     });
   }
 
+  public toPage(message: any): void {
+    this.offset = message.offset;
+    this.getAllVms();
+  }
+
   public getAllVms(refresh?) {
     if (this.sub) {
       this.sub.unsubscribe();
     }
 
     const queryset = {
-      user_power_state: this.user_power_state.value
-    };
-
-    if (this.user_power_state.value === false) {
-      delete queryset['user_power_state'];
+      offset: this.offset,
+      limit: this.limit
     }
+
+    this.queryset = queryset;
 
     this.waitService.setWait(true);
 
     let filtered = (data) => {
       if ((this.filter && !this.refresh) || (this.filter && this.refresh)) {
-        return data.data.controller.vms
+        return data.data.controller
       } else {
-        return data.data.vms
+        return data.data.vms_with_count
       }
     }
 
     if (refresh) {
       this.refresh = refresh
     }
-    this.sub = this.service.getAllVms(this.filter, this.refresh).valueChanges.pipe(map(data => filtered(data))).subscribe((data) => {
-      this.vms = data;
+
+    this.sub = this.service.getAllVms({
+      ...this.filter,
+      ...queryset
+    }, this.refresh).valueChanges.pipe(map(data => filtered(data))).subscribe((data) => {
+      this.count = data.count;
+      this.vms = data.vms;
       this.waitService.setWait(false);
     });
   }

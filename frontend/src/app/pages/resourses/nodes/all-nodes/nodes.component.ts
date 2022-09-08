@@ -14,11 +14,14 @@ import { NodesService } from './nodes.service';
   templateUrl: './nodes.component.html',
   styleUrls: ['./nodes.component.scss']
 })
-
-
 export class NodesComponent extends DetailsMove implements OnInit, OnDestroy {
 
   @Input() filter: object
+
+  public limit = 100;
+  public count = 0;
+  public offset = 0;
+  public queryset: any;
 
   public refresh: boolean = false
 
@@ -103,26 +106,44 @@ export class NodesComponent extends DetailsMove implements OnInit, OnDestroy {
     });
   }
 
+  public toPage(message: any): void {
+    this.offset = message.offset;
+    this.getNodes();
+  }
+
   public getNodes(refresh?) {
     if (this.sub) {
       this.sub.unsubscribe();
     }
+
+    const queryset = {
+      offset: this.offset,
+      limit: this.limit
+    }
+
+    this.queryset = queryset;
+
     this.waitService.setWait(true);
 
     let filtered = (data) => {
       if ((this.filter && !this.refresh) || (this.filter && this.refresh)) {
-        return data.data.controller.nodes
+        return data.data.controller
       } else {
-        return data.data.nodes
+        return data.data.nodes_with_count
       }
     }
 
     if (refresh) {
       this.refresh = refresh
     }
-    this.sub = this.service.getAllNodes(this.filter, this.refresh).valueChanges.pipe(map(data => filtered(data)))
+
+    this.sub = this.service.getAllNodes({
+      ...this.filter,
+      ...queryset
+    }, this.refresh).valueChanges.pipe(map(data => filtered(data)))
       .subscribe((data) => {
-        this.nodes = data;
+        this.count = data.count;
+        this.nodes = data.nodes;
         this.waitService.setWait(false);
       });
   }

@@ -10,17 +10,19 @@ import { IParams } from '@shared/types';
 
 import { TemplatesService } from './templates.service';
 
-
 @Component({
   selector: 'vdi-templates',
   templateUrl: './templates.component.html',
   styleUrls: ['./templates.component.scss']
 })
-
-
 export class TemplatesComponent extends DetailsMove implements OnInit, OnDestroy {
 
   @Input() filter: object
+
+  public limit = 100;
+  public count = 0;
+  public offset = 0;
+  public queryset: any;
 
   public refresh: boolean = false
 
@@ -60,25 +62,42 @@ export class TemplatesComponent extends DetailsMove implements OnInit, OnDestroy
     this.getTemplates();
   }
 
+  public toPage(message: any): void {
+    this.offset = message.offset;
+    this.getTemplates();
+  }
+
   public getTemplates(refresh?) {
     if (this.sub) {
       this.sub.unsubscribe();
     }
+
+    const queryset = {
+      offset: this.offset,
+      limit: this.limit
+    }
+
+    this.queryset = queryset;
+
     this.waitService.setWait(true);
 
     let filtered = (data) => {
       if ((this.filter && !this.refresh) || (this.filter && this.refresh)) {
-        return data.data.controller.templates
+        return data.data.controller
       } else {
-        return data.data.templates
+        return data.data.templates_with_count
       }
     }
 
     if (refresh) {
       this.refresh = refresh
     }
-    this.sub = this.service.getAllTemplates(this.filter, this.refresh).valueChanges.pipe(map(data => filtered(data))).subscribe((data) => {
-      this.templates = data;
+    this.sub = this.service.getAllTemplates({
+      ...this.filter,
+      ...queryset
+    }, this.refresh).valueChanges.pipe(map(data => filtered(data))).subscribe((data) => {
+      this.count = data.count;
+      this.templates = data.vms || data.templates;
       this.waitService.setWait(false);
     });
   }

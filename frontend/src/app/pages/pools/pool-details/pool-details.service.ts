@@ -77,7 +77,7 @@ export class PoolDetailsService {
         });
     }
 
-    public getPool(pool_id: string | number): QueryRef<any, any> {
+    public getPool(pool_id: string | number, params?): QueryRef<any, any> {
 
         return this.service.watchQuery({
             query: gql` query 
@@ -85,12 +85,16 @@ export class PoolDetailsService {
                     $pool_id: ShortString, 
                     $ordering_vms: ShortString, 
                     $ordering_users: ShortString, 
-                    $ordering_groups: ShortString
+                    $ordering_groups: ShortString,
+                    $limit_vms: Int,
+                    $offset_vms: Int,
                 ){
                     pool(
                         pool_id: $pool_id
                     ){
                         vms(
+                            limit: $limit_vms,
+                            offset: $offset_vms,
                             ordering: $ordering_vms
                         ){
                             id
@@ -116,6 +120,8 @@ export class PoolDetailsService {
                             address
                             verbose_name
                         }
+
+                        users_count
                         
                         users(ordering: $ordering_users) {
                             id
@@ -169,6 +175,7 @@ export class PoolDetailsService {
                         assigned_connection_types
                         
                         vm_action_upon_user_disconnect
+                        vm_amount
 
                         status
                         creator
@@ -181,7 +188,8 @@ export class PoolDetailsService {
                 pool_id,
                 ordering_vms: this.orderingVms.nameSort,
                 ordering_users: this.orderingUsers.nameSort,
-                ordering_groups: this.orderingGroups.nameSort
+                ordering_groups: this.orderingGroups.nameSort,
+                ...params
             }
         });
     }
