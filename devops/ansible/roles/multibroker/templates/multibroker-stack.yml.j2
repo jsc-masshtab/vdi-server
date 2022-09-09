@@ -31,7 +31,7 @@ services:
       - PYTHONDONTWRITEBYTECODE=1
       - PYTHONPYCACHEPREFIX=/tmp
       - VDI_BROKER_DB_HOST=vdi-postgres
-    command: sh -c "sleep 5 && cd common/migrations && alembic upgrade head && exit 0"
+    command: sh -c "cd common/migrations && alembic upgrade head || while [ $$? -ne 0 ]; do alembic upgrade head; done"
     depends_on:
       - vdi-postgres
   vdi-tornado:
