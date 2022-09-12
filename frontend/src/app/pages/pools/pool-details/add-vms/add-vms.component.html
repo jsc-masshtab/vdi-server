@@ -7,7 +7,7 @@
 
   <div class="form-fields">
     <label class="field" title="Отображаются только ВМ, имеющие виртуальный диск" >
-      <ng-container *ngIf="vms$ | async as vms; else loading">
+      <ng-container *ngIf="vms.length; else loading">
         <mat-form-field>
             <mat-label *ngIf="vms.length">Выберите свободные ВМ</mat-label>
             <mat-label *ngIf="!vms.length">- нет виртуальных машин -</mat-label>
@@ -21,6 +21,12 @@
                   Очистить выбор
                 </button>
               </mat-option>
+
+              <mat-option class="mat-filter-option" disabled="disabled">
+                <mat-label>Поиск: </mat-label>
+                <input matInput [formControl]="search" placeholder="">
+              </mat-option>
+
               <mat-option *ngFor="let vm of vms" [value]="vm">
                 {{vm.verbose_name}}
               </mat-option>

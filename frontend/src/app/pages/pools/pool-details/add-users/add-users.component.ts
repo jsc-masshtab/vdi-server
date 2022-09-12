@@ -1,8 +1,9 @@
 import { Component, Inject, OnInit, OnDestroy } from '@angular/core';
+import { FormControl, Validators } from '@angular/forms';
 import { MatDialogRef } from '@angular/material/dialog';
 import { MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
+import { debounceTime, map, takeUntil } from 'rxjs/operators';
 
 import { WaitService } from '../../../../core/components/wait/wait.service';
 import { PoolDetailsService } from '../pool-details.service';
@@ -21,64 +22,75 @@ interface IData {
 
 export class AddUsersPoolComponent implements OnInit, OnDestroy {
 
-  public pendingUsers: boolean = false;
-  public users: [] = [];
-  private idUsers: [] = [];
+  public isInvalid: boolean = false;
+  public isPending: boolean = false;
+
+  public users: any[] = [];
+  public usersInput = new FormControl([], Validators.required);
+
+  search = new FormControl('');
+
   private destroy: Subject<any> = new Subject<any>();
-  public valid: boolean = true;
 
-  public selected_users: string[] = [];
-
-  constructor(private waitService: WaitService,
-              private poolService: PoolDetailsService,
-              private dialogRef: MatDialogRef<AddUsersPoolComponent>,
-              @Inject(MAT_DIALOG_DATA) public data: IData
-  ) { }
+  constructor(
+    private waitService: WaitService,
+    private poolService: PoolDetailsService,
+    private dialogRef: MatDialogRef<AddUsersPoolComponent>,
+    @Inject(MAT_DIALOG_DATA) public data: IData
+  ) {}
 
   ngOnInit() {
-    this.getUsers();
+    this.load();
+
+    this.search.valueChanges.pipe(
+      debounceTime(1000)
+    ).subscribe((value) => {
+      this.load(value)
+    })
   }
 
+  load(value = '') {
 
-  public search(name) {
-    let filter = String(name).toLowerCase();
-    this.selected_users = this.users.filter(
-      (user: any) => user.username.toLowerCase().startsWith(filter) || this.idUsers.some(selected => selected === user.id)
-    );
+    const props = {};
+
+    if (value) {
+      props['username'] = value;
+    }
+
+    this.isPending = true;
+
+    this.poolService.getAllUsersNoEntitleToPool(this.data.idPool, props).valueChanges.pipe(map((data: any) => data.data['pool']['users'])).subscribe((res) => {
+      this.users = [...res] || []
+      this.isPending = false;
+    });
   }
 
   public send() {
-    if (this.idUsers.length) {
-      this.waitService.setWait(true);
-      this.poolService.entitleUsersToPool(this.data.idPool, this.idUsers).pipe(takeUntil(this.destroy)).subscribe((res) => {
-        if (res) {
-          this.poolService.getPool(this.data.idPool, this.data.queryset).refetch();
-          this.waitService.setWait(false);
-          this.dialogRef.close();
-        }
-      });
-    } else {
-      this.valid = false;
+
+    if (!this.usersInput.valid) {
+      this.isInvalid = true;
+      return;
     }
+
+    const data = this.usersInput.value;
+
+    this.waitService.setWait(true);
+    
+    this.poolService.entitleUsersToPool(this.data.idPool, data).pipe(takeUntil(this.destroy)).subscribe((res) => {
+      if (res) {
+        this.poolService.getPool(this.data.idPool, this.data.queryset).refetch();
+        this.waitService.setWait(false);
+        this.dialogRef.close();
+      }
+    });
   }
 
-  private getUsers() {
-    this.pendingUsers = true;
-    this.poolService.getAllUsersNoEntitleToPool(this.data.idPool).pipe(takeUntil(this.destroy))
-      .subscribe((data) => {
-        this.users = data;
-        this.selected_users = this.users;
-        this.pendingUsers = false;
-      },
-        () => {
-          this.users = [];
-          this.pendingUsers = false;
-        });
+  public selectAll(selected: any[]): void {
+    this.usersInput.setValue(selected.map((item: any) => item.id));
   }
 
-  public selectUser(value: string[]) {
-    this.idUsers = value['value'];
-    this.valid = true;
+  public deselectAll() {
+    this.usersInput.setValue([]);
   }
 
   ngOnDestroy() {

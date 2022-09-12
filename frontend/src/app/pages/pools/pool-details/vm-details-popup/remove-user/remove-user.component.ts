@@ -1,20 +1,27 @@
-import { Component, Inject, OnInit } from '@angular/core';
+import { Component, Inject, OnDestroy, OnInit } from '@angular/core';
 import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { FormControl } from '@angular/forms';
+import { FormControl, Validators } from '@angular/forms';
 import { WaitService } from '@core/components/wait/wait.service';
 import { VmDetailsPopupService } from '../vm-details-popup.service';
+import { Subject } from 'rxjs';
+import { debounceTime, map } from 'rxjs/operators';
 
 @Component({
   selector: 'vdi-remove-user-vm',
   templateUrl: './remove-user.component.html'
 })
 
-export class RemoveUserVmComponent implements OnInit {
+export class RemoveUserVmComponent implements OnInit, OnDestroy {
 
-  public users = new FormControl([]);
-  public valid: boolean = true;
+  public isInvalid: boolean = false;
+  public isPending: boolean = false;
 
-  public usersList: any[] = []
+  public users: any[] = [];
+  public usersInput = new FormControl([], Validators.required);
+
+  search = new FormControl('');
+
+  private destroy: Subject<any> = new Subject<any>();
 
   constructor(
     private waitService: WaitService,
@@ -25,25 +32,60 @@ export class RemoveUserVmComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    const assignedList = this.data.vm.assigned_users || [];
-    this.usersList = [ ...assignedList ];
+    this.load();
+
+    this.search.valueChanges.pipe(
+      debounceTime(1000)
+    ).subscribe((value) => {
+      this.load(value)
+    })
+  }
+
+  load(value = '') {
+
+    const props = {};
+
+    if (value) {
+      props['username'] = value;
+    }
+
+    this.isPending = true;
+
+    this.service.getAssignedUsersFromVm(props).valueChanges.pipe(map((data: any) => data.data['pool']['vm'])).subscribe((res) => {
+      this.users = [...res.assigned_users] || []
+      this.isPending = false;
+    });
   }
 
   public send() {
 
-    const users = this.users.value;
-
-    if (users.length) {
-      this.waitService.setWait(true);
-      this.service.freeVmFromUser(this.data.vm.id, users).subscribe((res) => {
-        if (res) {
-          this.service.getVm().refetch();
-          this.waitService.setWait(false);
-          this.dialogRef.close();
-        }
-      });
-    } else {
-      this.valid = false;
+    if (!this.usersInput.valid) {
+      this.isInvalid = true;
+      return;
     }
+
+    const data = this.usersInput.value;
+
+    this.waitService.setWait(true);
+
+    this.service.freeVmFromUser(this.data.vm.id, data).subscribe((res) => {
+      if (res) {
+        this.service.getVm().refetch();
+        this.waitService.setWait(false);
+        this.dialogRef.close();
+      }
+    });
+  }
+
+  public selectAll(selected: any[]): void {
+    this.usersInput.setValue(selected.map((item: any) => item.id));
+  }
+
+  public deselectAll() {
+    this.usersInput.setValue([]);
+  }
+
+  ngOnDestroy() {
+    this.destroy.next(null);
   }
 }

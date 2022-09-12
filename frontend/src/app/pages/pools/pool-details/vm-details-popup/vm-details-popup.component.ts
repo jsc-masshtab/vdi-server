@@ -46,6 +46,7 @@ export class VmDetalsPopupComponent extends VmCollections implements OnInit, OnD
   public vnc: any;
   public spice: any;
 
+  public limit = 100;
   public offset = 0;
 
   vm_status = new FormControl(false);
