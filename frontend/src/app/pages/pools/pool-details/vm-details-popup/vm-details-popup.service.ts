@@ -156,6 +156,76 @@ export class VmDetailsPopupService {
         offset
       }
     });
+  } 
+
+  getPossibleUsersFromVm(props: any) {
+    return this.service.watchQuery({
+      query: gql` query 
+        pools(
+          $pool_id: ShortString, 
+          $username: ShortString, 
+          $vm_id: UUID, 
+          $controller_address: UUID
+        ){
+          pool(
+            pool_id: $pool_id
+          ){
+            vm(
+              vm_id: $vm_id, 
+              controller_id: 
+              $controller_address
+            ){
+              possible_users(username: $username){
+                id
+                username
+              }
+            }
+          }
+        }
+      `,
+      variables: {
+        method: 'GET',
+        pool_id: this.data.idPool,
+        vm_id: this.data.vmActive,
+        controller_address: this.data.controller_id,
+        ...props
+      }
+    });
+  }
+
+  getAssignedUsersFromVm(props: any) {
+    return this.service.watchQuery({
+      query: gql` query 
+        pools(
+          $pool_id: ShortString, 
+          $username: ShortString, 
+          $vm_id: UUID, 
+          $controller_address: UUID
+        ){
+          pool(
+            pool_id: $pool_id
+          ){
+            vm(
+              vm_id: $vm_id, 
+              controller_id: 
+              $controller_address
+            ){
+              assigned_users(username: $username){
+                id
+                username
+              }
+            }
+          }
+        }
+      `,
+      variables: {
+        method: 'GET',
+        pool_id: this.data.idPool,
+        vm_id: this.data.vmActive,
+        controller_address: this.data.controller_id,
+        ...props
+      }
+    });
   }
 
   public getSpice(pool_id: string = this.data.idPool, vm_id: string = this.data.vmActive, controller_address: string = this.data.controller_id): QueryRef<any, any> {

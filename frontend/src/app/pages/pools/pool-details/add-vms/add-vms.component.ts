@@ -1,8 +1,8 @@
 import { Component, Inject, OnInit, OnDestroy } from '@angular/core';
 import { MatDialogRef } from '@angular/material/dialog';
 import { MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { Observable, Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
+import { Subject } from 'rxjs';
+import { debounceTime, map, takeUntil } from 'rxjs/operators';
 import { trigger, transition, style, animate } from '@angular/animations';
 
 import { WaitService } from '@core/components/wait/wait.service';
@@ -41,8 +41,10 @@ export class AddVMStaticPoolComponent implements OnInit, OnDestroy {
   public pendingVms: boolean = false;
   public checkValid: boolean = false;
 
-  public vms$: Observable<[]>;
+  public vms: any[] = [];
   public vmsInput = new FormControl([], Validators.required);
+
+  search = new FormControl('');
 
   private destroy$: Subject<any> = new Subject<any>();
 
@@ -54,7 +56,26 @@ export class AddVMStaticPoolComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit() {
-    this.vms$ = this.poolService.getAllVms(this.data.idController, this.data.idResourcePool);
+    this.load();
+
+    this.search.valueChanges.pipe(
+      debounceTime(1000)
+    ).subscribe((value) => {
+      this.load(value)
+    })
+  }
+
+  load(value = '') {
+
+    const props = {};
+    
+    if (value) {
+      props['verbose_name'] = value;
+    }
+    
+    this.poolService.getAllVms(this.data.idController, this.data.idResourcePool, props).valueChanges.pipe(map((data: any) => data.data.controller['vms'])).subscribe((res) => {
+      this.vms = [...res]
+    });
   }
 
   public send() {
