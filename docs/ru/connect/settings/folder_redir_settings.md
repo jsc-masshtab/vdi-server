@@ -19,6 +19,7 @@
 
 ### На ВМ установлен файловый менеджер без поддержки технологии WebDAV (например fly-fm)
 
+####Вариант 1
 - В гостевой ВМ установить **spice-webdavd service** командой 
       `sudo apt install spice-webdavd`.
 - Запустить сервис командой `sudo spice-webdavd -p 9843`.
@@ -30,6 +31,23 @@
 - Монтировать папку: `sudo mount -t davfs http://127.0.0.1:9843 /home/m`
 - В папке /home/m отобразится содержимое проброшенной папки.
 
+####Вариант 2
+- Установить файловый менеджер nautilus.
+- Отключить IPv6, выполнив в терминале команды:
+
+```
+sudo sysctl -w net.ipv6.conf.all.disable_ipv6=1
+```
+
+```
+sudo sysctl -w net.ipv6.conf.default.disable_ipv6=1
+```
+
+```
+sudo sysctl -w net.ipv6.conf.lo.disable_ipv6=1
+```
+
+- Далее следовать инструкции для файлового менеджера с поддержкой технологии WebDAV.
 
 ##VeiL Connect запущен на хосте с Linux/Windows. На ВМ установлен Windows
 
