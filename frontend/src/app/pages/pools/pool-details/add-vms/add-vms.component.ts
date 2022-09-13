@@ -112,7 +112,7 @@ export class AddVMStaticPoolComponent implements OnInit, OnDestroy {
     }
   }
 
-  public selectAllVms(vms: []): void { 
+  public selectAllVms(vms: any[]): void { 
     this.vmsInput.setValue(vms);
   }
 

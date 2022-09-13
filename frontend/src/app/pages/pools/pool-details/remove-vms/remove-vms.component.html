@@ -11,7 +11,7 @@
         <mat-label *ngIf="vms.length">Выберите ВМ для удаления</mat-label>
         <mat-label *ngIf="!vms.length">- нет виртуальных машин -</mat-label>
         <mat-select  formControlName="vmsInput" multiple="true">
-          <mat-option *ngIf="vms.length" disabled="disabled" class="mat-filter-option">
+          <mat-option disabled="disabled" class="mat-filter-option">
             <button type="button" class="mat-form-btn" (click)="selectAllVms()">
               Выбрать все
             </button>
