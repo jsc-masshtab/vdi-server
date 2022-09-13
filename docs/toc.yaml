@@ -77,6 +77,7 @@ nav:
       - Создание ВМ в ECP VeiL: broker/faq/install/install_step2.md
       - Монтирование ISO в ECP VeiL: broker/faq/install/install_step3.md
       - Установка VeiL Broker: broker/faq/install/install_step4.md
+      - Установка мультиброкера: broker/faq/install/install_multibroker.md
     - Обновление VeiL Broker:
       - Обшие сведения: broker/faq/update/index.md
       - Обновление с внешнего репозитория: broker/faq/update/update_repo.md
