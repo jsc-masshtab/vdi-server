@@ -7,36 +7,34 @@
 
   <div class="form-fields">
     <label class="field" title="Отображаются только ВМ, имеющие виртуальный диск" >
-      <ng-container *ngIf="vms.length; else loading">
         <mat-form-field>
-            <mat-label *ngIf="vms.length">Выберите свободные ВМ</mat-label>
-            <mat-label *ngIf="!vms.length">- нет виртуальных машин -</mat-label>
-            <mat-select [formControl]="vmsInput" multiple="true">
-              <mat-option disabled="disabled" class="mat-filter-option" >
-                <button type="button" class="mat-form-btn" (click)="selectAllVms(vms)">
-                  Выбрать все
-                </button>
-    
-                <button type="button" class="mat-form-btn" (click)="deselectAllVms()">
-                  Очистить выбор
-                </button>
-              </mat-option>
+          <mat-label *ngIf="vms.length">Выберите свободные ВМ</mat-label>
+          <mat-label *ngIf="!vms.length">- нет виртуальных машин -</mat-label>
+          <mat-select [formControl]="vmsInput" multiple="true">
+            <mat-option disabled="disabled" class="mat-filter-option" >
+              <button type="button" class="mat-form-btn" (click)="selectAllVms(vms)">
+                Выбрать все
+              </button>
+  
+              <button type="button" class="mat-form-btn" (click)="deselectAllVms()">
+                Очистить выбор
+              </button>
+            </mat-option>
 
-              <mat-option class="mat-filter-option" disabled="disabled">
-                <mat-label>Поиск: </mat-label>
-                <input matInput [formControl]="search" placeholder="">
-              </mat-option>
+            <mat-option class="mat-filter-option" disabled="disabled">
+              <mat-label>Поиск: </mat-label>
+              <input matInput [formControl]="search" placeholder="">
+            </mat-option>
 
-              <mat-option *ngFor="let vm of vms" [value]="vm">
-                {{vm.verbose_name}}
-              </mat-option>
-            </mat-select>
-          </mat-form-field>
+            <mat-option *ngFor="let vm of vms" [value]="vm">
+              {{vm.verbose_name}}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
 
-          <ng-container *ngIf="vmsInput.hasError('required') && checkValid">
-            <ng-container *ngTemplateOutlet="errorTemp"></ng-container>
-          </ng-container>
-      </ng-container>
+        <ng-container *ngIf="vmsInput.hasError('required') && checkValid">
+          <ng-container *ngTemplateOutlet="errorTemp"></ng-container>
+        </ng-container>
     </label>
   </div>
 
