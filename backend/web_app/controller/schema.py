@@ -318,6 +318,7 @@ class ControllerType(graphene.ObjectType, ControllerFetcher):
     ):
         """В self прилетает инстанс модели контроллера."""
         controller = await Controller.get(self.id)
+        verbose_name = None if verbose_name == "" else verbose_name  # для обхода бага VAC
         paginator = VeilRestPaginator(name=verbose_name, ordering=ordering, limit=limit, offset=offset)
         vms = await Vm.query.gino.all()
         # Прерываем выполнение при отсутствии клиента
