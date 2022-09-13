@@ -251,7 +251,7 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
                 resources_list.append(resource)
 
         if not ordering:
-            resources_list.sort(key=lambda data: data["verbose_name"], reverse=True)
+            resources_list.sort(key=lambda data: data["verbose_name"] or "no name", reverse=True)
 
         if ordering == "controller":
             resources_list.sort(key=lambda data: data["controller"]["verbose_name"])
