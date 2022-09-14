@@ -3,7 +3,7 @@ import { Component, OnInit, OnDestroy, Inject } from '@angular/core';
 import { FormBuilder, FormGroup, FormControl, Validators } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { Subscription } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { debounceTime, map } from 'rxjs/operators';
 
 import { WaitService } from '@core/components/wait/wait.service';
 
@@ -46,6 +46,7 @@ export class PoolAddComponent implements OnInit, OnDestroy {
   public guestPool: FormGroup;
   public rdsPool: FormGroup;
 
+  public search = new FormControl('');
   public warming_vm: FormControl = new FormControl(false);
   public warming_all: boolean = true;
 
@@ -64,9 +65,26 @@ export class PoolAddComponent implements OnInit, OnDestroy {
   ngOnInit() {
     if (this.poolSettings){
       this.initFormsForCopy();
-    }else{
+    } else{
       this.getAllAuthenticationDirectory();
     }
+
+    this.search.valueChanges.pipe(
+      debounceTime(1000)
+    ).subscribe((value) => {
+
+      const props = {};
+
+      if (value) {
+        props['verbose_name'] = value;
+      }
+
+      this.getData('vms', {
+        id_: this.sharedData.get('controller_id').value,
+        resource_pool_id: this.sharedData.get('resource_pool_id').value,
+        ...props
+      });
+    })
   }
 
   private totalSizeValidator() {
