@@ -164,7 +164,7 @@
 
   <a class="top-menu-item item-tree"
     [@fadeInOut]
-    *ngIf="toggleSetting"
+    *ngIf="toggleSetting && !multiple"
     (click)="routeTo('settings/system')"
     (keydown.enter)="routeTo('settings/system')"
     [class.clicked-link]="clickedManage =='system'"

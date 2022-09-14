@@ -13,11 +13,11 @@ Password: superadmin
 
 Например, следующим образом:
 
-```console
-LDAP_USER_LOGIN=admin
-LDAP_USER_PASSWORD=mail123#
-LDAP_SUPER_USER_LOGIN=superadmin
-LDAP_SUPER_USER_PASSWORD=mail123#
+```
+LDAP_USER_LOGIN=admin  
+LDAP_USER_PASSWORD=mail123#  
+LDAP_SUPER_USER_LOGIN=superadmin  
+LDAP_SUPER_USER_PASSWORD=mail123#  
 ```
 
 !!! tip "Совет"

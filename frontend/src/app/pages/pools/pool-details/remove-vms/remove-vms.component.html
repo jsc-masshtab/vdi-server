@@ -8,10 +8,10 @@
   <div class="form-fields">
     <label class="field">
       <mat-form-field>
-        <mat-label *ngIf="data?.vms?.length">Выберите ВМ для удаления</mat-label>
-        <mat-label *ngIf="!data?.vms?.length">- нет виртуальных машин -</mat-label>
+        <mat-label *ngIf="vms.length">Выберите ВМ для удаления</mat-label>
+        <mat-label *ngIf="!vms.length">- нет виртуальных машин -</mat-label>
         <mat-select  formControlName="vmsInput" multiple="true">
-          <mat-option *ngIf="data.vms?.length" disabled="disabled" class="mat-filter-option">
+          <mat-option disabled="disabled" class="mat-filter-option">
             <button type="button" class="mat-form-btn" (click)="selectAllVms()">
               Выбрать все
             </button>
@@ -20,7 +20,13 @@
               Очистить выбор
             </button>
           </mat-option>
-          <mat-option *ngFor="let vm of data?.vms" [value]="vm?.id">
+
+          <mat-option class="mat-filter-option" disabled="disabled">
+            <mat-label>Поиск: </mat-label>
+            <input matInput [formControl]="search" placeholder="">
+          </mat-option>
+          
+          <mat-option *ngFor="let vm of vms" [value]="vm?.id">
             {{vm.verbose_name}}
           </mat-option>
         </mat-select>
@@ -43,7 +49,13 @@
 
 </div>
 
-
 <ng-template #errorTemp>
   <div class="error" [@animForm]="error">Поле обязательно для заполения</div>
+</ng-template>
+
+<ng-template #loading>
+  <mat-form-field>
+    <mat-label>Загрузка ...</mat-label>
+    <mat-select [disabled]='true'></mat-select>
+  </mat-form-field>
 </ng-template>

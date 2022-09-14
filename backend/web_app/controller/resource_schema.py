@@ -45,6 +45,31 @@ class ResourcePoolType(VeilResourceType):
     controller = graphene.Field(ControllerType)
 
 
+class ClusterDataType(graphene.ObjectType):
+    clusters = graphene.List(ClusterType)
+    count = graphene.Int(default_value=100)
+
+
+class ResourcePoolDataType(graphene.ObjectType):
+    resource_pools = graphene.List(ResourcePoolType)
+    count = graphene.Int(default_value=100)
+
+
+class NodeDataType(graphene.ObjectType):
+    nodes = graphene.List(NodeType)
+    count = graphene.Int(default_value=100)
+
+
+class DataPoolDataType(graphene.ObjectType):
+    datapools = graphene.List(DataPoolType)
+    count = graphene.Int(default_value=100)
+
+
+class VmDataType(graphene.ObjectType):
+    vms = graphene.List(VmType)
+    count = graphene.Int(default_value=100)
+
+
 # Query
 class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
     """Данные для вкладки Ресурсы.
@@ -65,7 +90,14 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
         offset=graphene.Int(default_value=0),
         refresh=graphene.Boolean(default_value=False)
     )
-
+    clusters_with_count = graphene.Field(
+        ClusterDataType,
+        ordering=ShortString(),
+        limit=graphene.Int(default_value=100),
+        offset=graphene.Int(default_value=0),
+        refresh=graphene.Boolean(default_value=False)
+    )
+    ###
     resource_pool = graphene.Field(
         ResourcePoolType,
         resource_pool_id=graphene.UUID(),
@@ -79,7 +111,14 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
         offset=graphene.Int(default_value=0),
         refresh=graphene.Boolean(default_value=False)
     )
-
+    resource_pools_with_count = graphene.Field(
+        ResourcePoolDataType,
+        ordering=ShortString(),
+        limit=graphene.Int(default_value=100),
+        offset=graphene.Int(default_value=0),
+        refresh=graphene.Boolean(default_value=False)
+    )
+    ###
     node = graphene.Field(
         NodeType,
         node_id=graphene.UUID(),
@@ -93,7 +132,14 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
         offset=graphene.Int(default_value=0),
         refresh=graphene.Boolean(default_value=False)
     )
-
+    nodes_with_count = graphene.Field(
+        NodeDataType,
+        ordering=ShortString(),
+        limit=graphene.Int(default_value=100),
+        offset=graphene.Int(default_value=0),
+        refresh=graphene.Boolean(default_value=False)
+    )
+    ###
     datapool = graphene.Field(
         DataPoolType,
         datapool_id=graphene.UUID(),
@@ -107,7 +153,14 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
         offset=graphene.Int(default_value=0),
         refresh=graphene.Boolean(default_value=False)
     )
-
+    datapools_with_count = graphene.Field(
+        DataPoolDataType,
+        ordering=ShortString(),
+        limit=graphene.Int(default_value=100),
+        offset=graphene.Int(default_value=0),
+        refresh=graphene.Boolean(default_value=False)
+    )
+    ###
     template = graphene.Field(
         VmType,
         template_id=graphene.UUID(),
@@ -127,7 +180,15 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
         offset=graphene.Int(default_value=0),
         refresh=graphene.Boolean(default_value=False)
     )
+    templates_with_count = graphene.Field(
+        VmDataType,
+        ordering=ShortString(),
+        limit=graphene.Int(default_value=100),
+        offset=graphene.Int(default_value=0),
+        refresh=graphene.Boolean(default_value=False)
+    )
     vms = templates
+    vms_with_count = templates_with_count
 
     @classmethod
     async def get_resources_list(
@@ -136,6 +197,7 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
         """Все ресурсы на подключенных ECP VeiL."""
         controllers = await cls.fetch_all()
         resources_list = list()
+        total_paginator_count = 0
         for controller in controllers:
             paginator = VeilRestPaginator(ordering=ordering, limit=limit, offset=offset)
             # Прерываем выполнение при отсутствии клиента
@@ -163,6 +225,9 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
                 veil_response = await controller.veil_client.domain(
                     template=template
                 ).list(paginator=paginator)
+            else:
+                raise RuntimeError("unknown resource type")
+            total_paginator_count = total_paginator_count + veil_response.paginator_count
 
             for data in veil_response.response:
                 resource = data.public_attrs
@@ -186,7 +251,7 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
                 resources_list.append(resource)
 
         if not ordering:
-            resources_list.sort(key=lambda data: data["verbose_name"], reverse=True)
+            resources_list.sort(key=lambda data: data["verbose_name"] or "no name", reverse=True)
 
         if ordering == "controller":
             resources_list.sort(key=lambda data: data["controller"]["verbose_name"])
@@ -194,7 +259,7 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
             resources_list.sort(
                 key=lambda data: data["controller"]["verbose_name"], reverse=True
             )
-        return resources_list
+        return resources_list, total_paginator_count
 
     @classmethod
     async def get_resource_data(cls, resource_type, resource_id, controller_id):
@@ -282,6 +347,19 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
             veil_clusters_list.append(ClusterType(**resource_data))
         return veil_clusters_list
 
+    @classmethod
+    @administrator_required
+    async def resolve_clusters_with_count(
+        cls, root, info, creator, limit, offset, refresh: bool, ordering: str = None
+    ):
+        resources_list, total_paginator_count = await ResourcesQuery.get_resources_list(
+            limit=limit, offset=offset, ordering=ordering, resource_type="cluster"
+        )
+        gr_type = ClusterDataType()
+        gr_type.clusters = resources_list
+        gr_type.count = total_paginator_count
+        return gr_type
+
     # Пулы ресурсов
     @classmethod
     @administrator_required
@@ -330,6 +408,19 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
             veil_resource_pools_list.append(ResourcePoolType(**data))
         return veil_resource_pools_list
 
+    @classmethod
+    @administrator_required
+    async def resolve_resource_pools_with_count(
+        cls, root, info, creator, limit, offset, refresh: bool, ordering: str = None
+    ):
+        resources_list, total_paginator_count = await ResourcesQuery.get_resources_list(
+            limit=limit, offset=offset, ordering=ordering, resource_type="resource_pool"
+        )
+        gr_type = ResourcePoolDataType()
+        gr_type.resource_pools = resources_list
+        gr_type.count = total_paginator_count
+        return gr_type
+
     # Ноды
     @classmethod
     @administrator_required
@@ -374,6 +465,19 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
         for resource_data in cacheable_nodes_list:
             veil_nodes_list.append(NodeType(**resource_data))
         return veil_nodes_list
+
+    @classmethod
+    @administrator_required
+    async def resolve_nodes_with_count(
+        cls, root, info, creator, limit, offset, refresh: bool, ordering: str = None
+    ):
+        resources_list, total_paginator_count = await ResourcesQuery.get_resources_list(
+            limit=limit, offset=offset, ordering=ordering, resource_type="node"
+        )
+        gr_type = NodeDataType()
+        gr_type.nodes = resources_list
+        gr_type.count = total_paginator_count
+        return gr_type
 
     # Пулы данных
     @classmethod
@@ -420,6 +524,19 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
         for resource_data in cacheable_datapools_list:
             veil_datapools_list.append(DataPoolType(**resource_data))
         return veil_datapools_list
+
+    @classmethod
+    @administrator_required
+    async def resolve_datapools_with_count(
+        cls, root, info, creator, limit, offset, refresh: bool, ordering: str = None
+    ):
+        resources_list, total_paginator_count = await ResourcesQuery.get_resources_list(
+            limit=limit, offset=offset, ordering=ordering, resource_type="datapool"
+        )
+        gr_type = DataPoolDataType
+        gr_type.datapools = resources_list
+        gr_type.count = total_paginator_count
+        return gr_type
 
     # Виртуальные машины и шаблоны
     @classmethod
@@ -480,14 +597,16 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
             cache_key = "vms_list_cache"
         else:
             cache_key = "templates_list_cache"
+        total_paginator_count_key = cache_key + "_total_paginator_count"
 
         cache, cache_key, expire_time = await Cache.prepare_cache(
             cache_key=cache_key, ordering=ordering
         )
 
+        total_paginator_count = await cache.get(total_paginator_count_key)
         cacheable_domain_list = await cache.get(cache_key)
         if not cacheable_domain_list or refresh:
-            domains = await cls.get_resources_list(
+            domains, total_paginator_count = await cls.get_resources_list(
                 limit=limit,
                 offset=offset,
                 ordering=ordering,
@@ -508,20 +627,17 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
             elif ordering == "-pool_name":
                 domains.sort(key=lambda data: data["pool_name"], reverse=True)
 
-            cacheable_domain_list = await Cache.get_cacheable_resources(
-                domains, VmType
-            )
+            cacheable_domain_list = await Cache.get_cacheable_resources(domains, VmType)
             try:
-                await cache.set(
-                    key=cache_key, value=cacheable_domain_list, expire_time=expire_time
-                )
+                await cache.set(key=cache_key, value=cacheable_domain_list, expire_time=expire_time)
             except SerializeError:
                 pass
+            await cache.set(key=total_paginator_count_key, value=total_paginator_count, expire_time=expire_time)
 
         domain_list = list()
         for resource_data in cacheable_domain_list:
             domain_list.append(VmType(**resource_data))
-        return domain_list
+        return domain_list, total_paginator_count
 
     @classmethod
     @administrator_required
@@ -530,11 +646,24 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
     ):
         """Все виртуальные машины на подключенных ECP VeiL."""
         # Для каждого контроллера получаем список всех ВМ за вычетом шаблонов.
-        vm_type_list = await cls.domain_list(
-            template=0, limit=limit, offset=offset, ordering=ordering, refresh=refresh
-        )
+        vm_type_list, _ = await cls.domain_list(
+            template=0, limit=limit, offset=offset, ordering=ordering, refresh=refresh)
 
         return vm_type_list
+
+    @classmethod
+    @administrator_required
+    async def resolve_vms_with_count(
+        cls, root, info, creator, limit, offset, refresh: bool, ordering: str = None
+    ):
+        template_type_list, count = await cls.domain_list(
+            template=0, limit=limit, offset=offset, ordering=ordering, refresh=refresh)
+
+        gr_type = VmDataType()
+        gr_type.vms = template_type_list
+        gr_type.count = count
+
+        return gr_type
 
     @classmethod
     @administrator_required
@@ -543,11 +672,24 @@ class ResourcesQuery(graphene.ObjectType, ControllerFetcher):
     ):
         """Все шаблоны на подключенных ECP VeiL."""
         # Для каждого контроллера получаем список всех шаблонов за вычетом ВМ.
-        template_type_list = await cls.domain_list(
-            template=1, limit=limit, offset=offset, ordering=ordering, refresh=refresh
-        )
+        template_type_list, _ = await cls.domain_list(
+            template=1, limit=limit, offset=offset, ordering=ordering, refresh=refresh)
 
         return template_type_list
+
+    @classmethod
+    @administrator_required
+    async def resolve_templates_with_count(
+        cls, root, info, creator, limit, offset, refresh: bool, ordering: str = None
+    ):
+        template_type_list, count = await cls.domain_list(
+            template=1, limit=limit, offset=offset, ordering=ordering, refresh=refresh)
+
+        gr_type = VmDataType()
+        gr_type.vms = template_type_list
+        gr_type.count = count
+
+        return gr_type
 
 
 class AttachVeilUtilsMutation(graphene.Mutation):
@@ -559,6 +701,7 @@ class AttachVeilUtilsMutation(graphene.Mutation):
 
     ok = graphene.Boolean()
 
+    # TODO: code repeat (pool/schema.py)
     @classmethod
     @administrator_required
     async def mutate(cls, root, info, domain_id, controller_id, creator):

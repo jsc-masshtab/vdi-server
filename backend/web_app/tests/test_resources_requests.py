@@ -30,6 +30,7 @@ async def test_request_clusters(
 
     """Request clusters data"""
     examples = ["verbose_name", "-cpu_count"]
+    executed = None
     for ordering in examples:
         qu = (
             """{
@@ -69,6 +70,19 @@ async def test_request_clusters(
     )  # noqa
     snapshot.assert_match(executed)
 
+    # with_count
+    qu = """{
+      clusters_with_count{
+      clusters{
+        verbose_name
+      }
+        count
+      }
+    }"""
+
+    executed = await execute_scheme(resources_schema, qu, context=fixt_auth_context)
+    snapshot.assert_match(executed)
+
 
 async def test_request_nodes(
     fixt_db, fixt_controller, snapshot, fixt_auth_context
@@ -76,6 +90,7 @@ async def test_request_nodes(
 
     """Request nodes data"""
     examples = ["verbose_name", "-cpu_count"]
+    executed = None
     for ordering in examples:
         qu = (
             """{
@@ -116,6 +131,19 @@ async def test_request_nodes(
     )  # noqa
     snapshot.assert_match(executed)
 
+    # with_count
+    qu = """{
+      nodes_with_count{
+        nodes{
+          verbose_name
+        }
+        count
+      }
+    }"""
+
+    executed = await execute_scheme(resources_schema, qu, context=fixt_auth_context)
+    snapshot.assert_match(executed)
+
 
 async def test_request_datapools(
     fixt_db, fixt_controller, snapshot, fixt_auth_context
@@ -123,6 +151,7 @@ async def test_request_datapools(
 
     """Request datapools data"""
     examples = ["verbose_name", "-type"]
+    executed = None
     for ordering in examples:
         qu = (
             """{
@@ -164,6 +193,19 @@ async def test_request_datapools(
     )  # noqa
     snapshot.assert_match(executed)
 
+    # with_count
+    qu = """{
+      datapools_with_count{
+        datapools{
+          verbose_name
+        }
+        count
+      }
+    }"""
+
+    executed = await execute_scheme(resources_schema, qu, context=fixt_auth_context)
+    snapshot.assert_match(executed)
+
 
 async def test_request_vms(
     fixt_db, fixt_controller, snapshot, fixt_auth_context
@@ -171,6 +213,7 @@ async def test_request_vms(
 
     """Request vms data"""
     examples = ["verbose_name", "-status"]
+    executed = None
     for ordering in examples:
         qu = (
             """{
@@ -215,6 +258,19 @@ async def test_request_vms(
     )  # noqa
     snapshot.assert_match(executed)
 
+    # with_count
+    qu = """{
+      vms_with_count{
+        vms{
+          verbose_name
+        }
+        count
+      }
+    }"""
+
+    executed = await execute_scheme(resources_schema, qu, context=fixt_auth_context)
+    snapshot.assert_match(executed)
+
 
 async def test_request_templates(
     fixt_db, fixt_controller, snapshot, fixt_auth_context
@@ -222,6 +278,7 @@ async def test_request_templates(
 
     """Request templates data"""
     examples = ["verbose_name", "-status"]
+    executed = None
     for ordering in examples:
         qu = (
             """{
@@ -259,4 +316,17 @@ async def test_request_templates(
     executed = await execute_scheme(
         resources_schema, qu, context=fixt_auth_context
     )  # noqa
+    snapshot.assert_match(executed)
+
+    # with_count
+    qu = """{
+      templates_with_count{
+        vms{
+          verbose_name
+        }
+        count
+      }
+    }"""
+
+    executed = await execute_scheme(resources_schema, qu, context=fixt_auth_context)
     snapshot.assert_match(executed)

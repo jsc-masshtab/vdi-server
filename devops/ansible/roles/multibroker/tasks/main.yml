@@ -1,0 +1,7 @@
+---
+
+# docker tasks
+- import_tasks: docker.yml
+
+# swarm tasks
+- import_tasks: swarm.yml

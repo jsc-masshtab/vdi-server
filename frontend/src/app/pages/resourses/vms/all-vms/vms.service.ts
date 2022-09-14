@@ -16,21 +16,34 @@ export class VmsService {
 
     public getAllVms(filter?, refresh?): QueryRef<any, any> {
 
-        let query: string = `query resources($ordering:ShortString) {
-            vms(ordering: $ordering) {
-                verbose_name
-                pool_name
-                status
-                user_power_state
-                id
-                controller {
-                    id
-                    verbose_name
+        let query: string = `
+            query resources(
+                $limit: Int,
+                $offset: Int,
+                $ordering:ShortString
+            ){
+                vms_with_count(
+                    limit: $limit,
+                    offset: $offset,
+                    ordering: $ordering
+                ){
+                    count
+                    vms {
+                        verbose_name
+                        pool_name
+                        status
+                        user_power_state
+                        id
+                        controller {
+                            id
+                            verbose_name
+                        }
+                    }
                 }
             }
-        }`
+        `
 
-        if (filter) {
+        if (filter.controller_id) {
             query = `query controllers($controller_id:UUID, $cluster_id: UUID, $resource_pool_id: UUID, $node_id: UUID, $ordering:ShortString) {
                 controller(id_:$controller_id) {
                     id
@@ -40,20 +53,6 @@ export class VmsService {
                         status
                         pool_name
                         user_power_state
-                    }
-                }
-            }`
-        } else if (refresh && !filter) {
-            query = `query resources($ordering:ShortString, $refresh: Boolean) {
-                vms(ordering: $ordering, refresh: $refresh) {
-                    verbose_name
-                    pool_name
-                    status
-                    user_power_state
-                    id
-                    controller {
-                        id
-                        verbose_name
                     }
                 }
             }`

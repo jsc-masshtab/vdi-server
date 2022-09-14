@@ -15,25 +15,37 @@ export class ClustersService  {
 
     constructor(private service: Apollo) {}
 
-    public getAllClusters(filter?, refresh?): QueryRef<any, any> {
-        let query: string = `query resources($ordering:ShortString) {
-            clusters(ordering: $ordering) {
-                id
-                verbose_name
-                nodes_count
-                status
-                cpu_count
-                memory_count
-                description
-                controller {
-                    id
-                    verbose_name
+    public getAllClusters(filter?: any, refresh?): QueryRef<any, any> {
+        let query: string = `
+            query resources(
+                $limit: Int,
+                $offset: Int,
+                $ordering:ShortString
+            ){
+                clusters_with_count(
+                    limit: $limit,
+                    offset: $offset,
+                    ordering: $ordering
+                ){
+                    count
+                    clusters {
+                        id
+                        verbose_name
+                        nodes_count
+                        status
+                        cpu_count
+                        memory_count
+                        description
+                        controller {
+                            id
+                            verbose_name
+                        }
+                    }
                 }
-
             }
-        }`
+        `
 
-        if (filter) {
+        if (filter.controller_id) {
             query = `query controllers($controller_id:UUID, $ordering:ShortString) {
                 controller(id_:$controller_id) {
                     id
@@ -46,23 +58,6 @@ export class ClustersService  {
                         nodes_count
                         description
                     }
-                }
-            }`
-        } else if (refresh && !filter) {
-            query = `query resources($ordering: ShortString, $refresh: Boolean) {
-                clusters(ordering: $ordering, refresh: $refresh) {
-                  id
-                  verbose_name
-                  nodes_count
-                  status
-                  cpu_count
-                  memory_count
-                  description
-                  controller {
-                      id
-                      verbose_name
-                  }
-
                 }
             }`
         }

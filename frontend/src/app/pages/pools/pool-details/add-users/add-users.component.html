@@ -10,17 +10,37 @@
   <div class="form-fields">
     <label class="field">
       <mat-form-field>
-        <mat-label *ngIf="pendingUsers">Загрузка ...</mat-label>
-        <mat-label *ngIf="users?.length && !pendingUsers">Выберите пользователей</mat-label>
-        <mat-label *ngIf="!users?.length && !pendingUsers">- нет пользователей -</mat-label>
-        <mat-select (selectionChange)="selectUser($event)" multiple="true">
-          <input placeholder="Поиск..." (keyup)="search($event.target.value)">
-          <mat-option *ngFor="let user of selected_users" [value]="user.id">
+        <mat-label *ngIf="isPending">Загрузка ...</mat-label>
+        <mat-label *ngIf="users.length && !isPending">Выберите пользователей</mat-label>
+        <mat-label *ngIf="!users.length && !isPending">- нет пользователей -</mat-label>
+        <mat-select [formControl]="usersInput" multiple="true">
+          
+          <mat-option disabled="disabled" class="mat-filter-option">
+            <button type="button" class="mat-form-btn" (click)="selectAll(users)">
+              Выбрать все
+            </button>
+          
+            <button type="button" class="mat-form-btn" (click)="deselectAll()">
+              Очистить выбор
+            </button>
+          </mat-option>
+          
+          <mat-option class="mat-filter-option" disabled="disabled">
+            <mat-label>Поиск: </mat-label>
+            <input matInput [formControl]="search" placeholder="">
+          </mat-option>
+
+          <mat-option *ngFor="let user of users" [value]="user.id">
             {{user.username}}
           </mat-option>
+
         </mat-select>
       </mat-form-field>
-      <div class="error" *ngIf="!valid">Выберите пользователей</div>
+
+      <ng-container *ngIf="usersInput.hasError('required') && isInvalid">
+        <ng-container *ngTemplateOutlet="errorTemp"></ng-container>
+      </ng-container>
+
     </label>
   </div>
 
@@ -29,5 +49,8 @@
       <fa-icon [icon]="['fas','plus-circle']" size="xs"></fa-icon><span class="action-name">Добавить</span>
     </button>
   </div>
-
 </div>
+
+<ng-template #errorTemp>
+  <div class="error" [@animForm]="error">Поле обязательно для заполения</div>
+</ng-template>

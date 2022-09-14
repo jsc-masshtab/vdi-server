@@ -1,0 +1,71 @@
+---
+
+- name: Install python modules
+  apt:
+    name: ["python3-requests", "python3-docker"]
+    update_cache: yes
+
+- name: Swarm manager init
+  block:
+    - name: Init a new swarm cluster
+      docker_swarm:
+        state: present
+
+    - name: Create multibroker dir
+      file:
+        path: "{{ multibroker_directory }}"
+        state: directory
+        owner: root
+        group: root
+        mode: 0755
+
+    - name: Copy multibroker manifest
+      template:
+        src: multibroker-stack.yml.j2
+        dest: "{{ multibroker_directory }}/multibroker-stack.yml"
+        owner: root
+        group: root
+        mode: 0644
+      register: multibroker_manifest
+
+    - name: Deploy multibroker stack
+      command: |
+        docker stack deploy -c {{ multibroker_directory }}/multibroker-stack.yml multibroker
+      when: multibroker_manifest.changed
+
+    - name: Inspect swarm
+      docker_swarm:
+        state: inspect
+      register: swarm_info
+
+    - name: Print swarm info
+      debug:
+        msg: "Join token is: {{ swarm_info.swarm_facts.JoinTokens.Worker }}"
+  when: multibroker_role == "manager"
+
+- name: Swarm worker join
+  block:
+    - name: Checking swarm manager address
+      fail:
+        msg: "Swarm manager address is not defined!"
+      when: multibroker_swarm_manager_address is not defined
+
+    - name: Checking swarm join token
+      fail:
+        msg: "Swarm join token is not defined!"
+      when: multibroker_swarm_join_token is not defined
+
+    - name: Checking connection to swarm manager
+      wait_for:
+        host: "{{ multibroker_swarm_manager_address }}"
+        port: 2377
+        delay: 5
+        timeout: 15
+
+    - name: Join to swarm cluster
+      docker_swarm:
+        advertise_addr: "{{ ansible_default_ipv4.address }}"
+        state: join
+        join_token: "{{ multibroker_swarm_join_token }}"
+        remote_addrs: [ '{{ multibroker_swarm_manager_address }}:2377' ]
+  when: multibroker_role == "worker"

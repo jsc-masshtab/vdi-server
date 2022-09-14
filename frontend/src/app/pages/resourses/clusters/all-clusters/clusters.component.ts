@@ -14,11 +14,14 @@ import { ClustersService } from './clusters.service';
   templateUrl: './clusters.component.html',
   styleUrls: ['./clusters.component.scss']
 })
-
-
 export class ClustersComponent extends DetailsMove implements OnInit, OnDestroy {
 
   @Input() filter: object
+
+  public limit = 100;
+  public count = 0;
+  public offset = 0;
+  public queryset: any;
 
   public refresh: boolean = false
 
@@ -95,25 +98,44 @@ export class ClustersComponent extends DetailsMove implements OnInit, OnDestroy 
     });
   }
 
+  public toPage(message: any): void {
+    this.offset = message.offset;
+    this.getAllClusters();
+  }
+
   public getAllClusters(refresh?): void {
     if (this.sub) {
       this.sub.unsubscribe();
     }
+
+    const queryset = {
+      offset: this.offset,
+      limit: this.limit
+    }
+
+    this.queryset = queryset;
+
     this.waitService.setWait(true);
 
     let filtered = (data) => {
       if ((this.filter && !this.refresh) || (this.filter && this.refresh)) {
-        return data.data.controller.clusters
+        return data.data.controller
       } else {
-        return data.data.clusters
+        return data.data.clusters_with_count
       }
     }
+
     if (refresh) {
       this.refresh = refresh
     }
-    this.sub = this.service.getAllClusters(this.filter, this.refresh).valueChanges.pipe(map(data => filtered(data)))
+
+    this.sub = this.service.getAllClusters({
+      ...this.filter,
+      ...queryset
+    }, this.refresh).valueChanges.pipe(map(data => filtered(data)))
       .subscribe((data) => {
-        this.clusters = data;
+        this.count = data.count;
+        this.clusters = data.clusters;
         this.waitService.setWait(false);
       });
   }
@@ -162,5 +184,4 @@ export class ClustersComponent extends DetailsMove implements OnInit, OnDestroy 
       this.socketSub.unsubscribe();
     }
   }
-
 }

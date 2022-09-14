@@ -357,4 +357,38 @@ export class UsersService  {
             }
         });
     }
+
+    public getSettings(): QueryRef<any, any> {
+        return this.service.watchQuery({
+            query: gql`
+                query settings {
+                    settings {
+                        PASSWORD_SECURITY_LEVEL
+                    }
+                }
+            `,
+            variables: {
+                method: 'GET'
+            },
+            fetchPolicy: 'network-only'
+        });
+    }
+
+    public setSettings(_, data) {
+        return this.service.mutate<any>({
+            mutation: gql`
+                mutation settings($PASSWORD_SECURITY_LEVEL: PassSecLevel) {
+                    changeSettings(
+                        PASSWORD_SECURITY_LEVEL: $PASSWORD_SECURITY_LEVEL
+                    ) {
+                        ok
+                    }
+                }
+            `,
+            variables: {
+                method: 'POST',
+                ...data
+            }
+        });
+    }
 }

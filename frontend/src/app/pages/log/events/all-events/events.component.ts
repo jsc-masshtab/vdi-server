@@ -192,8 +192,7 @@ export class EventsComponent implements OnInit, OnDestroy {
       this.socketSub.unsubscribe();
     }
 
-    this.socketSub = this.ws.stream('/events/').subscribe((t) => {
-      console.log(t)
+    this.socketSub = this.ws.stream('/events/').subscribe(() => {
       this.service.getAllEvents(this.queryset).refetch();
     });
   }

@@ -2,9 +2,6 @@ import { Injectable } from '@angular/core';
 import { Apollo, QueryRef } from 'apollo-angular';
 import gql from 'graphql-tag';
 import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
-
-
 
 @Injectable()
 export class PoolDetailsService {
@@ -77,7 +74,7 @@ export class PoolDetailsService {
         });
     }
 
-    public getPool(pool_id: string | number): QueryRef<any, any> {
+    public getPool(pool_id: string | number, params?): QueryRef<any, any> {
 
         return this.service.watchQuery({
             query: gql` query 
@@ -85,13 +82,19 @@ export class PoolDetailsService {
                     $pool_id: ShortString, 
                     $ordering_vms: ShortString, 
                     $ordering_users: ShortString, 
-                    $ordering_groups: ShortString
+                    $ordering_groups: ShortString,
+                    $limit_vms: Int,
+                    $offset_vms: Int,
+                    $verbose_name: ShortString
                 ){
                     pool(
                         pool_id: $pool_id
                     ){
                         vms(
-                            ordering: $ordering_vms
+                            limit: $limit_vms,
+                            offset: $offset_vms,
+                            ordering: $ordering_vms,
+                            verbose_name: $verbose_name
                         ){
                             id
                             verbose_name
@@ -116,6 +119,8 @@ export class PoolDetailsService {
                             address
                             verbose_name
                         }
+
+                        users_count
                         
                         users(ordering: $ordering_users) {
                             id
@@ -169,6 +174,7 @@ export class PoolDetailsService {
                         assigned_connection_types
                         
                         vm_action_upon_user_disconnect
+                        vm_amount
 
                         status
                         creator
@@ -181,7 +187,8 @@ export class PoolDetailsService {
                 pool_id,
                 ordering_vms: this.orderingVms.nameSort,
                 ordering_users: this.orderingUsers.nameSort,
-                ordering_groups: this.orderingGroups.nameSort
+                ordering_groups: this.orderingGroups.nameSort,
+                ...params
             }
         });
     }
@@ -307,12 +314,23 @@ export class PoolDetailsService {
         });
     }
 
-    public getAllVms(controller_id: string, resource_pool_id: string): Observable<any>  {
+    public getAllVms(controller_id: string, resource_pool_id: string, props: any) {
         return  this.service.watchQuery({
-            query: gql` query controllers($controller_id: UUID, $resource_pool_id: UUID) {
-                controller(id_: $controller_id) {
-                    id
-                    vms(resource_pool_id: $resource_pool_id, ordering: "verbose_name") {
+            query: gql` 
+                query controllers(
+                    $controller_id: UUID, 
+                    $resource_pool_id: UUID,
+                    $verbose_name: ShortString
+                ){
+                    controller(
+                        id_: $controller_id
+                    ){
+                        id
+                        vms(
+                            resource_pool_id: $resource_pool_id, 
+                            verbose_name: $verbose_name,
+                            ordering: "verbose_name"
+                        ){
                             id
                             verbose_name
                         }
@@ -323,52 +341,71 @@ export class PoolDetailsService {
                 method: 'GET',
                 controller_id,
                 resource_pool_id,
-                get_vms_in_pools: false
+                get_vms_in_pools: false,
+                ...props
             }
-        }).valueChanges.pipe(map((data: any) => data.data.controller['vms']));
+        });
     }
-
-
+    
     // users for pool
 
-    public getAllUsersNoEntitleToPool(pool_id: string): Observable<any>  {
+    public getAllUsersNoEntitleToPool(pool_id: string, props: any)  {
         return  this.service.watchQuery({
-            query: gql` query pools($pool_id: ShortString, $entitled: Boolean) {
-                pool(pool_id: $pool_id) {
-                    users(entitled: $entitled) {
-                        username
-                        id
+            query: gql` 
+                query pools(
+                    $pool_id: ShortString, 
+                    $entitled: Boolean,
+                    $username: ShortString
+                ){
+                    pool(
+                        pool_id: $pool_id
+                    ){
+                        users(
+                            entitled: $entitled,
+                            username: $username
+                        ){
+                            username
+                            id
+                        }
                     }
                 }
-            }
             `,
             variables: {
                 method: 'GET',
                 entitled: false,
-                pool_id
+                pool_id,
+                ...props
             }
-         }).valueChanges.pipe(map(data => data.data['pool']['users']));
+         });
     }
 
-    public getAllUsersEntitleToPool(pool_id: string): Observable<any> {
+    public getAllUsersEntitleToPool(pool_id: string, props: any) {
         return this.service.watchQuery({
                 query: gql`
-                            query  pools($pool_id: ShortString) {
-                                pool(pool_id: $pool_id) {
-                                    users {
-                                        is_superuser
-                                        username
-                                        id
-                                    }
-                                }
-                            }
+                query  pools(
+                    $pool_id: ShortString,
+                    $username: ShortString
+                ){
+                    pool(
+                        pool_id: $pool_id
+                    ){
+                        users(
+                            username: $username
+                        ){
+                            is_superuser
+                            username
+                            id
+                        }
+                    }
+                }
             `,
             variables: {
                 method: 'POST',
                 pool_id,
-                entitled: true
+                entitled: true,
+                ...props
             }
-        }).valueChanges.pipe(map(data  => data.data['pool']['users']));
+        });
     }
 
     public removeUserEntitlementsFromPool(pool_id: string, users: []) {

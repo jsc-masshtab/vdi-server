@@ -132,7 +132,7 @@ export class TasksComponent implements OnInit, OnDestroy {
     this.service.getAllTasks(queryset).valueChanges.pipe(map(data => data.data))
       .subscribe((data) => {
         this.tasks = [...data.tasks];
-        this.count = data.count || 0;
+        this.count = data.tasks_count || 0;
         this.waitService.setWait(false);
       });
   }

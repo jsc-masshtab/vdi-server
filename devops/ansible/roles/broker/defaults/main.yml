@@ -1,7 +1,11 @@
 ---
 
+broker_postgresql_version: "11"
+broker_postgresql_cluster_name: "main"
+broker_postgresql_conf_dir: "/etc/postgresql/{{ broker_postgresql_version }}/{{ broker_postgresql_cluster_name }}"
 broker_db_name: "vdi"
 broker_db_user: "vdi"
+
 broker_local_settings: "/opt/veil-vdi/app/common/local_settings.py"
 broker_apt_repo: "deb [trusted=yes] file:///media/cdrom/repo 1.7_x86-64 main"
 

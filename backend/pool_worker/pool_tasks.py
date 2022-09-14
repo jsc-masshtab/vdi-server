@@ -231,10 +231,10 @@ class InitPoolTask(AbstractTask):
         except LockError:
             pass
         except Exception as E:
+            await automated_pool.deactivate()
             await system_logger.error(
                 message=_local_("Failed to init pool."), description=str(E)
             )
-            await automated_pool.deactivate()
             raise E
 
         # Активируем пул

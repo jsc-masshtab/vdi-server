@@ -17,23 +17,35 @@ export class ResourcePoolsService {
 
     public getAllResourcePools(filter?, refresh?): QueryRef<any, any> {
 
-        let query: string = `query resources($ordering:ShortString) {
-            resource_pools(ordering: $ordering) {
-                id
-                verbose_name
-                domains_count
-                cpu_limit
-                memory_limit
-                controller {
-                    id
-                    verbose_name
-                    address
+        let query: string = `
+            query resources(
+                $limit: Int,
+                $offset: Int,
+                $ordering:ShortString
+            ){
+                resource_pools_with_count(
+                    limit: $limit,
+                    offset: $offset,
+                    ordering: $ordering
+                ){
+                    count
+                    resource_pools {
+                        id
+                        verbose_name
+                        domains_count
+                        cpu_limit
+                        memory_limit
+                        controller {
+                            id
+                            verbose_name
+                            address
+                        }
+                    }
                 }
-
             }
-        }`
+        `
 
-        if (filter) {
+        if (filter.controller_id) {
             query = `query controllers($controller_id:UUID, $cluster_id: UUID, $ordering:ShortString) {
                 controller(id_:$controller_id) {
                     id
@@ -44,22 +56,6 @@ export class ResourcePoolsService {
                         cpu_limit
                         memory_limit
                     }
-                }
-            }`
-        } else if (refresh && !filter) {
-            query = `query resources($ordering:ShortString, $refresh: Boolean) {
-                resource_pools(ordering: $ordering, refresh: $refresh) {
-                    id
-                    verbose_name
-                    domains_count
-                    cpu_limit
-                    memory_limit
-                    controller {
-                        id
-                        verbose_name
-                        address
-                    }
-
                 }
             }`
         }

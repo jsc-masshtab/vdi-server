@@ -23,6 +23,11 @@ export class PoolsComponent extends DetailsMove implements OnInit, OnDestroy {
   private getControllerssSub: Subscription;
   private socketSub: Subscription;
 
+  public limit = 100;
+  public count = 0;
+  public offset = 0;
+  public queryset: any;
+
   public pools: [];
   public controllers: any[] = [];
 
@@ -108,9 +113,16 @@ export class PoolsComponent extends DetailsMove implements OnInit, OnDestroy {
       this.getPoolsSub.unsubscribe();
     }
 
+    const queryset = {
+      offset: this.offset,
+      limit: this.limit
+    }
+
+    this.queryset = queryset;
+
     this.waitService.setWait(true);
 
-    this.getPoolsSub = this.service.getAllPools().valueChanges.pipe(map(data => data.data['pools']))
+    this.getPoolsSub = this.service.getAllPools(queryset).valueChanges.pipe(map(data => data.data['pools']))
       .subscribe((data) => {
         this.pools = data;
         this.waitService.setWait(false);
@@ -124,13 +136,18 @@ export class PoolsComponent extends DetailsMove implements OnInit, OnDestroy {
 
     this.socketSub = this.ws.stream('/pools/').subscribe((message: any) => {
       if (message['msg_type'] === 'data') {
-        this.service.getAllPools().refetch();
+        this.service.getAllPools(this.queryset).refetch();
       }
     });
   }
 
   public refresh(): void {
     this.service.paramsForGetPools.spin = true;
+    this.getAllPools();
+  }
+
+  public toPage(message: any): void {
+    this.offset = message.offset;
     this.getAllPools();
   }
 

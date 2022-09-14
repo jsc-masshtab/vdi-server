@@ -18,39 +18,19 @@ export class NodesService {
 
     public getAllNodes(filter?, refresh?): QueryRef<any, any> {
 
-        let query: string = `query resources($ordering:ShortString) {
-            nodes(ordering: $ordering) {
-                id
-                verbose_name
-                status
-                datacenter_name
-                cpu_count
-                memory_count
-                management_ip
-                controller {
-                    id
-                    verbose_name
-                }
-            }
-        }`
-
-        if (filter) {
-            query = `query controllers($controller_id:UUID, $cluster_id: UUID, $resource_pool_id: UUID, $ordering:ShortString) {
-                controller(id_:$controller_id) {
-                    id
-                    nodes(cluster_id: $cluster_id, resource_pool_id: $resource_pool_id, ordering: $ordering) {
-                        id
-                        verbose_name
-                        status
-                        cpu_count
-                        memory_count
-                        management_ip
-                    }
-                }
-            }`
-        } else if (refresh && !filter) {
-            query = `query resources($ordering:ShortString, $refresh: Boolean) {
-                nodes(ordering: $ordering, refresh: $refresh) {
+        let query: string = `
+        query resources(
+            $limit: Int,
+            $offset: Int,
+            $ordering:ShortString
+        ){
+            nodes_with_count(
+                limit: $limit,
+                offset: $offset,
+                ordering: $ordering
+            ){
+                count
+                nodes {
                     id
                     verbose_name
                     status
@@ -61,6 +41,22 @@ export class NodesService {
                     controller {
                         id
                         verbose_name
+                    }
+                }
+            }
+        }`
+
+        if (filter.controller_id) {
+            query = `query controllers($controller_id:UUID, $cluster_id: UUID, $resource_pool_id: UUID, $ordering:ShortString) {
+                controller(id_:$controller_id) {
+                    id
+                    nodes(cluster_id: $cluster_id, resource_pool_id: $resource_pool_id, ordering: $ordering) {
+                        id
+                        verbose_name
+                        status
+                        cpu_count
+                        memory_count
+                        management_ip
                     }
                 }
             }`

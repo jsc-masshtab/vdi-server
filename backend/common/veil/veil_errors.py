@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """Old errors moved from Vdi v0.2."""
 import asyncio
-from abc import ABC
 
 from common.languages import _local_
 from common.log.journal import system_logger
@@ -146,7 +145,7 @@ class BadRequest(HttpError):
         return {"type": "HttpError", "code": self.code, **self.errors}
 
 
-class AuthError(HttpError, ABC):
+class AuthError(HttpError):
     pass
 
 
