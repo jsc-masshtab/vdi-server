@@ -493,10 +493,10 @@ class Vm(VeilModel):
             if no_space:
                 raise VmCreationError(_local_("Not enough free space on data pool."))
 
-            # Предполагаем, что контроллер заблокирован выполнением задачи.
-            # Это может быть и не так, но сейчас нам это не понятно.
+            # Пишем предупреждение о неудачной попытке создания ВМ
             await system_logger.warning(
-                _local_("Possibly blocked by active task on ECP. Wait before next try.")
+                message=_local_(f"Failed to create VM. Error code: {create_response.error_code} Wait before next try."),
+                description=create_response.error_detail
             )
             await asyncio.sleep(VEIL_OPERATION_WAITING)
             inner_retry_count += 1
