@@ -51,11 +51,21 @@ export class AddPoolService {
         }
 
         if (type === 'vms') {
-            query = `query
-                controllers($id_: UUID, $resource_pool_id: UUID) {
-                    controller(id_: $id_) {
+            query = `
+                query controllers(
+                    $id_: UUID, $resource_pool_id: UUID
+                    $verbose_name: ShortString
+                ){
+                    controller(
+                        id_: $id_
+                    ){
                         id
-                        vms(resource_pool_id: $resource_pool_id, exclude_existed: true, ordering: "verbose_name") {
+                        vms(
+                            resource_pool_id: $resource_pool_id, 
+                            exclude_existed: true, 
+                            ordering: "verbose_name",
+                            verbose_name: $verbose_name
+                        ){
                             id
                             verbose_name
                         }

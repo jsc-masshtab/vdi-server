@@ -105,7 +105,7 @@
           <mat-label *ngIf="!data.vms?.length">- нет виртуальных машин -</mat-label>
 
           <mat-select formControlName="vms" multiple="true">
-            <mat-option *ngIf="data.vms?.length" disabled="disabled" class="mat-filter-option">
+            <mat-option disabled="disabled" class="mat-filter-option">
               <button type="button" class="mat-form-btn" (click)="selectAllVms()">
                 Выбрать все
               </button>
@@ -113,6 +113,11 @@
               <button type="button" class="mat-form-btn" (click)="deselectAllVms()">
                 Очистить выбор
               </button>
+            </mat-option>
+
+            <mat-option class="mat-filter-option" disabled="disabled">
+              <mat-label>Поиск: </mat-label>
+              <input matInput [formControl]="search" placeholder="">
             </mat-option>
 
             <mat-option *ngFor="let vm of data.vms" [value]="vm">
