@@ -289,12 +289,7 @@ class ExpandPoolTask(AbstractTask):
                         max_possible_amount_to_add, automated_pool.increase_step
                     )
                     # add VMs.
-                    try:
-                        vm_list = await automated_pool.add_vm(real_amount_to_add)
-                    except VmCreationError as vm_error:
-                        await system_logger.error(
-                            _local_("VM creating error."), description=vm_error
-                        )
+                    vm_list = await automated_pool.add_vm(real_amount_to_add)
 
             # Подготовка ВМ для подключения к ТК  (под async with pool_lock)
             try:
