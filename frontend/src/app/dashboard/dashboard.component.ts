@@ -5,7 +5,6 @@ import { WebsocketService } from '@app/core/services/websock.service';
 import { Observable } from 'rxjs';
 
 import { ISettings, LoginService } from '@pages/login/login.service';
-import { map } from 'rxjs/operators';
 
 @Component({
   selector: 'vdi-dashboard',
