@@ -48,9 +48,3 @@ use_rdp_file=0
 rdp_settings_file=  
 rdp_args=+menu-anims,+home-drive  
   
-[X2GoSettings]  
-app_type=1  
-session_type=XFCE  
-conn_type_assigned=1  
-conn_type=modem  
-full_screen=1  
