@@ -5,6 +5,7 @@ import { WebsocketService } from '@app/core/services/websock.service';
 import { Observable } from 'rxjs';
 
 import { ISettings, LoginService } from '@pages/login/login.service';
+import { map } from 'rxjs/operators';
 
 @Component({
   selector: 'vdi-dashboard',
@@ -12,8 +13,14 @@ import { ISettings, LoginService } from '@pages/login/login.service';
   styleUrls: ['./dashboard.component.scss']
 })
 export class DashboardComponent implements OnInit, OnDestroy {
+
   public settings$: Observable<ISettings>;
-  constructor(private ws: WebsocketService, public dialog: MatDialog, private loginService: LoginService) { }
+
+  constructor(
+    private ws: WebsocketService, 
+    public dialog: MatDialog, 
+    private loginService: LoginService
+  ) {}
 
   ngOnInit() {
     this.ws.init();

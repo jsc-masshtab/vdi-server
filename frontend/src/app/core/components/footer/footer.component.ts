@@ -29,6 +29,7 @@ export class FooterComponent implements OnInit, OnDestroy {
 
   public openedLog: boolean = true;
   public log: string = 'events';
+  public connectVersion: string = '';
 
   public countEvents: ICountEvents;
 
@@ -60,6 +61,7 @@ export class FooterComponent implements OnInit, OnDestroy {
 
     this.listenSockets();
     this.getSystemInfo();
+    this.getConnectVersion();
   }
 
   getSystemInfo() {
@@ -82,6 +84,12 @@ export class FooterComponent implements OnInit, OnDestroy {
         }, 1000);    
       }
     );
+  }
+
+  getConnectVersion(): void {
+    this.systemService.getConnectVersion().valueChanges.pipe(map(data => data.data)).subscribe((res: any) => {
+      this.connectVersion = res.minimum_supported_desktop_thin_client_version;
+    });
   }
 
   private listenSockets(): void {
@@ -116,10 +124,8 @@ export class FooterComponent implements OnInit, OnDestroy {
     this.openedLog = false;
   }
 
- 
   public getLicense(): void {
     this.licenseService.getLicence().subscribe((res) => {
-    
       this.license = res.data;
     });
   }
