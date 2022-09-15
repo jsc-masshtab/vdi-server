@@ -32,4 +32,17 @@ export class SystemService {
       pollInterval: 60000
     });
   }
+
+  public getConnectVersion(): QueryRef<any, any> {
+    return this.appolo.watchQuery({
+      query: gql`
+        query broker_info {
+          minimum_supported_desktop_thin_client_version
+        }
+      `,
+      variables: {
+        method: 'GET'
+      }
+    });
+  }
 }

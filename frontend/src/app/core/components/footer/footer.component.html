@@ -51,6 +51,6 @@
   <div class="copyright" *ngIf="(info$ | async) as info"> 
     {{ info.comment }} &nbsp;
     <a href="{{ info.url }}" target="_blank">{{ info.copyright }}</a>
-    <span>, {{ info.year }} версия {{ info.version }}</span>
+    <span>, {{ info.year }} версия {{ info.version }} ({{ connectVersion }})</span>
   </div>
 </footer>
