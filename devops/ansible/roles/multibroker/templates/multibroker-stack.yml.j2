@@ -46,7 +46,7 @@ services:
       - PYTHONPYCACHEPREFIX=/tmp
       - VDI_BROKER_DB_HOST=vdi-postgres
       - VDI_BROKER_REDIS_HOST=vdi-redis
-    command: sh -c "python web_app/app.py --logging=DEBUG --address=0.0.0.0"
+    command: sh -c "sleep 15 && python web_app/app.py --logging=DEBUG --address=0.0.0.0"
     depends_on:
       - vdi-postgres
       - vdi-redis
@@ -63,7 +63,7 @@ services:
       - PYTHONPYCACHEPREFIX=/tmp
       - VDI_BROKER_DB_HOST=vdi-postgres
       - VDI_BROKER_REDIS_HOST=vdi-redis
-    command: sh -c "python pool_worker/app.py"
+    command: sh -c "sleep 15 && python pool_worker/app.py"
     depends_on:
       - vdi-tornado
   vdi-monitor-worker:
@@ -78,7 +78,7 @@ services:
       - PYTHONPYCACHEPREFIX=/tmp
       - VDI_BROKER_DB_HOST=vdi-postgres
       - VDI_BROKER_REDIS_HOST=vdi-redis
-    command: sh -c "python monitor_worker/app.py"
+    command: sh -c "sleep 15 && python monitor_worker/app.py"
     depends_on:
       - vdi-tornado
       - vdi-pool-worker
