@@ -68,6 +68,24 @@ async def test_create_and_expand_automated_pool(
     status = await wait_for_task_result(task_id, 60)
     assert (status is not None) and (status == TaskStatus.FINISHED.name)
 
+    # prepare VMs in pool
+    qu = (
+        """
+    mutation {
+        preparePool(pool_id: "%s"){
+            ok
+            task_id
+        }
+    }"""
+        % pool_id
+    )
+    executed = await execute_scheme(pool_schema, qu, context=fixt_auth_context)
+    assert executed["preparePool"]["ok"]
+
+    task_id = executed["preparePool"]["task_id"]
+    status = await wait_for_task_result(task_id, 60)
+    assert (status is not None) and (status == TaskStatus.FINISHED.name)
+
 
 @pytest.mark.asyncio
 async def test_update_automated_pool(

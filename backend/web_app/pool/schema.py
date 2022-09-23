@@ -640,6 +640,22 @@ class ClearPoolMutation(graphene.Mutation):
                 _local_("Pool {} is already active.").format(pool.verbose_name))
 
 
+class PreparePoolMutation(graphene.Mutation):
+    class Arguments:
+        pool_id = graphene.UUID()
+
+    ok = graphene.Boolean()
+    task_id = graphene.UUID()
+
+    @administrator_required
+    async def mutate(self, info, pool_id, creator):
+        task_id = await request_to_execute_pool_task(
+            pool_id, PoolTaskType.POOL_PREPARE, creator=creator
+        )
+
+        return {"ok": True, "task_id": task_id}
+
+
 # --- --- --- --- ---
 # Static pool mutations
 class CreateStaticPoolMutation(graphene.Mutation, PoolValidator, ControllerFetcher):
@@ -1681,32 +1697,25 @@ class TemplateChange(graphene.Mutation):
     class Arguments:
         vm_id = graphene.UUID(required=True)
         controller_id = graphene.UUID(required=True)
+        prepare_vms = graphene.Boolean(default_value=True)
 
     ok = graphene.Boolean()
 
     @classmethod
     @administrator_required
-    async def mutate(cls, root, info, vm_id, controller_id, creator):
-        controller = await Controller.get(controller_id)
-        veil_domain = controller.veil_client.domain(domain_id=str(vm_id))
-        await veil_domain.info()
-        if veil_domain.powered:
-            raise SilentError(
-                _local_("VM {} is powered. Please shutdown this.").format(
-                    veil_domain.public_attrs["verbose_name"]))
-        response = await veil_domain.change_template()
-        ok = response.success
-        if not ok:
-            for error in response.errors:
-                raise SilentError(
-                    _local_("VeiL ECP error: {}.").format(error["detail"]))
+    async def mutate(cls, root, info, vm_id, controller_id, prepare_vms=True, creator="system"):
 
-        await system_logger.info(
-            _local_(
-                "The template {} change and distribute this changes to thin clones.").format(
-                veil_domain.parent_name),
-            user=creator)
-        return TemplateChange(ok=ok)
+        vm = await Vm.get(vm_id)
+        await request_to_execute_pool_task(
+            str(vm.pool_id),
+            PoolTaskType.POOL_TEMPLATE_CHANGE,
+            creator=creator,
+            vm_id=str(vm_id),
+            controller_id=str(controller_id),
+            prepare_vms=prepare_vms
+        )
+
+        return TemplateChange(ok=True)
 
 
 class VmConvertToTemplate(graphene.Mutation, PoolValidator):
@@ -1854,6 +1863,7 @@ class PoolMutations(graphene.ObjectType):
     removeVmsFromRdsPool = RemoveVmsFromPoolMutation.Field()
     expandPool = ExpandPoolMutation.Field()
     clearPool = ClearPoolMutation.Field()
+    preparePool = PreparePoolMutation.Field()
 
     entitleUsersToPool = PoolUserAddPermissionsMutation.Field()
     removeUserEntitlementsFromPool = PoolUserDropPermissionsMutation.Field()

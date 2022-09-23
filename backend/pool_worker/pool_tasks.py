@@ -11,6 +11,7 @@ from common.languages import _local_
 from common.log.journal import system_logger
 from common.models.auth import Entity
 from common.models.authentication_directory import AuthenticationDirectory
+from common.models.controller import Controller
 from common.models.pool import AutomatedPool, Pool
 from common.models.task import PoolTaskType, Task, TaskStatus
 from common.models.vm import Vm
@@ -119,9 +120,8 @@ class AbstractTask(ABC):
             await self.task_model.set_status(TaskStatus.FAILED, message + " " + str(ex))
 
             description = str(ex)
-            # asyncio.TimeoutError и PoolCreationError считаются ожидаемым исключением, поэтому traceback не требуется
-            if self._show_tb_upon_fail and not isinstance(ex, asyncio.TimeoutError) and \
-                    not isinstance(ex, PoolCreationError):
+            # asyncio.TimeoutError считается ожидаемым исключением, поэтому traceback не требуется
+            if self._show_tb_upon_fail and not isinstance(ex, asyncio.TimeoutError):
                 tb = traceback.format_exc()
                 description += (" " + tb)
             await system_logger.warning(message=message,
@@ -201,6 +201,7 @@ class InitPoolTask(AbstractTask):
 
                         await automated_pool.add_initial_vms(self.task_model.creator)
                     except PoolCreationError:
+                        self._show_tb_upon_fail = False
                         await automated_pool.deactivate()
                         # Чтобы проблема была передана внешнему обработчику в AbstractTask
                         raise
@@ -211,23 +212,15 @@ class InitPoolTask(AbstractTask):
 
                 # Подготавливаем машины. Находимся на этом отступе так как нам нужен лок пула но не нужен лок шаблона
                 try:
-                    if automated_pool.preparation_required():
-                        results_future = await automated_pool.prepare_initial_vms(self.task_model.creator)
-                        # Если есть отмененные корутины, то считаем, что инициализация пула отменена
-                        for response in results_future:
-                            if isinstance(response, asyncio.CancelledError):
-                                raise asyncio.CancelledError
+                    results_future = await automated_pool.prepare_initial_vms(self.task_model.creator)
+                    # Если есть отмененные корутины, то считаем, что инициализация пула отменена
+                    for response in results_future:
+                        if isinstance(response, asyncio.CancelledError):
+                            raise asyncio.CancelledError
 
                 except asyncio.CancelledError:
                     await automated_pool.deactivate()
                     raise
-                except Exception as E:
-                    await automated_pool.deactivate()
-                    await system_logger.error(
-                        message=_local_("Pool initialization VM(s) preparation error."),
-                        description=str(E),
-                    )
-                    raise E
         except LockError:
             pass
         except Exception as E:
@@ -292,28 +285,7 @@ class ExpandPoolTask(AbstractTask):
                     vm_list = await automated_pool.add_vm(real_amount_to_add)
 
             # Подготовка ВМ для подключения к ТК  (под async with pool_lock)
-            try:
-                active_directory_object = await AuthenticationDirectory.query.where(
-                    AuthenticationDirectory.status == Status.ACTIVE
-                ).gino.first()
-
-                if vm_list and automated_pool.preparation_required():
-                    await asyncio.gather(
-                        *[
-                            vm_object.prepare_with_timeout(
-                                active_directory_object, automated_pool.ad_ou, automated_pool,
-                                self.task_model.creator
-                            )
-                            for vm_object in vm_list
-                        ],
-                        return_exceptions=True
-                    )
-            except asyncio.CancelledError:
-                raise
-            except Exception as E:
-                await system_logger.error(
-                    message=_local_("VM preparation error."), description=str(E)
-                )
+            await automated_pool.prepare_vms(vm_list, self.task_model.creator)
 
 
 class RecreationGuestVmTask(AbstractTask):
@@ -353,29 +325,7 @@ class RecreationGuestVmTask(AbstractTask):
                     )
 
             # Подготовка ВМ для подключения к ТК
-            # TODO: убрать повтор кода
-            try:
-                active_directory_object = await AuthenticationDirectory.query.where(
-                    AuthenticationDirectory.status == Status.ACTIVE
-                ).gino.first()
-
-                if vm_list and automated_pool.preparation_required():
-                    await asyncio.gather(
-                        *[
-                            vm_object.prepare_with_timeout(
-                                active_directory_object, automated_pool.ad_ou, automated_pool,
-                                self.task_model.creator
-                            )
-                            for vm_object in vm_list
-                        ],
-                        return_exceptions=True
-                    )
-            except asyncio.CancelledError:
-                raise
-            except Exception as E:
-                await system_logger.error(
-                    message=_local_("VM preparation error."), description=str(E)
-                )
+            await automated_pool.prepare_vms(vm_list, self.task_model.creator)
 
 
 class DecreasePoolTask(AbstractTask):
@@ -610,3 +560,82 @@ class RemoveVmsTask(AbstractTask):
             vm = await Vm.get(vm_id)
             if vm:
                 await vm.set_status(Status.FAILED)
+
+
+class TemplateChangeTask(AbstractTask):
+    """Реализация задачи изменения шаблона."""
+
+    task_type = PoolTaskType.POOL_TEMPLATE_CHANGE
+
+    def __init__(self, vm_id, controller_id, prepare_vms=True):
+        super().__init__()
+
+        self._vm_id = vm_id
+        self._controller_id = controller_id
+        self._prepare_vms = prepare_vms
+
+    # override
+    async def get_user_friendly_text(self):
+        entity_name = await self._get_associated_entity_name()
+        return _local_("Template change for pool {}.").format(entity_name)
+
+    # override
+    async def do_task(self):
+        # Change template
+        controller = await Controller.get(self._controller_id)
+        domain = controller.veil_client.domain(domain_id=str(self._vm_id))
+        await domain.info()
+        if domain.powered:
+            self._show_tb_upon_fail = False
+            raise RuntimeError(
+                _local_("VM {} is powered. Please shutdown this.").format(
+                    domain.public_attrs["verbose_name"]))
+
+        response = await domain.change_template()
+        # print("!!! response: ", response.data, flush=True)
+        ok = response.success
+        if not ok:
+            for error in response.errors:
+                self._show_tb_upon_fail = False
+                raise RuntimeError(
+                    _local_("VeiL ECP error: {}.").format(error["detail"]))
+
+        # Wait fot task to finish
+        task_id = response.data["_task"]["id"]
+        controller_task = None
+        try:
+            controller_task = controller.veil_client.task(task_id=task_id)
+            await Vm.task_waiting(controller_task)
+        except asyncio.CancelledError:
+            if controller_task:
+                await controller_task.cancel()
+            raise
+
+        await system_logger.info(
+            _local_(
+                "The template {} change and distribute this changes to thin clones.").format(
+                domain.parent_name),
+            user=self.task_model.creator)
+
+        # Prepare VMs
+        if self._prepare_vms:
+            automated_pool = await AutomatedPool.get(self.task_model.entity_id)
+            vm_list = await Vm.query.where(Vm.pool_id == automated_pool.id).gino.all()
+            await automated_pool.prepare_vms(vm_list, self.task_model.creator)
+
+
+class PreparePoolTask(AbstractTask):
+    """Реализация задачи подготовки всех машин в пуле."""
+
+    task_type = PoolTaskType.POOL_PREPARE
+
+    # override
+    async def get_user_friendly_text(self):
+        entity_name = await self._get_associated_entity_name()
+        return _local_("Preparation of VMs in pool {}.").format(entity_name)
+
+    # override
+    async def do_task(self):
+        automated_pool = await AutomatedPool.get(self.task_model.entity_id)
+        vm_list = await Vm.query.where(Vm.pool_id == automated_pool.id).gino.all()
+        await automated_pool.prepare_vms(vm_list, self.task_model.creator)
