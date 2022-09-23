@@ -2072,22 +2072,35 @@ class AutomatedPool(db.Model):
         """Подготавливает ВМ для дальнейшего использования тонким клиентом."""
         vm_objects = await VmModel.query.where(VmModel.pool_id == self.id).gino.all()
         if not vm_objects:
-            return
-        active_directory_object = await AuthenticationDirectory.query.where(
-            AuthenticationDirectory.status == Status.ACTIVE
-        ).gino.first()
+            return []
 
-        results_future = await asyncio.gather(
-            *[
-                vm_object.prepare_with_timeout(
-                    active_directory_object, self.ad_ou, self, creator
+        return await self.prepare_vms(vm_objects, creator=creator)
+
+    async def prepare_vms(self, vm_list, creator):
+        try:
+            if vm_list and self.preparation_required():
+
+                active_directory_object = await AuthenticationDirectory.query.where(
+                    AuthenticationDirectory.status == Status.ACTIVE).gino.first()
+
+                results_future = await asyncio.gather(
+                    *[
+                        vm_object.prepare_with_timeout(
+                            active_directory_object, self.ad_ou, self, creator
+                        )
+                        for vm_object in vm_list
+                    ],
+                    return_exceptions=True
                 )
-                for vm_object in vm_objects
-            ],
-            return_exceptions=True
-        )
-
-        return results_future
+                return results_future
+            else:
+                return []
+        except asyncio.CancelledError:
+            raise
+        except Exception as E:
+            await system_logger.error(
+                message=_local_("VM preparation error."), description=str(E)
+            )
 
     async def check_if_total_size_reached(self):
 
