@@ -42,7 +42,7 @@ from common.veil.veil_gino import (
     VeilModel,
 )
 
-PAGE_SIZE = 999
+PAGE_SIZE = 100
 
 
 # На время работы search_ext_s, result3 текщий процесс не будет отвечать на запросы.
