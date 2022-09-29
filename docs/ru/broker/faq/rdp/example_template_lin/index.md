@@ -6,10 +6,10 @@
 
 Так же для всех ВМ в среде VEIL/VDI предусмотрен доступ по протоколу RDP, но для ОС Linux необходимо установить RDP сервер.
 
-Для установки RDP сервера рекомендуется использовать: xrdp + xorgxrdp + puklseaudio-module-xrdp.
+Для установки RDP сервера рекомендуется использовать: xrdp + xorgxrdp + pulseaudio-module-xrdp.
 
 Семейство Debian/Ubuntu:  
-```# sudo apt install xrdp xorgxrdp puklseaudio-module-xrdp```
+```# sudo apt install xrdp xorgxrdp pulseaudio-module-xrdp```
 
 Семейство ReHat/CentOs:  
-```# sudo yum install xrdp xorgxrdp puklseaudio-module-xrdp```
+```# sudo yum install xrdp xorgxrdp pulseaudio-module-xrdp```
