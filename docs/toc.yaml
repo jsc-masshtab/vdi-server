@@ -172,6 +172,7 @@ nav:
         - Лицензирование: broker/operator_guide/license.md
         - Группы: broker/operator_guide/groups.md
         - Пользователи: broker/operator_guide/users.md
+        - Уровни стойкости паролей: broker/operator_guide/password_security_levels.md
         - Службы каталогов: broker/operator_guide/ad.md
         - Single Sign-On:
           - Общие сведения: broker/operator_guide/sso/index.md
