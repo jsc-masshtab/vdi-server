@@ -50,6 +50,11 @@ export class MainMenuComponent {
 
           if (clickedManage1) {
 
+            if (clickedManage1 === 'main') {
+              this.clickedManage = 'main';
+              return;
+            }
+
             if (clickedManage1 === 'controllers') {
               this.clickedManage = 'controllers';
               return;

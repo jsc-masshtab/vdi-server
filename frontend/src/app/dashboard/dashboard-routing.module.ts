@@ -38,6 +38,7 @@ import { SmtpComponent } from '@pages/settings/smtp/smtp.component';
 import { CacheComponent } from '@pages/settings/cache/cache.component';
 import { StatisticsComponent } from '@pages/statistics/statistics.component';
 import { PoolsStatisticsComponent } from '@app/pages/statistics/pools-statistics/pools-statistics.component';
+import { MainComponent } from '@app/pages/main/main.component';
 
 
 const routes: Routes = [
@@ -49,8 +50,12 @@ const routes: Routes = [
     children: [
       {
         path: '',
-        redirectTo: 'pools',
+        redirectTo: 'main',
         pathMatch: 'full'
+      },
+      {
+        path: 'main',
+        component: MainComponent
       },
       {
         path: 'pools',

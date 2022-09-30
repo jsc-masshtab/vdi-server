@@ -1,0 +1,126 @@
+
+<div class="main-dashboard">
+  <div class="dashboard-broker">
+    <div class="dashboard-pools">
+      <div class="dashboard-pool dashboard-container">
+        <div class="dashboard-container-title">
+          <span>Статические пулы</span>
+        </div>
+
+        <div class="dashboard-container-info">
+          <div class="dashboard-container-count">
+            <span>{{ static.count }}</span>
+          </div>
+
+          <div class="dashboard-container-options">
+            <div class="dashboard-container-option">
+              <fa-icon [icon]="['fas','desktop']"></fa-icon>
+              <span>{{ static.vms }}</span>
+            </div>
+            
+            <div class="dashboard-container-option">
+              <fa-icon [icon]="['fas','users']"></fa-icon>
+              <span>{{ static.users }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="dashboard-pool dashboard-container">
+        <div class="dashboard-container-title">
+          <span>Автоматические пулы</span>
+        </div>
+
+        <div class="dashboard-container-info">
+          <div class="dashboard-container-count">
+            <span>{{ automated.count }}</span>
+          </div>
+
+          <div class="dashboard-container-options">
+            <div class="dashboard-container-option">
+              <fa-icon [icon]="['fas','desktop']"></fa-icon>
+              <span>{{ automated.vms }}</span>
+            </div>
+            
+            <div class="dashboard-container-option">
+              <fa-icon [icon]="['fas','users']"></fa-icon>
+              <span>{{ automated.users }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="dashboard-info">
+      <div class="dashboard-controllers dashboard-container">
+        <div class="dashboard-container-title">
+          <span>Контроллеры</span>
+        </div>
+
+        <div class="dashboard-container-info">
+          <div class="dashboard-container-ip">
+            <span *ngFor="let controller of controllers">{{ controller.verbose_name }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="dashboard-about dashboard-container">
+        <vdi-table-into [item]="about" [collection]="collectionAbout"></vdi-table-into>
+      </div>
+    </div>
+
+    <div class="dashboard-pools">
+      <div class="dashboard-pool dashboard-container">
+        <div class="dashboard-container-title">
+          <span>Гостевые пулы</span>
+        </div>
+
+        <div class="dashboard-container-info">
+          <div class="dashboard-container-count">
+            <span>{{ guest.count }}</span>
+          </div>
+
+          <div class="dashboard-container-options">
+            <div class="dashboard-container-option">
+              <fa-icon [icon]="['fas','desktop']"></fa-icon>
+              <span>{{ guest.vms }}</span>
+            </div>
+            
+            <div class="dashboard-container-option">
+              <fa-icon [icon]="['fas','users']"></fa-icon>
+              <span>{{ guest.users }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="dashboard-pool dashboard-container">
+        <div class="dashboard-container-title">
+          <span>RDS пулы</span>
+        </div>
+
+        <div class="dashboard-container-info">
+          <div class="dashboard-container-count">
+            <span>{{ rds.count }}</span>
+          </div>
+
+          <div class="dashboard-container-options">
+            <div class="dashboard-container-option">
+              <fa-icon [icon]="['fas','desktop']"></fa-icon>
+              <span>{{ rds.vms }}</span>
+            </div>
+            
+            <div class="dashboard-container-option">
+              <fa-icon [icon]="['fas','users']"></fa-icon>
+              <span>{{ rds.users }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- <div class="dashboard-clients">
+    <div class="dashboard-client dashboard-container" *ngFor="let clients of clients"></div>
+  </div> -->
+</div>
