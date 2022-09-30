@@ -41,6 +41,7 @@ import { CacheModule } from '@pages/settings/cache/cache.module';
 import { StatisticsModule } from '@pages/statistics/statistics.module';
 import { PoolStatisticsModule } from '@app/pages/statistics/pools-statistics/pool-statistics.module';
 import { MAT_DATE_LOCALE } from '@angular/material/core';
+import { MainModule } from '@app/pages/main/main.module';
 
 @NgModule({
   declarations: [
@@ -51,6 +52,7 @@ import { MAT_DATE_LOCALE } from '@angular/material/core';
     CoreModule,
     DashboardRoutingModule,
     HttpClientModule,
+    MainModule,
     PoolsModule,
     ClustersModule,
     ResourcePoolsModule,

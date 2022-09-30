@@ -1,5 +1,11 @@
 
 <div class="top-menu">
+  <a class="top-menu-item" (click)="routeTo('main')" (keydown.enter)="routeTo('main')"
+    [class.clicked-link]="clickedManage == 'main'" tabindex="0">
+    <fa-icon title="Главная" [icon]="['fas','home']" size="s" [style.color]="'rgb(74 117 140)'"></fa-icon>
+    <span>Главная</span>
+  </a>
+
   <a class="top-menu-item" (click)="routeTo('controllers')" (keydown.enter)="routeTo('controllers')"
     [class.clicked-link]="clickedManage == 'controllers'" tabindex="0">
     <fa-icon title="Контроллеры" [icon]="['fas','server']" size="s" [style.color]="'rgb(204 187 162)'"></fa-icon>
