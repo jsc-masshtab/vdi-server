@@ -46,6 +46,8 @@ export class PoolAddComponent implements OnInit, OnDestroy {
   public guestPool: FormGroup;
   public rdsPool: FormGroup;
 
+  public nodes: FormControl = new FormControl('');
+
   public search = new FormControl('');
   public warming_vm: FormControl = new FormControl(false);
   public warming_all: boolean = true;
@@ -334,6 +336,7 @@ export class PoolAddComponent implements OnInit, OnDestroy {
           }
 
           if (value) {
+            this.getData('nodes', { id_: value });
             this.getData('resource_pools', { id_: value });
           } // запрос данных для выборки в очищенном поле
         });
@@ -347,6 +350,25 @@ export class PoolAddComponent implements OnInit, OnDestroy {
               resource_pool_id: this.sharedData.get('resource_pool_id').value
             });
           }
+        });
+
+        this.nodes.valueChanges.subscribe((value) => {
+
+          this.staticPool.get('vms').setValue(null);
+
+          const props = {};
+
+          if (value) {
+            props['node_id'] = value;
+          }
+
+          this.getData('vms', {
+            id_: this.sharedData.get('controller_id').value,
+            resource_pool_id: this.sharedData.get('resource_pool_id').value,
+            ...props
+          });
+
+          console.log(this.staticPool.get('vms').value)
         });
 
         this.sharedData.controls['resource_pool_id'].valueChanges.subscribe((value) => {
