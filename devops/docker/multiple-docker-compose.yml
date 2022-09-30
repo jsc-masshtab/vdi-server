@@ -13,7 +13,7 @@
 version: '3.7'
 services:
   vdi-postgres:
-    image: postgres:11
+    image: postgres:11-alpine
     environment:
       - POSTGRES_DB=postgres
       - POSTGRES_USER=postgres
@@ -21,7 +21,7 @@ services:
     volumes:
       - ./postgres/:/docker-entrypoint-initdb.d/
   vdi-redis:
-    image: redis:5
+    image: redis:5-alpine
     command: redis-server --requirepass 4NZ7GpHn4IlshPhb --bind 0.0.0.0
     depends_on:
       - vdi-postgres
@@ -29,6 +29,9 @@ services:
     build:
       context: ../../
       dockerfile: ./devops/docker/python/Dockerfile
+    deploy:
+      restart_policy:
+        condition: none
     environment:
       - PYTHONPATH=/opt/veil-vdi/app
       - PYTHONDONTWRITEBYTECODE=1
@@ -37,7 +40,7 @@ services:
     working_dir: /opt/veil-vdi/app
     volumes:
       - ../../backend:/opt/veil-vdi/app
-    command: sh -c "cd common/migrations && alembic upgrade head && poweroff"
+    command: sh -c "cd common/migrations && alembic upgrade head || while [ $$? -ne 0 ]; do alembic upgrade head; done"
     depends_on:
       - vdi-postgres
   vdi-tornado:
@@ -126,3 +129,10 @@ services:
     ports:
       - "443:443"
       - "80:80"
+  vdi-gateway:
+    image: nexus.bazalt.team/veil-broker-gateway:latest
+    command: sh -c "python3 app.py --host 0.0.0.0"
+    depends_on:
+      - vdi-tornado
+    ports:
+      - "8000:8000"
