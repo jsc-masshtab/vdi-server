@@ -22,6 +22,20 @@ export class AddPoolService {
             `;
         }
 
+        if (type === 'nodes') {
+            query = `query
+                controllers($id_: UUID) {
+                    controller(id_: $id_) {
+                        id
+                        nodes {
+                            id
+                            verbose_name
+                        }
+                    }
+                }
+            `;
+        }
+
         if (type === 'resource_pools') {
             query = `query
                 controllers($id_: UUID) {
@@ -72,6 +86,32 @@ export class AddPoolService {
                     }
                 }
             `;
+
+            if (data.node_id) {
+                query = `
+                    query controllers(
+                        $id_: UUID, $resource_pool_id: UUID
+                        $verbose_name: ShortString
+                        $node_id: UUID
+                    ){
+                        controller(
+                            id_: $id_
+                        ){
+                            id
+                            vms(
+                                resource_pool_id: $resource_pool_id, 
+                                exclude_existed: true, 
+                                ordering: "verbose_name",
+                                verbose_name: $verbose_name,
+                                node_id: $node_id
+                            ){
+                                id
+                                verbose_name
+                            }
+                        }
+                    }
+                `;
+            }
         }
 
         if (type === 'templates') {
