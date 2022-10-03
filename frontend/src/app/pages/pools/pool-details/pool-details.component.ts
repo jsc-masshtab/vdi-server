@@ -237,6 +237,27 @@ export class PoolDetailsComponent extends PoolCollections implements OnInit, OnD
     });
   }
 
+  public preparePool(): void {
+    this.dialog.open(YesNoFormComponent, {
+      disableClose: true,
+      width: '500px',
+      data: {
+        form: {
+          header: 'Подтверждение действия',
+          question: 'Подготовить все виртуальные машины пула?',
+          button: 'Выполнить'
+        },
+        request: {
+          service: this.poolService,
+          action: 'preparePool',
+          body: {
+            pool_id: this.idPool
+          }
+        }
+      }
+    });
+  }
+
   public backupVms(): void {
     this.dialog.open(YesNoFormComponent, {
       disableClose: true,
