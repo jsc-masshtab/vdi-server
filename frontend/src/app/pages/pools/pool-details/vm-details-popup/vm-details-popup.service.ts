@@ -528,17 +528,27 @@ export class VmDetailsPopupService {
     });
   }
 
-  public changeTemplate(data) {
+  public changeTemplate(params, data) {
     return this.service.mutate<any>({
-      mutation: gql` mutation pools($id: UUID!, $controller_id: UUID!) {
-                            changeTemplate(vm_id: $id, controller_id: $controller_id) {
-                                ok
-                            }
-                        }
-                    `,
+      mutation: gql` 
+        mutation pools(
+          $vm_id: UUID!, 
+          $controller_id: UUID!,
+          $prepare_vms: Boolean
+        ){
+          changeTemplate(
+            vm_id: $vm_id, 
+            controller_id: $controller_id,
+            prepare_vms: $prepare_vms
+          ){
+            ok
+          }
+        }
+      `,
       variables: {
         method: 'POST',
-        ...data
+        ...data,
+        ...params
       }
     });
   }
