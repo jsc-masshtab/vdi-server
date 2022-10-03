@@ -7,6 +7,10 @@
     </button>
   </div>
 
+  <div *ngIf="data?.settings?.info">
+    <p>{{ data?.settings?.info }}</p>
+  </div>
+
   <div class="form-fields" [formGroup]="formGroup">
     <label class="field" *ngFor="let field of data?.settings?.form; let i = index">
       <ng-container *ngIf="field.tag === 'input'">
@@ -37,6 +41,10 @@
             </mat-option>
           </mat-select>
         </mat-form-field>
+      </ng-container>
+
+      <ng-container *ngIf="field.tag === 'info'">
+        <p>{{ field.value }}</p>
       </ng-container>
 
       <ng-container *ngIf="formGroup.hasError('required', field.fieldName) && checkValid">

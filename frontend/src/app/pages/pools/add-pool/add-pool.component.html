@@ -97,7 +97,7 @@
         </ng-container>
       </label>
 
-      <label class="field">
+      <label class="field" *ngIf="type == 'static'">
         <mat-form-field>
           <mat-label *ngIf="data.nodes?.length">Фильтровать по серверу</mat-label>
           <mat-label *ngIf="!data.nodes?.length">- нет серверов -</mat-label>

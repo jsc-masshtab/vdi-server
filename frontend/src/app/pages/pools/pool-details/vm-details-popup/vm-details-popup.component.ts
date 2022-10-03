@@ -2,6 +2,7 @@ import { Component, Inject, OnDestroy, OnInit } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialog } from '@angular/material/dialog';
 import { DomSanitizer } from '@angular/platform-browser';
+import { FormForEditComponent } from '@app/shared/forms-dinamic/change-form/form-edit.component';
 
 import { WaitService } from '@core/components/wait/wait.service';
 
@@ -414,27 +415,34 @@ export class VmDetalsPopupComponent extends VmCollections implements OnInit, OnD
   }
 
   public changeTemplate(): void {
-    this.dialog.open(YesNoFormComponent, {
+    this.dialog.open(FormForEditComponent, {
       disableClose: true,
       width: '500px',
       data: {
-        form: {
-          header: 'Подтверждение действия',
-          question: `Перенести настройки тонкого клона ${this.data.vm.verbose_name} в шаблон ${this.data.vm.parent_name}?`,
-          error: 'Внесенные в шаблон настройки применятся ко всем клонам',
-          button: 'Выполнить'
-        },
-        request: {
+        post: {
           service: this.service,
-          action: 'changeTemplate',
-          body: {
-            id: this.data.vm.id,
+          method: 'changeTemplate',
+          params: {
+            vm_id: this.data.vm.id,
             controller_id: this.data.vm.controller.id
           }
         },
+        settings: {
+          header: 'Перенос настроек тонкого клона в шаблон',
+          danger: 'Внесенные в шаблон настройки применятся ко всем клонам',
+          buttonAction: 'Выполнить',
+          form: [{
+            tag: 'input',
+            type: 'checkbox',
+            fieldName: 'prepare_vms',
+            fieldValue: true,
+            description: 'Переподготовить все ВМ в пуле'
+          }]
+        },
         update: {
           method: 'getVm',
-          refetch: true
+          refetch: true,
+          params: []
         }
       }
     });
