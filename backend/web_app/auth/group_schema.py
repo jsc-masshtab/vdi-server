@@ -68,8 +68,17 @@ class GroupType(graphene.ObjectType):
         UserType,
         limit=graphene.Int(default_value=100),
         offset=graphene.Int(default_value=0),
+        username=ShortString()
     )
-    possible_users = graphene.List(UserType)
+    assigned_users_count = graphene.Int(default_value=0)
+
+    possible_users = graphene.List(
+        UserType,
+        limit=graphene.Int(default_value=100),
+        offset=graphene.Int(default_value=0),
+        username=ShortString()
+    )
+    possible_users_count = graphene.Int(default_value=0)
 
     assigned_roles = graphene.List(RoleTypeGraphene)
     possible_roles = graphene.List(RoleTypeGraphene)
@@ -91,13 +100,21 @@ class GroupType(graphene.ObjectType):
             date_updated=model_instance.date_updated,
         )
 
-    async def resolve_assigned_users(self, _info, limit, offset):
+    async def resolve_assigned_users(self, _info, limit, offset, username=""):
         group = await Group.get(self.id)
-        return await group.assigned_users_paginator(limit=limit, offset=offset)
+        return await group.assigned_users_paginator(limit=limit, offset=offset, username=username)
 
-    async def resolve_possible_users(self, _info):
+    async def resolve_assigned_users_count(self, _info):
         group = await Group.get(self.id)
-        return await group.possible_users
+        return await db.select([db.func.count()]).select_from(group.assigned_users_query.alias()).gino.scalar()
+
+    async def resolve_possible_users(self, _info, limit, offset, username=""):
+        group = await Group.get(self.id)
+        return await group.possible_users(limit, offset, username)
+
+    async def resolve_possible_users_count(self, _info):
+        group = await Group.get(self.id)
+        return await db.select([db.func.count()]).select_from(group.possible_users_query.alias()).gino.scalar()
 
     async def resolve_assigned_roles(self, _info):
         group = await Group.get(self.id)
@@ -137,6 +154,7 @@ class GroupQuery(graphene.ObjectType):
         ordering=ShortString(),
     )
     group = graphene.Field(GroupType, id=graphene.UUID())
+    group_count = graphene.Int()
 
     @security_administrator_required
     async def resolve_group(self, info, id, **kwargs):  # noqa
@@ -154,6 +172,11 @@ class GroupQuery(graphene.ObjectType):
         )
         objects = [GroupType.instance_to_type(group) for group in groups]
         return objects
+
+    @security_administrator_required
+    async def resolve_group_count(self, info, **kwargs):
+        count = await db.select([db.func.count()]).select_from(Group).gino.scalar()
+        return count
 
 
 class CreateGroupMutation(graphene.Mutation, GroupValidator):
