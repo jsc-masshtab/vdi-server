@@ -437,7 +437,6 @@ class Vm(VeilModel):
         verbose_name: str,
         domain_id: str,
         resource_pool_id: str,
-        datapool_id,
         controller_id,
         create_thin_clones: bool,
         count: int = 1,
