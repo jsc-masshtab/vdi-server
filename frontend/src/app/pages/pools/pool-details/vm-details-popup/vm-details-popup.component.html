@@ -52,15 +52,13 @@
       
       <button *ngIf="data?.typePool != 'static'" (click)="prepareVM()" title="Подготовка ВМ" class="btn-control">
         <fa-icon [icon]="['fas','suitcase']"></fa-icon>
-
         <span class="name">Подготовка ВМ</span>
       </button>
 
       <button (click)="test()" title="Проверить нахождение в домене" class="btn-control">
         <fa-icon [class.rotation]="testing" [icon]="['fas','sync-alt']" size="xs"></fa-icon>
-
         <span class="name">Проверка нахождения в домене</span>
-      
+  
         <fa-icon *ngIf="tested && connected" class="ad-status ad-success" [icon]="['fas','check']"></fa-icon>
         <fa-icon *ngIf="tested && !connected" class="ad-status ad-failed" [icon]="['fas','times-circle']"></fa-icon>
       

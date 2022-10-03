@@ -483,6 +483,7 @@ export class PoolDetailsService {
             });
         }
     }
+
     public updatePool({pool_id, pool_type }, {connection_types, verbose_name, increase_step, reserve_size, total_size,
                                               vm_disconnect_action_timeout, vm_name_template, create_thin_clones,
                                               enable_vms_remote_access, start_vms, set_vms_hostnames, include_vms_in_ad,
@@ -567,7 +568,6 @@ export class PoolDetailsService {
             });
         }
     }
-
 
     public addGrop(id, groups) {
         return this.service.mutate<any>({
@@ -657,6 +657,27 @@ export class PoolDetailsService {
         });
     }
 
+    public preparePool(data) {
+        return this.service.mutate<any>({
+            mutation: gql`
+                mutation pools (
+                    $pool_id: UUID!
+                ){
+                    preparePool(
+                        pool_id: $pool_id
+                    ){
+                        ok
+                        task_id
+                    }
+                }
+            `,
+            variables: {
+                method: 'POST',
+                ...data
+            }
+        });
+    }
+
     public backupVms(data) {
         return this.service.mutate<any>({
             mutation: gql`
@@ -691,7 +712,6 @@ export class PoolDetailsService {
             }
         });
     }
-
 
     public copyPool(pool_id: string) {
         return this.service.mutate<any>({

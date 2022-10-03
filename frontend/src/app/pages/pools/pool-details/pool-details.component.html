@@ -43,6 +43,12 @@
                 <span class="name">Удалить ВМ</span>
             </button>
 
+            <button *ngIf="typePool === 'automated'" (click)="preparePool()" title="Подготовить все ВМ"
+                class="btn-control">
+                <fa-icon [icon]="['fas','suitcase']" size="xs"></fa-icon>
+                <span class="name">Подготовить все ВМ</span>
+            </button>
+
             <button (click)="backupVms()" *ngIf="menuActive === 'vms' && pool?.vms?.length && pool?.pool_type !== 'GUEST'" title="Создать резервные копии всех ВМ в пуле" class="btn-control">
                 <fa-icon [icon]="['fas','clone']" size="xs"></fa-icon>
                 <span class="name">Резервное копирование</span>

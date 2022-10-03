@@ -16,6 +16,8 @@ export class TaskTypePipe implements PipeTransform {
             translateTaskTypePipe = 'Удаление пула';
         } else if (taskType === 'POOL_DECREASE') {
             translateTaskTypePipe = 'Уменьшение пула';
+        } else if (taskType === 'POOL_PREPARE') {
+            translateTaskTypePipe = 'Подготовка всех ВМ пула';
         } else if (taskType === 'VM_PREPARE') {
             translateTaskTypePipe = 'Подготовка ВМ';
         } else if (taskType === 'VMS_BACKUP') {
