@@ -1019,17 +1019,21 @@ class Group(AbstractSortableStatusModel, VeilModel):
         return await query.gino.all()
 
     @property
-    async def possible_users(self):
-        """Берем всех АКТИВНЫХ пользователей и исключаем тех, кому уже назначена группа."""
+    def possible_users_query(self):
         possible_users_query = (
             User.join(
-                UserGroup.query.where(UserGroup.group_id == self.id).alias(),
+                UserGroup.query.where(UserGroup.group_id == self.id).alias("query_1"),
                 isouter=True,
-            )
-            .select()
-            .where((text("anon_1.id is null")) & (User.is_active))
-        )  # noqa
-        return await possible_users_query.order_by(User.username).gino.load(User).all()
+            ).select().where((text("query_1.id is null")) & (User.is_active))
+        )
+        return possible_users_query
+
+    async def possible_users(self, limit=100, offset=0, username=""):
+        """Берем всех АКТИВНЫХ пользователей и исключаем тех, кому уже назначена группа."""
+        return (
+            await self.possible_users_query.where(User.username.ilike("%{}%".format(username))).order_by(
+                User.username).limit(limit).offset(offset).gino.load(User).all()
+        )
 
     @property
     def assigned_users_query(self):
@@ -1041,9 +1045,10 @@ class Group(AbstractSortableStatusModel, VeilModel):
     async def assigned_users(self):
         return await self.assigned_users_query.gino.load(User).all()
 
-    async def assigned_users_paginator(self, limit, offset):
+    async def assigned_users_paginator(self, limit, offset, username=""):
         return (
             await self.assigned_users_query.limit(limit)
+            .where(User.username.ilike("%{}%".format(username)))
             .offset(offset)
             .gino.load(User)
             .all()

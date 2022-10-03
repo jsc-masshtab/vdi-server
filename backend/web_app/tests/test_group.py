@@ -54,6 +54,9 @@ class TestGroupSchema:
                         email
                         username
                     }
+                    
+                    assigned_users_count
+                    possible_users_count
                   }
                 }"""
         executed = await execute_scheme(group_schema, query, context=fixt_auth_context)
