@@ -22,10 +22,15 @@ export class GroupsService  {
        return  this.service.watchQuery({
             query:  gql`
                 query groups(
+                    $limit: Int, 
+                    $offset: Int
                     $ordering: ShortString,
                     $verbose_name: ShortString
                 ){
+                    count: group_count
                     groups(
+                        limit: $limit,
+                        offset: $offset,
                         verbose_name: $verbose_name,
                         ordering: $ordering
                     ){
