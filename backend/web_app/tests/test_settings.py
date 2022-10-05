@@ -15,7 +15,6 @@ from web_app.tests.fixtures import (
     fixt_user,
     fixt_user_admin,
     fixt_user_another_admin,  # noqa
-    fixt_launch_workers,
     fixt_veil_client,
     get_resources_for_pool_test,
     get_auth_context,
