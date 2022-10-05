@@ -55,6 +55,25 @@ services:
       - vdi-test-postgres
       - vdi-test-redis
       - vdi-test-veil-server
+      - vdi-test-pool-worker
+  vdi-test-pool-worker:
+    build:
+      context: ../../
+      dockerfile: ./devops/docker/python/Dockerfile
+    container_name: vdi-test-pool-worker
+    environment:
+      - PYTHONPATH=/opt/veil-vdi/app
+      - PYTHONDONTWRITEBYTECODE=1
+      - PYTHONPYCACHEPREFIX=/tmp
+    working_dir: /opt/veil-vdi/app
+    volumes:
+      - ../../backend:/opt/veil-vdi/app
+    command: sh -c "sleep 10 && pip install -U veil_api_client veil_aio_au && python pool_worker/app.py"
+    network_mode: "host"
+    depends_on:
+      - vdi-test-postgres
+      - vdi-test-redis
+      - vdi-test-veil-server
 
 # manual run only
 #  vdi-black:

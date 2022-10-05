@@ -2,7 +2,7 @@ import pytest
 
 from datetime import datetime, timedelta
 
-from web_app.tests.fixtures import fixt_controller, fixt_launch_workers, fixt_db, fixt_redis_client, fixt_auth_context, fixt_user, fixt_veil_client  # noqa
+from web_app.tests.fixtures import fixt_controller, fixt_db, fixt_redis_client, fixt_auth_context, fixt_user, fixt_veil_client  # noqa
 from web_app.tests.utils import execute_scheme
 from web_app.journal.schema import event_schema
 from common.models.auth import Group, Role
@@ -152,7 +152,7 @@ async def test_events_ordering(snapshot, fixt_db, fixt_auth_context):  # noqa
 
 
 # @pytest.mark.asyncio
-# async def test_veil_events(snapshot, fixt_launch_workers, fixt_controller, fixt_db, fixt_auth_context):  # noqa
+# async def test_veil_events(snapshot,  fixt_controller, fixt_db, fixt_auth_context):  # noqa
 #     controller_id = fixt_controller["controller_id"]
 #     query = """{
 #                 veil_events(controller: "%s") {

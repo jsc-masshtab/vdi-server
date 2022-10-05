@@ -56,31 +56,8 @@ def get_test_pool_name():
 @pytest.fixture
 async def fixt_redis_client():
     redis_init()
-    await redis_get_client().flushdb()
     yield
     await redis_deinit()
-
-
-@pytest.fixture
-async def fixt_launch_workers(fixt_redis_client):
-
-    file_path = os.path.dirname(__file__)
-    pool_worker_path = os.path.join(file_path, "../../pool_worker/app.py")
-
-    pool_worker = Popen([sys.executable, pool_worker_path, "-do-not-resume-tasks"])
-
-    yield
-
-    def stop_worker(worker):
-        worker.terminate()
-        try:
-            worker.wait(1)
-        except TimeoutExpired:
-            pass
-        worker.kill()
-
-    # stop_worker(monitor_worker)
-    stop_worker(pool_worker)
 
 
 @pytest.fixture

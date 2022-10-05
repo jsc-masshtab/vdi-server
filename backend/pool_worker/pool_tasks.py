@@ -9,7 +9,7 @@ from yaaredis.exceptions import LockError
 
 from common.languages import _local_
 from common.log.journal import system_logger
-from common.models.auth import Entity
+from common.models.auth import Entity, Group
 from common.models.authentication_directory import AuthenticationDirectory
 from common.models.controller import Controller
 from common.models.pool import AutomatedPool, Pool
@@ -168,6 +168,8 @@ class AbstractTask(ABC):
 
                     vm = await Vm.get(self.task_model.entity_id)
                     self._associated_entity_name = vm.verbose_name if vm else ""
+                else:
+                    self._associated_entity_name = ""
 
         return self._associated_entity_name
 
@@ -639,3 +641,32 @@ class PreparePoolTask(AbstractTask):
         automated_pool = await AutomatedPool.get(self.task_model.entity_id)
         vm_list = await Vm.query.where(Vm.pool_id == automated_pool.id).gino.all()
         await automated_pool.prepare_vms(vm_list, self.task_model.creator)
+
+
+class ADSynchronizeGroupTask(AbstractTask):
+
+    task_type = PoolTaskType.AD_SYNCHRONIZE_GROUP
+
+    def __init__(self, auth_dir_id=None, convert_local_users_to_ad=True):
+        super().__init__()
+
+        self._auth_dir_id = auth_dir_id
+        self._convert_local_users_to_ad = convert_local_users_to_ad
+
+    # override
+    async def get_user_friendly_text(self):
+        group = await Group.get(self.task_model.entity_id)
+        return _local_(f"Synchronization of AD group {group.verbose_name}.")
+
+    # override
+    async def do_task(self):
+        auth_dir = await AuthenticationDirectory.get(self._auth_dir_id)
+        if not auth_dir:
+            raise RuntimeError(_local_("No such Authentication Directory."))
+
+        lock_name = "group_" + str(self.task_model.entity_id)
+
+        async with ReacquireLock(redis_get_client(), lock_name):
+            await auth_dir.synchronize_group(group_id=self.task_model.entity_id,
+                                             convert_local_users_to_ad=self._convert_local_users_to_ad,
+                                             creator=self.task_model.creator)

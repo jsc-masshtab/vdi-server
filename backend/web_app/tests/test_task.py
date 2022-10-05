@@ -15,7 +15,6 @@ from web_app.tests.fixtures import (
     fixt_user,
     fixt_user_admin,
     fixt_user_another_admin,  # noqa
-    fixt_launch_workers,
     fixt_veil_client,
     get_resources_for_pool_test,
     get_auth_context,
@@ -52,7 +51,7 @@ async def test_request_tasks(fixt_db, fixt_auth_context):  # noqa
 # @pytest.mark.broken_runner
 @pytest.mark.asyncio
 async def test_cancel_tasks(
-    fixt_launch_workers, fixt_db, fixt_controller, fixt_auth_context
+    fixt_redis_client, fixt_db, fixt_controller, fixt_auth_context
 ):  # noqa
 
     # Start pool creation task

@@ -28,7 +28,6 @@ from web_app.tests.fixtures import (
     fixt_user,
     fixt_user_admin,
     fixt_user_another_admin,  # noqa
-    fixt_launch_workers,
     fixt_veil_client,
 )  # noqa
 
@@ -41,7 +40,7 @@ pytestmark = [
 # Automated pool
 @pytest.mark.asyncio
 async def test_create_and_expand_automated_pool(
-    fixt_launch_workers, fixt_db, fixt_create_automated_pool, fixt_auth_context  # noqa
+    fixt_redis_client, fixt_db, fixt_create_automated_pool, fixt_auth_context  # noqa
 ):  # noqa
     """Create, expand and remove automated pool"""
 
@@ -90,7 +89,7 @@ async def test_create_and_expand_automated_pool(
 @pytest.mark.asyncio
 async def test_update_automated_pool(
     snapshot,
-    fixt_launch_workers,
+    fixt_redis_client,
     fixt_db,
     fixt_create_automated_pool,  # noqa
     fixt_auth_context,
@@ -167,7 +166,7 @@ async def test_update_automated_pool(
 
 @pytest.mark.asyncio
 @pytest.mark.usefixtures(
-    "fixt_launch_workers",
+    "fixt_redis_client",
     "fixt_db",
     "fixt_user_admin",  # noqa
     "fixt_create_automated_pool",
@@ -240,7 +239,7 @@ class PoolTestCase(VdiHttpTestCase):
 
 @pytest.mark.asyncio
 async def test_copy_automated_pool(
-    fixt_launch_workers,
+    fixt_redis_client,
     fixt_db,
     fixt_create_automated_pool,  # noqa
     fixt_auth_context,
@@ -270,7 +269,7 @@ async def test_copy_automated_pool(
 # Static pool
 @pytest.mark.asyncio
 async def test_create_static_pool(
-    fixt_launch_workers, fixt_db, fixt_create_static_pool, fixt_auth_context  # noqa
+    fixt_redis_client, fixt_db, fixt_create_static_pool, fixt_auth_context  # noqa
 ):  # noqa
     """Create static pool, make request to check data, remove this pool"""
     pool_id = fixt_create_static_pool["id"]
@@ -312,7 +311,7 @@ async def test_create_static_pool(
 
 @pytest.mark.asyncio
 async def test_update_static_pool(
-    snapshot, fixt_launch_workers, fixt_db, fixt_create_static_pool, fixt_auth_context  # noqa
+    snapshot, fixt_redis_client, fixt_db, fixt_create_static_pool, fixt_auth_context  # noqa
 ):  # noqa
     """Create static pool, update this pool, remove this pool"""
     pool_id = fixt_create_static_pool["id"]
@@ -352,7 +351,7 @@ async def test_update_static_pool(
 
 @pytest.mark.asyncio
 async def test_remove_and_add_vm_in_static_pool(
-    fixt_launch_workers,
+    fixt_redis_client,
     fixt_db,
     fixt_controller,  # noqa
     fixt_create_static_pool,
@@ -424,7 +423,7 @@ async def test_remove_and_add_vm_in_static_pool(
 
 @pytest.mark.asyncio
 async def test_clear_pool_errors(
-    fixt_launch_workers,
+    fixt_redis_client,
     fixt_db,
     fixt_controller,  # noqa
     fixt_create_static_pool,
@@ -484,7 +483,7 @@ async def test_clear_pool_errors(
 
 @pytest.mark.asyncio
 @pytest.mark.usefixtures(
-    "fixt_launch_workers",
+    "fixt_redis_client",
     "fixt_db",
     "fixt_controller",
     "fixt_group",
@@ -557,7 +556,7 @@ class TestPoolPermissionsSchema:
 
 @pytest.mark.asyncio
 async def test_pools_ordering(
-    fixt_launch_workers,
+    fixt_redis_client,
     fixt_db,
     fixt_controller,
     fixt_create_automated_pool,  # noqa
@@ -672,7 +671,7 @@ async def test_create_update_remove_rds_pool(fixt_db, fixt_create_rds_pool, fixt
 
 @pytest.mark.asyncio
 async def test_add_remove_vm_to_rds_pool(
-    fixt_launch_workers,
+    fixt_redis_client,
     fixt_db,
     fixt_create_rds_pool,
     fixt_auth_context
@@ -722,7 +721,7 @@ async def test_add_remove_vm_to_rds_pool(
 
 @pytest.mark.asyncio
 async def test_vm_connection_data(
-    snapshot, fixt_launch_workers, fixt_db, fixt_create_static_pool, fixt_auth_context):  # noqa
+    snapshot, fixt_redis_client, fixt_db, fixt_create_static_pool, fixt_auth_context):  # noqa
     """Add vm_connection_data, update this vm_connection_data, remove this vm_connection_data"""
 
     pool_id = fixt_create_static_pool["id"]

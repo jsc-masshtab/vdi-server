@@ -31,7 +31,6 @@ from web_app.tests.fixtures import (
     fixt_user_admin,  # noqa: F401
     fixt_auth_dir,  # noqa: F401
     fixt_mapping,  # noqa: F401
-    fixt_launch_workers, # noqa
     fixt_group,  # noqa: F401
     fixt_group_role,  # noqa: F401
     fixt_create_static_pool,  # noqa: F401
@@ -182,7 +181,7 @@ class VmActionWhenUserDisconnectsTestCase(VdiHttpTestCase):
     @pytest.mark.usefixtures("fixt_db",
                              "fixt_user_admin",
                              "fixt_create_static_pool",
-                             "fixt_launch_workers")
+                             "fixt_redis_client")
     @gen_test
     async def test_vm_action_when_user_disconnects(self):
 

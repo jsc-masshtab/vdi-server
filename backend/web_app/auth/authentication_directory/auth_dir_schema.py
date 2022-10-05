@@ -10,9 +10,11 @@ from common.graphene_utils import ShortString
 from common.languages import _local_
 from common.models.auth import Group
 from common.models.authentication_directory import AuthenticationDirectory, Mapping
+from common.models.task import PoolTaskType, TaskStatus
 from common.veil.veil_decorators import security_administrator_required
 from common.veil.veil_errors import SilentError, ValidationError
 from common.veil.veil_gino import Status, StatusGraphene
+from common.veil.veil_redis import request_to_execute_pool_task, wait_for_task_result
 from common.veil.veil_validators import MutationValidation
 
 ConnectionTypesGraphene = GrapheneEnum.from_enum(
@@ -430,17 +432,49 @@ class SyncAuthenticationDirectoryGroupUsers(graphene.Mutation):
         auth_dir_id = graphene.UUID(required=True)
         sync_data = AuthenticationDirectorySyncGroupType(required=True)
         convert_local_users_to_ad = graphene.Boolean()
+        wait_for_result = graphene.Boolean()
 
     ok = graphene.Boolean(default_value=False)
 
     @security_administrator_required
     async def mutate(self, _info, auth_dir_id, sync_data, convert_local_users_to_ad=True,
-                     creator="system", **kwargs):
+                     wait_for_result=True, creator="system", **kwargs):
         auth_dir = await AuthenticationDirectory.get(auth_dir_id)
         if not auth_dir:
             raise SilentError(_local_("No such Authentication Directory."))
-        await auth_dir.synchronize(sync_data, convert_local_users_to_ad=convert_local_users_to_ad, creator=creator)
-        return SyncAuthenticationDirectoryGroupUsers(ok=True)
+
+        # Создаем группу
+        group_info = {
+            "ad_guid": sync_data["group_ad_guid"],
+            "verbose_name": sync_data["group_verbose_name"],
+            "ad_cn": sync_data["group_ad_cn"],
+        }
+        group = await auth_dir.sync_group(group_info, creator=creator)
+
+        # Синхронизируем пользователей
+        ok = await SyncAuthenticationDirectoryGroupUsers.launch_synchronize_group_task(
+            group.id, auth_dir_id, convert_local_users_to_ad, creator, wait_for_result)
+
+        return SyncAuthenticationDirectoryGroupUsers(ok=ok)
+
+    @staticmethod
+    async def launch_synchronize_group_task(group_id, auth_dir_id, convert_local_users_to_ad,
+                                            creator, wait_for_result):
+        task_id = await request_to_execute_pool_task(
+            entity_id=group_id,
+            task_type=PoolTaskType.AD_SYNCHRONIZE_GROUP,
+            auth_dir_id=str(auth_dir_id),
+            convert_local_users_to_ad=convert_local_users_to_ad,
+            creator=creator
+        )
+
+        if wait_for_result:
+            status = await wait_for_task_result(task_id, 300)
+            ok = status and (status == TaskStatus.FINISHED.name)
+        else:
+            ok = True
+
+        return ok
 
 
 class SyncExistingAuthenticationDirectoryGroupUsers(graphene.Mutation):
@@ -450,19 +484,20 @@ class SyncExistingAuthenticationDirectoryGroupUsers(graphene.Mutation):
         auth_dir_id = graphene.UUID(required=True)
         group_id = graphene.UUID(required=True)
         convert_local_users_to_ad = graphene.Boolean()
+        wait_for_result = graphene.Boolean()
 
     ok = graphene.Boolean(default_value=False)
 
     @security_administrator_required
     async def mutate(self, info, auth_dir_id, group_id, convert_local_users_to_ad=True,
-                     creator="system", **kwargs):
+                     wait_for_result=True, creator="system", **kwargs):
         auth_dir = await AuthenticationDirectory.get(auth_dir_id)
         if not auth_dir:
             raise SilentError(_local_("No such Authentication Directory."))
-        await auth_dir.synchronize_group(group_id=group_id,
-                                         convert_local_users_to_ad=convert_local_users_to_ad,
-                                         creator=creator)
-        return SyncAuthenticationDirectoryGroupUsers(ok=True)
+
+        ok = await SyncAuthenticationDirectoryGroupUsers.launch_synchronize_group_task(
+            group_id, auth_dir_id, convert_local_users_to_ad, creator, wait_for_result)
+        return SyncExistingAuthenticationDirectoryGroupUsers(ok=ok)
 
 
 class SyncAuthenticationDirectoryOpenLDAPUsers(graphene.Mutation):

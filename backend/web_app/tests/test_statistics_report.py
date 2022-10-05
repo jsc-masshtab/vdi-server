@@ -19,7 +19,6 @@ from web_app.tests.fixtures import (
     fixt_user_admin,  # noqa: F401
     fixt_auth_dir,  # noqa: F401
     fixt_mapping,  # noqa: F401
-    fixt_launch_workers,  # noqa
     fixt_group,  # noqa: F401
     fixt_group_role,  # noqa: F401
     fixt_create_static_pool,  # noqa: F401

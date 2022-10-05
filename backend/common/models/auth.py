@@ -659,7 +659,8 @@ class User(AbstractSortableStatusModel, VeilModel):
         two_factor=False,
         secret=None,
         by_ad=False,
-        local_password=True
+        local_password=True,
+        logging=True
     ):
         """Если password будет None, то make_password вернет unusable password."""
         if by_ad:
@@ -753,8 +754,9 @@ class User(AbstractSortableStatusModel, VeilModel):
             )
             raise AssertionError(msg)
 
-        info_message = _local_("{} {} created.").format(user_role[:-1], username)
-        await system_logger.info(info_message, entity=user_obj.entity, user=creator)
+        if logging:
+            info_message = _local_("{} {} created.").format(user_role[:-1], username)
+            await system_logger.info(info_message, entity=user_obj.entity, user=creator)
 
         if groups:
             for group in groups:
@@ -1166,7 +1168,7 @@ class Group(AbstractSortableStatusModel, VeilModel):
 
         return self
 
-    async def add_user(self, user_id, creator):
+    async def add_user(self, user_id, creator, logging=True):
         """Add user to group."""
         try:
             user_in_group = await db.scalar(
@@ -1179,21 +1181,22 @@ class Group(AbstractSortableStatusModel, VeilModel):
             if user_in_group:
                 return
             user_group = await UserGroup.create(user_id=user_id, group_id=self.id)
-            user = await User.get(user_id)
-            info_message = _local_("User {} has been included to group {}.").format(
-                user.username, self.verbose_name
-            )
-            await system_logger.info(info_message, entity=self.entity, user=creator)
+            if logging:
+                user = await User.get(user_id)
+                info_message = _local_("User {} has been included to group {}.").format(
+                    user.username, self.verbose_name
+                )
+                await system_logger.info(info_message, entity=self.entity, user=creator)
             return user_group
         except UniqueViolationError:
             raise SimpleError(
                 _local_("User {} is already in group {}.").format(user_id, self.id)
             )
 
-    async def add_users(self, user_id_list, creator):
+    async def add_users(self, user_id_list, creator, logging=True):
         async with db.transaction():
             for user in user_id_list:
-                await self.add_user(user, creator)
+                await self.add_user(user, creator, logging)
 
     async def remove_users(self, creator: str, user_id_list: list):
         for id in user_id_list:
