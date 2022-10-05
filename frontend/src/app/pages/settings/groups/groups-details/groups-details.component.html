@@ -64,11 +64,17 @@
         <ng-container *ngIf="menuActive === 'roles'">Доступные роли группы</ng-container>
         <ng-container *ngIf="menuActive === 'users'">Пользователи</ng-container>
       </div>
+
       <div class="details-slide-into">
+
         <vdi-table-into *ngIf="menuActive === 'info'" [item]="entity" [collection]="collection" (edit)="edit($event)"></vdi-table-into>
         <vdi-table-component *ngIf="menuActive === 'roles'" [data]="entity.assigned_roles" [collection]="collection_roles"></vdi-table-component>
-        <vdi-table-component *ngIf="menuActive === 'users'" [data]="entity.assigned_users" entity="users" [collection]="collection_users"></vdi-table-component>
 
+        <ng-conteiner *ngIf="menuActive === 'users'">
+          <vdi-table-component  [data]="entity.assigned_users" entity="users" [collection]="collection_users"></vdi-table-component>
+          <vdi-pagination [count]="count" [limit]="limit" [offset]="offset" (action)="toPage($event)"></vdi-pagination>
+        </ng-conteiner>
+        
         <vdi-table-component 
           *ngIf="menuActive === 'permissions'" 
           [data]="entity.assigned_permissions"
