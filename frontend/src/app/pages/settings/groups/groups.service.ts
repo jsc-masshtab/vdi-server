@@ -1,8 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Apollo, QueryRef } from 'apollo-angular';
 import gql from 'graphql-tag';
-import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
 
 import { IParams } from '@shared/types';
 
