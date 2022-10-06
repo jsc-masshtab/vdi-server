@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import json
 import textwrap
-from datetime import datetime, timedelta, timezone
 
 import graphene
 
@@ -85,14 +84,7 @@ class ThinClientType(graphene.ObjectType):
         if tk_db_data.disconnected:
             thin_client_type.is_afk = None
         else:
-            if tk_db_data.last_interaction is None:
-                thin_client_type.is_afk = True
-            else:
-                afk_timeout = 300  # как в WoW
-                time_delta = timedelta(seconds=afk_timeout)
-                cur_time = datetime.now(timezone.utc)
-                thin_client_type.is_afk = bool(
-                    (cur_time - tk_db_data.last_interaction) > time_delta)
+            thin_client_type.is_afk = await ActiveTkConnection.afk(tk_db_data.last_interaction)
 
         return thin_client_type
 

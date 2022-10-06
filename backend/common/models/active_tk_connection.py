@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import uuid
+from datetime import datetime, timedelta, timezone
 from enum import Enum
 
 from sqlalchemy import desc
@@ -12,8 +13,10 @@ from common.log.journal import system_logger
 from common.models.auth import User
 from common.models.license import License
 from common.models.pool import Pool
+from common.models.settings import Settings
 from common.models.tk_vm_connection import TkVmConnection
 from common.models.vm import Vm
+from common.settings import AFK_TIMEOUT
 from common.subscription_sources import THIN_CLIENTS_SUBSCRIPTION, WsEventToClient
 from common.veil.veil_gino import AbstractSortableStatusModel
 from common.veil.veil_redis import (
@@ -109,6 +112,16 @@ class ActiveTkConnection(db.Model, AbstractSortableStatusModel):
             filters.append(ActiveTkConnection.user_id == user_id)
 
         return filters
+
+    @staticmethod
+    async def afk(last_interaction):
+        if last_interaction is None:
+            return True
+        else:
+            afk_timeout = await Settings.get_settings("AFK_TIMEOUT", AFK_TIMEOUT)
+            time_delta = timedelta(seconds=afk_timeout)
+            cur_time = datetime.now(timezone.utc)
+            return bool((cur_time - last_interaction) > time_delta)
 
     @classmethod
     async def thin_client_limit_exceeded(cls):

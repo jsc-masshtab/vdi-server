@@ -89,6 +89,8 @@ VEIL_MAX_IDS_LEN = 3780
 VEIL_MAX_VM_CREATE_ATTEMPTS = 5
 VEIL_DEFAULT_VM_DISCONNECT_ACTION_TIMEOUT = 60  # Время, через которое над ВМ выполнится действие
 # после дисконнекта пользователя, сек
+AFK_TIMEOUT = 300  # Время через которое ws соединение тонкого клиента считается неактивным
+DISCONNECT_INACTIVE_CONNECTIONS = False  # Флаг завершать ли неактивные ws соединения тонкого клиента
 
 # Cache settings
 # -----------------------------

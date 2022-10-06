@@ -30,7 +30,7 @@ def main():
     loop.create_task(resources_monitor_manager.listen_for_messages())
 
     thin_client_conn_monitor = ThinClientConnMonitor()
-    loop.create_task(thin_client_conn_monitor.check_thin_client_connections())
+    thin_client_conn_monitor.start()
 
     loop.run_forever()  # run until event loop stops
 
