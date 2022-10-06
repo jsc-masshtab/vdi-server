@@ -7,6 +7,7 @@ from dateutil.tz import tzlocal
 
 import graphene
 
+from common import settings
 from common.graphene_utils import ShortString
 from common.languages import _local_
 from common.log.journal import check_smtp_connection, system_logger
@@ -63,6 +64,8 @@ class SettingsType(graphene.ObjectType):
     VEIL_MAX_IDS_LEN = graphene.Int()
     VEIL_MAX_VM_CREATE_ATTEMPTS = graphene.Int()
     PASSWORD_SECURITY_LEVEL = PassSecLevelGraphene()
+    DISCONNECT_INACTIVE_CONNECTIONS = graphene.Boolean(default_value=settings.DISCONNECT_INACTIVE_CONNECTIONS)
+    AFK_TIMEOUT = graphene.Int(default_value=settings.AFK_TIMEOUT)
 
 
 class SmtpSettingsType(graphene.ObjectType):
@@ -237,6 +240,8 @@ class ChangeSettingsMutation(graphene.Mutation):
         VEIL_MAX_IDS_LEN = graphene.Int()
         VEIL_MAX_VM_CREATE_ATTEMPTS = graphene.Int()
         PASSWORD_SECURITY_LEVEL = PassSecLevelGraphene()
+        DISCONNECT_INACTIVE_CONNECTIONS = graphene.Boolean()
+        AFK_TIMEOUT = graphene.Int()
 
     ok = graphene.Boolean()
 
