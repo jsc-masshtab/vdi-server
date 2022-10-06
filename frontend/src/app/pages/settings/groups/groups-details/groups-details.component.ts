@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute, Router, ParamMap } from '@angular/router';
 import { Subscription } from 'rxjs';
+import { map } from 'rxjs/operators';
 
 import { FormForEditComponent } from '../../../../shared/forms-dinamic/change-form/form-edit.component';
 import { AddPermissionComponent } from '../add-permission/add-permission.component';
@@ -13,7 +14,6 @@ import { AddUserGroupComponent } from './add-users/add-user.component';
 import { RemoveRoleComponent } from './remove-role/remove-role.component';
 import { RemoveUserGroupComponent } from './remove-user/remove-user.component';
 
-
 @Component({
   selector: 'groups-details',
   templateUrl: './groups-details.component.html',
@@ -22,10 +22,17 @@ import { RemoveUserGroupComponent } from './remove-user/remove-user.component';
 export class GroupsDetailsComponent implements OnInit, OnDestroy {
 
   private sub: Subscription;
+
   private id: string;
   public entity = {};
   public host: boolean = false;
   public menuActive: string = 'info';
+
+  public limit = 100;
+  public count = 0;
+  public offset = 0;
+
+  queryset: any = {}
 
   public collection: object[] = [
     {
@@ -103,8 +110,12 @@ export class GroupsDetailsComponent implements OnInit, OnDestroy {
     }
   ];
 
-  constructor(private service: GroupsService, private activatedRoute: ActivatedRoute, public dialog: MatDialog,
-              private router: Router) {}
+  constructor(
+    private service: GroupsService,
+    private activatedRoute: ActivatedRoute,
+    public dialog: MatDialog,
+    private router: Router
+  ) {}
 
   ngOnInit() {
     this.activatedRoute.paramMap.subscribe((param: ParamMap) => {
@@ -113,15 +124,31 @@ export class GroupsDetailsComponent implements OnInit, OnDestroy {
     });
   }
 
+  public toPage(message: any): void {
+    this.offset = message.offset;
+    this.getGroup();
+  }
+
   public getGroup(): void {
+
     this.host = false;
+
     if (this.sub) {
       this.sub.unsubscribe();
     }
 
-    this.sub = this.service.getGroup(this.id)
+    const queryset = {
+      offset: this.offset,
+      limit: this.limit
+    }
+
+    this.queryset = queryset;
+
+    this.sub = this.service.getGroup(this.id, queryset).valueChanges.pipe(map((data: any) => data.data))
       .subscribe((data) => {
         this.host = true;
+        console.log(data)
+        this.count = data.group.assigned_users_count
         this.entity = data.group;
       });
   }
@@ -131,7 +158,7 @@ export class GroupsDetailsComponent implements OnInit, OnDestroy {
   }
 
   // @ts-ignore: Unreachable code error
-  private openEditForm(activeObj: IEditFormObj): void  {
+  public openEditForm(activeObj: IEditFormObj): void  {
     activeObj['formEdit'][0]['fieldValue'] = this.entity[activeObj['property']];
     this.dialog.open(FormForEditComponent, {
       disableClose: true,
@@ -166,7 +193,8 @@ export class GroupsDetailsComponent implements OnInit, OnDestroy {
       data: {
         id: this.id,
         verbose_name: this.entity['verbose_name'],
-        roles: this.entity['possible_roles']
+        roles: this.entity['possible_roles'],
+        queryset: this.queryset
       }
     });
   }
@@ -178,7 +206,8 @@ export class GroupsDetailsComponent implements OnInit, OnDestroy {
       data: {
         id: this.id,
         verbose_name: this.entity['verbose_name'],
-        roles: this.entity['assigned_roles']
+        roles: this.entity['assigned_roles'],
+        queryset: this.queryset
       }
     });
   }
@@ -190,7 +219,7 @@ export class GroupsDetailsComponent implements OnInit, OnDestroy {
       data: {
         id: this.id,
         verbose_name: this.entity['verbose_name'],
-        users: this.entity['possible_users']
+        queryset: this.queryset
       }
     });
   }
@@ -202,7 +231,7 @@ export class GroupsDetailsComponent implements OnInit, OnDestroy {
       data: {
         id: this.id,
         verbose_name: this.entity['verbose_name'],
-        users: this.entity['assigned_users']
+        queryset: this.queryset
       }
     });
   }
@@ -213,7 +242,8 @@ export class GroupsDetailsComponent implements OnInit, OnDestroy {
       width: '500px',
       data: {
         id: this.id,
-        verbose_name: this.entity['verbose_name']
+        verbose_name: this.entity['verbose_name'],
+        queryset: this.queryset
       }
     });
   }
@@ -225,7 +255,8 @@ export class GroupsDetailsComponent implements OnInit, OnDestroy {
       data: {
         id: this.id,
         verbose_name: this.entity['verbose_name'],
-        permissions: this.entity['possible_permissions']
+        permissions: this.entity['possible_permissions'],
+        queryset: this.queryset
       }
     });
   }
@@ -237,7 +268,8 @@ export class GroupsDetailsComponent implements OnInit, OnDestroy {
       data: {
         id: this.id,
         verbose_name: this.entity['verbose_name'],
-        permissions: this.entity['assigned_permissions']
+        permissions: this.entity['assigned_permissions'],
+        queryset: this.queryset
       }
     });
   }

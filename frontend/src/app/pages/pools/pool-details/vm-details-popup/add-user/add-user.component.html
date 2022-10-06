@@ -13,6 +13,7 @@
         <mat-label *ngIf="isPending">Загрузка ...</mat-label>
         <mat-label *ngIf="users.length && !isPending">Выберите пользователя</mat-label>
         <mat-label *ngIf="!users.length && !isPending">- нет доступных пользователей -</mat-label>
+        
         <mat-select [formControl]="usersInput" multiple="true">
 
           <mat-option disabled="disabled" class="mat-filter-option">

@@ -5,7 +5,6 @@ import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { map } from 'rxjs/operators';
 
-
 import { WaitService } from '@core/components/wait/wait.service';
 
 import { DetailsMove } from '@shared/classes/details-move';
@@ -14,24 +13,25 @@ import { IParams } from '@shared/types';
 import { AddGroupComponent } from '../add-groups/add-groups.component';
 import { GroupsService   } from '../groups.service';
 
-
-
-
-
 @Component({
   selector: 'vdi-groups',
   templateUrl: './groups.component.html',
   styleUrls: ['./groups.component.scss']
 })
-
-
 export class GroupsComponent extends DetailsMove implements OnInit, OnDestroy {
 
   private getGroupsSub: Subscription;
 
+  public limit = 100;
+  public count = 0;
+  public offset = 0;
+
+  queryset: any = {}
+
   verbose_name = new FormControl('');
 
-  public groups: [];
+  public groups: any[] = [];
+
   public collection: object[] = [
     {
       title: 'Название',
@@ -71,7 +71,6 @@ export class GroupsComponent extends DetailsMove implements OnInit, OnDestroy {
     this.verbose_name.valueChanges.subscribe(() => {
       this.getAllGroups();
     });
-
   }
 
   public addGroup() {
@@ -81,24 +80,35 @@ export class GroupsComponent extends DetailsMove implements OnInit, OnDestroy {
     });
   }
 
+  public toPage(message: any): void {
+    this.offset = message.offset;
+    this.getAllGroups();
+  }
+
   public getAllGroups() {
     if (this.getGroupsSub) {
       this.getGroupsSub.unsubscribe();
     }
 
     const queryset = {
-      verbose_name: this.verbose_name.value
+      verbose_name: this.verbose_name.value,
+      offset: this.offset,
+      limit: this.limit
     };
 
     if (this.verbose_name.value === '') {
       delete queryset['verbose_name'];
     }
 
+    this.queryset = queryset;
+
     this.waitService.setWait(true);
 
-    this.service.getGroups(queryset).valueChanges.pipe(map(data => data.data.groups))
+    this.service.getGroups(queryset).valueChanges.pipe(map(data => data.data))
       .subscribe((data) => {
-        this.groups = data;
+        console.log(data)
+        this.count = data.count;
+        this.groups = [...data.groups] || [];
         this.waitService.setWait(false);
     });
   }

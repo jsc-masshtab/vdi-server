@@ -6,7 +6,6 @@ import { Subscription } from 'rxjs';
 import { WaitService } from '../../../../core/components/wait/wait.service';
 import { GroupsService } from '../groups.service';
 
-
 @Component({
   selector: 'vdi-add-groups',
   templateUrl: './add-groups.component.html'
@@ -25,13 +24,14 @@ export class AddGroupComponent implements OnDestroy {
     });
   }
 
-  constructor(private service: GroupsService,
-              private dialogRef: MatDialogRef<AddGroupComponent>,
-              private fb: FormBuilder,
-              private waitService: WaitService) {
-                this.initForm();
-              }
-
+  constructor(
+    private service: GroupsService,
+    private dialogRef: MatDialogRef<AddGroupComponent>,
+    private fb: FormBuilder,
+    private waitService: WaitService
+  ) {
+    this.initForm();
+  }
 
   public send() {
     this.checkValid = true;
@@ -39,10 +39,9 @@ export class AddGroupComponent implements OnDestroy {
       this.waitService.setWait(true);
       this.service.createGroup(this.form.value).subscribe((res) => {
         if (res) {
-          this.sub =  this.service.getGroups().valueChanges.subscribe(() => {
-            this.waitService.setWait(false);
-            this.dialogRef.close();
-          });
+          this.service.getGroups().refetch();
+          this.waitService.setWait(false);
+          this.dialogRef.close();
         }
       });
     }

@@ -1,12 +1,8 @@
 import { Injectable } from '@angular/core';
 import { Apollo, QueryRef } from 'apollo-angular';
 import gql from 'graphql-tag';
-import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
 
 import { IParams } from '@shared/types';
-
-
 
 @Injectable()
 export class GroupsService  {
@@ -22,10 +18,15 @@ export class GroupsService  {
        return  this.service.watchQuery({
             query:  gql`
                 query groups(
+                    $limit: Int, 
+                    $offset: Int
                     $ordering: ShortString,
                     $verbose_name: ShortString
                 ){
+                    count: group_count
                     groups(
+                        limit: $limit,
+                        offset: $offset,
                         verbose_name: $verbose_name,
                         ordering: $ordering
                     ){
@@ -46,51 +47,117 @@ export class GroupsService  {
         });
     }
 
-    public getGroup(id: string): Observable<any> {
+    public getGroup(id: string, params?) {
         return this.service.watchQuery({
-            query: gql` query groups($id:UUID) {
-                                group(id: $id) {
-                                id,
-                                verbose_name,
-                                description,
-                                date_created,
-                                date_updated,
-                                assigned_permissions,
-                                possible_permissions,
-                                assigned_users {
-                                  username
-                                  is_active
-                                  id
-                                }
-                                possible_users{
-                                  id
-                                  username
-                                }
-                                assigned_roles
-                                possible_roles
-                            }
+            query: gql` 
+                query groups(
+                    $id:UUID,
+                    $offset: Int,
+                    $limit: Int,
+                    $username: ShortString
+                ){
+                    group(
+                        id: $id
+                    ){
+                        id,
+                        verbose_name,
+                        description,
+                        date_created,
+                        date_updated,
+                        assigned_permissions,
+                        possible_permissions,
+                        assigned_users_count,
+                        assigned_users (
+                            limit: $limit,
+                            offset: $offset,
+                            username: $username
+                        ){
+                            username
+                            is_active
+                            id
                         }
-                    `,
+                        possible_users {
+                            id
+                            username
+                        }
+                        assigned_roles
+                        possible_roles
+                    }
+                }
+            `,
             variables: {
                 method: 'GET',
-                id
+                id,
+                ...params
             }
-        }).valueChanges.pipe(map(data => data.data));
+        });
+    }
+
+    public getPossibleUsersFromGroup(id: string, params?) {
+        return this.service.watchQuery({
+            query: gql` 
+                query groups(
+                    $id:UUID,
+                    $username: ShortString
+                ){
+                    group(
+                        id: $id
+                    ){
+                        id,
+                        possible_users(username: $username) {
+                            id
+                            username
+                        }
+                    }
+                }
+            `,
+            variables: {
+                method: 'GET',
+                id,
+                ...params
+            }
+        })
+    }
+
+    public getAssignedUsersFromGroup(id: string, params?) {
+        return this.service.watchQuery({
+            query: gql` 
+                query groups(
+                    $id:UUID,
+                    $username: ShortString
+                ){
+                    group(
+                        id: $id
+                    ){
+                        id,
+                        assigned_users(username: $username) {
+                            id
+                            username
+                        }
+                    }
+                }
+            `,
+            variables: {
+                method: 'GET',
+                id,
+                ...params
+            }
+        })
     }
 
     public createGroup({verbose_name, description }) {
         return this.service.mutate<any>({
             mutation: gql`
-                            mutation groups(
-                                $verbose_name: ShortString!,
-                                $description: ShortString){
-                                createGroup(
-                                    description: $description,
-                                    verbose_name: $verbose_name
-                                ){
-                                    ok
-                                }
-                            }
+                mutation groups(
+                    $verbose_name: ShortString!,
+                    $description: ShortString){
+                    createGroup(
+                        description: $description,
+                        verbose_name: $verbose_name
+                    ){
+                        ok
+                    }
+                }
             `,
             variables: {
                 method: 'POST',
