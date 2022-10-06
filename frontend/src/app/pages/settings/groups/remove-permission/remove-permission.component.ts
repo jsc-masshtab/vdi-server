@@ -29,10 +29,9 @@ export class RemovePermissionComponent implements OnDestroy {
       this.waitService.setWait(true);
       this.service.removePermission(this.data.id, this.permissions).pipe(takeUntil(this.destroy)).subscribe((res) => {
         if (res) {
-          this.service.getGroup(this.data.id).pipe(takeUntil(this.destroy)).subscribe(() => {
-            this.waitService.setWait(false);
-            this.dialogRef.close();
-          });
+          this.service.getGroup(this.data.id, this.data.queryset).refetch()
+          this.waitService.setWait(false);
+          this.dialogRef.close();
         }
       });
     } else {

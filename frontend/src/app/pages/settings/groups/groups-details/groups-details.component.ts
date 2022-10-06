@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute, Router, ParamMap } from '@angular/router';
 import { Subscription } from 'rxjs';
+import { map } from 'rxjs/operators';
 
 import { FormForEditComponent } from '../../../../shared/forms-dinamic/change-form/form-edit.component';
 import { AddPermissionComponent } from '../add-permission/add-permission.component';
@@ -143,7 +144,7 @@ export class GroupsDetailsComponent implements OnInit, OnDestroy {
 
     this.queryset = queryset;
 
-    this.sub = this.service.getGroup(this.id, queryset)
+    this.sub = this.service.getGroup(this.id, queryset).valueChanges.pipe(map((data: any) => data.data))
       .subscribe((data) => {
         this.host = true;
         console.log(data)
@@ -192,7 +193,8 @@ export class GroupsDetailsComponent implements OnInit, OnDestroy {
       data: {
         id: this.id,
         verbose_name: this.entity['verbose_name'],
-        roles: this.entity['possible_roles']
+        roles: this.entity['possible_roles'],
+        queryset: this.queryset
       }
     });
   }
@@ -204,7 +206,8 @@ export class GroupsDetailsComponent implements OnInit, OnDestroy {
       data: {
         id: this.id,
         verbose_name: this.entity['verbose_name'],
-        roles: this.entity['assigned_roles']
+        roles: this.entity['assigned_roles'],
+        queryset: this.queryset
       }
     });
   }
@@ -216,7 +219,7 @@ export class GroupsDetailsComponent implements OnInit, OnDestroy {
       data: {
         id: this.id,
         verbose_name: this.entity['verbose_name'],
-        users: this.entity['possible_users']
+        queryset: this.queryset
       }
     });
   }
@@ -228,7 +231,7 @@ export class GroupsDetailsComponent implements OnInit, OnDestroy {
       data: {
         id: this.id,
         verbose_name: this.entity['verbose_name'],
-        users: this.entity['assigned_users']
+        queryset: this.queryset
       }
     });
   }
@@ -239,7 +242,8 @@ export class GroupsDetailsComponent implements OnInit, OnDestroy {
       width: '500px',
       data: {
         id: this.id,
-        verbose_name: this.entity['verbose_name']
+        verbose_name: this.entity['verbose_name'],
+        queryset: this.queryset
       }
     });
   }
@@ -251,7 +255,8 @@ export class GroupsDetailsComponent implements OnInit, OnDestroy {
       data: {
         id: this.id,
         verbose_name: this.entity['verbose_name'],
-        permissions: this.entity['possible_permissions']
+        permissions: this.entity['possible_permissions'],
+        queryset: this.queryset
       }
     });
   }
@@ -263,7 +268,8 @@ export class GroupsDetailsComponent implements OnInit, OnDestroy {
       data: {
         id: this.id,
         verbose_name: this.entity['verbose_name'],
-        permissions: this.entity['assigned_permissions']
+        permissions: this.entity['assigned_permissions'],
+        queryset: this.queryset
       }
     });
   }

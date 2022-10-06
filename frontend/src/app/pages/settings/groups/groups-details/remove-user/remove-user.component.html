@@ -8,15 +8,33 @@
   <div class="form-fields">
     <label class="field">
       <mat-form-field>
-        <mat-label *ngIf="pending">Загрузка ...</mat-label>
-        <mat-label *ngIf="data.users?.length && !pending">Выберите пользователей</mat-label>
-        <mat-label *ngIf="!data.users?.length && !pending">- нет пользователей -</mat-label>
-        <mat-select (selectionChange)="select($event)" multiple="true">
-          <mat-option *ngFor="let user of data.users" [value]="user.id">
+        <mat-label *ngIf="isPending">Загрузка ...</mat-label>
+        <mat-label *ngIf="selected_users.length && !isPending">Выберите пользователей</mat-label>
+        <mat-label *ngIf="!selected_users.length && !isPending">- нет пользователей -</mat-label>
+
+        <mat-select [formControl]="users" multiple="true">
+
+          <mat-option disabled="disabled" class="mat-filter-option">
+            <button type="button" class="mat-form-btn" (click)="selectAllUsers()">
+              Выбрать все
+            </button>
+          
+            <button type="button" class="mat-form-btn" (click)="deselectAllUsers()">
+              Очистить выбор
+            </button>
+          </mat-option>
+
+          <mat-option class="mat-filter-option" disabled="disabled">
+            <mat-label>Поиск: </mat-label>
+            <input type="text" [formControl]="search" placeholder="">
+          </mat-option>
+          
+          <mat-option *ngFor="let user of selected_users" [value]="user.id">
             {{user.username}}
           </mat-option>
         </mat-select>
       </mat-form-field>
+      
       <div class="error" *ngIf="!valid">Выберите пользователей</div>
     </label>
   </div>

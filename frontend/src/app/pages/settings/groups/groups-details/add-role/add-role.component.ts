@@ -8,12 +8,6 @@ import { takeUntil } from 'rxjs/operators';
 import { WaitService } from '../../../../../core/components/wait/wait.service';
 import { GroupsService } from '../../groups.service';
 
-interface IData {
-  id: string;
-  verbose_name: string;
-  roles: string[]; // доступные для группы
-}
-
 @Component({
   selector: 'vdi-add-role',
   templateUrl: './add-role.component.html'
@@ -26,22 +20,21 @@ export class AddRoleComponent implements OnDestroy {
   private destroy: Subject<any> = new Subject<any>();
   public valid: boolean = true;
 
-  constructor(private service: GroupsService,
-              private waitService: WaitService,
-              private dialogRef: MatDialogRef<AddRoleComponent>,
-              @Inject(MAT_DIALOG_DATA) public data: IData) { }
-
-
+  constructor(
+    private service: GroupsService,
+    private waitService: WaitService,
+    private dialogRef: MatDialogRef<AddRoleComponent>,
+    @Inject(MAT_DIALOG_DATA) public data: any
+  ) {}
 
   public send() {
     if (this.roles.length) {
       this.waitService.setWait(true);
       this.service.addGroupRole(this.roles, this.data.id).pipe(takeUntil(this.destroy)).subscribe((res) => {
         if (res) {
-          this.service.getGroup(this.data.id).pipe(takeUntil(this.destroy)).subscribe(() => {
-            this.waitService.setWait(false);
-            this.dialogRef.close();
-          });
+          this.service.getGroup(this.data.id, this.data.queryset).refetch()
+          this.waitService.setWait(false);
+          this.dialogRef.close();
         }
       });
     } else {
@@ -57,5 +50,4 @@ export class AddRoleComponent implements OnDestroy {
   ngOnDestroy() {
     this.destroy.next(null);
   }
-
 }

@@ -170,8 +170,16 @@ export class DashboardModule {
                   merge( _ = [], incoming: any[]) {
                     return [...incoming];
                   }
+                },
+                groups: {
+                  merge( _ = [], incoming: any[]) {
+                    return [...incoming];
+                  }
                 }
               }
+            },
+            GroupType: {
+              merge: true
             },
             PoolType: {
               merge: true
@@ -185,7 +193,6 @@ export class DashboardModule {
       defaultOptions: {
         watchQuery: {
           fetchPolicy: 'cache-and-network',
-          nextFetchPolicy: "cache-first",
           errorPolicy: 'ignore',
         },
         query: {

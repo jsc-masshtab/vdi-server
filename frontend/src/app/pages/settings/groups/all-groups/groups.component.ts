@@ -30,7 +30,8 @@ export class GroupsComponent extends DetailsMove implements OnInit, OnDestroy {
 
   verbose_name = new FormControl('');
 
-  public groups: [];
+  public groups: any[] = [];
+
   public collection: object[] = [
     {
       title: 'Название',
@@ -105,8 +106,9 @@ export class GroupsComponent extends DetailsMove implements OnInit, OnDestroy {
 
     this.service.getGroups(queryset).valueChanges.pipe(map(data => data.data))
       .subscribe((data) => {
+        console.log(data)
         this.count = data.count;
-        this.groups = data.groups;
+        this.groups = [...data.groups] || [];
         this.waitService.setWait(false);
     });
   }

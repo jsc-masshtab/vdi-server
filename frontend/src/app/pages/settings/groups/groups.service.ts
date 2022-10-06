@@ -6,8 +6,6 @@ import { map } from 'rxjs/operators';
 
 import { IParams } from '@shared/types';
 
-
-
 @Injectable()
 export class GroupsService  {
 
@@ -51,7 +49,7 @@ export class GroupsService  {
         });
     }
 
-    public getGroup(id: string, params?): Observable<any> {
+    public getGroup(id: string, params?) {
         return this.service.watchQuery({
             query: gql` 
                 query groups(
@@ -94,7 +92,59 @@ export class GroupsService  {
                 id,
                 ...params
             }
-        }).valueChanges.pipe(map(data => data.data));
+        });
+    }
+
+    public getPossibleUsersFromGroup(id: string, params?) {
+        return this.service.watchQuery({
+            query: gql` 
+                query groups(
+                    $id:UUID,
+                    $username: ShortString
+                ){
+                    group(
+                        id: $id
+                    ){
+                        id,
+                        possible_users(username: $username) {
+                            id
+                            username
+                        }
+                    }
+                }
+            `,
+            variables: {
+                method: 'GET',
+                id,
+                ...params
+            }
+        })
+    }
+
+    public getAssignedUsersFromGroup(id: string, params?) {
+        return this.service.watchQuery({
+            query: gql` 
+                query groups(
+                    $id:UUID,
+                    $username: ShortString
+                ){
+                    group(
+                        id: $id
+                    ){
+                        id,
+                        assigned_users(username: $username) {
+                            id
+                            username
+                        }
+                    }
+                }
+            `,
+            variables: {
+                method: 'GET',
+                id,
+                ...params
+            }
+        })
     }
 
     public createGroup({verbose_name, description }) {

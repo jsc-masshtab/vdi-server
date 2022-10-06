@@ -22,9 +22,6 @@ import { GroupsService } from './groups.service';
 import { RemoveGroupComponent } from './remove-groups/remove-group.component';
 import { RemovePermissionComponent } from './remove-permission/remove-permission.component';
 
-
-
-
 @NgModule({
    declarations: [
       GroupsComponent,
