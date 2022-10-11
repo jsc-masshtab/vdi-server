@@ -32,6 +32,10 @@ snapshots['test_request_services 1'] = {
         {
             'status': 'running',
             'verbose_name': 'Веб-приложение.'
+        },
+        {
+            'status': 'running',
+            'verbose_name': 'Vm manager.'
         }
     ]
 }

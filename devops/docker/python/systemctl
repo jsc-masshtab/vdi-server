@@ -7,5 +7,6 @@ postgresql@11-main.service loaded active running
 redis-server.service loaded active running
 vdi-monitor_worker.service loaded active running
 vdi-pool_worker.service loaded active running
+vdi-vm_manager.service loaded active running
 vdi-web.service loaded active running
 ubuntu-fan.service loaded active exited Ubuntu FAN network setup"

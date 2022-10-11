@@ -81,6 +81,22 @@ services:
     command: sh -c "sleep 10 && pip install -U veil_api_client veil_aio_au && python pool_worker/app.py"
     depends_on:
       - vdi-tornado
+  vdi-vm-manager:
+    build:
+      context: ../../
+      dockerfile: ./devops/docker/python/Dockerfile
+    environment:
+      - PYTHONPATH=/opt/veil-vdi/app
+      - PYTHONDONTWRITEBYTECODE=1
+      - PYTHONPYCACHEPREFIX=/tmp
+      - VDI_BROKER_DB_HOST=vdi-postgres
+      - VDI_BROKER_REDIS_HOST=vdi-redis
+    working_dir: /opt/veil-vdi/app
+    volumes:
+      - ../../backend:/opt/veil-vdi/app
+    command: sh -c "sleep 10 && pip install -U veil_api_client veil_aio_au && python vm_manager/app.py"
+    depends_on:
+      - vdi-tornado
   vdi-monitor-worker:
     build:
       context: ../../
