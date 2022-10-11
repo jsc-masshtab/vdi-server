@@ -15,10 +15,10 @@ FERNET_KEY = b"LRzSxWyxqKD4p2BR11-nVmghV67AVmQ4CxYi__S_OH8="
 # -----------------------------
 
 DB_HOST = os.getenv("VDI_BROKER_DB_HOST", "localhost")
-DB_PORT = 5432
-DB_NAME = "vdi"
-DB_USER = "postgres"
-DB_PASS = "postgres"
+DB_PORT = os.getenv("VDI_BROKER_DB_PORT", 5432)
+DB_NAME = os.getenv("VDI_BROKER_DB_NAME", "vdi")
+DB_USER = os.getenv("VDI_BROKER_DB_USER", "postgres")
+DB_PASS = os.getenv("VDI_BROKER_DB_PASS", "postgres")
 
 # Pool settings
 POOL_MIN_SIZE = 1
