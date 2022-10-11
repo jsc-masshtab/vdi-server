@@ -66,6 +66,21 @@ services:
     command: sh -c "sleep 15 && python pool_worker/app.py"
     depends_on:
       - vdi-tornado
+  vdi-vm-manager:
+    image: nexus.bazalt.team/veil-broker-backend:latest
+    deploy:
+      mode: global
+      update_config:
+        parallelism: 1
+    environment:
+      - PYTHONPATH=/opt/broker-backend/app
+      - PYTHONDONTWRITEBYTECODE=1
+      - PYTHONPYCACHEPREFIX=/tmp
+      - VDI_BROKER_DB_HOST=vdi-postgres
+      - VDI_BROKER_REDIS_HOST=vdi-redis
+    command: sh -c "sleep 15 && python vm_manager/app.py"
+    depends_on:
+      - vdi-tornado
   vdi-monitor-worker:
     image: nexus.bazalt.team/veil-broker-backend:latest
     deploy:

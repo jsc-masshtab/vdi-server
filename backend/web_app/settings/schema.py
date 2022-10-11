@@ -29,6 +29,7 @@ app_services = OrderedDict([
     ("vdi-monitor_worker.service", _local_("Monitor worker.")),
     ("vdi-pool_worker.service", _local_("Task worker.")),
     ("vdi-web.service", _local_("Web application.")),
+    ("vdi-vm_manager.service", _local_("Vm manager.")),
 ])
 
 

@@ -32,6 +32,8 @@ echo "Stop 'vdi-monitor_worker' service"
 sudo service vdi-monitor_worker stop
 echo "Stop 'vdi-pool_worker' service"
 sudo service vdi-pool_worker stop
+echo "Stop 'vdi-vm_manager' service"
+sudo service vdi-vm_manager stop
 echo "Stop 'vdi-web' service"
 sudo service vdi-web stop
 
@@ -46,5 +48,7 @@ echo "Start 'vdi-monitor_worker' service"
 sudo service vdi-monitor_worker start
 echo "Start 'vdi-pool_worker' service"
 sudo service vdi-pool_worker start
+echo "Start 'vdi-vm_manager' service"
+sudo service vdi-vm_manager start
 echo "Start 'vdi-web' service"
 sudo service vdi-web start
