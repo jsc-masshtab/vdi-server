@@ -1,6 +1,6 @@
 ---
 
-- name: Broker | Install guacamole server
+- name: Install guacamole server
   apt:
     name: "{{ item }}"
     update_cache: yes

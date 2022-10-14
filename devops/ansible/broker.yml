@@ -1,6 +1,6 @@
 ---
 
-- name: Deploy VeiL Broker
+- name: Install VeiL Broker
   hosts: broker
   become: true
   any_errors_fatal: true
@@ -23,8 +23,12 @@
 
     - include_role:
         name: broker
-      when: broker_mode is not defined
+      when: broker_mode is defined and broker_mode  == "single"
 
     - include_role:
         name: multibroker
       when: broker_mode is defined and broker_mode  == "multi"
+
+    - include_role:
+        name: postgresql
+      when: broker_mode is defined and broker_mode  == "db"

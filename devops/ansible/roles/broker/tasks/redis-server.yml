@@ -1,16 +1,16 @@
 ---
 
-- name: Broker | Install redis-server
+- name: Install redis-server
   apt:
     name: redis-server
     update_cache: yes
 
-- name: Broker | Enable service redis-server
+- name: Enable service redis-server
   service:
     name: redis-server
     enabled: yes
 
-- name: Broker | Configure redis.conf
+- name: Configure redis.conf
   template:
     src: redis.conf.j2
     dest: /etc/redis/redis.conf
@@ -18,19 +18,19 @@
     group: redis
     mode: 0640
 
-- name: Broker | Register redis password
+- name: Register redis password
   shell: grep -r 'REDIS_PASSWORD' /opt/veil-vdi/app/common/local_settings.py | sed -r "s/REDIS_PASSWORD = '(.+)'/\1/g"
   no_log: true
   register: broker_redis_pass
 
-- name: Broker | Set redis password
+- name: Set redis password
   lineinfile:
     dest: /etc/redis/redis.conf
     line: 'requirepass {{ broker_redis_pass.stdout }}'
   no_log: true
   register: broker_redis_pass_set_result
 
-- name: Broker | Restart service redis-server
+- name: Restart service redis-server
   service:
     name: redis-server
     state: restarted
