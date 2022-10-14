@@ -1,11 +1,11 @@
 ---
 
-- name: Broker | Install awstats
+- name: Install awstats
   apt:
     name: awstats
     update_cache: yes
 
-- name: Broker | Configure awstats.vdi.conf
+- name: Configure awstats.vdi.conf
   template:
     src: awstats.vdi.conf.j2
     dest: /etc/awstats/awstats.vdi.conf
@@ -13,7 +13,7 @@
     group: root
     mode: 0644
 
-- name: Broker | Add awstats cron job
+- name: Add awstats cron job
   cron:
     name: "Update awstats statistics"
     minute: "0"

@@ -1,39 +1,47 @@
 ---
 
-- name: Broker | Add repo key
+- name: Add repo key
   apt_key:
     data: "{{ lookup('file', 'veil-repo-key.gpg') }}"
     state: present
 
-- name: Broker | Add apt repo
+- name: Add apt repo
   apt_repository:
     repo: "{{ broker_apt_repo }}"
     state: present
 
-- name: Broker | Install system packages
+- name: Install system packages
   apt:
     name: "{{ item }}"
     update_cache: yes
     state: latest
   loop: "{{ broker_system_packages_list }}"
 
-- name: Broker | Install broker packages
+- name: Install broker packages
   apt:
     name: "{{ item }}"
     update_cache: yes
     state: latest
   loop: "{{ broker_packages_list }}"
 
-- name: Broker | Stop broker services
+- name: Stop broker services
   service:
     name: "{{ item }}"
     state: stopped
   loop: "{{ broker_services_list }}"
 
-# postgresql tasks
-- import_tasks: postgresql.yml
+- name: Register db password
+  shell: grep -r 'DB_PASS' /opt/veil-vdi/app/common/local_settings.py | sed -r "s/DB_PASS = '(.+)'/\1/g"
+  no_log: true
+  register: broker_db_pass
 
-- name: Broker | Configure db connection
+# postgresql role
+- include_role:
+    name: postgresql
+  vars:
+    postgresql_db_pass: "{{ broker_db_pass.stdout }}"
+
+- name: Configure db connection
   blockinfile:
     path: "{{ broker_local_settings }}"
     block: |
@@ -42,7 +50,7 @@
       LOCAL_AUTH = True
       PAM_AUTH = False
 
-- name: Broker | Apply migrations
+- name: Apply migrations
   command: "/opt/veil-vdi/env/bin/python /opt/veil-vdi/env/bin/alembic upgrade head"
   args:
     chdir: "/opt/veil-vdi/app/common/migrations"
@@ -61,13 +69,13 @@
 # guacamole tasks
 - import_tasks: guacamole.yml
 
-- name: Broker | Start broker services
+- name: Start broker services
   service:
     name: "{{ item }}"
     state: started
   loop: "{{ broker_services_list }}"
 
-- name: Broker | Remove apt repo
+- name: Remove apt repo
   apt_repository:
     repo: "{{ broker_apt_repo }}"
     state: absent

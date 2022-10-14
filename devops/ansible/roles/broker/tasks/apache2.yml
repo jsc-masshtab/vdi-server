@@ -1,11 +1,11 @@
 ---
 
-- name: Broker | Install apache2
+- name: Install apache2
   apt:
     name: apache2
     update_cache: yes
 
-- name: Broker | Enable the apache2 modules
+- name: Enable the apache2 modules
   apache2_module:
     state: present
     name: "{{ item }}"
@@ -20,12 +20,12 @@
     - expires
     - remoteip
 
-- name: Broker | Stop service apache2
+- name: Stop service apache2
   service:
     name: apache2
     state: stopped
 
-- name: Broker | Configure apache2.conf
+- name: Configure apache2.conf
   template:
     src: apache2.conf.j2
     dest: /etc/apache2/apache2.conf
@@ -33,7 +33,7 @@
     group: root
     mode: 0644
 
-- name: Broker | Remove default apache2 sites configs
+- name: Remove default apache2 sites configs
   file:
     path: "{{ item }}"
     state: absent
@@ -43,7 +43,7 @@
     - /etc/apache2/sites-available/000-default.conf
     - /etc/apache2/sites-available/default-ssl.conf
 
-- name: Broker | Configure apache2 sites configs
+- name: Configure apache2 sites configs
   template:
     src: "{{ item }}.conf.j2"
     dest: "/etc/apache2/sites-available/{{ item }}.conf"
@@ -54,7 +54,7 @@
     - broker
     - broker-ssl
 
-- name: Broker | Enable apache2 sites configs
+- name: Enable apache2 sites configs
   file:
     src: "/etc/apache2/sites-available/{{ item }}.conf"
     dest: "/etc/apache2/sites-enabled/{{ item }}.conf"
@@ -65,7 +65,7 @@
     - broker
     - broker-ssl
 
-- name: Broker | Configure apache2 systemd unit
+- name: Configure apache2 systemd unit
   template:
     src: apache2.service.j2
     dest: /lib/systemd/system/apache2.service
@@ -74,22 +74,22 @@
     mode: 0644
   register: apache2_systemd
 
-- name: Broker | Reread systemd configs
+- name: Reread systemd configs
   systemd:
     daemon_reload: yes
   when: apache2_systemd.changed
 
-- name: Broker | Enable service apache2
+- name: Enable service apache2
   service:
     name: apache2
     enabled: yes
 
-- name: Broker | Start service apache2
+- name: Start service apache2
   service:
     name: apache2
     state: started
 
-- name: Broker | Change apache2 logs ownership and group
+- name: Change apache2 logs ownership and group
   file:
     path: /var/log/apache2
     owner: www-data

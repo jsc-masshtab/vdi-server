@@ -26,11 +26,8 @@ services:
     deploy:
       restart_policy:
         condition: none
-    environment:
-      - PYTHONPATH=/opt/broker-backend/app
-      - PYTHONDONTWRITEBYTECODE=1
-      - PYTHONPYCACHEPREFIX=/tmp
-      - VDI_BROKER_DB_HOST=vdi-postgres
+    env_file:
+       - '.env'
     command: sh -c "cd common/migrations && alembic upgrade head || while [ $$? -ne 0 ]; do alembic upgrade head; done"
     depends_on:
       - vdi-postgres
@@ -40,12 +37,8 @@ services:
       mode: global
       update_config:
         parallelism: 1
-    environment:
-      - PYTHONPATH=/opt/broker-backend/app
-      - PYTHONDONTWRITEBYTECODE=1
-      - PYTHONPYCACHEPREFIX=/tmp
-      - VDI_BROKER_DB_HOST=vdi-postgres
-      - VDI_BROKER_REDIS_HOST=vdi-redis
+    env_file:
+       - '.env'
     command: sh -c "sleep 15 && python web_app/app.py --logging=DEBUG --address=0.0.0.0"
     depends_on:
       - vdi-postgres
@@ -57,12 +50,8 @@ services:
       mode: global
       update_config:
         parallelism: 1
-    environment:
-      - PYTHONPATH=/opt/broker-backend/app
-      - PYTHONDONTWRITEBYTECODE=1
-      - PYTHONPYCACHEPREFIX=/tmp
-      - VDI_BROKER_DB_HOST=vdi-postgres
-      - VDI_BROKER_REDIS_HOST=vdi-redis
+    env_file:
+       - '.env'
     command: sh -c "sleep 15 && python pool_worker/app.py"
     depends_on:
       - vdi-tornado
@@ -87,12 +76,8 @@ services:
       mode: global
       update_config:
         parallelism: 1
-    environment:
-      - PYTHONPATH=/opt/broker-backend/app
-      - PYTHONDONTWRITEBYTECODE=1
-      - PYTHONPYCACHEPREFIX=/tmp
-      - VDI_BROKER_DB_HOST=vdi-postgres
-      - VDI_BROKER_REDIS_HOST=vdi-redis
+    env_file:
+       - '.env'
     command: sh -c "sleep 15 && python monitor_worker/app.py"
     depends_on:
       - vdi-tornado

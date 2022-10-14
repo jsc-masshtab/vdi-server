@@ -24,8 +24,21 @@ fi
 # run ansible-playbook
 cd /media/cdrom/ansible
 if [[ $1 == "multi" ]]; then
-    if [[ $2 == "manager" ]]; then
-        ansible-playbook broker.yml --extra-vars "broker_mode=multi multibroker_role=manager"
+    if [ -z  "$2" ]; then
+        echo "Parameter error: Multibroker role is not defined" && exit 1
+    elif [[ $2 == "manager" ]]; then
+        if [ -z  "$3" ]; then
+            echo "Parameter error: Database address is not defined" && exit 1
+        fi
+        if [ -z  "$4" ]; then
+            echo "Parameter error: Database port is not defined" && exit 1
+        fi
+        echo "Insert database (postgresql) user's name:"
+        read DB_USER
+        echo "Insert database (postgresql) user's password:"
+        read -s DB_PASS
+        ansible-playbook broker.yml --extra-vars "broker_mode=multi multibroker_role=manager multibroker_db_host=$3 multibroker_db_port=$4 multibroker_db_user=$DB_USER multibroker_db_pass=$DB_PASS"
+        unset $DB_PASS
     elif [[ $2 == "worker" ]]; then
         if [ -z  "$3" ]; then
             echo "Parameter error: Multibroker manager address is not defined" && exit 1
@@ -35,6 +48,8 @@ if [[ $1 == "multi" ]]; then
         fi
         ansible-playbook broker.yml --extra-vars "broker_mode=multi multibroker_role=worker multibroker_swarm_manager_address=$3 multibroker_swarm_join_token=$4"
     fi
+elif [[ $1 == "db" ]]; then
+    ansible-playbook broker.yml --extra-vars "broker_mode=db"
 else
-    ansible-playbook broker.yml
+    ansible-playbook broker.yml --extra-vars "broker_mode=single"
 fi

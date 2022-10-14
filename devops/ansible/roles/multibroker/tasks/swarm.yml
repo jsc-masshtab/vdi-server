@@ -25,13 +25,45 @@
         dest: "{{ multibroker_directory }}/multibroker-stack.yml"
         owner: root
         group: root
-        mode: 0644
+        mode: 0600
       register: multibroker_manifest
+
+    - name: Copy .env file
+      template:
+        src: .env.j2
+        dest: "{{ multibroker_directory }}/.env"
+        owner: root
+        group: root
+        mode: 0600
+      register: multibroker_env
+
+    - name: Configure db address in .env file
+      lineinfile:
+        path: "{{ multibroker_directory }}/.env"
+        regexp: '^VDI_BROKER_DB_HOST'
+        line: VDI_BROKER_DB_HOST={{ multibroker_db_host }}
+
+    - name: Configure db port in .env file
+      lineinfile:
+        path: "{{ multibroker_directory }}/.env"
+        line: VDI_BROKER_DB_PORT={{ multibroker_db_port }}
+
+    - name: Configure db user in .env file
+      lineinfile:
+        path: "{{ multibroker_directory }}/.env"
+        line: VDI_BROKER_DB_USER={{ multibroker_db_user }}
+      no_log: true
+
+    - name: Configure db password in .env file
+      lineinfile:
+        path: "{{ multibroker_directory }}/.env"
+        line: VDI_BROKER_DB_PASS={{ multibroker_db_pass }}
+      no_log: true
 
     - name: Deploy multibroker stack
       command: |
-        docker stack deploy -c {{ multibroker_directory }}/multibroker-stack.yml multibroker
-      when: multibroker_manifest.changed
+        docker stack deploy --resolve-image never -c {{ multibroker_directory }}/multibroker-stack.yml multibroker
+      when: multibroker_manifest.changed or multibroker_env.changed
 
     - name: Inspect swarm
       docker_swarm:
