@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*
+import datetime
 import json
 import re
 import uuid
@@ -16,6 +17,7 @@ from veil_aio_au import VeilResult as VeilAuthResult
 from common.database import db
 from common.languages import _local_
 from common.log.journal import system_logger
+from common.models.settings import Settings
 from common.models.user_tk_permission import (
     GroupTkPermission,
     TkPermission,
@@ -115,6 +117,7 @@ class User(AbstractSortableStatusModel, VeilModel):
     id = db.Column(UUID(), primary_key=True, default=uuid.uuid4)
     username = db.Column(db.Unicode(length=128), nullable=False, unique=True)
     password = db.Column(db.Unicode(length=128), nullable=False)
+    password_expiration_date = db.Column(db.DateTime(timezone=True), nullable=True)
     email = db.Column(db.Unicode(length=256), unique=False, nullable=True)
     last_name = db.Column(db.Unicode(length=128))
     first_name = db.Column(db.Unicode(length=32))
@@ -569,6 +572,15 @@ class User(AbstractSortableStatusModel, VeilModel):
         return await veil_auth_class.user_set_gecos(username=self.username, gecos=gecos)
 
     async def set_password(self, raw_password, creator):
+        # Save old password in history
+        await PasswordHistory.soft_create(user_id=self.id)
+
+        # Set password expiration date
+        expiration_date = await self.get_password_expiration_date()
+        await User.update.values(
+            password_expiration_date=expiration_date
+        ).where(User.id == self.id).gino.status()
+
         if PAM_AUTH and not self.by_ad:
             pam_result = await self.pam_create_user(raw_password=raw_password)
             if pam_result.success:
@@ -597,6 +609,21 @@ class User(AbstractSortableStatusModel, VeilModel):
         await UserJwtInfo.delete.where(UserJwtInfo.user_id == self.id).gino.status()
 
         return user_status
+
+    @staticmethod
+    async def get_password_expiration_date():
+        expiration_date = None
+        expiration_period = await Settings.get_settings("PASSWORD_EXPIRATION_PERIOD")
+
+        if expiration_period and expiration_period != 0:
+            today = datetime.datetime.now(datetime.timezone.utc)
+            timedelta = datetime.timedelta(days=abs(expiration_period))
+            expiration_date = today + timedelta
+            info_message = _local_(
+                f"Password expires {expiration_date.date()}."
+            )
+            await system_logger.info(info_message)
+        return expiration_date
 
     async def pam_create_user(
         self, raw_password: str, superuser: bool = False
@@ -687,6 +714,9 @@ class User(AbstractSortableStatusModel, VeilModel):
             user_kwargs["first_name"] = first_name
         if id:
             user_kwargs["id"] = id
+        password_expiration_date = await cls.get_password_expiration_date()
+        if password_expiration_date:
+            user_kwargs["password_expiration_date"] = password_expiration_date
 
         user_role = _local_("Superuser.") if is_superuser else _local_("User.")
 
@@ -1275,6 +1305,38 @@ class UserRole(db.Model):
     user_id = db.Column(
         UUID(), db.ForeignKey(User.id, ondelete="CASCADE"), nullable=False
     )
+
+
+class PasswordHistory(db.Model):
+    __tablename__ = "password_history"
+    id = db.Column(UUID(), primary_key=True, default=uuid.uuid4)
+    user_id = db.Column(
+        UUID(), db.ForeignKey(User.id, ondelete="CASCADE"), nullable=False
+    )
+    password = db.Column(db.Unicode(length=128), nullable=False)
+    changed = db.Column(db.DateTime(timezone=True), server_default=func.now())
+
+    @classmethod
+    async def soft_create(cls, user_id):
+        password = await User.select("password").where(User.id == user_id).gino.first()
+        kwargs = {
+            "user_id": user_id,
+            "password": password[0]
+        }
+        model = await cls.create(**kwargs)
+        return model
+
+    @classmethod
+    async def get_encoded_passwords(cls, user_id):
+        encoded_passwords = await cls.select("password").where(
+            cls.user_id == user_id).gino.all()
+
+        if encoded_passwords:
+            encoded_passwords_list = [
+                password[0] for password in encoded_passwords
+            ]
+            return encoded_passwords_list
+        return
 
 
 # -------- Составные индексы --------------------------------

@@ -65,6 +65,7 @@ class SettingsType(graphene.ObjectType):
     VEIL_MAX_IDS_LEN = graphene.Int()
     VEIL_MAX_VM_CREATE_ATTEMPTS = graphene.Int()
     PASSWORD_SECURITY_LEVEL = PassSecLevelGraphene()
+    PASSWORD_EXPIRATION_PERIOD = graphene.Int()
     DISCONNECT_INACTIVE_CONNECTIONS = graphene.Boolean(default_value=settings.DISCONNECT_INACTIVE_CONNECTIONS)
     AFK_TIMEOUT = graphene.Int(default_value=settings.AFK_TIMEOUT)
 
@@ -241,6 +242,7 @@ class ChangeSettingsMutation(graphene.Mutation):
         VEIL_MAX_IDS_LEN = graphene.Int()
         VEIL_MAX_VM_CREATE_ATTEMPTS = graphene.Int()
         PASSWORD_SECURITY_LEVEL = PassSecLevelGraphene()
+        PASSWORD_EXPIRATION_PERIOD = graphene.Int()
         DISCONNECT_INACTIVE_CONNECTIONS = graphene.Boolean()
         AFK_TIMEOUT = graphene.Int()
 

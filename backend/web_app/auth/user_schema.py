@@ -126,6 +126,7 @@ class UserType(graphene.ObjectType):
     id = graphene.UUID()
     username = graphene.Field(ShortString)
     password = graphene.Field(ShortString)
+    password_expiration_date = graphene.DateTime()
     email = graphene.Field(ShortString)
     last_name = graphene.Field(ShortString)
     first_name = graphene.Field(ShortString)
@@ -180,6 +181,10 @@ class UserType(graphene.ObjectType):
 
     async def resolve_password(self, _info):
         return "*" * 8  # dummy value for not displayed field
+
+    async def resolve_password_expiration_date(self, _info):
+        user = await User.get(self.id)
+        return user.password_expiration_date
 
     async def resolve_assigned_groups(self, _info):
         user = await User.get(self.id)
