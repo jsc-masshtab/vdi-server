@@ -45,7 +45,9 @@
               "src/reset.scss",
               "src/styles.scss"
             ],
-            "scripts": []
+            "scripts": [
+              "src/init.js"
+            ]
           },
           "configurations": {
             "production": {

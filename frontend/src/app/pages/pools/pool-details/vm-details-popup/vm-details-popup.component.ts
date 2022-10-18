@@ -395,7 +395,7 @@ export class VmDetalsPopupComponent extends VmCollections implements OnInit, OnD
       data: {
         form: {
           header: 'Подтверждение действия',
-          question: `Монтировать образ VeiL utils для ВМ ${this.data.vm.verbose_name}?`,
+          question: `Монтировать образ utils для ВМ ${this.data.vm.verbose_name}?`,
           button: 'Выполнить'
         },
         request: {

@@ -39,6 +39,9 @@ export class LoginComponent implements OnInit {
   public settings$: Observable<ISettings>;
   public useCode = new FormControl(false)
   public ldap = '';
+  public broker_name = '';
+  
+  info$ = this.loginService.getCopyrightInfo();
 
   constructor(private fb: FormBuilder,
               private authStorageService: AuthStorageService,
@@ -55,7 +58,7 @@ export class LoginComponent implements OnInit {
 
     this.loginService.getSettings().subscribe((res) => {
       this.ldap = res.ldap;
-
+      this.broker_name = res.broker_name
       if (res.sso) {
         this.sendSSO();
       }

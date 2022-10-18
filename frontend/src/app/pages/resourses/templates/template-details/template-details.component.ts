@@ -175,7 +175,7 @@ export class TemplateDetailsComponent implements OnInit, OnDestroy {
         data: {
           form: {
             header: 'Подтверждение действия',
-            question: `Монтировать образ VeiL utils для шаблона ${this.template.verbose_name}?`,
+            question: `Монтировать образ utils для шаблона ${this.template.verbose_name}?`,
             button: 'Выполнить'
           },
           request: {

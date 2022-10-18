@@ -50,4 +50,8 @@ export class LoginService {
         let url = `${environment.api}sso/`;
         return this.http.get(url, { observe: 'response' });
     }
+
+    public getCopyrightInfo(): Observable<any> {
+        return this.http.get<any>('/api/version/').pipe(map((res: any) => res.data));
+      }
 }
