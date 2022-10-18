@@ -33,10 +33,16 @@ if [[ $1 == "multi" ]]; then
         if [ -z  "$4" ]; then
             echo "Parameter error: Database port is not defined" && exit 1
         fi
-        echo "Insert database (postgresql) user's name:"
+        echo "Insert database (postgresql) username:"
         read DB_USER
-        echo "Insert database (postgresql) user's password:"
+        if [ -z  "$DB_USER" ]; then
+            echo "Parameter error: Database username is empty" && exit 1
+        fi
+        echo "Insert database (postgresql) password:"
         read -s DB_PASS
+        if [ -z  "$DB_PASS" ]; then
+            echo "Parameter error: Database password is empty" && exit 1
+        fi
         ansible-playbook broker.yml --extra-vars "broker_mode=multi multibroker_role=manager multibroker_db_host=$3 multibroker_db_port=$4 multibroker_db_user=$DB_USER multibroker_db_pass=$DB_PASS"
         unset $DB_PASS
     elif [[ $2 == "worker" ]]; then

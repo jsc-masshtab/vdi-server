@@ -45,7 +45,6 @@ pipeline {
         choice(    name: 'REPO',           choices: repos,                description: 'repo for uploading')
         string(    name: 'VERSION',        defaultValue: version,         description: 'base version')
         choice(    name: 'AGENT',          choices: agents,               description: 'jenkins build agent')
-        string(    name: 'BROKER_NAME',    defaultValue: 'VeiL VDI',      description: 'broker name')
     }
 
     stages {
@@ -87,8 +86,6 @@ pipeline {
                     # install requirements
                     cd ${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/app
                     ${DEB_ROOT}/${PRJNAME}/root/opt/veil-vdi/env/bin/python -m pip --no-cache-dir install -r requirements.txt
-                    # set BROKER_NAME
-                    echo "BROKER_NAME = \\"${BROKER_NAME}\\"" > common/broker_name.py
                     # make relocatable env
                     virtualenv --relocatable ../env
 
