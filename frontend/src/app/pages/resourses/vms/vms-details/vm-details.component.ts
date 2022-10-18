@@ -203,7 +203,7 @@ export class VmDetailsComponent implements OnInit, OnDestroy {
         data: {
           form: {
             header: 'Подтверждение действия',
-            question: `Монтировать образ VeiL utils для ВМ ${this.vm.verbose_name}?`,
+            question: `Монтировать образ utils для ВМ ${this.vm.verbose_name}?`,
             button: 'Выполнить'
           },
           request: {

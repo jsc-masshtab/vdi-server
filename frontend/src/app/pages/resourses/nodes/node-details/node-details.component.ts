@@ -67,7 +67,7 @@ export class NodeDetailsComponent implements OnInit, OnDestroy {
       title: 'Тип установки',
       type: {
         typeDepend: 'boolean',
-        propertyDepend: ['VeiL controller + VeiL server', 'VeiL server']
+        propertyDepend: ['controller + server', 'server']
       }
     },
     {

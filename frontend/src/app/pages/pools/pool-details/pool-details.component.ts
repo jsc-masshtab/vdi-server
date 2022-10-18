@@ -558,7 +558,7 @@ export class PoolDetailsComponent extends PoolCollections implements OnInit, OnD
           entity: 'pool-details',
           header: 'Изменение шаблона для ВМ',
           buttonAction: 'Изменить',
-          danger: 'Произойдет переименование ВМ и переназначение hostname на ECP VeiL!',
+          danger: 'Произойдет переименование ВМ и переназначение hostname на коннтроллере!',
           form: [{
             tag: 'input',
             type: 'text',

@@ -3,9 +3,7 @@
 -->
 
 <div class="linear-gradient">
-	<p class="login-title">
-		Virtual Desktop Infrastructure <b>VeiL</b>
-	</p>
+	<p class="login-title" id="login-title">{{ broker_name }}</p>
 
 	<form [formGroup]="loginForm" *ngIf="loaded" [@animForm]="loaded" class="form">
 		<div class="form-message">
@@ -51,6 +49,6 @@
 	</form>
 </div>
 
-<div class="copyright-login">
-	<span>© mashtab.org, 2019-2022</span>
+<div class="copyright-login" *ngIf="(info$ | async) as info">
+	<span>{{ info.copyright }}, {{ info.year }}</span>
 </div>

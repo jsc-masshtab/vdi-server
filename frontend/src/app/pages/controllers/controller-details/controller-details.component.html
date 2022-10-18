@@ -44,7 +44,7 @@
             <li (click)="routeTo('datapools')" [class.active]="menuActive === 'datapools'" title="Пулы данных"><fa-icon [icon]="['fas','folder-open']"></fa-icon><span class="name">Пулы данных</span></li>
             <li (click)="routeTo('vms')" [class.active]="menuActive === 'vms'" title="Виртуальные машины"><fa-icon [icon]="['fas','desktop']"></fa-icon><span class="name">Виртуальные машины</span></li>
             <li (click)="routeTo('templates')" [class.active]="menuActive === 'templates'" title="Шаблоны виртуальных машин"><fa-icon [icon]="['fas','tv']"></fa-icon><span class="name">Шаблоны ВМ</span></li>
-            <li (click)="routeTo('veil-events')" [class.active]="menuActive === 'veil-events'" title="События ECP VeiL"><fa-icon [icon]="['fas','comment']"></fa-icon><span class="name">События ECP VeiL</span></li>
+            <li (click)="routeTo('veil-events')" [class.active]="menuActive === 'veil-events'" title="События контроллеров"><fa-icon [icon]="['fas','comment']"></fa-icon><span class="name">События контроллеров</span></li>
         </ul>
 
         <div class="details-slide" *ngIf="host">
@@ -56,7 +56,7 @@
                 <ng-container *ngIf="menuActive === 'datapools'">Пулы данных на контроллере</ng-container>
                 <ng-container *ngIf="menuActive === 'templates'">Шаблоны ВМ на контроллере</ng-container>
                 <ng-container *ngIf="menuActive === 'vms'">ВМ на контроллере</ng-container>
-                <ng-container *ngIf="menuActive === 'veil-events'">События ECP VeiL</ng-container>
+                <ng-container *ngIf="menuActive === 'veil-events'">События контроллеров</ng-container>
             </div>
             <div class="details-slide-into">
                 <vdi-table-into *ngIf="menuActive === 'info'" [item]="controller" [collection]="collection" (edit)="edit($event)"></vdi-table-into>
