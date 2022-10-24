@@ -44,21 +44,28 @@ class ThinClientTaskSet(SequentialTaskSet):
         # login
         body = {"username": self.vdi_username, "password": password}
         headers = {"Content-Type": "application/json"}
-        response = self.user.http_client.post(url="/auth", data=json.dumps(body), headers=headers)
+        response = self.user.http_client.post(url="/api/auth", data=json.dumps(body), headers=headers)
 
         # parse to get token
         response_dict = self._get_response_dict(response)
-        self.jwt = response_dict["data"]["access_token"]
-        self.base_headers = {"Content-Type": "application/json",
-                             "Authorization": "jwt {}".format(self.jwt)}
+
+        try:
+            self.jwt = response_dict["data"]["access_token"]
+            self.base_headers = {"Content-Type": "application/json",
+                                "Authorization": "jwt {}".format(self.jwt)}
+        except KeyError as ex:
+            errors = response_dict.get("errors")
+            if errors:
+                raise RuntimeError(errors)
+            raise ex
 
     # override
     def on_stop(self):
-        self.user.http_client.post(url="/logout", data=None, headers=self.base_headers)
+        self.user.http_client.post(url="/api/logout", data=None, headers=self.base_headers)
 
     @task
     def task_get_pools(self):
-        with self.user.http_client.get(url="/client/pools",
+        with self.user.http_client.get(url="/api/client/pools",
                                        data=None,
                                        headers=self.base_headers) as response:
             try:
@@ -71,7 +78,7 @@ class ThinClientTaskSet(SequentialTaskSet):
     @task
     def task_get_vm_from_pool(self):
 
-        with self.user.http_client.post(url="/client/pools/{}".format(self.pool_id),
+        with self.user.http_client.post(url="/api/client/pools/{}".format(self.pool_id),
                                         data=None,
                                         headers=self.base_headers,
                                         catch_response=True) as response:
@@ -123,6 +130,7 @@ class ThinClientUser(User):
             user=self,
         )
         self.http_client.trust_env = False
+        self.http_client.verify = False
 
         # spice
         self.spice_client = SpiceSession()
