@@ -81,6 +81,17 @@ class SmtpSettingsType(graphene.ObjectType):
     level = graphene.Int()
 
 
+class GatewaySettingsType(graphene.ObjectType):
+    port_range_start = graphene.Int()
+    port_range_stop = graphene.Int()
+    gateway_address = graphene.Field(ShortString)
+    gateway_port = graphene.Int()
+    broker_address = graphene.Field(ShortString)
+    broker_port = graphene.Int()
+    vc_address = graphene.Field(ShortString)
+    vc_port = graphene.Int()
+
+
 class ServiceGrapheneType(graphene.ObjectType):
     service_name = graphene.Field(ShortString)
     verbose_name = graphene.Field(ShortString)
@@ -101,6 +112,7 @@ class SysInfoGrapheneType(graphene.ObjectType):
 class SettingsQuery(graphene.ObjectType):
     settings = graphene.Field(SettingsType)
     smtp_settings = graphene.Field(SmtpSettingsType)
+    gateway_settings = graphene.Field(GatewaySettingsType)
     check_smtp_connection = graphene.Boolean()
 
     services = graphene.List(ServiceGrapheneType)
@@ -118,6 +130,12 @@ class SettingsQuery(graphene.ObjectType):
         smtp_settings = await Settings.get_smtp_settings()
         smtp_settings_list = SmtpSettingsType(**smtp_settings)
         return smtp_settings_list
+
+    @administrator_required
+    async def resolve_gateway_settings(self, _info, **kwargs):
+        gateway_settings = await Settings.get_gateway_settings()
+        gateway_settings_list = GatewaySettingsType(**gateway_settings)
+        return gateway_settings_list
 
     @administrator_required
     async def resolve_check_smtp_connection(self, _info, **kwargs):
@@ -273,6 +291,25 @@ class ChangeSmtpSettingsMutation(graphene.Mutation):
         return ChangeSmtpSettingsMutation(ok=ok)
 
 
+class ChangeGatewaySettingsMutation(graphene.Mutation):
+    class Arguments:
+        port_range_start = graphene.Int()
+        port_range_stop = graphene.Int()
+        gateway_address = ShortString()
+        gateway_port = graphene.Int()
+        broker_address = ShortString()
+        broker_port = graphene.Int()
+        vc_address = ShortString()
+        vc_port = graphene.Int()
+
+    ok = graphene.Boolean()
+
+    @administrator_required
+    async def mutate(self, _info, creator, **kwargs):
+        ok = await Settings.change_gateway_settings(creator=creator, **kwargs)
+        return ChangeGatewaySettingsMutation(ok=ok)
+
+
 class DoServiceAction(graphene.Mutation):
     class Arguments:
         service_name = ShortString()
@@ -352,6 +389,7 @@ class ClearRedisCache(graphene.Mutation):
 class SettingsMutations(graphene.ObjectType):
     changeSettings = ChangeSettingsMutation.Field()
     changeSmtpSettings = ChangeSmtpSettingsMutation.Field()
+    changeGatewaySettings = ChangeGatewaySettingsMutation.Field()
 
     doServiceAction = DoServiceAction.Field()
 

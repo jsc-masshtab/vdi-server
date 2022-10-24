@@ -1810,6 +1810,8 @@ class UpdateVmConnectionDataMutation(graphene.Mutation, PoolValidator):
 
     class Arguments:
         id = graphene.UUID(required=True)  # vm_connection_data record id
+        vm_id = graphene.UUID(required=True)
+        connection_type = ConnectionTypesGraphene(required=True)
         address = ShortString()
         port = graphene.Int()
         active = graphene.Boolean()
