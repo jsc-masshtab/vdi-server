@@ -16,6 +16,8 @@ from common.veil.veil_redis import redis_get_client, wait_for_task_result
 from common.models.controller import Controller
 from common.models.pool import Pool
 from common.models.vm import Vm
+from common.models.vm_connection_data import VmConnectionData
+from common.models.active_tk_connection import ActiveTkConnection
 from common.models.auth import Group, User
 from common.models.authentication_directory import AuthenticationDirectory, Mapping
 from common.models.license import License
@@ -134,7 +136,7 @@ async def fixt_auth_context():
     return await get_auth_context()
 
 
-@pytest.fixture # prepare_vms: false,
+@pytest.fixture  # prepare_vms: false,
 async def fixt_create_automated_pool(fixt_controller):
     """Create an automated pool, yield, remove this pool."""
     # start resources_monitor to receive info  from controller. autopool creation doesn`t work without it
@@ -909,6 +911,67 @@ def fixt_vm(request, event_loop, fixt_create_static_pool):
     def teardown():
         async def a_teardown():
             await Vm.delete.where(Vm.id == id).gino.status()
+
+        event_loop.run_until_complete(a_teardown())
+
+    request.addfinalizer(teardown)
+    return True
+
+
+@pytest.fixture
+def fixt_vm_connection_data(request, event_loop):
+    vm_id = "10913d5d-ba7a-4049-88c5-769267a6cbe4"
+    connection_type = "RDP"
+    address = "192.168.88.99"
+    port = 3389
+    active = True
+
+    async def setup():
+        await VmConnectionData.soft_create(
+            vm_id=vm_id,
+            connection_type=connection_type,
+            address=address,
+            port=port,
+            active=active,
+            creator="system"
+        )
+
+    event_loop.run_until_complete(setup())
+
+    def teardown():
+        async def a_teardown():
+            await VmConnectionData.delete.where(vm_id == vm_id).gino.status()
+
+        event_loop.run_until_complete(a_teardown())
+
+    request.addfinalizer(teardown)
+    return True
+
+
+@pytest.fixture
+def fixt_active_tk_connection(request, event_loop):
+    user_id = "10913d5d-ba7a-4049-88c5-769267a6cbe4"
+    veil_connect_version = "1.14.6"
+    tk_ip = "127.0.0.1"
+    tk_os = "Linux"
+    hostname = "PC"
+    mac_address = "84:4b:f5:9f:a2:51"
+
+    async def setup():
+        await ActiveTkConnection.create(
+            user_id=user_id,
+            veil_connect_version=veil_connect_version,
+            tk_ip=tk_ip,
+            tk_os=tk_os,
+            mac_address=mac_address,
+            hostname=hostname
+        )
+
+    event_loop.run_until_complete(setup())
+
+    def teardown():
+        async def a_teardown():
+            await ActiveTkConnection.delete.where(user_id == user_id).gino.status()
 
         event_loop.run_until_complete(a_teardown())
 

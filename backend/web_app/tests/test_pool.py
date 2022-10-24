@@ -766,10 +766,10 @@ async def test_vm_connection_data(
     new_active = "false"
     qu = """
     mutation {
-      updateVmConnectionData(id:"%s", address:"%s", port:%s, active:%s){
+      updateVmConnectionData(id:"%s", vm_id:"%s", connection_type:%s, address:"%s", port:%s, active:%s){
         ok
       }
-    }""" % (vm_connection_data_id, new_address, new_port, new_active)
+    }""" % (vm_connection_data_id, vm_id, connection_type, new_address, new_port, new_active)
 
     executed = await execute_scheme(pool_schema, qu, context=fixt_auth_context)
     assert executed["updateVmConnectionData"]["ok"]

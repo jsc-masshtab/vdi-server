@@ -39,7 +39,10 @@ class VmConnectionData(db.Model, AbstractSortableStatusModel):
         return vm_connection_data
 
     async def soft_update(self, creator, **kwargs):
-        await VmConnectionData.update.values(**kwargs).gino.status()
+        await VmConnectionData.update.values(**kwargs).where(
+            (VmConnectionData.vm_id == kwargs["vm_id"]) &  # noqa: W504
+            (VmConnectionData.connection_type == kwargs["connection_type"])
+        ).gino.status()
 
         vm = await Vm.get(self.vm_id)
         await system_logger.info(
