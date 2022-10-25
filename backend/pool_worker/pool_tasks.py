@@ -72,11 +72,11 @@ class AbstractTask(ABC):
         """Корутина, в которой будет выполняться таска."""
         raise NotImplementedError
 
-    async def do_on_cancel(self):
+    async def do_on_cancel(self):  # noqa
         """Действия при отмене корутины do_task."""
         pass
 
-    async def do_on_fail(self):
+    async def do_on_fail(self):  # noqa
         """Действия при фэйле корутины do_task."""
         pass
 
