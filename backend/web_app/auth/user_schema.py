@@ -10,12 +10,13 @@ from common.database import db
 from common.graphene_utils import ShortString
 from common.languages import _local_
 from common.log.journal import system_logger
-from common.models.auth import User
+from common.models.auth import PasswordHistory, User
 from common.models.settings import Settings
 from common.models.user_tk_permission import TkPermission
 from common.password import PassSecLevel, password_check
-from common.veil.veil_decorators import security_administrator_required
-from common.veil.veil_errors import AssertError, SimpleError, ValidationError
+from common.settings import AUTH_ENABLED
+from common.veil.veil_decorators import administrator_required, security_administrator_required
+from common.veil.veil_errors import AssertError, SimpleError, Unauthorized, ValidationError
 from common.veil.veil_gino import Role, RoleTypeGraphene
 from common.veil.veil_validators import MutationValidation
 
@@ -79,9 +80,19 @@ class UserValidator(MutationValidation):
 
         security_level = await Settings.get_settings("PASSWORD_SECURITY_LEVEL", PassSecLevel.LOW)
         resp = password_check(value, PassSecLevel(security_level), obj_dict["username"])
+        in_history = False
+        # Проверка на повторное использование пароля для security_level == 'HIGH'.
+        # Исключаются случаи, когда создается новый пользователь.
+        if "id" in obj_dict.keys() and security_level == "HIGH":
+            in_history = await PasswordHistory.check_history_match(
+                user_id=obj_dict["id"], raw_password=value
+            )
         if not resp["result"]:
             msg = resp["comment"].format(**resp["comment_values"])
             raise AssertError(msg)
+
+        if in_history:
+            raise AssertError(_local_("Unable to set a previously used password."))
 
     @staticmethod
     async def validate_first_name(obj_dict, value):
@@ -391,16 +402,34 @@ class ChangeUserPasswordMutation(graphene.Mutation, UserValidator):
     ok = graphene.Boolean()
 
     @classmethod
-    @security_administrator_required
+    @administrator_required
     async def mutate(cls, root, info, creator, **kwargs):
         # Назначаем новый пароль
         user = await User.get(kwargs["id"])
         if user:
             kwargs["username"] = user.username  # При валидации пароля необходим логин
             await cls.validate(**kwargs)
+            creator_object = await User.get_object(extra_field_name="username", extra_field_value=creator)
+            if creator_object:
+                roles = await creator_object.roles
+                # Пользователь с ролью SECURITY_ADMINISTRATOR может назначать пароли всем пользователям
+                if Role.SECURITY_ADMINISTRATOR in roles:
+                    await user.set_password(kwargs["password"], creator=creator)
+                    return ChangeUserPasswordMutation(ok=True)
+                # Пользователь с ролью ADMINISTRATOR может назначать пароль только себе
+                if Role.ADMINISTRATOR in roles:
+                    if user.id == creator_object.id and user.username == creator_object.username:
+                        await user.set_password(kwargs["password"], creator=creator)
+                        return ChangeUserPasswordMutation(ok=True)
+                    else:
+                        message = _local_("Invalid permissions.")
+                        await system_logger.warning(message)
+                        raise Unauthorized(message)
 
-            await user.set_password(kwargs["password"], creator=creator)
-            return ChangeUserPasswordMutation(ok=True)
+            if not AUTH_ENABLED:
+                await user.set_password(kwargs["password"], creator=creator)
+                return ChangeUserPasswordMutation(ok=True)
+
         return ChangeUserPasswordMutation(ok=False)
 
 

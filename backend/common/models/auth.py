@@ -619,11 +619,21 @@ class User(AbstractSortableStatusModel, VeilModel):
             today = datetime.datetime.now(datetime.timezone.utc)
             timedelta = datetime.timedelta(days=abs(expiration_period))
             expiration_date = today + timedelta
-            info_message = _local_(
-                f"Password expires {expiration_date.date()}."
+            await system_logger.debug(
+                _local_("Password expires {}.").format(expiration_date.date())
             )
-            await system_logger.info(info_message)
         return expiration_date
+
+    @staticmethod
+    async def check_password_expiration(username):
+        expiration_date = (
+            await User.select("password_expiration_date").where(User.username == username).gino.scalar()
+        )
+        is_expired = False
+        if expiration_date:
+            today = datetime.datetime.now(datetime.timezone.utc)
+            is_expired = today > expiration_date
+        return is_expired
 
     async def pam_create_user(
         self, raw_password: str, superuser: bool = False
@@ -1337,6 +1347,17 @@ class PasswordHistory(db.Model):
             ]
             return encoded_passwords_list
         return
+
+    @classmethod
+    async def check_history_match(cls, user_id, raw_password):
+        current_password = await User.select("password").where(User.id == user_id).gino.first()
+        current_password = current_password[0]
+        encoded_password = hashers.make_password(raw_password, salt=SECRET_KEY)
+        history = await cls.get_encoded_passwords(user_id)
+        if (current_password == encoded_password) or (history and encoded_password in history):
+            return True
+        else:
+            return False
 
 
 # -------- Составные индексы --------------------------------
