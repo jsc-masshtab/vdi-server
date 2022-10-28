@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-10-07 15:59+0300\n"
+"POT-Creation-Date: 2022-10-27 20:21+0300\n"
 "PO-Revision-Date: 2020-07-30 11:25+0300\n"
 "Last-Translator: Emil <emil@emil-pc>\n"
 "Language-Team: Russian\n"
@@ -65,224 +65,228 @@ msgstr "Пользователю {} не удалось подключиться
 msgid "Error code: {}. Error message: {}."
 msgstr "Код ошибки: {}. Сообщение об ошибке: {}."
 
-#: ../common/models/auth.py:244 ../common/models/auth.py:668
-#: ../web_app/auth/user_schema.py:38
+#: ../common/models/auth.py:247 ../common/models/auth.py:706
+#: ../web_app/auth/user_schema.py:39
 msgid "username can`t be empty."
 msgstr "имя пользователя не может быть пустым."
 
-#: ../common/models/auth.py:249 ../web_app/auth/user_schema.py:44
+#: ../common/models/auth.py:252 ../web_app/auth/user_schema.py:45
 msgid "username must be <= 128 characters."
 msgstr "имя пользователя должно быть <= 128 символов."
 
-#: ../common/models/auth.py:256
+#: ../common/models/auth.py:259
 msgid "username {} must contain letters, digits, _, +, begin from letter and can't contain any spaces."
 msgstr "имя пользователя {} должно состоять из букв, цифр, _, +, начинаться с буквы и не содержать пробелов."
 
-#: ../common/models/auth.py:287
+#: ../common/models/auth.py:290
 msgid "Role {} is added to user {}."
 msgstr "Роль {} назначена пользователю {}."
 
-#: ../common/models/auth.py:295 ../common/models/auth.py:323
+#: ../common/models/auth.py:298 ../common/models/auth.py:326
 msgid "User {} roles: {}."
 msgstr "Роли пользователя {}: {}."
 
-#: ../common/models/auth.py:300
+#: ../common/models/auth.py:303
 msgid "Role {} is assigned to user {}."
 msgstr "Роль {} назначена пользователю {}."
 
-#: ../common/models/auth.py:312
+#: ../common/models/auth.py:315
 msgid "Roles: {} was deleted to user {}."
 msgstr "Роли: {} удалены у пользователя {}."
 
-#: ../common/models/auth.py:371
+#: ../common/models/auth.py:374
 msgid "User {} already has permission {}."
 msgstr "Пользователь {} уже имеет разрешение."
 
-#: ../common/models/auth.py:379
+#: ../common/models/auth.py:382
 msgid "Permission(s) {} added to user {}."
 msgstr "Разрешения {} назначены пользователю {}."
 
-#: ../common/models/auth.py:402
+#: ../common/models/auth.py:405
 msgid "Permission(s) {} removed from user {}."
 msgstr "Разрешения {} удалены у пользователя {}."
 
-#: ../common/models/auth.py:411
+#: ../common/models/auth.py:414
 msgid "User {} permission(s): {}."
 msgstr "Разрешения пользователя {}: {}."
 
-#: ../common/models/auth.py:425
+#: ../common/models/auth.py:428
 #, python-brace-format
 msgid "User {username} has been activated."
 msgstr "Пользователь {username} активирован."
 
-#: ../common/models/auth.py:436
+#: ../common/models/auth.py:439
 #, python-brace-format
 msgid "User {username} has been activated on Astra."
 msgstr "Пользователь {username} был активирован в системе."
 
-#: ../common/models/auth.py:457
+#: ../common/models/auth.py:460
 msgid "There is no more active superuser."
 msgstr "Больше нет активного администратора."
 
-#: ../common/models/auth.py:466
+#: ../common/models/auth.py:469
 #, python-brace-format
 msgid "User {username} has been deactivated."
 msgstr "Пользователь {username} деактивирован."
 
-#: ../common/models/auth.py:488
+#: ../common/models/auth.py:491
 #, python-brace-format
 msgid "User {username} has been deactivated on Astra."
 msgstr "Пользователь {username} деактивирован в системе."
 
-#: ../common/models/auth.py:533
+#: ../common/models/auth.py:536
 msgid "Invalid credentials. Check or create password for user {}."
 msgstr "Неверные учетные данные. Проверьте или создайте пароль для пользователя {}."
 
-#: ../common/models/auth.py:543 ../common/models/auth.py:591
+#: ../common/models/auth.py:546 ../common/models/auth.py:603
 #, python-brace-format
 msgid "Password of user {username} has been changed."
 msgstr "Пароль пользователя {username} изменен."
 
-#: ../common/models/auth.py:549
+#: ../common/models/auth.py:552
 #, python-brace-format
 msgid "Password of user {username} has`t been changed."
 msgstr "Пароль пользователя {username} не был изменен."
 
-#: ../common/models/auth.py:588
+#: ../common/models/auth.py:600
 msgid "Password of user {} has been changed to the local password."
 msgstr "Пароль пользователя {} изменен на локальный пароль."
 
-#: ../common/models/auth.py:643
+#: ../common/models/auth.py:623
+msgid "Password expires {}."
+msgstr "Срок действия пароля истекает {}."
+
+#: ../common/models/auth.py:681
 #, python-brace-format
 msgid "Local user {username} was converted to domain user."
 msgstr "Локальный пользователь {username} был преобразован в доменного пользователя."
 
-#: ../common/models/auth.py:691
+#: ../common/models/auth.py:732
 msgid "Superuser."
 msgstr "Администратор."
 
-#: ../common/models/auth.py:691 ../common/models/auth.py:706
-#: ../common/models/auth.py:718
+#: ../common/models/auth.py:732 ../common/models/auth.py:747
+#: ../common/models/auth.py:759
 msgid "User."
 msgstr "Пользователь."
 
-#: ../common/models/auth.py:708
+#: ../common/models/auth.py:749
 msgid "You must change password for user {}. Check a reason in description."
 msgstr "Необходимо изменить пароль для пользователя {}. Причина в описании."
 
-#: ../common/models/auth.py:722
+#: ../common/models/auth.py:763
 msgid "User {} was created in Astra Linux before. Please try to create him with correct password or delete in Astra Linux before trying to create in VeiL VDI again."
 msgstr "Пользователь {} был ранее создан в Astra Linux. Пожалуйста, попробуйте создать его с правильным паролем или удалите его в Astra Linux, прежде чем снова пытаться создать в VeiL VDI."
 
-#: ../common/models/auth.py:726
+#: ../common/models/auth.py:767
 msgid "User {} was created in Astra Linux before. Please delete him there before trying to create in Broker again."
 msgstr "Пользователь {} был ранее создан в Astra Linux. Пожалуйста удалите его оттуда, прежде чем снова пересоздать в Брокере."
 
-#: ../common/models/auth.py:736
+#: ../common/models/auth.py:777
 msgid "User {} creation error."
 msgstr "Ошибка создания пользователя {}."
 
-#: ../common/models/auth.py:747
+#: ../common/models/auth.py:788
 msgid "Your password is incorrect for user {}. Check description in journal."
 msgstr "Пароль неверен для пользователя {}. Проверьте описание в журнале."
 
-#: ../common/models/auth.py:758
+#: ../common/models/auth.py:799
 msgid "{} {} created."
 msgstr "{} {} создан."
 
-#: ../common/models/auth.py:817
+#: ../common/models/auth.py:858
 msgid "User {} update error."
 msgstr "Ошибка обновления пользователя {}."
 
-#: ../common/models/auth.py:829
+#: ../common/models/auth.py:870
 msgid "Values of user {} is changed."
 msgstr "Параметры пользователя {} изменены."
 
-#: ../common/models/auth.py:836 ../common/models/auth.py:847
+#: ../common/models/auth.py:877 ../common/models/auth.py:888
 msgid "Roles: {}."
 msgstr "Роли: {}."
 
-#: ../common/models/auth.py:837
+#: ../common/models/auth.py:878
 #, python-brace-format
 msgid "User {username} has become a superuser."
 msgstr "Пользователь {username} стал администратором."
 
-#: ../common/models/auth.py:848
+#: ../common/models/auth.py:889
 #, python-brace-format
 msgid "User {username} is no longer a superuser."
 msgstr "Пользователь {username} перестал быть администратором."
 
-#: ../common/models/auth.py:879
+#: ../common/models/auth.py:920
 #, python-brace-format
 msgid "User {username} has been logged in."
 msgstr "Пользователь {username} вошел в систему."
 
-#: ../common/models/auth.py:882
+#: ../common/models/auth.py:923
 msgid "Auth type: {}, IP: {}, Client type: {}."
 msgstr "Тип авторизации: {}, IP: {}, тип клиента: {}."
 
-#: ../common/models/auth.py:905
+#: ../common/models/auth.py:946
 #, python-brace-format
 msgid "User {username} has been logged out."
 msgstr "Пользователь {username} вышел из системы."
 
-#: ../common/models/auth.py:922
+#: ../common/models/auth.py:963
 msgid "QR code and secret code of 2fa were repeated for user {}."
 msgstr "QR код и секретный код для двухфакторной аутентификации были повторены для пользователя {}."
 
-#: ../common/models/auth.py:926
+#: ../common/models/auth.py:967
 msgid "New QR code and secret code of 2fa were generated for user {}."
 msgstr "Новый QR код и секретный код для двухфакторной аутентификации были созданы для пользователя {}."
 
-#: ../common/models/auth.py:941
+#: ../common/models/auth.py:982
 msgid "One-time password does not match or is out of date."
 msgstr "Одноразовый пароль не совпадает или устарел."
 
-#: ../common/models/auth.py:1071
+#: ../common/models/auth.py:1112
 msgid "Group {} is created."
 msgstr "Группа {} создана."
 
-#: ../common/models/auth.py:1105
+#: ../common/models/auth.py:1146
 msgid "Group {} already has permission {}."
 msgstr "Группа {} уже имеет разрешение {}."
 
-#: ../common/models/auth.py:1113
+#: ../common/models/auth.py:1154
 msgid "Permission(s) {} added to group {}."
 msgstr "Разрешения: {} добавлены группе {}."
 
-#: ../common/models/auth.py:1136
+#: ../common/models/auth.py:1177
 msgid "Permission(s) {} removed from group {}."
 msgstr "Разрешения {} удалены у группы {}."
 
-#: ../common/models/auth.py:1145
+#: ../common/models/auth.py:1186
 msgid "Group {} permission(s): {}."
 msgstr "Разрешения группы {}: {}."
 
-#: ../common/models/auth.py:1163
+#: ../common/models/auth.py:1204
 msgid "Values of group {} is updated."
 msgstr "Параметры группы {} обновлены."
 
-#: ../common/models/auth.py:1186
+#: ../common/models/auth.py:1227
 msgid "User {} has been included to group {}."
 msgstr "Пользователь {} был включен в группу {}."
 
-#: ../common/models/auth.py:1193
+#: ../common/models/auth.py:1234
 msgid "User {} is already in group {}."
 msgstr "Пользователь {} уже находится в группе {}."
 
-#: ../common/models/auth.py:1205
+#: ../common/models/auth.py:1246
 msgid "Removing user {} from group {}."
 msgstr "Удаление пользователя {} из группы {}."
 
-#: ../common/models/auth.py:1218
+#: ../common/models/auth.py:1259
 msgid "Role {} has been set to group {}."
 msgstr "Роль {} добавлена в группу {}."
 
-#: ../common/models/auth.py:1225
+#: ../common/models/auth.py:1266
 msgid "Group {} has already role {}."
 msgstr "Группе {} уже назначена роль {}."
 
-#: ../common/models/auth.py:1238
+#: ../common/models/auth.py:1279
 msgid "Roles: {} was deleted to group {}."
 msgstr "Роли: {} удалены из группы {}."
 
@@ -367,7 +371,7 @@ msgid "No authentication directory controllers."
 msgstr "Нет контроллеров служб каталогов."
 
 #: ../common/models/authentication_directory.py:586
-#: ../web_app/auth/handlers.py:55
+#: ../web_app/auth/handlers.py:59
 msgid "Invalid credentials."
 msgstr "Неверные учетные данные."
 
@@ -422,6 +426,7 @@ msgid "Group {} is not synchronized by AD."
 msgstr "Группа {} не синхронизирована со службой каталогов."
 
 #: ../common/models/authentication_directory.py:1109
+#, python-brace-format
 msgid "There is no users to sync in group {group.verbose_name}."
 msgstr "В группе {group.verbose_name} не найдены пользователи для синхронизации."
 
@@ -933,7 +938,8 @@ msgid "VeiL ECP {} request error."
 msgstr "Ошибка запроса ECP VeiL {}."
 
 #: ../common/veil/veil_decorators.py:43 ../common/veil/veil_decorators.py:49
-#: ../web_app/auth/license/handlers.py:31 ../web_app/tests/test_auth_v2.py:116
+#: ../web_app/auth/license/handlers.py:31 ../web_app/auth/user_schema.py:425
+#: ../web_app/tests/test_auth_v2.py:116
 msgid "Invalid permissions."
 msgstr "Недостаточно прав."
 
@@ -1147,23 +1153,23 @@ msgstr "Синхронизация группы AD {group.verbose_name}."
 msgid "No such Authentication Directory."
 msgstr "Такая Authentication Directory отсутствует."
 
-#: ../pool_worker/vm_manager.py:112
+#: ../vm_manager/vm_manager_.py:112
 msgid "Keep vms on task error."
 msgstr "Сохранить ВМ при ошибке задачи."
 
-#: ../pool_worker/vm_manager.py:149
+#: ../vm_manager/vm_manager_.py:149
 msgid "Synchronize vm data task error."
 msgstr "Ошибка задачи синхронизации данных виртуальной машины."
 
-#: ../pool_worker/vm_manager.py:202
+#: ../vm_manager/vm_manager_.py:202
 msgid "Action upon user disconnect completed. Action: {}. VM: {}. Result: {}."
 msgstr "Действие при отключении пользователя завершено. Действие: {}. ВМ: {}. Результат: {}."
 
-#: ../pool_worker/vm_manager.py:208
+#: ../vm_manager/vm_manager_.py:208
 msgid "Vm post disconnect action error."
 msgstr "Ошибка действия ВМ после отключения."
 
-#: ../pool_worker/vm_manager.py:269
+#: ../vm_manager/vm_manager_.py:269
 msgid "_do_actions_when_user_disconnects_from_vm error."
 msgstr "Ошибка _do_actions_when_user_disconnects_from_vm."
 
@@ -1268,37 +1274,41 @@ msgstr "Отсутствует имя пользователя."
 msgid "Missing password."
 msgstr "Отсутствует пароль."
 
-#: ../web_app/auth/handlers.py:44
+#: ../web_app/auth/handlers.py:40
+msgid "The password for user {} has expired."
+msgstr "Срок действия пароля пользователя {} истек."
+
+#: ../web_app/auth/handlers.py:48
 msgid "External auth system is disabled. Check broker settings."
 msgstr "Внешняя служба авторизации отключена. Проверьте настройки брокера."
 
-#: ../web_app/auth/handlers.py:48
+#: ../web_app/auth/handlers.py:52
 msgid "PAM or LOCAL auth only. Check broker settings."
 msgstr "Проверьте настройки брокера. Разрешена только pam ИЛИ локальная авторизация."
 
-#: ../web_app/auth/handlers.py:58
+#: ../web_app/auth/handlers.py:62
 msgid "Auth system is disabled. Check broker settings."
 msgstr "Проверьте настройки брокера. Система аутентификации отключена."
 
-#: ../web_app/auth/handlers.py:89 ../web_app/auth/handlers.py:108
+#: ../web_app/auth/handlers.py:93 ../web_app/auth/handlers.py:112
 msgid "Authentication failed for user: {}."
 msgstr "Ошибка авторизации пользователя: {}."
 
-#: ../web_app/auth/handlers.py:123
+#: ../web_app/auth/handlers.py:127
 #, python-brace-format
 msgid "Missing VeiL Connect version. {base_error_msg}."
 msgstr "Не указана версия VeiL Connect. {base_error_msg}."
 
-#: ../web_app/auth/handlers.py:129
+#: ../web_app/auth/handlers.py:133
 #, python-brace-format
 msgid "Version {veil_connect_version} is not supported. {base_error_msg}."
 msgstr "Версия {veil_connect_version} не поддерживается. {base_error_msg}."
 
-#: ../web_app/auth/handlers.py:135 ../web_app/thin_client_api/handlers.py:466
+#: ../web_app/auth/handlers.py:139 ../web_app/thin_client_api/handlers.py:466
 msgid "Thin client limit exceeded."
 msgstr "Превышен лимит тонких клиентов."
 
-#: ../web_app/auth/handlers.py:144
+#: ../web_app/auth/handlers.py:148
 msgid "User {} logged out."
 msgstr "Пользователь {} вышел из системы."
 
@@ -1310,50 +1320,54 @@ msgstr "Недопустимое расширение."
 msgid "Fail to open license key file."
 msgstr "Не удалось открыть лицензионный ключ."
 
-#: ../web_app/auth/user_schema.py:33 ../web_app/auth/user_schema.py:272
+#: ../web_app/auth/user_schema.py:34 ../web_app/auth/user_schema.py:288
 #: ../web_app/thin_client_api/schema.py:263
 msgid "No such user."
 msgstr "Нет такого пользователя."
 
-#: ../web_app/auth/user_schema.py:42
+#: ../web_app/auth/user_schema.py:43
 msgid "username must be at least 2 character."
 msgstr "имя пользователя должно быть не менее 2 символов."
 
-#: ../web_app/auth/user_schema.py:52
+#: ../web_app/auth/user_schema.py:53
 msgid "username must contain letters, digits, _, +, begin from letter and can't contain any spaces."
 msgstr "имя пользователя должно состоять из букв, цифр, _, +, начинаться с буквы и не содержать пробелов."
 
-#: ../web_app/auth/user_schema.py:61
+#: ../web_app/auth/user_schema.py:62
 msgid "Email {} is already busy."
 msgstr "Email {} занят."
 
-#: ../web_app/auth/user_schema.py:74
+#: ../web_app/auth/user_schema.py:75
 msgid "Email must contain English characters and/or digits, @ and domain name."
 msgstr "Email должен содержать символы латинского алфавита и/или цифры, иметь @ и домен."
 
-#: ../web_app/auth/user_schema.py:89
+#: ../web_app/auth/user_schema.py:95
+msgid "Unable to set a previously used password."
+msgstr "Нельзя установить ранее использованный пароль."
+
+#: ../web_app/auth/user_schema.py:100
 msgid "First name length must be <= 32 characters."
 msgstr "Имя должно быть <= 32 символов."
 
-#: ../web_app/auth/user_schema.py:95
+#: ../web_app/auth/user_schema.py:106
 msgid "Last name length must be <= 128 characters."
 msgstr "Фамилия должна быть <= 128 символам."
 
-#: ../web_app/auth/user_schema.py:268
+#: ../web_app/auth/user_schema.py:284
 msgid "Specify id or username."
 msgstr "Укажите id или имя пользователя."
 
-#: ../web_app/auth/user_schema.py:367
+#: ../web_app/auth/user_schema.py:383
 #, python-brace-format
 msgid "Can not delete administrator account {username}."
 msgstr "Невозможно удалить учетную запись администратора {username}."
 
-#: ../web_app/auth/user_schema.py:374
+#: ../web_app/auth/user_schema.py:390
 #, python-brace-format
 msgid "User {username} was deleted."
 msgstr "Пользователь {username} был удален."
 
-#: ../web_app/auth/user_schema.py:544
+#: ../web_app/auth/user_schema.py:578
 msgid "Can`t remove permission(s) {} because they are granted to groups of user {}."
 msgstr "Невозможно удалить разрешения {}, так как они выданы группам, в которых состоит пользователь."
 
@@ -1620,35 +1634,39 @@ msgstr "Обработчик задач."
 msgid "Web application."
 msgstr "Веб-приложение."
 
-#: ../web_app/settings/schema.py:134
+#: ../web_app/settings/schema.py:32
+msgid "Vm manager."
+msgstr ""
+
+#: ../web_app/settings/schema.py:136
 msgid "Unable to get services information. {}."
 msgstr "Невозможно получить информацию о сервисах. {}."
 
-#: ../web_app/settings/schema.py:138
+#: ../web_app/settings/schema.py:140
 msgid "No services launched."
 msgstr "Никаких сервисов не запущено."
 
-#: ../web_app/settings/schema.py:151
+#: ../web_app/settings/schema.py:153
 msgid "Output parsing error. {}."
 msgstr "Ошибка вывода парсинга. {}."
 
-#: ../web_app/settings/schema.py:289
+#: ../web_app/settings/schema.py:292
 msgid "Invalid service name {}."
 msgstr "Недействительное название службы {}."
 
-#: ../web_app/settings/schema.py:306
+#: ../web_app/settings/schema.py:309
 msgid "Error occurred during service action executing. {}."
 msgstr "Ошибка при выполнении действия сервиса. {}."
 
-#: ../web_app/settings/schema.py:311
+#: ../web_app/settings/schema.py:314
 msgid "Executed action {} for service {}."
 msgstr "Выполнено действие {} для сервиса {}."
 
-#: ../web_app/settings/schema.py:330
+#: ../web_app/settings/schema.py:333
 msgid "Unable to check status of service {}."
 msgstr "Невозможно проверить статус сервиса {}."
 
-#: ../web_app/settings/schema.py:344
+#: ../web_app/settings/schema.py:347
 msgid "Cache is cleared."
 msgstr "Кэш очищен."
 

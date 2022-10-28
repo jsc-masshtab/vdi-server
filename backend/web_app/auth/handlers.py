@@ -35,6 +35,10 @@ class AuthHandler(BaseHttpHandler):
             if not password or len(password) < 2:
                 raise ValidationError(_local_("Missing password."))
 
+            password_expired = await User.check_password_expiration(username)
+            if password_expired:
+                raise MeaningError(_local_("The password for user {} has expired.").format(username))
+
             # Updated 26.12.2020
             if self.args.get("ldap") and settings.EXTERNAL_AUTH:
                 account_name = await AuthenticationDirectory.authenticate(username, password)
