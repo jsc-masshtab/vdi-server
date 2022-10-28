@@ -5,7 +5,7 @@
     name: ["python3-requests", "python3-docker"]
     update_cache: yes
 
-- name: Swarm manager init
+- name: Swarm init
   block:
     - name: Init a new swarm cluster
       docker_swarm:
@@ -72,24 +72,24 @@
 
     - name: Print swarm info
       debug:
-        msg: "Join token is: {{ swarm_info.swarm_facts.JoinTokens.Worker }}"
-  when: multibroker_role == "manager"
+        msg: "Join token is: {{ swarm_info.swarm_facts.JoinTokens.Manager }}"
+  when: multibroker_role == "leader"
 
-- name: Swarm worker join
+- name: Swarm node join
   block:
-    - name: Checking swarm manager address
+    - name: Checking swarm leader address
       fail:
-        msg: "Swarm manager address is not defined!"
-      when: multibroker_swarm_manager_address is not defined
+        msg: "Swarm leader address is not defined!"
+      when: multibroker_swarm_leader_address is not defined
 
     - name: Checking swarm join token
       fail:
         msg: "Swarm join token is not defined!"
       when: multibroker_swarm_join_token is not defined
 
-    - name: Checking connection to swarm manager
+    - name: Checking connection to swarm leader
       wait_for:
-        host: "{{ multibroker_swarm_manager_address }}"
+        host: "{{ multibroker_swarm_leader_address }}"
         port: 2377
         delay: 5
         timeout: 15
@@ -99,5 +99,5 @@
         advertise_addr: "{{ ansible_default_ipv4.address }}"
         state: join
         join_token: "{{ multibroker_swarm_join_token }}"
-        remote_addrs: [ '{{ multibroker_swarm_manager_address }}:2377' ]
-  when: multibroker_role == "worker"
+        remote_addrs: [ '{{ multibroker_swarm_leader_address }}:2377' ]
+  when: multibroker_role == "manager"
