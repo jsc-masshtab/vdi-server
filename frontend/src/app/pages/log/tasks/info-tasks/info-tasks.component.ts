@@ -2,6 +2,8 @@ import { Component, Inject } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialog } from '@angular/material/dialog';
 
 import { YesNoFormComponent } from '@shared/forms-dinamic/yes-no-form/yes-no-form.component';
+import { Subscription } from 'rxjs';
+import { map } from 'rxjs/operators';
 
 import { TasksService } from '../all-tasks/tasks.service';
 
@@ -14,7 +16,8 @@ import { TasksService } from '../all-tasks/tasks.service';
 })
 export class InfoTaskComponent {
 
-  task: any;
+  sub: Subscription;
+  task: any = {};
 
   public collection: any[] = [
     {
@@ -54,7 +57,21 @@ export class InfoTaskComponent {
     private service: TasksService,
     public dialog: MatDialog
   ) {
-    this.task = data.task;
+    this.getTask()
+  }
+
+  getTask(): void {
+    if (this.sub) {
+      this.sub.unsubscribe();
+    }
+
+    const task_id = this.data.task.id;
+
+    this.sub = this.service.getTask({task_id}).valueChanges.pipe(map(data => data.data.task))
+      .subscribe((res) => {
+        this.task = { ...res }
+      }
+    );
   }
 
   public cancelTask() {

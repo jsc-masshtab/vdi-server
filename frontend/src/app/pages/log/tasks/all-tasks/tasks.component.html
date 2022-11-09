@@ -31,7 +31,7 @@
     </mat-form-field>
 
     <mat-form-field class="tasks-field">
-        <mat-label>Действия пулов</mat-label>
+        <mat-label>Тип задачи</mat-label>
         <mat-select [formControl]="task_type">
             <mat-option [value]="'all'">
                 Все
@@ -50,6 +50,9 @@
             </mat-option>
             <mat-option [value]="'POOL_PREPARE'">
                 Подготовка всех ВМ пула
+            </mat-option>
+            <mat-option [value]="'POOL_TEMPLATE_CHANGE'">
+                Изменение шаблона пула
             </mat-option>
             <mat-option [value]="'VM_PREPARE'">
                 Подготовка ВМ
