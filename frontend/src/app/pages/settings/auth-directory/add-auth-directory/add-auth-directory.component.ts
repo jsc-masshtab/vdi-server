@@ -25,7 +25,7 @@ export class AddAuthenticationDirectoryComponent implements OnDestroy {
       dc_str: ['', Validators.required],
       verbose_name: ['', Validators.required],
       connection_type: ['ldap'],
-      directory_url: ['', [Validators.required, Validators.pattern(/^ldap[s]?:\/\/[a-zA-Z0-9.-_+ ]+$/)]],
+      directory_url: ['', [Validators.required, Validators.pattern(/^ldap[s]?:\/\/[a-zA-Z0-9.-_+]+$/)]],
       directory_type: 'ActiveDirectory',
       description: '',
       service_username: '',
@@ -51,7 +51,9 @@ export class AddAuthenticationDirectoryComponent implements OnDestroy {
     if (this.form.status === 'VALID') {
       this.waitService.setWait(true);
 
-      this.service.createAuthDir({ ...this.form.value }).subscribe(() => {
+      const data = { ...this.form.value };
+
+      this.service.createAuthDir(data).subscribe(() => {
         this.service.getAllAuthenticationDirectory().refetch();
         this.dialogRef.close();
         this.waitService.setWait(false);
