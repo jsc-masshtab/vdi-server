@@ -5,7 +5,6 @@ import gql from 'graphql-tag';
 
 import { IParams } from '@shared/types';
 
-
 @Injectable()
 export class TasksService {
 
@@ -30,7 +29,6 @@ export class TasksService {
             }
         });
     }
-
 
     public getAllTasks(props): QueryRef<any, any> {
         return  this.service.watchQuery({
@@ -66,6 +64,35 @@ export class TasksService {
             variables: {
                 method: 'GET',
                 ordering: this.paramsForGetTasks.nameSort,
+                ...props
+            }
+        });
+    }
+
+    public getTask(props): QueryRef<any, any> {
+        return this.service.watchQuery({
+            query: gql`
+                query tasks(
+                    $task_id: UUID
+                ){
+                    task(
+                        id: $task_id
+                    ){
+                        id
+                        task_type
+                        status
+                        entity_id
+                        priority
+                        started
+                        finished
+                        progress
+                        message
+                        duration
+                    },
+                }
+            `,
+            variables: {
+                method: 'GET',
                 ...props
             }
         });
