@@ -105,6 +105,8 @@ LANGUAGE = "ru"
 # -----------------------------
 DEFAULT_NAME = "-"
 BROKER_NAME = "VeiL VDI"
+BROKER_COPYRIGHT = "© mashtab.org"
+BROKER_URL = "https://mashtab.org"
 
 # LDAP
 # -----------------------------

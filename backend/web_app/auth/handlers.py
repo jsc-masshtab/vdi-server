@@ -153,8 +153,8 @@ class VersionHandler(BaseHttpHandler):
         info_dict = {
             "version": "4.1.5",
             "year": "2019-2022",
-            "url": "https://mashtab.org",
-            "copyright": "© mashtab.org",
+            "url": settings.BROKER_URL,
+            "copyright": settings.BROKER_COPYRIGHT,
         }
         response = {"data": info_dict}
         return self.finish(response)
