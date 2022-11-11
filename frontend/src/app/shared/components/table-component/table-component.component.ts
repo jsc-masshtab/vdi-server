@@ -1,7 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnInit, HostBinding, OnChanges, ViewChild, ElementRef, HostListener } from '@angular/core';
-import { fromEvent } from 'rxjs';
-
-
+import { Component, Input, Output, EventEmitter, OnInit, HostBinding, OnChanges, ViewChild, ElementRef } from '@angular/core';
 
 interface ICollection {
   title: string;
