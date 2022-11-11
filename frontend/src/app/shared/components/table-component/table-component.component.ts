@@ -1,6 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnInit, HostBinding, OnChanges } from '@angular/core';
-
-
+import { Component, Input, Output, EventEmitter, OnInit, HostBinding, OnChanges, ViewChild, ElementRef } from '@angular/core';
 
 interface ICollection {
   title: string;
@@ -36,8 +34,11 @@ export class TableComponentComponent implements OnInit, OnChanges {
   @Output() actions: EventEmitter<object> = new EventEmitter<object>();
   @Output() clickRowData: EventEmitter<object> = new EventEmitter<object>();
   @Output() sortListNow: EventEmitter<object> = new EventEmitter<object>();
+  @Output() scrolled: EventEmitter<string> = new EventEmitter<string>();
 
   @HostBinding('style.height') @Input() height = 'fit-content';
+
+  @ViewChild('table') table: ElementRef;
 
   public exist_keys: string[] = [];
 
@@ -54,6 +55,17 @@ export class TableComponentComponent implements OnInit, OnChanges {
       if (this.data.length) {
         this.exist_keys = Object.keys(this.data[0]);
       }
+    }
+  }
+
+  onScroll(e) {
+    if(e.target.scrollTop === 0) {
+      this.scrolled.emit('prev');
+      this.table.nativeElement.scrollTop = 100
+    }
+
+    if(e.target.scrollTop >= (e.target.scrollHeight - e.target.clientHeight)) {
+      this.scrolled.emit('next');
     }
   }
 

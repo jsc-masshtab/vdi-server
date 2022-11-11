@@ -28,7 +28,7 @@
       </ng-container>
     </header>
 
-    <div class="table-area" >
+    <div class="table-area" #table (scroll)="onScroll($event)">
       <div *ngFor="let item of data;let i = index"
         class="table-area-object" 
         [class.cursorTrue]="cursor"

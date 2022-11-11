@@ -1,7 +1,6 @@
 import { Component, OnInit, OnDestroy, Input } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
-import { Subscription } from 'rxjs';
 import { map } from 'rxjs/operators';
 
 import { WaitService } from '@core/components/wait/wait.service';
@@ -10,6 +9,7 @@ import { AddExportComponent } from '../add-exports/add-exports.component';
 import { InfoEventComponent } from '../info-event/info-event.component';
 import { EventsService } from './events.service';
 import { WebsocketService } from '@app/core/services/websock.service';
+import { Subscription } from 'rxjs';
 
 interface Event {
   event: {
@@ -35,6 +35,7 @@ export class EventsComponent implements OnInit, OnDestroy {
 
   private socketSub: Subscription;
 
+  public move = '';
   public limit = 100;
   public count = 0;
   public offset = 0;
@@ -123,6 +124,21 @@ export class EventsComponent implements OnInit, OnDestroy {
     });
   }
 
+  onScroll(event) {
+    if(event === 'next') {
+      const next = this.offset + 100
+      this.toPage({
+        offset: next < this.count ? next : this.offset
+      });
+    }
+
+    if(event === 'prev') {
+      this.toPage({
+        offset: this.offset > 0 ? this.offset - 100 : 0
+      });
+    }
+  }
+
   public refresh(): void {
     this.getEvents();
   }
@@ -132,8 +148,15 @@ export class EventsComponent implements OnInit, OnDestroy {
   }
 
   public toPage(message: any): void {
-    this.offset = message.offset;
-    this.getEvents();
+    if (this.offset > message.offset) {
+      this.offset = message.offset;
+      this.getEvents({add: 'prev'});
+    }
+
+    if (this.offset < message.offset) {
+      this.offset = message.offset;
+      this.getEvents({add: 'next'});
+    }
   }
 
   public sortList(param: IParams): void {
@@ -142,7 +165,7 @@ export class EventsComponent implements OnInit, OnDestroy {
     this.getEvents();
   }
 
-  public getEvents(): void {
+  public getEvents(actions?): void {
 
     const start_date = new Date(this.start_date.value).setHours(0, 0, 0);
     const end_date = new Date(this.end_date.value).setHours(23, 59, 59);
@@ -178,7 +201,28 @@ export class EventsComponent implements OnInit, OnDestroy {
     this.waitService.setWait(true);
     this.service.getAllEvents(queryset).valueChanges.pipe(map(data => data.data))
       .subscribe((data) => {
-        this.events = [...data.events];
+
+        if (actions) {
+          if (actions.add === 'prev') {
+            this.events = [...data.events, ...this.events];
+
+            if (this.events.length > 201) {
+              this.events.splice(200, 100);
+            }
+          }
+
+          if (actions.add === 'next') {
+            this.events = [...this.events, ...data.events];
+
+            if (this.events.length > 201) {
+              this.events.splice(0, 100);
+            }
+          }
+        } else {
+          this.events = [...data.events];
+        }
+        
+        console.log(this.events.length)
         this.entity_types = [...data.entity_types];
         this.count = data.count;
         this.users = [...data.users];
